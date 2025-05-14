@@ -1,3 +1,7 @@
+.PHONY: test
+test:
+	dune runtest
+
 .PHONY: stdlib_test
 stdlib_test:
 	dune exec ocaml_stdlib
@@ -17,3 +21,7 @@ test:
 .PHONY: build
 build:
 	dune build
+
+.PHONY: get
+get:
+	opam install . --deps-only --with-test --with-doc -vv
