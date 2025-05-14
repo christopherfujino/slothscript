@@ -15,7 +15,13 @@ module Process = struct
     right
 
   let exec cmd args = Unix.execvp cmd args
-  (* p in execvp is use path *)
+  (* p in execvp is use path. This will never return. *)
+
+  let run cmd args =
+    let pid = Unix.create_process cmd args Unix.stdin Unix.stdout Unix.stderr in
+    let pid = Unix.fork () in
+    (* 0 is the child *)
+    if pid = 0 then exec cmd args else Unix.waitpid [] pid
 
   let spawn cmd args =
     let arg_len = List.length args in
@@ -23,10 +29,9 @@ module Process = struct
       Array.init (arg_len + 1) (fun idx ->
           if idx = 0 then cmd else List.nth args (idx - 1))
     in
-    let pid = Unix.create_process cmd args Unix.stdin Unix.stdout Unix.stderr in
-    Printf.printf "PID is %d\n" pid
+    Unix.create_process cmd args Unix.stdin Unix.stdout Unix.stderr
 end
 
 module InputOutput = struct
-  let print t = Types.to_s t |> print_endline
+  let print t = Runtime.to_s t |> print_endline
 end

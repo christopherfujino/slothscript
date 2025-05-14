@@ -5,10 +5,13 @@ open Sloth_script
 open Sloth_script.Stdlib
 
 let main () =
-  let a = Types.Array [Types.String "One"; Types.Num 2.0] in
+  let open Runtime in
+  let a = Array [ String "One"; Num 2.0 ] in
   InputOutput.print a;
-  (* Process.spawn "sleep" ["100"];
-  print_endline "post spawn" *)
-  InputOutput.print (Types.String "The End.")
+  let m = Map [ ("key", String "value") ] in
+  InputOutput.print m;
+  let i, _ = Process.run "uname" ["-a"] in
+  print_int i;
+  InputOutput.print (String "The End.")
 
 let () = main ()

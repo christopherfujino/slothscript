@@ -1,6 +1,7 @@
 .PHONY: test
 test:
-	dune runtest
+	# A synonym for dune runtest
+	dune build @runtest --force
 
 .PHONY: stdlib_test
 stdlib_test:

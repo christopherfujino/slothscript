@@ -4,11 +4,13 @@ type t =
   | Num of float
   (* TODO make this a custom dynamic array *)
   | Array of t list
+  (* TODO make this more efficient *)
+  | Map of (string * t) list
   | Null
 (* TODO hashmap *)
 
 let rec to_s = function
-  | String s -> s
+  | String s -> Printf.sprintf "\"%s\"" s
   (* TODO write a custom, better Float.to_string *)
   | Num f -> Float.to_string f
   | Array l ->
@@ -22,3 +24,10 @@ let rec to_s = function
       List.fold_left cb "[" l ^ "]"
   | Null -> "null"
   | Bool b -> if b then "true" else "false"
+  | Map assoc ->
+      List.fold_left
+        (fun acc cur ->
+          let key, value = cur in
+          Printf.sprintf "%s\"%s\": %s" acc key (to_s value))
+        "{" assoc
+      ^ "}"
