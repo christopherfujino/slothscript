@@ -1,0 +1,9 @@
+(executable
+ (public_name sloth_script)
+ (name main)
+ (libraries sloth_script))
+
+(executable
+ (public_name ocaml_stdlib)
+ (name ocaml_stdlib)
+ (libraries sloth_script))

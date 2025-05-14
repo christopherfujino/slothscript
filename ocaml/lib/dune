@@ -1,0 +1,8 @@
+(library
+ (name sloth_script)
+ (libraries unix))
+
+(menhir
+  (modules parser))
+
+(ocamllex lexer)
