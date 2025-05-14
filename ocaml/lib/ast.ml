@@ -25,5 +25,5 @@ and expr_to_str expr =
 and stmt_to_str stmt =
   match stmt with
   | LetStmt (name, expr) ->
-      Printf.sprintf "(LetStmt %s %s)" name (expr_to_str expr)
+      Printf.sprintf "(LetStmt \"%s\" %s)" name (expr_to_str expr)
   | ExprStmt expr -> Printf.sprintf "(ExprStmt %s)" (expr_to_str expr)

@@ -7,6 +7,7 @@ let test_specs =
   [
     { name = "num literal"; program = "11;"; ast = "(ExprStmt 11)" };
     { name = "addition"; program = "1 + 1;"; ast = "(ExprStmt (Add 1 1))" };
+    { name = "assignment"; program = "let x = 1 + 1;"; ast = "(LetStmt \"x\" (Add 1 1))"}
   ]
 
 let parser_tests =

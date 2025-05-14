@@ -40,10 +40,8 @@
 
 prog:
   | e1 = expr; SEMICOLON { ExprStmt e1 }
-  (* match an expression and bind it to e, then return e
-  | LET; x = ID; EQUALS; e1 = expr { LetStmt (x, e1) }
+  | LET; x = ID; EQUALS; e1 = expr; SEMICOLON { LetStmt (x, e1) }
   ;
-  *)
 
 expr:
   | e1 = expr; PLUS; e2 = expr { Binary (Add, e1, e2) }
