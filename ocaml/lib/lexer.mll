@@ -29,6 +29,7 @@ rule read =
   | "if" { IF }
   | "then" { THEN }
   | "else" { ELSE }
+  | ";" { SEMICOLON }
   (* Lexing.lexeme means return the string that matched the pattern *)
   | id { ID (Lexing.lexeme lexbuf) }
   | num { NUM (float_of_string (Lexing.lexeme lexbuf)) }
