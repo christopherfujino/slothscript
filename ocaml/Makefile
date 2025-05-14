@@ -25,3 +25,7 @@ build:
 .PHONY: get
 get:
 	opam install . --deps-only --with-test --with-doc -vv
+
+.PHONY: list-errors
+list-errors:
+	menhir --list-errors lib/parser.mly

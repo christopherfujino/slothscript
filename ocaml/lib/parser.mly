@@ -23,6 +23,7 @@
 %token THEN
 %token ELSE
 %token EOF
+%token SEMICOLON
 
 (* Disambiguate precedence and associativity *)
 (* TODO figure this out *)
@@ -38,19 +39,19 @@
 %%
 
 prog:
-  | e1 = expr { ExprStmt e1 }
+  | e1 = expr; SEMICOLON { ExprStmt e1 }
   (* match an expression and bind it to e, then return e
   | LET; x = ID; EQUALS; e1 = expr { LetStmt (x, e1) }
   ;
   *)
 
 expr:
+  | e1 = expr; PLUS; e2 = expr { Binary (Add, e1, e2) }
   (* upon an INT token, bind the contained Ocaml int val to i, and return AST
      node `Int i` *)
   | f = NUM { Num f }
   | TRUE { Bool true }
   | FALSE { Bool false }
-  | e1 = expr; PLUS; e2 = expr { Binary (Add, e1, e2) }
   (*
   | x = ID { Var x }
   (* match three tokens in a row *)
