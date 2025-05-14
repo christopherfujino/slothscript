@@ -18,10 +18,17 @@ module Process = struct
   (* p in execvp is use path. This will never return. *)
 
   let run cmd args =
+    let arg_len = List.length args in
+    let args =
+      Array.init (arg_len + 1) (fun idx ->
+          if idx = 0 then cmd else List.nth args (idx - 1))
+    in
     let pid = Unix.create_process cmd args Unix.stdin Unix.stdout Unix.stderr in
-    let pid = Unix.fork () in
-    (* 0 is the child *)
-    if pid = 0 then exec cmd args else Unix.waitpid [] pid
+    let _, status = Unix.waitpid [] pid in
+    match status with
+    | WEXITED exit -> exit
+    | WSIGNALED signal -> -signal
+    | WSTOPPED signal -> -signal
 
   let spawn cmd args =
     let arg_len = List.length args in

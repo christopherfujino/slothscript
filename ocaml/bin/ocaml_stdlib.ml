@@ -10,8 +10,8 @@ let main () =
   InputOutput.print a;
   let m = Map [ ("key", String "value") ] in
   InputOutput.print m;
-  let i, _ = Process.run "uname" ["-a"] in
-  print_int i;
+  let exit = Process.run "uname" ["-a"] in
+  Printf.printf "exited with code %d\n" exit;
   InputOutput.print (String "The End.")
 
 let () = main ()

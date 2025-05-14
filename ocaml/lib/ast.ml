@@ -15,8 +15,8 @@ and expr_to_str expr =
     else string_of_float f
   in
   match expr with
-  | Num f -> custom_string_of_float f
-  | Bool b -> string_of_bool b
+  | Num f -> Printf.sprintf "(Num %s)" (custom_string_of_float f)
+  | Bool b -> Printf.sprintf "(Bool %s)" (string_of_bool b)
   | Binary (op, left, right) -> (
       match op with
       | Add ->
