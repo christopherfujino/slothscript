@@ -2,7 +2,7 @@
    calls the stdlib *)
 
 open Sloth_script
-open Sloth_script.Stdlib
+open Sloth_script.Sloth_stdlib
 
 let main () =
   let open Runtime in
