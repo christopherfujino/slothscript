@@ -7,12 +7,12 @@ test:
 stdlib_test:
 	dune exec ocaml_stdlib
 
-.PHONY: interpreter
-interpreter:
-	dune exec sloth_script
-
 .PHONY: repl
-repl: build
+repl:
+	dune exec repl
+
+.PHONY: utop
+utop: build
 	# opam install utop
 	dune utop lib/
 

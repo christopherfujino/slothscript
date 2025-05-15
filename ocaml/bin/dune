@@ -1,6 +1,9 @@
 (executable
- (public_name sloth_script)
+ ; install executable as this name, plus .exe
+ (public_name repl)
+ ; entrypoint module, aka //bin/main.ml
  (name main)
+ ; deps, depends on slot_script from //lib/dune
  (libraries sloth_script))
 
 (executable
