@@ -39,6 +39,17 @@ module Process = struct
     Unix.create_process cmd args Unix.stdin Unix.stdout Unix.stderr
 end
 
-module InputOutput = struct
-  let print t = Runtime.to_s t |> print_endline
+(* TODO provide output sig *)
+module Make (T : sig
+  val oc : out_channel
+end) =
+struct
+  module InputOutput = struct
+    let print_endline s =
+      output_string T.oc s;
+      output_char T.oc '\n';
+      flush T.oc
+
+    let print t = Runtime.to_s t |> print_endline
+  end
 end

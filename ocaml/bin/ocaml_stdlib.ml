@@ -4,13 +4,18 @@
 open Sloth_script
 open Sloth_script.Sloth_stdlib
 
+module ProdStdlib = Sloth_script.Sloth_stdlib.Make (struct
+  let oc = stdout
+end)
+
 let main () =
+  let open ProdStdlib in
   let open Runtime in
   let a = Array [ String "One"; Num 2.0 ] in
   InputOutput.print a;
   let m = Map [ ("key", String "value") ] in
   InputOutput.print m;
-  let exit = Process.run "uname" ["-a"] in
+  let exit = Process.run "uname" [ "-a" ] in
   Printf.printf "exited with code %d\n" exit;
   InputOutput.print (String "The End.")
 
