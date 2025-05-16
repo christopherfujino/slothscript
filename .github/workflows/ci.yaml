@@ -8,7 +8,7 @@ jobs:
     name: Run full CI suite
     # https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#choosing-github-hosted-runners
     # This is the VM image
-    runs-on: ubuntu:latest
+    runs-on: ubuntu-latest
     container:
       # As of May 2025, this is testing (bookworm is stable)
       image: debian:trixie-20250428-slim
