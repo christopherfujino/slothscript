@@ -16,7 +16,18 @@ jobs:
     steps:
       - name: Install OS deps
         shell: bash -exo pipefail {0}
-        run: apt-get update && apt-get --yes upgrade && apt-get install --yes make
+        run: |
+          apt-get update
+          apt-get --yes upgrade
+          apt-get install --yes make opam
+
+      - name: Setup OCaml Deps
+        shell: bash -exo pipefail {0}
+        run: |
+          opam init --bare --disable-sandboxing
+          opam switch create default-switch 5.2.0
+          echo 'eval $(opam env --switch=default-switch)' >> /root/.bashrc
+          opam install dune odoc ocamlformat
 
       # Check out repo
       - name: Check out repo
