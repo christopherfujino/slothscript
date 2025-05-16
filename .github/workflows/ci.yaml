@@ -40,4 +40,6 @@ jobs:
       - name: Run CI
         shell: bash -exo pipefail {0}
         working-directory: ./tool
-        run: make
+        run: |
+          echo $PATH
+          make
