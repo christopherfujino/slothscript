@@ -14,6 +14,10 @@ jobs:
       image: debian:trixie-20250428-slim
 
     steps:
+      - name: Install OS deps
+        shell: bash -exo pipefail {0}
+        run: apt-get update && apt-get upgrade && apt-get install make
+
       # Check out repo
       - name: Check out repo
         uses: actions/checkout@v4.2.2
