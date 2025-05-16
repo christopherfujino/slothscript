@@ -37,10 +37,11 @@ jobs:
           # https://stackoverflow.com/questions/72978485/git-submodule-update-failed-with-fatal-detected-dubious-ownership-in-repositor
           set-safe-directory: true
 
+      # TODO use //tool/ci.ml
       - name: Run CI
         shell: bash -exo pipefail {0}
-        working-directory: ./tool
         run: |
           eval $(opam env --switch=default-switch)
-          dune --version
-          make
+          make get
+          make build
+          make test
