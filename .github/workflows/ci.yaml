@@ -16,7 +16,7 @@ jobs:
     steps:
       - name: Install OS deps
         shell: bash -exo pipefail {0}
-        run: apt-get update && apt-get upgrade && apt-get install make
+        run: apt-get update && apt-get --yes upgrade && apt-get install --yes make
 
       # Check out repo
       - name: Check out repo
