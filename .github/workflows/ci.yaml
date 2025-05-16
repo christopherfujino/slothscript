@@ -27,7 +27,7 @@ jobs:
           opam init --bare --disable-sandboxing
           opam switch create default-switch 5.2.0
           echo 'eval $(opam env --switch=default-switch)' >> /root/.bashrc
-          opam install --yes dune odoc ocamlformat
+          opam install --yes dune ocamlformat
 
       # Check out repo
       - name: Check out repo
@@ -41,5 +41,6 @@ jobs:
         shell: bash -exo pipefail {0}
         working-directory: ./tool
         run: |
+          cat /root/.bashrc
           echo $PATH
           make
