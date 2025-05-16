@@ -6,19 +6,19 @@
 (generate_opam_files true)
 
 (source
- (github username/reponame))
+ (github christopherfujino/slothscript))
 
 (authors "Author Name")
 
 (maintainers "Maintainer Name")
 
-(license LICENSE)
+(license "BSD-3-Clause")
 
 (documentation https://url/to/documentation)
 
 (package
  (name sloth_script)
- (synopsis "A short synopsis")
+ (synopsis "A slow scripting language")
  (description "A longer description")
  (depends ocaml dune ounit2)
  (tags

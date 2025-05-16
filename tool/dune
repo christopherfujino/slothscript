@@ -1,0 +1,3 @@
+(executable
+ (name ci)
+ (libraries unix))
