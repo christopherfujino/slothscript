@@ -27,7 +27,7 @@ jobs:
           opam init --bare --disable-sandboxing
           opam switch create default-switch 5.2.0
           echo 'eval $(opam env --switch=default-switch)' >> /root/.bashrc
-          opam install dune odoc ocamlformat
+          opam install --yes dune odoc ocamlformat
 
       # Check out repo
       - name: Check out repo
