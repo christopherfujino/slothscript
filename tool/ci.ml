@@ -6,7 +6,12 @@ let run cmd =
   in
   let _, status = Unix.waitpid [] pid in
   match status with
-  | WEXITED code -> if code = 0 then () else failwith "Whoops!"
+  | WEXITED code -> if code = 0 then
+      ()
+    else
+      let cmd_str = List.fold_left (fun acc cur -> Printf.sprintf "%s, %s" acc cur) "" cmd in
+      let msg = Printf.sprintf "Invocation [%s] failed with code %d" cmd_str code in
+    failwith msg
   | WSIGNALED _ -> failwith "Subprocess failed with a signal"
   | WSTOPPED _ -> failwith "Subprocess stopped"
 

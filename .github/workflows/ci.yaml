@@ -19,7 +19,7 @@ jobs:
         run: |
           apt-get update
           apt-get --yes upgrade
-          apt-get install --yes make opam
+          apt-get install --yes make opam git
 
       - name: Setup OCaml Deps
         shell: bash -exo pipefail {0}
