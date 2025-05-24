@@ -30,6 +30,7 @@ jobs:
       #    echo 'eval $(opam env --switch=default-switch)' >> /root/.profile
       #    opam install --yes dune ocamlformat
       - name: Print debugging
+        shell: bash -exuo pipefail {0}
         run: |
           env
           whoami
