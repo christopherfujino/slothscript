@@ -29,6 +29,12 @@ jobs:
       #    opam switch create default-switch 5.2.0
       #    echo 'eval $(opam env --switch=default-switch)' >> /root/.profile
       #    opam install --yes dune ocamlformat
+      - name: Print debugging
+        run: |
+          env
+          whoami
+          pwd
+          ls -alh ..
 
       # Check out repo
       - name: Check out repo
