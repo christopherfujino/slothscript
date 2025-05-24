@@ -10,24 +10,25 @@ jobs:
     # This is the VM image
     runs-on: ubuntu-latest
     container:
-      # As of May 2025, this is testing (bookworm is stable)
-      image: debian:trixie-20250428-slim
+      # As of May 2025, debian 12 is stable
+      # As of May 2025, OCaml 5.3 is stable
+      image: ocaml/opam:debian-12-ocaml-5.3
 
     steps:
-      - name: Install OS deps
-        shell: bash -exo pipefail {0}
-        run: |
-          apt-get update
-          apt-get --yes upgrade
-          apt-get install --yes make opam git
+      #- name: Install OS deps
+      #  shell: bash -exo pipefail {0}
+      #  run: |
+      #    apt-get update
+      #    apt-get --yes upgrade
+      #    apt-get install --yes make opam git
 
-      - name: Setup OCaml Deps
-        shell: bash -exo pipefail {0}
-        run: |
-          opam init --bare --disable-sandboxing
-          opam switch create default-switch 5.2.0
-          echo 'eval $(opam env --switch=default-switch)' >> /root/.profile
-          opam install --yes dune ocamlformat
+      #- name: Setup OCaml Deps
+      #  shell: bash -exo pipefail {0}
+      #  run: |
+      #    opam init --bare --disable-sandboxing
+      #    opam switch create default-switch 5.2.0
+      #    echo 'eval $(opam env --switch=default-switch)' >> /root/.profile
+      #    opam install --yes dune ocamlformat
 
       # Check out repo
       - name: Check out repo
