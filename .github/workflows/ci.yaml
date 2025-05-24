@@ -37,9 +37,9 @@ jobs:
           echo "user:  $(id -u)"
           echo "group: $(id -g)"
           echo "PWD:   $PWD"
-          ls -alh ..
           sudo chown "$(id -u):$(id -g)" "$GITHUB_WORKSPACE"
           sudo chmod +w "$GITHUB_WORKSPACE"
+          ls -alh ..
 
       # Check out repo
       - name: Check out repo
