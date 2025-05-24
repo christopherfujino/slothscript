@@ -39,6 +39,7 @@ jobs:
           echo "PWD:   $PWD"
           sudo chown "$(id -u):$(id -g)" "$GITHUB_WORKSPACE"
           sudo chmod 777 "$GITHUB_WORKSPACE"
+          sudo chmod 777 "$RUNNER_TEMP"
           ls -alh ..
 
       # Check out repo
