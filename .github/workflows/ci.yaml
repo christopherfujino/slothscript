@@ -33,7 +33,9 @@ jobs:
         run: |
           env
           whoami
-          pwd
+          echo "user:  $(id -u)"
+          echo "group: $(id -g)"
+          echo "PWD:   $PWD"
           ls -alh ..
 
       # Check out repo
