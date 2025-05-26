@@ -41,6 +41,7 @@ jobs:
           sudo chmod -R 777 "$GITHUB_WORKSPACE"
           sudo chmod -R 777 "$RUNNER_TEMP"
           ls -alh ..
+          ls -alh .
 
       - name: Check out repo
         shell: bash -exuo pipefail {0}
