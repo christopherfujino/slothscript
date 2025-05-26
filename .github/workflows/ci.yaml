@@ -43,7 +43,7 @@ jobs:
 
       - name: Run CI
         shell: bash -exuo pipefail {0}
-        working-directory: ./slothscript/tool
+        working-directory: ./slothscript
         run: |
           eval $(opam env --switch=default-switch)
           pwd
