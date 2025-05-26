@@ -22,6 +22,13 @@ jobs:
       #    apt-get --yes upgrade
       #    apt-get install --yes make opam git
 
+      - name: Chmod dirs
+        shell: bash -exuo pipefail {0}
+        run: |
+          sudo chown "$(id -u):$(id -g)" "$GITHUB_WORKSPACE"
+          sudo chmod -R 777 "$GITHUB_WORKSPACE"
+          sudo chmod -R 777 "$RUNNER_TEMP"
+
       - name: Check out repo
         shell: bash -exuo pipefail {0}
         run: |
