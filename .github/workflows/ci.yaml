@@ -44,7 +44,7 @@ jobs:
       # TODO use //tool/ci.ml
       - name: Run CI
         shell: bash -exuo pipefail {0}
-        working-directory: "${GITHUB_WORKSPACE}/slothscript/slothscript"
+        working-directory: ./slothscript
         run: |
           eval $(opam env --switch=default-switch)
           make get
