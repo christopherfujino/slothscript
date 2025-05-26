@@ -66,6 +66,9 @@ jobs:
       - name: Run CI
         shell: bash -exuo pipefail {0}
         run: |
+          pwd
+          ls -alh .
+          ls -alh ..
           eval $(opam env --switch=default-switch)
           make get
           make build
