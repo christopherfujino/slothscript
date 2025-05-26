@@ -41,12 +41,7 @@ jobs:
           opam switch create default-switch 5.2.0
           opam install --yes dune ocamlformat
 
-      # TODO use //tool/ci.ml
       - name: Run CI
         shell: bash -exuo pipefail {0}
-        working-directory: ./slothscript
-        run: |
-          eval $(opam env --switch=default-switch)
-          make get
-          make build
-          make test
+        working-directory: ./slothscript/tool
+        run: dune exec tool/ci.exe
