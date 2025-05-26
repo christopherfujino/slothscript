@@ -46,9 +46,11 @@ jobs:
       - name: Check out repo
         uses: actions/checkout@v4.2.2
         with:
+          # https://github.com/actions/checkout/issues/1575#issuecomment-2283621510
+          clean: false
           #submodules: true
           # https://stackoverflow.com/questions/72978485/git-submodule-update-failed-with-fatal-detected-dubious-ownership-in-repositor
-          set-safe-directory: true
+          set-safe-directory: false
 
       # TODO use //tool/ci.ml
       - name: Run CI
