@@ -44,4 +44,6 @@ jobs:
       - name: Run CI
         shell: bash -exuo pipefail {0}
         working-directory: ./slothscript/tool
-        run: dune exec tool/ci.exe
+        run: |
+          eval $(opam env --switch=default-switch)
+          dune exec tool/ci.exe
