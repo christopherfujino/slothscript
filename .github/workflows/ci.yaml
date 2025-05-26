@@ -46,7 +46,7 @@ jobs:
       - name: Check out repo
         shell: bash -exuo pipefail {0}
         run: |
-          git clone "${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}" -b "${GITHUB_HEAD_REF}" "${RUNNER_WORKSPACE}"
+          git clone "${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}" -b "${GITHUB_HEAD_REF}"
       ## Check out repo
       #- name: Check out repo
       #  uses: actions/checkout@v4.2.2
