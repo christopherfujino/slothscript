@@ -66,6 +66,7 @@ jobs:
       - name: Run CI
         shell: bash -exuo pipefail {0}
         run: |
+          cd slothscript
           pwd
           ls -alh .
           ls -alh ..
