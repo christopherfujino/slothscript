@@ -46,6 +46,4 @@ jobs:
         working-directory: ./slothscript
         run: |
           eval $(opam env --switch=default-switch)
-          pwd
-          ls -alh
           dune exec tool/ci.exe
