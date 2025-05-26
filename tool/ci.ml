@@ -1,6 +1,6 @@
 let run cmd =
   let process = match cmd with hd :: _ -> hd | _ -> failwith "usage error!" in
-  Printf.printf "Executing %s\n" (List.fold_left (fun acc cur -> Printf.sprintf "%s, %s" acc cur) "" cmd);
+  Printf.printf "Executing%s\n%!" (List.fold_left (fun acc cur -> Printf.sprintf "%s %s" acc cur) "" cmd);
   let pid =
     Unix.create_process process (Array.of_list cmd) Unix.stdin Unix.stdout
       Unix.stderr
