@@ -1,3 +1,7 @@
+(* TODO
+   - Create stampfiles; e.g. hash *.opam file for make get, hash *.ml* for make build, make test
+*)
+
 let run cmd =
   let process = match cmd with hd :: _ -> hd | _ -> failwith "usage error!" in
   Printf.printf "Executing%s\n%!" (List.fold_left (fun acc cur -> Printf.sprintf "%s %s" acc cur) "" cmd);

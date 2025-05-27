@@ -27,3 +27,11 @@ get:
 .PHONY: list-errors
 list-errors:
 	menhir --list-errors lib/parser.mly
+
+.PHONY: ci
+ci:
+	dune exec tool/ci.exe
+
+.PHONY: todos
+todos:
+	grep -rnI TODO | fgrep -v ignorethisparticularline

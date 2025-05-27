@@ -9,6 +9,10 @@ type t =
   | Null
 (* TODO hashmap *)
 
+let num_of_val v = match v with
+  | Num f -> f
+  | _ -> failwith "Cast error!"
+
 let rec to_s = function
   | String s -> Printf.sprintf "\"%s\"" s
   (* TODO write a custom, better Float.to_string *)
