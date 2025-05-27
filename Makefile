@@ -31,3 +31,7 @@ list-errors:
 .PHONY: ci
 ci:
 	dune exec tool/ci.exe
+
+.PHONY: todos
+todos:
+	grep -rnI TODO | fgrep -v ignorethisparticularline
