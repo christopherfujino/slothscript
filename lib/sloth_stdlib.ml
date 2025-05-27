@@ -39,11 +39,11 @@ module Process = struct
     Unix.create_process cmd args Unix.stdin Unix.stdout Unix.stderr
 end
 
-(* TODO provide output sig *)
-module Make (T : sig
+module type StdlibSig = sig
   val oc : out_channel
-end) =
-struct
+end
+
+module Make (T : StdlibSig) = struct
   module InputOutput = struct
     let print_endline s =
       output_string T.oc s;
