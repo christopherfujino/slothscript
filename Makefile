@@ -16,9 +16,6 @@ utop: build
 	# opam install utop
 	dune utop lib/
 
-.PHONY: test
-test: 
-
 .PHONY: build
 build:
 	dune build

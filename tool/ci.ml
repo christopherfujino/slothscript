@@ -1,12 +1,22 @@
 let run cmd =
   let process = match cmd with hd :: _ -> hd | _ -> failwith "usage error!" in
+  Printf.printf "Executing%s\n%!" (List.fold_left (fun acc cur -> Printf.sprintf "%s %s" acc cur) "" cmd);
   let pid =
     Unix.create_process process (Array.of_list cmd) Unix.stdin Unix.stdout
       Unix.stderr
   in
   let _, status = Unix.waitpid [] pid in
   match status with
-  | WEXITED code -> if code = 0 then () else failwith "Whoops!"
+  | WEXITED code ->
+      if code = 0 then ()
+      else
+        let cmd_str =
+          List.fold_left (fun acc cur -> Printf.sprintf "%s, %s" acc cur) "" cmd
+        in
+        let msg =
+          Printf.sprintf "Invocation [%s] failed with code %d" cmd_str code
+        in
+        failwith msg
   | WSIGNALED _ -> failwith "Subprocess failed with a signal"
   | WSTOPPED _ -> failwith "Subprocess stopped"
 
@@ -17,4 +27,4 @@ let () =
   in
   run [ "make"; "-C"; root; "get" ];
   run [ "make"; "-C"; root; "build" ];
-  run [ "make"; "-C"; root; "test" ];
+  run [ "make"; "-C"; root; "test" ]

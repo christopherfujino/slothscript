@@ -1,0 +1,58 @@
+on:
+  - push
+
+jobs:
+  # Set the job key. The key is displayed as the job name when a job name is
+  # not provided
+  all:
+    # Name the job
+    name: Run full CI suite
+    # https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#choosing-github-hosted-runners
+    # This is the VM image
+    runs-on: ubuntu-latest
+    container:
+      # As of May 2025, debian 12 is stable
+      # As of May 2025, OCaml 5.3 is stable
+      image: ocaml/opam:debian-12-ocaml-5.3
+
+    steps:
+      #- name: Install OS deps
+      #  shell: bash -exo pipefail {0}
+      #  run: |
+      #    apt-get update
+      #    apt-get --yes upgrade
+      #    apt-get install --yes make opam git
+
+      - name: Chmod dirs
+        shell: bash -exuo pipefail {0}
+        run: |
+          sudo chown "$(id -u):$(id -g)" "$GITHUB_WORKSPACE"
+          sudo chmod -R 777 "$GITHUB_WORKSPACE"
+          sudo chmod -R 777 "$RUNNER_TEMP"
+
+      - name: Check out repo
+        shell: bash -exuo pipefail {0}
+        run: |
+          env
+          REF=$(echo "${GITHUB_REF}" | sed -n 's/refs\/heads\/\(.*\)/\1/p')
+          git clone "${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}" -b "${REF}"
+
+      - name: Setup switch
+        shell: bash -exuo pipefail {0}
+        run: |
+          opam init --bare --disable-sandboxing
+          opam switch create default-switch 5.2.0
+          opam install --yes dune ocamlformat
+
+      - name: Run CI
+        shell: bash -exuo pipefail {0}
+        working-directory: ./slothscript
+        run: |
+          eval $(opam env --switch=default-switch)
+          make get
+          make build
+          make test
+      # TODO
+      #  run: |
+      #    eval $(opam env --switch=default-switch)
+      #    dune exec tool/ci.exe
