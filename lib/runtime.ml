@@ -9,14 +9,13 @@ type t =
   | Null
 (* TODO hashmap *)
 
-let num_of_val v = match v with
-  | Num f -> f
-  | _ -> failwith "Cast error!"
+let num_of_val v = match v with Num f -> f | _ -> failwith "Cast error!"
 
 let rec to_s = function
   | String s -> Printf.sprintf "\"%s\"" s
-  (* TODO write a custom, better Float.to_string *)
-  | Num f -> Float.to_string f
+  | Num f ->
+      if Float.is_integer f then Int.of_float f |> Int.to_string
+      else Float.to_string f
   | Array l ->
       let is_first = ref true in
       let cb acc cur =

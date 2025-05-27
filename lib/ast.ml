@@ -6,7 +6,7 @@ let rec num_of_expr expr =
   match expr with
   | Num f -> f
   | _ ->
-      let msg = Printf.sprintf "Unreachable! %s" (expr_to_str expr) in
+      let msg = Printf.sprintf "Cast error! %s" (expr_to_str expr) in
       failwith msg
 
 and expr_to_str expr =

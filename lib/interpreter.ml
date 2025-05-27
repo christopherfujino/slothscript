@@ -1,16 +1,16 @@
 (* Context *)
 type t = { l : (module Sloth_stdlib.StdlibSig) }
 
-let make_ctx _ : t =
-  { l = (module Sloth_stdlib.Prod) }
+let make_prod_ctx () : t = { l = (module Sloth_stdlib.Prod) }
 
 let rec interpret_stmt ctx stmt =
   let open Ast in
   match stmt with
-  | LetStmt (_, _) -> failwith "Todo"
+  | LetStmt (_, _) -> (* TODO *) failwith "Todo"
   | ExprStmt expr ->
-      (* TODO print literal values *)
-      let _ = interpret_expr ctx expr in
+      let v = interpret_expr ctx expr in
+      let module L = (val ctx.l) in
+      L.InputOutput.print v;
       ()
 
 and interpret_expr ctx (expr : Ast.expr) =
