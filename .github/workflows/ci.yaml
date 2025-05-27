@@ -34,7 +34,8 @@ jobs:
         shell: bash -exuo pipefail {0}
         run: |
           env
-          git clone "${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}" -b "${GITHUB_HEAD_REF}"
+          REF=$(echo "${GITHUB_REF}" | sed -n 's/refs\/heads\/\(.*\)/\1/p')
+          git clone "${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}" -b "${REF}"
 
       - name: Setup switch
         shell: bash -exuo pipefail {0}
