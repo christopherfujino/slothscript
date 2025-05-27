@@ -44,7 +44,7 @@ jobs:
       - name: Run CI
         shell: bash -exuo pipefail {0}
         working-directory: ./slothscript
-        run:
+        run: |
           eval $(opam env --switch=default-switch)
           make get
           make build
