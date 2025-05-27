@@ -40,10 +40,17 @@ module Process = struct
 end
 
 module type StdlibSig = sig
+  module InputOutput : sig
+    val print_endline : string -> unit
+    val print : Runtime.t -> unit
+  end
+end
+
+module type StdlibInputSig = sig
   val oc : out_channel
 end
 
-module Make (T : StdlibSig) = struct
+module Make (T : StdlibInputSig) : StdlibSig = struct
   module InputOutput = struct
     let print_endline s =
       output_string T.oc s;
@@ -53,3 +60,11 @@ module Make (T : StdlibSig) = struct
     let print t = Runtime.to_s t |> print_endline
   end
 end
+
+module ProdInput : StdlibInputSig = struct
+  let oc = stdout
+end
+
+module Prod = Make (struct
+  let oc = stdout
+end)

@@ -1,7 +1,7 @@
 (* Context *)
-type t = { identifiers : unit }
+type t = { l : (module Sloth_stdlib.StdlibSig) }
 
-let make_ctx () : t = { identifiers = () }
+let make_ctx _ : t = { l = 1 }
 
 let rec interpret_stmt ctx stmt =
   let open Ast in
