@@ -33,6 +33,7 @@ jobs:
       - name: Check out repo
         shell: bash -exuo pipefail {0}
         run: |
+          env
           git clone "${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}" -b "${GITHUB_HEAD_REF}"
 
       - name: Setup switch
