@@ -1,5 +1,3 @@
-open Sloth_script
-
 let rec repl () =
   (* %! means flush *)
   Printf.printf "> %!";
@@ -9,8 +7,8 @@ let rec repl () =
       Printf.printf "\n";
       exit 0
   in
-  let stmt = Compiler.parse_line line in
-  Interpreter.interpret_stmt (Interpreter.make_prod_ctx ()) stmt;
+  let stmt = Compiler.Main.parse_line line in
+  Interpreter.Context.interpret_stmt (Interpreter.Context.make_prod_ctx ()) stmt;
   repl ()
 
 let rec interpret () =
@@ -20,8 +18,8 @@ let rec interpret () =
       Printf.printf "\n";
       exit 0
   in
-  let stmt = Compiler.parse_line line in
-  Interpreter.interpret_stmt (Interpreter.make_prod_ctx ()) stmt;
+  let stmt = Compiler.Main.parse_line line in
+  Interpreter.Context.interpret_stmt (Interpreter.Context.make_prod_ctx ()) stmt;
   interpret ()
 
 let () = if Unix.isatty Unix.stdin then repl () else interpret ()
