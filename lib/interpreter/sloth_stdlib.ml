@@ -61,10 +61,10 @@ module Prod = Make (struct
   let print_s = print_string
 end)
 
-module Test = struct
+module Make_test () = (struct
   let stdout_buffer : string list ref = ref []
 
   include Make (struct
     let print_s s = stdout_buffer := s :: !stdout_buffer
   end)
-end
+end)

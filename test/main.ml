@@ -28,7 +28,10 @@ let tests =
     let open Compiler in
     name >:: fun _ ->
     let stmt = Main.parse_line program in
-    let ctx = Interpreter.Context.make_ctx (module Interpreter.Sloth_stdlib.Test) in
+    let ctx =
+      Interpreter.Context.make_ctx
+        (module Interpreter.Sloth_stdlib.Make_test ())
+    in
     Interpreter.Context.interpret_stmt ctx stmt;
     ()
   in
