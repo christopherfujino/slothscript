@@ -8,9 +8,9 @@
 (source
  (github christopherfujino/slothscript))
 
-(authors "Author Name")
+(authors "Christopher Fujino")
 
-(maintainers "Maintainer Name")
+(maintainers "Christopher Fujino")
 
 (license "BSD-3-Clause")
 
