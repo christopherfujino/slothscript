@@ -3,12 +3,8 @@
 
 open Interpreter.Sloth_stdlib
 
-module ProdStdlib = Interpreter.Sloth_stdlib.Make (struct
-  let oc = stdout
-end)
-
 let main () =
-  let open ProdStdlib in
+  let open Interpreter.Sloth_stdlib.Prod in
   let open Interpreter.Runtime in
   let a = Array [ String "One"; Num 2.0 ] in
   InputOutput.print a;

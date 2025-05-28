@@ -8,7 +8,8 @@ let rec repl () =
       exit 0
   in
   let stmt = Compiler.Main.parse_line line in
-  Interpreter.Context.interpret_stmt (Interpreter.Context.make_prod_ctx ()) stmt;
+  let open Interpreter in
+  Context.interpret_stmt (Context.make_ctx (module Sloth_stdlib.Prod)) stmt;
   repl ()
 
 let rec interpret () =
@@ -19,7 +20,8 @@ let rec interpret () =
       exit 0
   in
   let stmt = Compiler.Main.parse_line line in
-  Interpreter.Context.interpret_stmt (Interpreter.Context.make_prod_ctx ()) stmt;
+  let open Interpreter in
+  Context.interpret_stmt (Context.make_ctx (module Sloth_stdlib.Prod)) stmt;
   interpret ()
 
 let () = if Unix.isatty Unix.stdin then repl () else interpret ()
