@@ -6,8 +6,8 @@ type t =
   | Array of t list
   (* TODO make this more efficient *)
   | Map of (string * t) list
+  (* TODO hashmap *)
   | Null
-(* TODO hashmap *)
 
 let num_of_val v = match v with Num f -> f | _ -> failwith "Cast error!"
 

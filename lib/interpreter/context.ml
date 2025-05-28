@@ -1,12 +1,14 @@
 (* Context *)
-type t = { l : (module Sloth_stdlib.StdlibSig) }
+type t = { l : (module Sloth_stdlib.StdlibSig); identifiers : Identifiers.t }
 
-let make_prod_ctx () : t = { l = (module Sloth_stdlib.Prod) }
+let make_ctx m = { l = m; identifiers = Identifiers.create () }
 
 let rec interpret_stmt ctx stmt =
   let open Compiler.Ast in
   match stmt with
-  | LetStmt (_, _) -> (* TODO *) failwith "Todo"
+  | LetStmt (id, e) ->
+      let v = interpret_expr ctx e in
+      Identifiers.set ctx.identifiers id v
   | ExprStmt expr ->
       let v = interpret_expr ctx expr in
       let module L = (val ctx.l) in

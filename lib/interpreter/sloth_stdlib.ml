@@ -41,30 +41,30 @@ end
 
 module type StdlibSig = sig
   module InputOutput : sig
-    val print_endline : string -> unit
+    val print_s : string -> unit
     val print : Runtime.t -> unit
   end
 end
 
 module type StdlibInputSig = sig
-  val oc : out_channel
+  val print_s : string -> unit
 end
 
 module Make (T : StdlibInputSig) : StdlibSig = struct
   module InputOutput = struct
-    let print_endline s =
-      output_string T.oc s;
-      output_char T.oc '\n';
-      flush T.oc
-
-    let print t = Runtime.to_s t |> print_endline
+    let print_s = T.print_s
+    let print t = Runtime.to_s t ^ "\n" |> print_s
   end
 end
 
-module ProdInput : StdlibInputSig = struct
-  let oc = stdout
-end
-
 module Prod = Make (struct
-  let oc = stdout
+  let print_s = print_string
+end)
+
+module Make_test () = (struct
+  let stdout_buffer : string list ref = ref []
+
+  include Make (struct
+    let print_s s = stdout_buffer := s :: !stdout_buffer
+  end)
 end)
