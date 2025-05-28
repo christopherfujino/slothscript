@@ -2,6 +2,8 @@
 
 a.out
 
+ignore/
+
 *.annot
 *.cmo
 *.cma
