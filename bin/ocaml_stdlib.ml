@@ -1,16 +1,15 @@
 (* To flesh out the semantics, this is a pure Ocaml program that directly
    calls the stdlib *)
 
-open Sloth_script
-open Sloth_script.Sloth_stdlib
+open Interpreter.Sloth_stdlib
 
-module ProdStdlib = Sloth_script.Sloth_stdlib.Make (struct
+module ProdStdlib = Interpreter.Sloth_stdlib.Make (struct
   let oc = stdout
 end)
 
 let main () =
   let open ProdStdlib in
-  let open Runtime in
+  let open Interpreter.Runtime in
   let a = Array [ String "One"; Num 2.0 ] in
   InputOutput.print a;
   let m = Map [ ("key", String "value") ] in

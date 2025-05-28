@@ -4,7 +4,7 @@ type t = { l : (module Sloth_stdlib.StdlibSig) }
 let make_prod_ctx () : t = { l = (module Sloth_stdlib.Prod) }
 
 let rec interpret_stmt ctx stmt =
-  let open Ast in
+  let open Compiler.Ast in
   match stmt with
   | LetStmt (_, _) -> (* TODO *) failwith "Todo"
   | ExprStmt expr ->
@@ -13,8 +13,8 @@ let rec interpret_stmt ctx stmt =
       L.InputOutput.print v;
       ()
 
-and interpret_expr ctx (expr : Ast.expr) =
-  let open Ast in
+and interpret_expr ctx (expr : Compiler.Ast.expr) =
+  let open Compiler.Ast in
   match expr with
   | Num f -> Runtime.Num f
   | Bool b -> Runtime.Bool b

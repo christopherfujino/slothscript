@@ -1,5 +1,4 @@
 open OUnit2
-open Sloth_script
 
 type test_spec = { name : string; program : string; ast : string }
 
@@ -12,8 +11,9 @@ let test_specs =
 
 let parser_tests =
   let make_test name program expectation =
+    let open Compiler in
     name >:: fun _ ->
-    let stmt = Compiler.parse_line program in
+    let stmt = Main.parse_line program in
     assert_equal ~printer:(fun s -> s) expectation (Ast.stmt_to_str stmt)
   in
   "parser"
