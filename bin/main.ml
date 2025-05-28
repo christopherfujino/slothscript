@@ -9,7 +9,7 @@ let rec repl () =
   in
   let stmt = Compiler.Main.parse_line line in
   let open Interpreter in
-  Context.interpret_stmt (Context.make_ctx (module Sloth_stdlib.Prod)) stmt;
+  Interpret.interpret_stmt (Context.make_ctx (module Sloth_stdlib.Prod)) stmt;
   repl ()
 
 let rec interpret () =
@@ -21,7 +21,7 @@ let rec interpret () =
   in
   let stmt = Compiler.Main.parse_line line in
   let open Interpreter in
-  Context.interpret_stmt (Context.make_ctx (module Sloth_stdlib.Prod)) stmt;
+  Interpret.interpret_stmt (Context.make_ctx (module Sloth_stdlib.Prod)) stmt;
   interpret ()
 
 let () = if Unix.isatty Unix.stdin then repl () else interpret ()

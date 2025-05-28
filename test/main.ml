@@ -32,7 +32,7 @@ let tests =
       Interpreter.Context.make_ctx
         (module Interpreter.Sloth_stdlib.Make_test ())
     in
-    Interpreter.Context.interpret_stmt ctx stmt;
+    Interpreter.Interpret.interpret_stmt ctx stmt;
     ()
   in
   "slothscript"
