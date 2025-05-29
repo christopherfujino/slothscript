@@ -9,6 +9,7 @@
 (* In OCaml, `float` is a 64-bit IEEE float *)
 %token <float> NUM
 %token <string> ID
+%token <string> STRING
 %token TRUE
 %token FALSE
 %token LEQ
@@ -50,6 +51,7 @@ expr:
   | f = NUM { Num f }
   | TRUE { Bool true }
   | FALSE { Bool false }
+  | s = STRING { String s }
   (*
   | e1 = expr; LEQ; e2 = expr { Binary (Leq, e1, e2) }
   | e1 = expr; TIMES; e2 = expr { Binary (Mult, e1, e2) }

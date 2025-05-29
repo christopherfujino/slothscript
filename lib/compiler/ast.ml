@@ -1,5 +1,11 @@
 type stmt = LetStmt of string * expr | ExprStmt of expr
-and expr = Num of float | Bool of bool | Binary of operator * expr * expr
+
+and expr =
+  | Num of float
+  | Bool of bool
+  | String of string
+  | Binary of operator * expr * expr
+
 and operator = Add
 
 let rec num_of_expr expr =
@@ -21,6 +27,7 @@ and expr_to_str expr =
       match op with
       | Add ->
           Printf.sprintf "(Add %s %s)" (expr_to_str left) (expr_to_str right))
+  | String s -> Printf.sprintf "(String \"%s\")" s
 
 and stmt_to_str stmt =
   match stmt with
