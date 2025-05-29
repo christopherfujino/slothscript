@@ -69,11 +69,13 @@ let tests =
     | None -> assert_equal ~printer spec.stdout_expect ""
     | Some s -> assert_equal ~printer spec.stdout_expect s
   in
-  "slothscript"
-  >::: [
-         "parser" >::: List.map (fun spec -> make_parser_test spec) test_specs;
-         "interpreter"
-         >::: List.map (fun spec -> make_interpreter_test spec) test_specs;
-       ]
+  let parser_tests =
+    "parser" >::: List.map (fun spec -> make_parser_test spec) test_specs
+  in
+  let interpreter_tests =
+    "interpreter"
+    >::: List.map (fun spec -> make_interpreter_test spec) test_specs
+  in
+  "slothscript" >::: [ parser_tests; interpreter_tests ]
 
 let () = run_test_tt_main tests
