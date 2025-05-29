@@ -12,46 +12,58 @@
 %token <string> STRING
 %token TRUE
 %token FALSE
-%token LEQ
-%token TIMES
 %token PLUS
-%token LPAREN
-%token RPAREN
 %token LET
 %token EQUALS
+%token EOF
+%token SEMICOLON
+(*
+%token LEQ
+%token TIMES
+%token LPAREN
+%token RPAREN
 %token IN
 %token IF
 %token THEN
 %token ELSE
-%token EOF
-%token SEMICOLON
+  *)
 
 (* Disambiguate precedence and associativity *)
 (* TODO figure this out *)
+%left PLUS
+(*
 %nonassoc IN
 %nonassoc ELSE
 %left LEQ
-%left PLUS
 %left TIMES
+*)
 
 (* Declare the starting point for parsing (root of AST) *)
-%start <Ast.stmt> prog
+%start <Ast.stmt list> prog
 
 %%
 
 prog:
+  | p = stmts; EOF { p }
+  ;
+
+stmts:
+  | tl = stmts; hd = stmt { hd :: tl }
+  | s = stmt { [s] }
+  ;
+
+stmt:
   | e1 = expr; SEMICOLON { ExprStmt e1 }
   | LET; x = ID; EQUALS; e1 = expr; SEMICOLON { LetStmt (x, e1) }
   ;
 
 expr:
   | e1 = expr; PLUS; e2 = expr { Binary (Add, e1, e2) }
-  (* upon an INT token, bind the contained Ocaml int val to i, and return AST
-     node `Int i` *)
   | f = NUM { Num f }
   | TRUE { Bool true }
   | FALSE { Bool false }
   | s = STRING { String s }
+  | i = ID { IdRef i }
   (*
   | e1 = expr; LEQ; e2 = expr { Binary (Leq, e1, e2) }
   | e1 = expr; TIMES; e2 = expr { Binary (Mult, e1, e2) }

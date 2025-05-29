@@ -5,6 +5,7 @@ and expr =
   | Bool of bool
   | String of string
   | Binary of operator * expr * expr
+  | IdRef of string
 
 and operator = Add
 
@@ -28,9 +29,23 @@ and expr_to_str expr =
       | Add ->
           Printf.sprintf "(Add %s %s)" (expr_to_str left) (expr_to_str right))
   | String s -> Printf.sprintf "(String \"%s\")" s
+  | IdRef i -> Printf.sprintf "(IdRef %s)" i
 
 and stmt_to_str stmt =
   match stmt with
   | LetStmt (name, expr) ->
-      Printf.sprintf "(LetStmt \"%s\" %s)" name (expr_to_str expr)
+      Printf.sprintf "(LetStmt %s %s)" name (expr_to_str expr)
   | ExprStmt expr -> Printf.sprintf "(ExprStmt %s)" (expr_to_str expr)
+
+and prog_to_str stmts =
+  let inner_string_opt =
+    List.fold_left
+      (fun acc cur ->
+        let cur_str = stmt_to_str cur in
+        Some
+          (match acc with
+          | None -> cur_str
+          | Some acc -> Printf.sprintf "%s %s" acc cur_str))
+      None stmts
+  in
+  Printf.sprintf "(Prog %s)" (Option.get inner_string_opt)

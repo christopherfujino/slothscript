@@ -1,7 +1,8 @@
 .PHONY: test
 test:
 	# A synonym for dune runtest
-	dune build @runtest --force
+	# OUNIT_CI=true makes output prettier
+	OUNIT_CI=true dune build @runtest --force
 
 .PHONY: stdlib_test
 stdlib_test:
@@ -26,7 +27,7 @@ get:
 
 .PHONY: list-errors
 list-errors:
-	menhir --list-errors lib/parser.mly
+	menhir --list-errors lib/compiler/parser.mly
 
 .PHONY: ci
 ci:
