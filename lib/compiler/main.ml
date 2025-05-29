@@ -1,4 +1,4 @@
-let parse_line line =
+let parse line =
   try Lexing.from_string line |> Parser.prog Lexer.read
   with Parser.Error i ->
     let msg = Printf.sprintf "Parser error (%d)" i in

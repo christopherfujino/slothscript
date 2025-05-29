@@ -36,3 +36,16 @@ and stmt_to_str stmt =
   | LetStmt (name, expr) ->
       Printf.sprintf "(LetStmt %s %s)" name (expr_to_str expr)
   | ExprStmt expr -> Printf.sprintf "(ExprStmt %s)" (expr_to_str expr)
+
+and prog_to_str stmts =
+  let inner_string_opt =
+    List.fold_left
+      (fun acc cur ->
+        let cur_str = stmt_to_str cur in
+        Some
+          (match acc with
+          | None -> cur_str
+          | Some acc -> Printf.sprintf "%s %s" acc cur_str))
+      None stmts
+  in
+  Printf.sprintf "(Prog %s)" (Option.get inner_string_opt)

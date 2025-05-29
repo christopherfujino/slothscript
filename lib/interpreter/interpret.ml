@@ -24,3 +24,8 @@ and interpret_expr ctx (expr : Compiler.Ast.expr) =
           Runtime.Num (left_val +. right_val))
   | IdRef i ->
       Identifiers.get ctx.identifiers i
+
+and interpret_prog ctx prog =
+  match prog with
+  | [] -> ()
+  | hd :: tl -> interpret_stmt ctx hd; interpret_prog ctx tl

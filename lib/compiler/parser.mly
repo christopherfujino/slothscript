@@ -35,11 +35,16 @@
 %left TIMES
 
 (* Declare the starting point for parsing (root of AST) *)
-%start <Ast.stmt> prog
+%start <Ast.stmt list> prog
 
 %%
 
 prog:
+  | s = stmt { [s] }
+  | p = prog ; s = stmt { s :: p }
+  ;
+
+stmt:
   | e1 = expr; SEMICOLON { ExprStmt e1 }
   | LET; x = ID; EQUALS; e1 = expr; SEMICOLON { LetStmt (x, e1) }
   ;

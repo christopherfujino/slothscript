@@ -13,9 +13,9 @@ let rec repl ctx_opt =
       Printf.printf "\n";
       exit 0
   in
-  let stmt = Compiler.Main.parse_line line in
+  let prog = Compiler.Main.parse line in
   let open Interpreter in
-  Interpret.interpret_stmt ctx stmt;
+  Interpret.interpret_prog ctx prog;
   (repl [@tailcall]) (Some ctx)
 
 let rec interpret () =
@@ -25,9 +25,9 @@ let rec interpret () =
       Printf.printf "\n";
       exit 0
   in
-  let stmt = Compiler.Main.parse_line line in
+  let prog = Compiler.Main.parse line in
   let open Interpreter in
-  Interpret.interpret_stmt (Context.make_ctx (module Sloth_stdlib.Prod)) stmt;
+  Interpret.interpret_prog (Context.make_ctx (module Sloth_stdlib.Prod)) prog;
   (interpret [@tailcall]) ()
 
 let () = if Unix.isatty Unix.stdin then repl None else interpret ()

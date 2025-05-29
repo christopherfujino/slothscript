@@ -26,7 +26,7 @@ get:
 
 .PHONY: list-errors
 list-errors:
-	menhir --list-errors lib/parser.mly
+	menhir --list-errors lib/compiler/parser.mly
 
 .PHONY: ci
 ci:

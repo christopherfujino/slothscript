@@ -52,16 +52,16 @@ let tests =
   let make_parser_test spec =
     let open Compiler in
     spec.name >:: fun _ ->
-    let stmt = Main.parse_line spec.program in
-    assert_equal ~printer spec.ast (Ast.stmt_to_str stmt)
+    let prog = Main.parse spec.program in
+    assert_equal ~printer spec.ast (Ast.prog_to_str prog)
   in
   let make_interpreter_test spec =
     let open Compiler in
     spec.name >:: fun _ ->
-    let stmt = Main.parse_line spec.program in
+    let stmt = Main.parse spec.program in
     let module Lib = Interpreter.Sloth_stdlib.Make_test () in
     let ctx = Interpreter.Context.make_ctx (module Lib) in
-    Interpreter.Interpret.interpret_stmt ctx stmt;
+    Interpreter.Interpret.interpret_prog ctx stmt;
     let catted_output_opt =
       List.fold_left
         (fun acc cur ->
