@@ -1,7 +1,3 @@
-(* TODO
-   - Create stampfiles; e.g. hash *.opam file for make get, hash *.ml* for make build, make test
-*)
-
 module Target = struct
   type t = {
     cmd : string list;

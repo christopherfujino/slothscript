@@ -34,7 +34,7 @@ ci:
 
 .PHONY: todos
 todos:
-	grep -rnI TODO | fgrep -v ignorethisparticularline
+	grep -rnI TODO | grep -v '^_build\/'| fgrep -v ignorethisparticularline
 
 .PHONY: clean
 clean:

@@ -2,9 +2,8 @@ type t =
   | String of string
   | Bool of bool
   | Num of float
-  (* TODO make this a custom dynamic array *)
   | Array of t list
-  (* TODO make this more efficient *)
+  (* TODO use dynamic array *)
   | Map of (string * t) list
   (* TODO hashmap *)
   | Null
