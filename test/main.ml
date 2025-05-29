@@ -42,8 +42,8 @@ let test_specs =
     {
       name = "var reference";
       program = "let x = 1 + 1;\nx;";
-      ast = "(Prog (ExprStmt (IdRef x)) (LetStmt x (Add (Num 1) (Num 1))))";
-      stdout_expect = "";
+      ast = "(Prog (LetStmt x (Add (Num 1) (Num 1))) (ExprStmt (IdRef x)))";
+      stdout_expect = "2\n";
     }
   ]
 
