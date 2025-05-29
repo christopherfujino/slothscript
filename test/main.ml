@@ -10,41 +10,47 @@ type test_spec = {
 let test_specs =
   [
     {
+      name = "empty program";
+      program = "";
+      ast = "()";
+      stdout_expect = "";
+    };
+    {
       name = "num literal";
       program = "11;";
-      ast = "(Prog (ExprStmt (Num 11)))";
+      ast = "((ExprStmt(Num 11)))";
       stdout_expect = "11\n";
     };
     {
       name = "string literal";
       program = "\"Hello\";";
-      ast = "(Prog (ExprStmt (String \"Hello\")))";
+      ast = "((ExprStmt(String Hello)))";
       stdout_expect = "\"Hello\"\n";
     };
     {
       name = "bool literal";
       program = "true;";
-      ast = "(Prog (ExprStmt (Bool true)))";
+      ast = "((ExprStmt(Bool true)))";
       stdout_expect = "true\n";
     };
     {
       name = "addition";
       program = "1 + 1;";
-      ast = "(Prog (ExprStmt (Add (Num 1) (Num 1))))";
+      ast = "((ExprStmt(Binary Add(Num 1)(Num 1))))";
       stdout_expect = "2\n";
     };
     {
       name = "assignment";
       program = "let x = 1 + 1;";
-      ast = "(Prog (LetStmt x (Add (Num 1) (Num 1))))";
+      ast = "((LetStmt x(Binary Add(Num 1)(Num 1))))";
       stdout_expect = "";
     };
     {
       name = "var reference";
       program = "let x = 1 + 1;\nx;";
-      ast = "(Prog (LetStmt x (Add (Num 1) (Num 1))) (ExprStmt (IdRef x)))";
+      ast = "((LetStmt x(Binary Add(Num 1)(Num 1)))(ExprStmt(IdRef x)))";
       stdout_expect = "2\n";
-    }
+    };
   ]
 
 let tests =

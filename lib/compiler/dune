@@ -1,5 +1,9 @@
 (library
-  (name compiler))
+  (name compiler)
+  (libraries core)
+  ; https://dune.readthedocs.io/en/latest/quick-start.html#building-a-hello-world-program-using-core-and-jane-street-ppxs
+  (preprocess (pps ppx_jane))
+)
 
 (menhir
   (modules parser)

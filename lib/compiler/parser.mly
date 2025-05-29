@@ -44,6 +44,7 @@
 %%
 
 prog:
+  | EOF { [] }
   | p = stmts; EOF { p }
   ;
 
