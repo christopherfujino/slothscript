@@ -16,6 +16,12 @@ let test_specs =
       stdout_expect = "11\n";
     };
     {
+      name = "string literal";
+      program = "\"Hello\";";
+      ast = "(ExprStmt (String ))";
+      stdout_expect = "Hello\n";
+    };
+    {
       name = "addition";
       program = "1 + 1;";
       ast = "(ExprStmt (Add (Num 1) (Num 1)))";
