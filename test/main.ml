@@ -18,8 +18,14 @@ let test_specs =
     {
       name = "string literal";
       program = "\"Hello\";";
-      ast = "(ExprStmt (String ))";
-      stdout_expect = "Hello\n";
+      ast = "(ExprStmt (String \"Hello\"))";
+      stdout_expect = "\"Hello\"\n";
+    };
+    {
+      name = "bool literal";
+      program = "true;";
+      ast = "(ExprStmt (Bool true))";
+      stdout_expect = "true\n";
     };
     {
       name = "addition";

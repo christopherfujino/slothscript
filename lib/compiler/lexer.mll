@@ -1,6 +1,8 @@
 (* header *)
 {
 open Parser
+
+exception SyntaxError of string
 }
 
 (* identifiers *)
@@ -15,23 +17,34 @@ rule read =
   parse
   (* means if `white` matches, call the read rule again and return its
      results--i.e. skip this match *)
-  | white { read lexbuf }
+  | white { (read [@tailcall]) lexbuf }
   | "true" { TRUE }
   | "false" { FALSE }
   | "<=" { LEQ }
-  | "*" { TIMES }
-  | "+" { PLUS }
-  | "(" { LPAREN }
-  | ")" { RPAREN }
+  | '*' { TIMES }
+  | '+' { PLUS }
+  | '(' { LPAREN }
+  | ')' { RPAREN }
   | "let" { LET }
-  | "=" { EQUALS }
+  | '=' { EQUALS }
   | "in" { IN }
   | "if" { IF }
   | "then" { THEN }
   | "else" { ELSE }
-  | ";" { SEMICOLON }
+  | ';' { SEMICOLON }
+  | '"' { read_string (Buffer.create 33) lexbuf }
   (* Lexing.lexeme means return the string that matched the pattern *)
   | id { ID (Lexing.lexeme lexbuf) }
   | num { NUM (float_of_string (Lexing.lexeme lexbuf)) }
+  | _ { raise (SyntaxError (Lexing.lexeme lexbuf))}
   (* Here `eof` is a special regex built into ocamllex *)
   | eof { EOF }
+
+and read_string buf =
+  (* TODO implement escapes *)
+  parse
+  | '"' { STRING (Buffer.contents buf) }
+  | [^ '"']+ {
+    let chunk = (Lexing.lexeme lexbuf) in
+    Buffer.add_string buf chunk;
+    read_string buf lexbuf }

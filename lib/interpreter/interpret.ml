@@ -14,6 +14,7 @@ and interpret_expr ctx (expr : Compiler.Ast.expr) =
   let open Compiler.Ast in
   match expr with
   | Num f -> Runtime.Num f
+  | String s -> Runtime.String s
   | Bool b -> Runtime.Bool b
   | Binary (op, lhs, rhs) -> (
       match op with
