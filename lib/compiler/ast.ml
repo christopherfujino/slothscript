@@ -1,4 +1,7 @@
-type stmt = LetStmt of string * expr | ExprStmt of expr
+open Core
+
+type prog = stmt list [@@deriving sexp]
+and stmt = LetStmt of string * expr | ExprStmt of expr [@@deriving sexp]
 
 and expr =
   | Num of float
@@ -6,46 +9,17 @@ and expr =
   | String of string
   | Binary of operator * expr * expr
   | IdRef of string
+[@@deriving sexp]
 
-and operator = Add
+and operator = Add [@@deriving sexp]
 
-let rec num_of_expr expr =
+let num_of_expr expr =
   match expr with
   | Num f -> f
   | _ ->
-      let msg = Printf.sprintf "Cast error! %s" (expr_to_str expr) in
+      let sexp = sexp_of_expr expr in
+      let s = Sexp.to_string sexp in
+      let msg = Printf.sprintf "Cast error! %s" s in
       failwith msg
 
-and expr_to_str expr =
-  let custom_string_of_float f =
-    if Float.is_integer f then Int.of_float f |> string_of_int
-    else string_of_float f
-  in
-  match expr with
-  | Num f -> Printf.sprintf "(Num %s)" (custom_string_of_float f)
-  | Bool b -> Printf.sprintf "(Bool %s)" (string_of_bool b)
-  | Binary (op, left, right) -> (
-      match op with
-      | Add ->
-          Printf.sprintf "(Add %s %s)" (expr_to_str left) (expr_to_str right))
-  | String s -> Printf.sprintf "(String \"%s\")" s
-  | IdRef i -> Printf.sprintf "(IdRef %s)" i
-
-and stmt_to_str stmt =
-  match stmt with
-  | LetStmt (name, expr) ->
-      Printf.sprintf "(LetStmt %s %s)" name (expr_to_str expr)
-  | ExprStmt expr -> Printf.sprintf "(ExprStmt %s)" (expr_to_str expr)
-
-and prog_to_str stmts =
-  let inner_string_opt =
-    List.fold_left
-      (fun acc cur ->
-        let cur_str = stmt_to_str cur in
-        Some
-          (match acc with
-          | None -> cur_str
-          | Some acc -> Printf.sprintf "%s %s" acc cur_str))
-      None stmts
-  in
-  Printf.sprintf "(Prog %s)" (Option.get inner_string_opt)
+let prog_to_str stmts = sexp_of_prog stmts |> Sexp.to_string
