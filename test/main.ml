@@ -39,6 +39,12 @@ let test_specs =
       ast = "(LetStmt \"x\" (Add (Num 1) (Num 1)))";
       stdout_expect = "";
     };
+    {
+      name = "var reference";
+      program = "let x = 1 + 1;\nx;";
+      ast = "";
+      stdout_expect = "";
+    }
   ]
 
 let tests =

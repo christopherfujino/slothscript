@@ -1,4 +1,10 @@
-let rec repl () =
+let rec repl ctx_opt =
+  let ctx =
+    match ctx_opt with
+    | None ->
+        Interpreter.Context.make_ctx (module Interpreter.Sloth_stdlib.Prod)
+    | Some c -> c
+  in
   (* %! means flush *)
   Printf.printf "> %!";
   let line =
@@ -9,8 +15,8 @@ let rec repl () =
   in
   let stmt = Compiler.Main.parse_line line in
   let open Interpreter in
-  Interpret.interpret_stmt (Context.make_ctx (module Sloth_stdlib.Prod)) stmt;
-  (repl [@tailcall]) ()
+  Interpret.interpret_stmt ctx stmt;
+  (repl [@tailcall]) (Some ctx)
 
 let rec interpret () =
   let line =
@@ -24,4 +30,4 @@ let rec interpret () =
   Interpret.interpret_stmt (Context.make_ctx (module Sloth_stdlib.Prod)) stmt;
   (interpret [@tailcall]) ()
 
-let () = if Unix.isatty Unix.stdin then repl () else interpret ()
+let () = if Unix.isatty Unix.stdin then repl None else interpret ()
