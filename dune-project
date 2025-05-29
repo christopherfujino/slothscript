@@ -20,7 +20,13 @@
  (name sloth_script)
  (synopsis "A slow scripting language")
  (description "A longer description")
- (depends ocaml dune ounit2)
+ (depends
+   ocaml
+   dune
+   ounit2
+   (core (and (>= v0.17.1) (< v0.18)))
+   (ppx_jane (and (>= v0.17) (< v0.18)))
+ )
  (tags
   (topics "to describe" your project)))
 
