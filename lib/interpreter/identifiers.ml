@@ -9,7 +9,7 @@ let set ids id v =
   | Some _ ->
       let msg = Printf.sprintf "cannot rebind name %s" id in
       failwith msg
-  | None -> Hashtbl.add tbl id v
+  | None -> Printf.printf "setting name %s\n" id; Hashtbl.add tbl id v
 
 let rec get_from_tables tbls id =
   match tbls with

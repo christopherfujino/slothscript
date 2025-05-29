@@ -20,19 +20,19 @@ rule read =
   | white { (read [@tailcall]) lexbuf }
   | "true" { TRUE }
   | "false" { FALSE }
-  | "<=" { LEQ }
-  | '*' { TIMES }
   | '+' { PLUS }
-  | '(' { LPAREN }
-  | ')' { RPAREN }
   | "let" { LET }
   | '=' { EQUALS }
+  | ';' { SEMICOLON }
+  | '"' { read_string (Buffer.create 33) lexbuf }
+  (*| "<=" { LEQ }
+  | '*' { TIMES }
+  | '(' { LPAREN }
+  | ')' { RPAREN }
   | "in" { IN }
   | "if" { IF }
   | "then" { THEN }
-  | "else" { ELSE }
-  | ';' { SEMICOLON }
-  | '"' { read_string (Buffer.create 33) lexbuf }
+  | "else" { ELSE } *)
   (* Lexing.lexeme means return the string that matched the pattern *)
   | id { ID (Lexing.lexeme lexbuf) }
   | num { NUM (float_of_string (Lexing.lexeme lexbuf)) }

@@ -12,27 +12,31 @@
 %token <string> STRING
 %token TRUE
 %token FALSE
-%token LEQ
-%token TIMES
 %token PLUS
-%token LPAREN
-%token RPAREN
 %token LET
 %token EQUALS
+%token EOF
+%token SEMICOLON
+(*
+%token LEQ
+%token TIMES
+%token LPAREN
+%token RPAREN
 %token IN
 %token IF
 %token THEN
 %token ELSE
-%token EOF
-%token SEMICOLON
+  *)
 
 (* Disambiguate precedence and associativity *)
 (* TODO figure this out *)
+%left PLUS
+(*
 %nonassoc IN
 %nonassoc ELSE
 %left LEQ
-%left PLUS
 %left TIMES
+*)
 
 (* Declare the starting point for parsing (root of AST) *)
 %start <Ast.stmt list> prog
@@ -40,8 +44,12 @@
 %%
 
 prog:
+  | p = stmts; EOF { p }
+  ;
+
+stmts:
+  | tl = stmts; hd = stmt { hd :: tl }
   | s = stmt { [s] }
-  | p = prog ; s = stmt { s :: p }
   ;
 
 stmt:
