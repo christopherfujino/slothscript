@@ -46,12 +46,11 @@ prog:
 
 expr:
   | e1 = expr; PLUS; e2 = expr { Binary (Add, e1, e2) }
-  (* upon an INT token, bind the contained Ocaml int val to i, and return AST
-     node `Int i` *)
   | f = NUM { Num f }
   | TRUE { Bool true }
   | FALSE { Bool false }
   | s = STRING { String s }
+  | i = ID { IdRef i }
   (*
   | e1 = expr; LEQ; e2 = expr { Binary (Leq, e1, e2) }
   | e1 = expr; TIMES; e2 = expr { Binary (Mult, e1, e2) }

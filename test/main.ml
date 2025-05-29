@@ -36,7 +36,7 @@ let test_specs =
     {
       name = "assignment";
       program = "let x = 1 + 1;";
-      ast = "(LetStmt \"x\" (Add (Num 1) (Num 1)))";
+      ast = "(LetStmt x (Add (Num 1) (Num 1)))";
       stdout_expect = "";
     };
     {

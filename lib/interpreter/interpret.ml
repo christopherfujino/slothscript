@@ -22,3 +22,5 @@ and interpret_expr ctx (expr : Compiler.Ast.expr) =
           let left_val = Runtime.num_of_val (interpret_expr ctx lhs) in
           let right_val = Runtime.num_of_val (interpret_expr ctx rhs) in
           Runtime.Num (left_val +. right_val))
+  | IdRef i ->
+      Identifiers.get ctx.identifiers i
