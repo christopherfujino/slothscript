@@ -17,11 +17,14 @@
 %token EQUALS
 %token EOF
 %token SEMICOLON
+%token FUNC
+%token LCURLY
+%token RCURLY
+%token LPAREN
+%token RPAREN
 (*
 %token LEQ
 %token TIMES
-%token LPAREN
-%token RPAREN
 %token IN
 %token IF
 %token THEN
@@ -55,7 +58,8 @@ stmts:
 
 stmt:
   | e1 = expr; SEMICOLON { ExprStmt e1 }
-  | LET; x = ID; EQUALS; e1 = expr; SEMICOLON { LetStmt (x, e1) }
+  | LET; id = ID; EQUALS; e1 = expr; SEMICOLON { LetStmt (id, e1) }
+  | FUNC; i = ID; p = parameter_list ; b = block { FuncStmt {name = i; parameters = p; block = b;} }
   ;
 
 expr:
@@ -73,3 +77,12 @@ expr:
   | LPAREN; e=expr; RPAREN {e}
   *)
   ;
+
+block:
+  | LCURLY; RCURLY { [] }
+  | LCURLY; s = stmts; RCURLY { s }
+
+parameter_list:
+  (* TODO: make parameters different from just strings, to support type
+     annotations *)
+  | LPAREN; RPAREN { [] }

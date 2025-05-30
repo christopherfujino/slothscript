@@ -20,15 +20,18 @@ rule read =
   | white { (read [@tailcall]) lexbuf }
   | "true" { TRUE }
   | "false" { FALSE }
-  | '+' { PLUS }
   | "let" { LET }
+  | "func" { FUNC }
+  | '+' { PLUS }
   | '=' { EQUALS }
   | ';' { SEMICOLON }
   | '"' { read_string (Buffer.create 33) lexbuf }
-  (*| "<=" { LEQ }
-  | '*' { TIMES }
+  | '{' { LCURLY }
+  | '}' { RCURLY }
   | '(' { LPAREN }
   | ')' { RPAREN }
+  (*| "<=" { LEQ }
+  | '*' { TIMES }
   | "in" { IN }
   | "if" { IF }
   | "then" { THEN }

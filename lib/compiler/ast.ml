@@ -1,7 +1,18 @@
 open Core
 
-type prog = stmt list [@@deriving sexp]
-and stmt = LetStmt of string * expr | ExprStmt of expr [@@deriving sexp]
+type func_stmt_t = {
+  name : string;
+  parameters : string list;
+  block : stmt list;
+}
+
+and prog = stmt list [@@deriving sexp]
+
+and stmt =
+  | LetStmt of string * expr
+  | ExprStmt of expr
+  | FuncStmt of func_stmt_t
+[@@deriving sexp]
 
 and expr =
   | Num of float

@@ -1,3 +1,9 @@
+type function_t = {
+  parameters : string list;
+  (* TODO make this an IR block *)
+  block : Compiler.Ast.stmt list;
+}
+
 type t =
   | String of string
   | Bool of bool

@@ -51,6 +51,12 @@ let test_specs =
       ast = "((LetStmt x(Binary Add(Num 1)(Num 1)))(ExprStmt(IdRef x)))";
       stdout_expect = "2\n";
     };
+    {
+      name = "func definition";
+      program = "func m() {23+19;}";
+      ast = "((FuncStmt((name m)(parameters())(block((ExprStmt(Binary Add(Num 23)(Num 19))))))))";
+      stdout_expect = "";
+    };
   ]
 
 let tests =
