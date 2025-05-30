@@ -10,3 +10,10 @@ let set funcs id f =
       Printf.sprintf "A function named \"%s\" has already been defined" id
       |> failwith
   | None -> Hashtbl.add funcs id f
+
+let get funcs id =
+  let func_opt = Hashtbl.find_opt funcs id in
+  match func_opt with
+  | None ->
+      Printf.sprintf "Could not find a function named \"%s\"!" id |> failwith
+  | Some f -> f

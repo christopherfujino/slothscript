@@ -68,6 +68,7 @@ expr:
   | TRUE { Bool true }
   | FALSE { Bool false }
   | s = STRING { String s }
+  | i = ID; a = argument_list { FuncInvoc (i, a) }
   | i = ID { IdRef i }
   (*
   | e1 = expr; LEQ; e2 = expr { Binary (Leq, e1, e2) }
@@ -82,7 +83,12 @@ block:
   | LCURLY; RCURLY { [] }
   | LCURLY; s = stmts; RCURLY { s }
 
+argument_list:
+  (* TODO: support actual args *)
+  | LPAREN; RPAREN { [] }
+
 parameter_list:
+  (* TODO: support actual params *)
   (* TODO: make parameters different from just strings, to support type
      annotations *)
   | LPAREN; RPAREN { [] }

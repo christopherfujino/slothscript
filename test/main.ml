@@ -57,6 +57,12 @@ let test_specs =
       ast = "((FuncStmt((name m)(parameters())(block((ExprStmt(Binary Add(Num 23)(Num 19))))))))";
       stdout_expect = "";
     };
+    {
+      name = "func invocation";
+      program = "func m() {23+19;}m()";
+      ast = "((FuncStmt((name m)(parameters())(block((ExprStmt(Binary Add(Num 23)(Num 19))))))))";
+      stdout_expect = "";
+    };
   ]
 
 let tests =

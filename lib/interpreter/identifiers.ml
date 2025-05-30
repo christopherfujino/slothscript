@@ -1,9 +1,11 @@
-type t = (string, Runtime.t) Hashtbl.t list
+let init_size = 8
 
-let create () = [ Hashtbl.create 8 ]
+type t = (string, Runtime.t) Hashtbl.t list ref
+
+let create () = ref [ Hashtbl.create init_size ]
 
 let set ids id v =
-  let tbl = List.hd ids in
+  let tbl = List.hd !ids in
   let maybe_val = Hashtbl.find_opt tbl id in
   match maybe_val with
   | Some _ ->
@@ -19,4 +21,10 @@ let rec get_from_tables tbls id =
       | Some v -> v
       | None -> (get_from_tables [@tailrec]) tl id)
 
-let get ids id = get_from_tables ids id
+let get ids id = get_from_tables !ids id
+let push t' = t' := Hashtbl.create init_size :: !t'
+
+let pop t' =
+  match !t' with
+  | _ :: tl -> t' := tl
+  | [] -> failwith "can't pop an empty stack!"
