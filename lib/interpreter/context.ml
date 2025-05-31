@@ -5,8 +5,9 @@ type t = {
   functions : Functions.t;
 }
 
-let make_ctx m = {
-  l = m;
-  identifiers = Identifiers.create ();
-  functions = Functions.create ();
-}
+let make_ctx m =
+  {
+    l = m;
+    identifiers = [ Identifiers.create () ];
+    functions = Functions.create ();
+  }
