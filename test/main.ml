@@ -59,9 +59,9 @@ let test_specs =
     };
     {
       name = "func invocation";
-      program = "func m() {23+19;}m()";
-      ast = "((FuncStmt((name m)(parameters())(block((ExprStmt(Binary Add(Num 23)(Num 19))))))))";
-      stdout_expect = "";
+      program = "func m() {23+19;}m();";
+      ast = "((FuncStmt((name m)(parameters())(block((ExprStmt(Binary Add(Num 23)(Num 19)))))))(ExprStmt(FuncInvoc m())))";
+      stdout_expect = "42\n\n42\n";
     };
   ]
 

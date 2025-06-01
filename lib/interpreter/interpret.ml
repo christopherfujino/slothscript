@@ -5,13 +5,18 @@ let rec interpret_stmt (ctx : Context.t) stmt =
   match stmt with
   | LetStmt (id, e) ->
       let v = interpret_expr ctx e in
-      Identifiers.set ctx.identifiers id v
+      Identifiers.set ctx.identifiers id v;
+      v
   | ExprStmt expr ->
       let v = interpret_expr ctx expr in
       let module L = (val ctx.l) in
-      L.InputOutput.print v
+      (* TODO don't do this *)
+      L.InputOutput.print v;
+      v
   | FuncStmt { name; parameters; block } ->
-      Functions.set ctx.functions name { parameters; block }
+      (* TODO ensure this is at top-level *)
+      Functions.set ctx.functions name { parameters; block };
+      Runtime.Null
 
 and interpret_expr ctx (expr : Compiler.Ast.expr) =
   let open Compiler.Ast in
@@ -44,20 +49,18 @@ and interpret_expr ctx (expr : Compiler.Ast.expr) =
 
       let rec traverse stmts =
         match stmts with
-        | [] -> ()
-        | stmt :: stmts -> begin
-          interpret_stmt temp_ctx stmt;
-          if List.is_empty stmts then
-        end
+        | [] -> Runtime.Null
+        | stmt :: stmts ->
+            let return_val = interpret_stmt temp_ctx stmt in
+            if List.is_empty stmts then return_val
+            else (traverse [@tailrec]) stmts
       in
-      traverse f.parameters args;
-      (* TODO invoke the func *)
-      List.iter f.block ~f:(interpret_stmt temp_ctx)
+      traverse f.block
 
 and interpret_prog ctx prog =
   (* TODO we need to reverse program! *)
   match prog with
   | [] -> ()
   | hd :: tl ->
-      interpret_stmt ctx hd;
+      let _ = interpret_stmt ctx hd in
       interpret_prog ctx tl
