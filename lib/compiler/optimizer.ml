@@ -34,9 +34,9 @@ and optimize_stmt stmts : stmt =
       let e = optimize_expr expr in
       ExprStmt e
   | FuncStmt { name; parameters; block } ->
-      let rev_block = List.rev block in
-      let new_block = List.map rev_block ~f:optimize_stmt in
-      FuncStmt { name; parameters; block = new_block }
+      let parameters = List.rev parameters in
+      let block = List.rev block |> List.map ~f:optimize_stmt in
+      FuncStmt { name; parameters; block }
 
 and optimize_operator (o : Ast.operator) : operator = match o with Add -> Add
 
