@@ -33,5 +33,3 @@ let num_of_expr expr =
       let s = Sexp.to_string sexp in
       let msg = Printf.sprintf "Cast error! %s" s in
       failwith msg
-
-let prog_to_str stmts = sexp_of_prog stmts |> Sexp.to_string

@@ -9,35 +9,30 @@ type test_spec = {
 
 let test_specs =
   [
-    {
-      name = "empty program";
-      program = "";
-      ast = "()";
-      stdout_expect = "";
-    };
+    { name = "empty program"; program = ""; ast = "()"; stdout_expect = "" };
     {
       name = "num literal";
       program = "11;";
       ast = "((ExprStmt(Num 11)))";
-      stdout_expect = "11\n";
+      stdout_expect = "";
     };
     {
       name = "string literal";
       program = "\"Hello\";";
       ast = "((ExprStmt(String Hello)))";
-      stdout_expect = "\"Hello\"\n";
+      stdout_expect = "";
     };
     {
       name = "bool literal";
       program = "true;";
       ast = "((ExprStmt(Bool true)))";
-      stdout_expect = "true\n";
+      stdout_expect = "";
     };
     {
       name = "addition";
       program = "1 + 1;";
       ast = "((ExprStmt(Binary Add(Num 1)(Num 1))))";
-      stdout_expect = "2\n";
+      stdout_expect = "";
     };
     {
       name = "assignment";
@@ -49,29 +44,54 @@ let test_specs =
       name = "var reference";
       program = "let x = 1 + 1;\nx;";
       ast = "((LetStmt x(Binary Add(Num 1)(Num 1)))(ExprStmt(IdRef x)))";
-      stdout_expect = "2\n";
+      stdout_expect = "";
     };
     {
       name = "func definition";
       program = "func m() {23+19;}";
-      ast = "((FuncStmt((name m)(parameters())(block((ExprStmt(Binary Add(Num 23)(Num 19))))))))";
+      ast =
+        "((FuncStmt(name m)(parameters())(block((ExprStmt(Binary Add(Num \
+         23)(Num 19)))))))";
       stdout_expect = "";
     };
     {
       name = "func invocation";
-      program = "func m() {23+19;}m();";
-      ast = "((FuncStmt((name m)(parameters())(block((ExprStmt(Binary Add(Num 23)(Num 19)))))))(ExprStmt(FuncInvoc m())))";
-      stdout_expect = "42\n\n42\n";
+      program = "func m() {1;2;3;}m();";
+      ast =
+        "((FuncStmt(name m)(parameters())(block((ExprStmt(Num 1))(ExprStmt(Num \
+         2))(ExprStmt(Num 3)))))(ExprStmt(FuncInvoc m())))";
+      stdout_expect = "";
     };
   ]
 
+let rec indent buf n =
+  if n = 0 then Buffer.contents buf
+  else (
+    Buffer.add_char buf ' ';
+    (indent [@tailrec]) buf (n - 1))
+
 let tests =
-  let printer s = Printf.sprintf "\"%s\"" s in
   let make_parser_test spec =
     let open Compiler in
     spec.name >:: fun _ ->
     let prog = Main.parse spec.program in
-    assert_equal ~printer spec.ast (Ast.prog_to_str prog)
+    let f formatter left_right_tuple =
+      let left, right = left_right_tuple in
+      let rec diff_finder i left' right' =
+        try
+          let lchar = String.get left' i in
+          let rchar = String.get right' i in
+          if lchar != rchar then i
+          else (diff_finder [@tailrec]) (i + 1) left' right'
+          (* Catch index out of bounds *)
+        with Invalid_argument _ -> i
+      in
+      let i = diff_finder 0 left right in
+      Format.fprintf formatter "First diff at %d\n\n%s\n%s^" i right
+        (indent (Buffer.create i) i)
+    in
+    assert_equal ~pp_diff:f ~printer:Fun.id spec.ast
+      (Optimizer.prog_to_str prog)
   in
   let make_interpreter_test spec =
     let open Compiler in
@@ -90,8 +110,8 @@ let tests =
         None !Lib.stdout_buffer
     in
     match catted_output_opt with
-    | None -> assert_equal ~printer spec.stdout_expect ""
-    | Some s -> assert_equal ~printer spec.stdout_expect s
+    | None -> assert_equal ~printer:Fun.id spec.stdout_expect ""
+    | Some s -> assert_equal ~printer:Fun.id spec.stdout_expect s
   in
   let parser_tests =
     "parser" >::: List.map (fun spec -> make_parser_test spec) test_specs

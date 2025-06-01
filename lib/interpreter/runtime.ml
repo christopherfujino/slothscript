@@ -1,7 +1,6 @@
 type function_t = {
   parameters : string list;
-  (* TODO make this an IR block *)
-  block : Compiler.Ast.stmt list;
+  block : Compiler.Optimizer.stmt list;
 }
 
 type t =

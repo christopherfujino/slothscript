@@ -1,25 +1,20 @@
 open Core
 
 let rec interpret_stmt (ctx : Context.t) stmt =
-  let open Compiler.Ast in
+  let open Compiler.Optimizer in
   match stmt with
   | LetStmt (id, e) ->
       let v = interpret_expr ctx e in
       Identifiers.set ctx.identifiers id v;
       v
-  | ExprStmt expr ->
-      let v = interpret_expr ctx expr in
-      let module L = (val ctx.l) in
-      (* TODO don't do this *)
-      L.InputOutput.print v;
-      v
+  | ExprStmt expr -> interpret_expr ctx expr
   | FuncStmt { name; parameters; block } ->
       (* TODO ensure this is at top-level *)
       Functions.set ctx.functions name { parameters; block };
       Runtime.Null
 
-and interpret_expr ctx (expr : Compiler.Ast.expr) =
-  let open Compiler.Ast in
+and interpret_expr ctx expr =
+  let open Compiler.Optimizer in
   match expr with
   | Num f -> Runtime.Num f
   | String s -> Runtime.String s
