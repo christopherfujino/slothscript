@@ -30,6 +30,7 @@ rule read =
   | '}' { RCURLY }
   | '(' { LPAREN }
   | ')' { RPAREN }
+  | ',' { COMMA }
   (*| "<=" { LEQ }
   | '*' { TIMES }
   | "in" { IN }

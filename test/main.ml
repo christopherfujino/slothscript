@@ -17,10 +17,22 @@ let test_specs =
       stdout_expect = "";
     };
     {
+      name = "print num";
+      program = "print(11);";
+      ast = "((ExprStmt(FuncInvoc print((Num 11)))))";
+      stdout_expect = "11\n";
+    };
+    {
       name = "string literal";
       program = "\"Hello\";";
       ast = "((ExprStmt(String Hello)))";
       stdout_expect = "";
+    };
+    {
+      name = "print string";
+      program = "print(\"Hello\");";
+      ast = "((ExprStmt(FuncInvoc print((String Hello)))))";
+      stdout_expect = "Hello\n";
     };
     {
       name = "bool literal";
@@ -71,6 +83,7 @@ let rec indent buf n =
     (indent [@tailrec]) buf (n - 1))
 
 let tests =
+  let printer s = Printf.sprintf "\"%s\"" s in
   let make_parser_test spec =
     let open Compiler in
     spec.name >:: fun _ ->
@@ -87,10 +100,14 @@ let tests =
         with Invalid_argument _ -> i
       in
       let i = diff_finder 0 left right in
-      Format.fprintf formatter "First diff at %d\n\n%s\n%s^" i right
+      let right_len = String.length right in
+      (* TODO write a recursive word boundary finder *)
+      let trunc_len = min (i + 6) right_len in
+      let right_trunc = String.sub right 0 trunc_len in
+      Format.fprintf formatter "First diff at %d\n\n%s\n%s^" i right_trunc
         (indent (Buffer.create i) i)
     in
-    assert_equal ~pp_diff:f ~printer:Fun.id spec.ast
+    assert_equal ~pp_diff:f ~printer spec.ast
       (Optimizer.prog_to_str prog)
   in
   let make_interpreter_test spec =
@@ -110,8 +127,8 @@ let tests =
         None !Lib.stdout_buffer
     in
     match catted_output_opt with
-    | None -> assert_equal ~printer:Fun.id spec.stdout_expect ""
-    | Some s -> assert_equal ~printer:Fun.id spec.stdout_expect s
+    | None -> assert_equal ~printer spec.stdout_expect ""
+    | Some s -> assert_equal ~printer spec.stdout_expect s
   in
   let parser_tests =
     "parser" >::: List.map (fun spec -> make_parser_test spec) test_specs

@@ -14,11 +14,7 @@ and stmt =
   | FuncStmt of { name : string; parameters : string list; block : stmt list }
 
 val optimize_stmts : Ast.stmt list -> stmt list
-
 val optimize_stmt : Ast.stmt -> stmt
-
 val optimize_expr : Ast.expr -> expr
-
 val optimize_operator : Ast.operator -> operator
-
 val prog_to_str : stmt list -> string

@@ -22,6 +22,7 @@
 %token RCURLY
 %token LPAREN
 %token RPAREN
+%token COMMA
 (*
 %token LEQ
 %token TIMES
@@ -68,7 +69,8 @@ expr:
   | TRUE { Bool true }
   | FALSE { Bool false }
   | s = STRING { String s }
-  | i = ID; a = argument_list { FuncInvoc (i, a) }
+  | i = ID; LPAREN; a = argument_list; RPAREN { FuncInvoc (i, a) }
+  | i = ID; LPAREN; RPAREN { FuncInvoc (i, []) }
   | i = ID { IdRef i }
   (*
   | e1 = expr; LEQ; e2 = expr { Binary (Leq, e1, e2) }
@@ -85,7 +87,8 @@ block:
 
 argument_list:
   (* TODO: support actual args *)
-  | LPAREN; RPAREN { [] }
+  | e = expr { [e] }
+  | tl = argument_list; COMMA; e = expr { e :: tl }
 
 parameter_list:
   (* TODO: support actual params *)
