@@ -1,5 +1,4 @@
 type frame = (string, Runtime.t) Hashtbl.t
-
 type t = frame list
 
 let create () = Hashtbl.create 8
@@ -30,6 +29,4 @@ let get ids id =
 let push_new_frame t' = create () :: t'
 
 let pop t' =
-  match t' with
-  | [] -> failwith "can't pop an empty stack!"
-  | _ :: tl -> tl
+  match t' with [] -> failwith "can't pop an empty stack!" | _ :: tl -> tl

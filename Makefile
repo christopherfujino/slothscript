@@ -37,6 +37,14 @@ ci:
 todos:
 	grep -rnI TODO | grep -v '^_build\/'| fgrep -v ignorethisparticularline
 
+.PHONY: format
+format:
+	dune fmt
+
+.PHONY: check-format
+check-format:
+	! test -n "$(dune fmt --preview)"
+
 .PHONY: clean
 clean:
 	dune clean

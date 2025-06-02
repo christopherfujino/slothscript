@@ -95,4 +95,5 @@ let () =
   create "get" (Some "cat sloth_script.opam dune-project | sha256sum")
   |> Target.run;
   create "build" None |> Target.run;
+  create "check-format" None |> Target.run;
   create "test" None |> Target.run

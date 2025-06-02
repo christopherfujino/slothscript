@@ -55,7 +55,9 @@ let test_specs =
     {
       name = "var reference";
       program = "let x = 1 + 1;\nprint(x);";
-      ast = "((LetStmt x(Binary Add(Num 1)(Num 1)))(ExprStmt(FuncInvoc print((IdRef x)))))";
+      ast =
+        "((LetStmt x(Binary Add(Num 1)(Num 1)))(ExprStmt(FuncInvoc \
+         print((IdRef x)))))";
       stdout_expect = "2\n";
     };
     {

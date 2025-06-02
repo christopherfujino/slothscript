@@ -1,15 +1,14 @@
 (library
-  (name compiler)
-  (libraries core)
-  ; https://dune.readthedocs.io/en/latest/quick-start.html#building-a-hello-world-program-using-core-and-jane-street-ppxs
-  (preprocess (pps ppx_jane))
-)
+ (name compiler)
+ (libraries core)
+ ; https://dune.readthedocs.io/en/latest/quick-start.html#building-a-hello-world-program-using-core-and-jane-street-ppxs
+ (preprocess
+  (pps ppx_jane)))
 
 (menhir
-  (modules parser)
-  ; https://gallium.inria.fr/~fpottier/menhir/manual.html#sec63
-  ; exn-carries-state -> Parser.Error of int
-  (flags --exn-carries-state)
-)
+ (modules parser)
+ ; https://gallium.inria.fr/~fpottier/menhir/manual.html#sec63
+ ; exn-carries-state -> Parser.Error of int
+ (flags --exn-carries-state))
 
 (ocamllex lexer)
