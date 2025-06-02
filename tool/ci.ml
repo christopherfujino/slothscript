@@ -95,17 +95,13 @@ module Target = struct
                 None cmd
             in
             let cmd_str = Option.get cmd_str_opt in
-            Error
-              [
-                Printf.sprintf "`%s` failed with code %d" cmd_str
-                  code;
-              ]
+            Error [ Printf.sprintf "`%s` failed with code %d" cmd_str code ]
       | WSIGNALED _ -> Error [ "Subprocess failed with a signal" ]
       | WSTOPPED _ -> Error [ "Subprocess stopped" ])
 end
 
 let () =
-  let (let*) = Target.bind in
+  let ( let* ) = Target.bind in
   let root =
     Unix.open_process_in "git rev-parse --show-toplevel"
     |> In_channel.input_all |> String.trim
@@ -113,8 +109,10 @@ let () =
   let create = Target.create root in
   let res =
     let* () = create "yolos" None |> Target.run in
-    let* () = create "get" (Some "cat sloth_script.opam dune-project | sha256sum")
-    |> Target.run in
+    let* () =
+      create "get" (Some "cat sloth_script.opam dune-project | sha256sum")
+      |> Target.run
+    in
     let* () = create "build" None |> Target.run in
     let* () = create "check-format" None |> Target.run in
     create "test" None |> Target.run

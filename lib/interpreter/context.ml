@@ -20,6 +20,6 @@ let make_ctx m =
              let arg = List.hd args in
              M.InputOutput.print arg;
              Runtime.Null);
-         identifiers = [identifiers];
+         identifiers = [ identifiers ];
        });
   { l = m; identifiers = [ identifiers ]; functions = fs }

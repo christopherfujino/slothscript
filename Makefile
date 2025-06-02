@@ -48,7 +48,7 @@ format:
 
 .PHONY: check-format
 check-format:
-	! test -n "$(dune fmt --preview)"
+	dune fmt --preview
 
 .PHONY: clean
 clean:

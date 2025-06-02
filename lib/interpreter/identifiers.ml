@@ -29,7 +29,7 @@ let rec get_opt tbls id =
   match tbls with
   | [] -> None
   | hd :: tl -> (
-      Hashtbl.iter (fun k v -> Printf.printf "(%s=>%s) " k (Runtime.to_s v)) hd ;
+      Hashtbl.iter (fun k v -> Printf.printf "(%s=>%s) " k (Runtime.to_s v)) hd;
       Printf.printf "\n";
       (* Use monadic interface? *)
       match Hashtbl.find_opt hd id with
