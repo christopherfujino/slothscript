@@ -62,10 +62,8 @@ let test_specs =
     };
     {
       name = "func definition";
-      program = "func m() {23+19;}";
-      ast =
-        "((FuncStmt(name m)(parameters())(block((ExprStmt(Binary Add(Num \
-         23)(Num 19)))))))";
+      program = "func m() {}";
+      ast = "((FuncStmt(name m)(parameters())(block())))";
       stdout_expect = "";
     };
     {
@@ -75,6 +73,16 @@ let test_specs =
         "((FuncStmt(name m)(parameters())(block((ExprStmt(Num 1))(ExprStmt(Num \
          2))(ExprStmt(Num 3)))))(ExprStmt(FuncInvoc print((FuncInvoc m())))))";
       stdout_expect = "3\n";
+    };
+    {
+      name = "nested functions";
+      program = "func f1() {let x = 1;func f2() {print(x);}f2();}f1();";
+      ast =
+        "((FuncStmt(name f1)(parameters())(block((LetStmt x(Num \
+         1))(FuncStmt(name f2)(parameters())(block((ExprStmt(FuncInvoc \
+         print((IdRef x)))))))(ExprStmt(FuncInvoc f2())))))(ExprStmt(FuncInvoc \
+         f1())))";
+      stdout_expect = "1\n";
     };
     {
       name = "lexical scope";
