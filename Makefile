@@ -35,7 +35,12 @@ ci:
 
 .PHONY: todos
 todos:
-	grep -rnI TODO | grep -v '^_build\/'| fgrep -v ignorethisparticularline
+	grep -rnI TODO --exclude-dir='_build/' | fgrep -v ignorethisparticularline
+
+# Detect all appearances of the string YOLO and fail, unless it also has ignorethisparticularline2
+.PHONY: yolos
+yolos:
+	! grep -rnI YOLO --exclude-dir='_build/' | fgrep -v ignorethisparticularline2
 
 .PHONY: format
 format:
