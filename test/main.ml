@@ -54,9 +54,9 @@ let test_specs =
     };
     {
       name = "var reference";
-      program = "let x = 1 + 1;\nx;";
-      ast = "((LetStmt x(Binary Add(Num 1)(Num 1)))(ExprStmt(IdRef x)))";
-      stdout_expect = "";
+      program = "let x = 1 + 1;\nprint(x);";
+      ast = "((LetStmt x(Binary Add(Num 1)(Num 1)))(ExprStmt(FuncInvoc print((IdRef x)))))";
+      stdout_expect = "2\n";
     };
     {
       name = "func definition";
@@ -68,11 +68,11 @@ let test_specs =
     };
     {
       name = "func invocation";
-      program = "func m() {1;2;3;}m();";
+      program = "func m() {1;2;3;}print(m());";
       ast =
         "((FuncStmt(name m)(parameters())(block((ExprStmt(Num 1))(ExprStmt(Num \
-         2))(ExprStmt(Num 3)))))(ExprStmt(FuncInvoc m())))";
-      stdout_expect = "";
+         2))(ExprStmt(Num 3)))))(ExprStmt(FuncInvoc print((FuncInvoc m())))))";
+      stdout_expect = "3\n";
     };
     {
       name = "lexical scope";
