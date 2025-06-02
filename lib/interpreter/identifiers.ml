@@ -1,22 +1,35 @@
-type t = (string, Runtime.t) Hashtbl.t list ref
+type frame = (string, Runtime.t) Hashtbl.t
 
-let create () = ref [ Hashtbl.create 8 ]
+type t = frame list
+
+let create () = Hashtbl.create 8
 
 let set ids id v =
-  let tbl = List.hd !ids in
+  let tbl = List.hd ids in
   let maybe_val = Hashtbl.find_opt tbl id in
   match maybe_val with
   | Some _ ->
       let msg = Printf.sprintf "cannot rebind name %s" id in
       failwith msg
-  | None -> Printf.printf "setting name %s\n" id; Hashtbl.add tbl id v
+  | None -> Hashtbl.add tbl id v
 
-let rec get_from_tables tbls id =
+let rec get_opt tbls id =
   match tbls with
-  | [] -> Printf.sprintf "Unknown identifier %s" id |> failwith
+  | [] -> None
   | hd :: tl -> (
+      (* Use monadic interface? *)
       match Hashtbl.find_opt hd id with
-      | Some v -> v
-      | None -> (get_from_tables [@tailrec]) tl id)
+      | Some v -> Some v
+      | None -> (get_opt [@tailrec]) tl id)
 
-let get ids id = get_from_tables !ids id
+let get ids id =
+  match get_opt ids id with
+  | Some v -> v
+  | None -> Printf.sprintf "No variable defined named %s" id |> failwith
+
+let push_new_frame t' = create () :: t'
+
+let pop t' =
+  match t' with
+  | [] -> failwith "can't pop an empty stack!"
+  | _ :: tl -> tl

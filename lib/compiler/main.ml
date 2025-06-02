@@ -1,4 +1,6 @@
-let rec parse line =
+open Core
+
+let parse line =
   let stmts =
     try Lexing.from_string line |> Parser.prog Lexer.read
     with Parser.Error i ->
@@ -6,8 +8,4 @@ let rec parse line =
       (* TODO Interpolate lexer position *)
       failwith msg
   in
-  (optimize [@tailrec]) stmts
-
-and optimize prog =
-  (* TODO Compiler.optimize should compile to IR. *)
-  List.rev prog
+  Optimizer.optimize_stmts stmts

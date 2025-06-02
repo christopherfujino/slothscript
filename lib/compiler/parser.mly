@@ -17,11 +17,15 @@
 %token EQUALS
 %token EOF
 %token SEMICOLON
+%token FUNC
+%token LCURLY
+%token RCURLY
+%token LPAREN
+%token RPAREN
+%token COMMA
 (*
 %token LEQ
 %token TIMES
-%token LPAREN
-%token RPAREN
 %token IN
 %token IF
 %token THEN
@@ -55,7 +59,8 @@ stmts:
 
 stmt:
   | e1 = expr; SEMICOLON { ExprStmt e1 }
-  | LET; x = ID; EQUALS; e1 = expr; SEMICOLON { LetStmt (x, e1) }
+  | LET; id = ID; EQUALS; e1 = expr; SEMICOLON { LetStmt (id, e1) }
+  | FUNC; i = ID; p = parameter_list ; b = block { FuncStmt {name = i; parameters = p; block = b;} }
   ;
 
 expr:
@@ -64,6 +69,8 @@ expr:
   | TRUE { Bool true }
   | FALSE { Bool false }
   | s = STRING { String s }
+  | i = ID; LPAREN; a = argument_list; RPAREN { FuncInvoc (i, a) }
+  | i = ID; LPAREN; RPAREN { FuncInvoc (i, []) }
   | i = ID { IdRef i }
   (*
   | e1 = expr; LEQ; e2 = expr { Binary (Leq, e1, e2) }
@@ -73,3 +80,18 @@ expr:
   | LPAREN; e=expr; RPAREN {e}
   *)
   ;
+
+block:
+  | LCURLY; RCURLY { [] }
+  | LCURLY; s = stmts; RCURLY { s }
+
+argument_list:
+  (* TODO: support actual args *)
+  | e = expr { [e] }
+  | tl = argument_list; COMMA; e = expr { e :: tl }
+
+parameter_list:
+  (* TODO: support actual params *)
+  (* TODO: make parameters different from just strings, to support type
+     annotations *)
+  | LPAREN; RPAREN { [] }
