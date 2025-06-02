@@ -19,7 +19,7 @@ utop: build
 
 .PHONY: build
 build:
-	dune build
+	dune build --verbose
 
 .PHONY: get
 get:
@@ -37,7 +37,7 @@ ci:
 todos:
 	grep -rnI TODO --exclude-dir='_build/' | fgrep -v ignorethisparticularline
 
-# Detect all appearances of the string YOLO and fail, unless it also has ignorethisparticularline2
+# Detect the string YOLO and fail, unless it also has ignorethisparticularline2
 .PHONY: yolos
 yolos:
 	! grep -rnI YOLO --exclude-dir='_build/' | fgrep -v ignorethisparticularline2
