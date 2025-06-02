@@ -49,7 +49,7 @@ jobs:
         working-directory: ./slothscript
         run: |
           eval $(opam env --switch=default-switch)
-          dune exec tool/ci.exe
+          make ci
           #make get
           #make build
           #make check-format
