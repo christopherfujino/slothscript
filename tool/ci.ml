@@ -105,19 +105,18 @@ module Target = struct
 end
 
 let () =
-  let ( >>= ) = Target.bind in
+  let (let*) = Target.bind in
   let root =
     Unix.open_process_in "git rev-parse --show-toplevel"
     |> In_channel.input_all |> String.trim
   in
   let create = Target.create root in
   let res =
-    create "yolos" None |> Target.run >>= fun () ->
-    create "get" (Some "cat sloth_script.opam dune-project | sha256sum")
-    |> Target.run
-    >>= fun () ->
-    create "build" None |> Target.run >>= fun () ->
-    create "check-format" None |> Target.run >>= fun () ->
+    let* () = create "yolos" None |> Target.run in
+    let* () = create "get" (Some "cat sloth_script.opam dune-project | sha256sum")
+    |> Target.run in
+    let* () = create "build" None |> Target.run in
+    let* () = create "check-format" None |> Target.run in
     create "test" None |> Target.run
   in
   match res with
