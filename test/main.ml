@@ -82,41 +82,39 @@ let rec indent buf n =
     Buffer.add_char buf ' ';
     (indent [@tailrec]) buf (n - 1))
 
-let tests =
-  let printer s = Printf.sprintf "\"%s\"" s in
-  let make_parser_test spec =
-    let open Compiler in
-    spec.name >:: fun _ ->
-    let prog = Main.parse spec.program in
-    let f formatter left_right_tuple =
-      let left, right = left_right_tuple in
-      let rec diff_finder i left' right' =
-        try
-          let lchar = String.get left' i in
-          let rchar = String.get right' i in
-          if lchar != rchar then i
-          else (diff_finder [@tailrec]) (i + 1) left' right'
-          (* Catch index out of bounds *)
-        with Invalid_argument _ -> i
-      in
-      let i = diff_finder 0 left right in
-      let right_len = String.length right in
-      (* TODO write a recursive word boundary finder *)
-      let trunc_len = min (i + 6) right_len in
-      let right_trunc = String.sub right 0 trunc_len in
-      Format.fprintf formatter "First diff at %d\n\n%s\n%s^" i right_trunc
-        (indent (Buffer.create i) i)
-    in
-    assert_equal ~pp_diff:f ~printer spec.ast
-      (Optimizer.prog_to_str prog)
+let printer s = Printf.sprintf "\"%s\"" s
+
+let pp_diff formatter left_right_tuple =
+  let left, right = left_right_tuple in
+  let rec diff_finder i left' right' =
+    try
+      let lchar = String.get left' i in
+      let rchar = String.get right' i in
+      if lchar != rchar then i
+      else (diff_finder [@tailrec]) (i + 1) left' right'
+      (* Catch index out of bounds *)
+    with Invalid_argument _ -> i
   in
-  let make_interpreter_test spec =
+  let i = diff_finder 0 left right in
+  let right_len = String.length right in
+  (* TODO write a recursive word boundary finder *)
+  let trunc_len = min (i + 6) right_len in
+  let right_trunc = String.sub right 0 trunc_len in
+  Format.fprintf formatter "First diff at %d\n\n%s\n%s^" i right_trunc
+    (indent (Buffer.create i) i)
+
+let tests =
+  let make_test spec =
     let open Compiler in
     spec.name >:: fun _ ->
-    let stmt = Main.parse spec.program in
+    (* Parser *)
+    let prog = Main.parse spec.program in
+    assert_equal ~pp_diff ~printer spec.ast (Optimizer.prog_to_str prog);
+
+    (* Interpreter *)
     let module Lib = Interpreter.Sloth_stdlib.Make_test () in
     let ctx = Interpreter.Context.make_ctx (module Lib) in
-    Interpreter.Interpret.interpret_prog ctx stmt;
+    Interpreter.Interpret.interpret_prog ctx prog;
     let catted_output_opt =
       List.fold_left
         (fun acc cur ->
@@ -130,13 +128,6 @@ let tests =
     | None -> assert_equal ~printer spec.stdout_expect ""
     | Some s -> assert_equal ~printer spec.stdout_expect s
   in
-  let parser_tests =
-    "parser" >::: List.map (fun spec -> make_parser_test spec) test_specs
-  in
-  let interpreter_tests =
-    "interpreter"
-    >::: List.map (fun spec -> make_interpreter_test spec) test_specs
-  in
-  "slothscript" >::: [ parser_tests; interpreter_tests ]
+  "slothscript" >::: List.map make_test test_specs
 
 let () = run_test_tt_main tests
