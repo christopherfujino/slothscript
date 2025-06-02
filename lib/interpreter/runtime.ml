@@ -8,10 +8,6 @@ type t =
   (* TODO hashmap *)
   | Null
 
-type function_t =
-  | Native of { parameters : string list; cb : t list -> t }
-  | User of { parameters : string list; block : Compiler.Optimizer.stmt list }
-
 let num_of_val v = match v with Num f -> f | _ -> failwith "Cast error!"
 
 let rec to_s = function

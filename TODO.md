@@ -1,1 +1,2 @@
-- [ ] Implement lexical scoping
+- [ ] Lexical scoping
+- [ ] Stack traces

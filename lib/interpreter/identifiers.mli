@@ -1,18 +1,21 @@
-type frame
+type t
 
-type t = frame list
-(** Map-stack. *)
+type function_t =
+  | Native of {
+      parameters : string list;
+      cb : Runtime.t list -> Runtime.t;
+      identifiers : t list;
+    }
+  | User of {
+      parameters : string list;
+      block : Compiler.Optimizer.stmt list;
+      identifiers : t list;
+    }
 
-val create : unit -> frame
+val create : unit -> t
 
-val set : t -> string -> Runtime.t -> unit
+val set : t list -> string -> Runtime.t -> unit
 (** Will throw if the identifier already exists on the head of the stack. *)
 
-val get : t -> string -> Runtime.t
+val get : t list -> string -> Runtime.t
 (** Will throw if the identifier cannot be found in the stack. *)
-
-val push_new_frame : t -> t
-(** Push a new empty frame on the stack *)
-
-val pop : t -> t
-(** Pop the top frame off the stack *)
