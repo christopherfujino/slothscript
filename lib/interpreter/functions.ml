@@ -1,3 +1,5 @@
+(* TODO Merge this with Identifiers.t *)
+
 type t = (string, Runtime.function_t) Hashtbl.t
 
 let create () = Hashtbl.create 8

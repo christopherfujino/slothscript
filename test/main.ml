@@ -96,6 +96,17 @@ let test_specs =
     };
   ]
 
+(* Throw specific runtime exceptions, and assert on them here. *)
+let interpreter_failure_specs =
+  [
+    {
+      name = "vars & funcs share namespace";
+      program = "let x=1;func x(){}";
+      ast = "((LetStmt x(Num 1))(FuncStmt(name x)(parameters())(block())))";
+      stdout_expect = "";
+    };
+  ]
+
 let rec indent buf n =
   if n = 0 then Buffer.contents buf
   else (
@@ -148,6 +159,25 @@ let tests =
     | None -> assert_equal ~printer spec.stdout_expect ""
     | Some s -> assert_equal ~printer spec.stdout_expect s
   in
-  "slothscript" >::: List.map make_test test_specs
+  let make_failing_test spec =
+    let open Compiler in
+    spec.name >:: fun _ ->
+    (* Parser *)
+    let prog = Main.parse spec.program in
+    assert_equal ~pp_diff ~printer spec.ast (Optimizer.prog_to_str prog);
+
+    (* Interpreter *)
+    let module Lib = Interpreter.Sloth_stdlib.Make_test () in
+    let ctx = Interpreter.Context.make_ctx (module Lib) in
+    try
+      Interpreter.Interpret.interpret_prog ctx prog;
+      assert_failure "test did not throw a runtime error as expected"
+    with Failure _ -> ()
+  in
+  "slothscript"
+  >::: [
+         "green" >::: List.map make_test test_specs;
+         "red" >::: List.map make_failing_test interpreter_failure_specs;
+       ]
 
 let () = run_test_tt_main tests
