@@ -74,6 +74,16 @@ let test_specs =
          2))(ExprStmt(Num 3)))))(ExprStmt(FuncInvoc m())))";
       stdout_expect = "";
     };
+    {
+      name = "lexical scope";
+      program = "let x=1;func f() {print(x);}func g() {let x=2;f();}g();";
+      ast =
+        "((LetStmt x(Num 1))(FuncStmt(name \
+         f)(parameters())(block((ExprStmt(FuncInvoc print((IdRef \
+         x)))))))(FuncStmt(name g)(parameters())(block((LetStmt x(Num \
+         2))(ExprStmt(FuncInvoc f())))))(ExprStmt(FuncInvoc g())))";
+      stdout_expect = "1\n";
+    };
   ]
 
 let rec indent buf n =
