@@ -15,11 +15,13 @@ let rec repl ctx_opt =
   in
   let prog = Compiler.Main.parse line in
   let open Interpreter in
-  Interpret.interpret_prog ctx prog;
+  let ctx, v = Interpret.interpret_prog ctx prog in
+  Runtime.to_s v |> print_endline;
   (repl [@tailcall]) (Some ctx)
 
 let rec interpret () =
   let line =
+    (* TODO We should read the whole doc at this point *)
     try read_line ()
     with End_of_file ->
       Printf.printf "\n";
@@ -27,7 +29,9 @@ let rec interpret () =
   in
   let prog = Compiler.Main.parse line in
   let open Interpreter in
-  Interpret.interpret_prog (Context.make_ctx (module Sloth_stdlib.Prod)) prog;
+  let _, _ =
+    Interpret.interpret_prog (Context.make_ctx (module Sloth_stdlib.Prod)) prog
+  in
   (interpret [@tailcall]) ()
 
 let () = if Unix.isatty Unix.stdin then repl None else interpret ()

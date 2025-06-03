@@ -3,24 +3,34 @@ open Core
 let rec interpret_stmt (ctx : Context.t) stmt =
   let open Compiler.Optimizer in
   match stmt with
-  | LetStmt (id, e) ->
+  | LetStmt (id, e) -> (
       let v = interpret_expr ctx e in
-      Identifiers.set ctx.identifiers id v;
-      v
-  | ExprStmt expr -> interpret_expr ctx expr
-  | FuncStmt { name; parameters; block } ->
-      (* TODO ensure this is at top-level *)
-      Identifiers.set ctx.identifiers name
-        (Func
-           (User
-              {
-                parameters;
-                block;
-                (* TODO this will capture identifiers declared AFTER this point *)
-                identifiers = ctx.identifiers;
-              }));
-      Runtime.Null
+      match ctx.identifiers with
+      | [] -> failwith "unreachable"
+      | current_env_frame :: tail_env_frames ->
+          let identifiers = Identifiers.set current_env_frame id v in
+          ({ ctx with identifiers = identifiers :: tail_env_frames }, v))
+  | ExprStmt expr -> (ctx, interpret_expr ctx expr)
+  | FuncStmt { name; parameters; block } -> (
+      match ctx.identifiers with
+      | [] -> failwith "unreachable"
+      | current_env_frame :: tail_env_frames ->
+          let identifiers =
+            Identifiers.set current_env_frame name
+              (Func
+                 (User
+                    {
+                      parameters;
+                      block;
+                      (* TODO this should snapshot *)
+                      identifiers = ctx.identifiers;
+                    }))
+          in
+          ( { ctx with identifiers = identifiers :: tail_env_frames },
+            Runtime.Null ))
 
+(* TODO Note this does not return a context--can expressions mutate context?! *)
+(* Yes, if they call a function that mutates a global *)
 and interpret_expr ctx expr =
   let open Compiler.Optimizer in
   match expr with
@@ -39,40 +49,47 @@ and interpret_expr ctx expr =
       | Func f -> (
           match f with
           | User { parameters; block; identifiers } ->
-              let temp_ctx =
-                { ctx with identifiers = Identifiers.create () :: identifiers }
+              let new_frame = Identifiers.create () in
+              let new_frame =
+                match
+                  List.fold2 parameters args ~init:new_frame
+                    ~f:(fun frame p a ->
+                      let v = interpret_expr ctx a in
+                      Identifiers.set frame p v)
+                with
+                | Ok frame -> frame
+                | Unequal_lengths ->
+                    Printf.sprintf
+                      "Mismatched number of params and args in call to %s" name
+                    |> failwith
               in
-              (match
-                 List.iter2 parameters args ~f:(fun p a ->
-                     let v = interpret_expr ctx a in
-                     Identifiers.set temp_ctx.identifiers p v)
-               with
-              | Ok () -> ()
-              | Unequal_lengths ->
-                  Printf.sprintf
-                    "Mismatched number of params and args in call to %s" name
-                  |> failwith);
 
-              let rec traverse stmts =
-                match stmts with
-                | [] -> Runtime.Null
-                | stmt :: stmts ->
-                    let return_val = interpret_stmt temp_ctx stmt in
-                    if List.is_empty stmts then return_val
-                    else (traverse [@tailrec]) stmts
-              in
-              traverse block
-          | Native { cb; parameters = _; identifiers } ->
               let temp_ctx =
-                { ctx with identifiers = Identifiers.create () :: identifiers }
+                { ctx with identifiers = new_frame :: identifiers }
               in
-              let vals = List.map args ~f:(interpret_expr temp_ctx) in
+              let rec traverse_stmts ctx stmts =
+                match stmts with
+                | [] -> (ctx, Runtime.Null)
+                | stmt :: stmts ->
+                    let ctx, return_val = interpret_stmt ctx stmt in
+                    if List.is_empty stmts then (ctx, return_val)
+                    else (traverse_stmts [@tailrec]) ctx stmts
+              in
+              (* discard context *)
+              let _, v = traverse_stmts temp_ctx block in
+              v
+          | Native { cb; parameters = _; identifiers = _ } ->
+              let vals = List.map args ~f:(interpret_expr ctx) in
               cb vals)
-      | _ -> failwith "YOLO")
+      | _ ->
+          Printf.sprintf "Tried to invoke id \"%s\", but it is not a function"
+            name
+          |> failwith)
 
 and interpret_prog ctx prog =
   match prog with
-  | [] -> ()
+  | [] -> (ctx, Runtime.Null)
   | hd :: tl ->
-      let _ = interpret_stmt ctx hd in
-      interpret_prog ctx tl
+      let new_ctx, v = interpret_stmt ctx hd in
+      if List.is_empty tl then (new_ctx, v)
+      else (interpret_prog [@tailrec]) new_ctx tl

@@ -2,7 +2,7 @@ type 'a t
 
 val create : unit -> 'a t
 
-val set : 'a t list -> string -> 'a -> unit
+val set : 'a t -> string -> 'a -> 'a t
 (** Will throw if the identifier already exists on the head of the stack. *)
 
 val get : 'a t list -> string -> 'a

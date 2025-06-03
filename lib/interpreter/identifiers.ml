@@ -1,25 +1,29 @@
-type 'a t = (string, 'a) Hashtbl.t
+open Core
 
-let create () = Hashtbl.create 8
+type 'a t = (string, 'a, String.comparator_witness) Base.Map.t
 
+let create () = Map.empty (module String)
+
+(* TODO figure out recursion when setting funcs *)
 let set ids id v =
-  (*Printf.printf "setting %s to %s\n" id (Runtime.to_s v); *)
-  let tbl = List.hd ids in
-  let maybe_val = Hashtbl.find_opt tbl id in match maybe_val with
+  Printf.printf "setting var %s\n" id;
+  let maybe_val = Map.find ids id in
+  match maybe_val with
   | Some _ ->
       let msg = Printf.sprintf "cannot rebind name %s" id in
       failwith msg
-  | None -> Hashtbl.add tbl id v
+  | None -> Map.add_exn ids ~key:id ~data:v
 
 let rec get_opt tbls id =
   Printf.printf "looking for %s in..." id;
   match tbls with
   | [] -> None
   | hd :: tl -> (
-      (* Hashtbl.iter (fun k v -> Printf.printf "(%s=>%s) " k (Runtime.to_s v)) hd;
-      Printf.printf "\n"; *)
+      Map.iter_keys hd ~f:print_string;
+      (* Hashtbl.iter (fun k v -> Printf.printf "(%s=>%s) " k (Runtime.to_s v)) hd; *)
+      Printf.printf "\n";
       (* Use monadic interface? *)
-      match Hashtbl.find_opt hd id with
+      match Map.find hd id with
       | Some v -> Some v
       | None -> (get_opt [@tailrec]) tl id)
 

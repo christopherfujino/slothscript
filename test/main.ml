@@ -105,6 +105,14 @@ let interpreter_failure_specs =
       ast = "((LetStmt x(Num 1))(FuncStmt(name x)(parameters())(block())))";
       stdout_expect = "";
     };
+    (*
+    {
+      name = "foo";
+      program = "let x = 0;func f() {print(x);}x = 1;f();";
+      ast = "";
+      stdout_expect = "1\n";
+    }
+    *)
   ]
 
 let rec indent buf n =
@@ -145,7 +153,7 @@ let tests =
     (* Interpreter *)
     let module Lib = Interpreter.Sloth_stdlib.Make_test () in
     let ctx = Interpreter.Context.make_ctx (module Lib) in
-    Interpreter.Interpret.interpret_prog ctx prog;
+    let _, _ = Interpreter.Interpret.interpret_prog ctx prog in
     let catted_output_opt =
       List.fold_left
         (fun acc cur ->
@@ -170,7 +178,7 @@ let tests =
     let module Lib = Interpreter.Sloth_stdlib.Make_test () in
     let ctx = Interpreter.Context.make_ctx (module Lib) in
     try
-      Interpreter.Interpret.interpret_prog ctx prog;
+      let _, _ = Interpreter.Interpret.interpret_prog ctx prog in
       assert_failure "test did not throw a runtime error as expected"
     with Failure _ -> ()
   in
