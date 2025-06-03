@@ -49,11 +49,11 @@ jobs:
         working-directory: ./slothscript
         run: |
           eval $(opam env --switch=default-switch)
-          make ci
-          #make get
-          #make build
-          #make check-format
-          #make test
+          make yolos
+          make get
+          make build
+          make check-format
+          make test
       # TODO use tool/ci.exe
       #  run: |
       #    eval $(opam env --switch=default-switch)
