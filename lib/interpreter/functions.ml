@@ -1,5 +1,5 @@
 (* TODO Merge this with Identifiers.t *)
-
+(*
 type t = (string, Identifiers.function_t) Hashtbl.t
 
 let create () = Hashtbl.create 8
@@ -19,3 +19,4 @@ let get funcs id =
   | None ->
       Printf.sprintf "Could not find a function named \"%s\"!" id |> failwith
   | Some f -> f
+  *)

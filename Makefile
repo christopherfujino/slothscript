@@ -4,6 +4,10 @@ test:
 	# OUNIT_CI=true makes output prettier
 	OUNIT_CI=true dune build @runtest --force
 
+.PHONY: describe
+describe:
+	dune describe
+
 .PHONY: stdlib_test
 stdlib_test:
 	dune exec ocaml_stdlib
