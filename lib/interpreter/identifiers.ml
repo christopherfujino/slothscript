@@ -1,5 +1,6 @@
 open Core
 
+(* This type is polymorphic to avoid module cycle with Runtime *)
 type 'a t = (string, 'a, String.comparator_witness) Base.Map.t
 
 let create () = Map.empty (module String)
