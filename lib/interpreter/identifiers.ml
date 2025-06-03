@@ -21,7 +21,6 @@ let rec get_opt tbls id =
   | [] -> None
   | hd :: tl -> (
       Map.iter_keys hd ~f:print_string;
-      (* Hashtbl.iter (fun k v -> Printf.printf "(%s=>%s) " k (Runtime.to_s v)) hd; *)
       Printf.printf "\n";
       (* Use monadic interface? *)
       match Map.find hd id with
