@@ -7,6 +7,17 @@ module Target = struct
     hasher_opt : (unit -> string) option;
   }
 
+  type result = Ok | Error of string list
+
+  let bind res func =
+    let res2 = func () in
+    match res2 with
+    | Ok -> res
+    | Error new_errors -> (
+        match res with
+        | Ok -> res2
+        | Error old_errors -> Error (old_errors @ new_errors))
+
   let create root make_target hasher_cmd_opt =
     {
       cmd = [ "make"; "-C"; root; make_target ];
@@ -60,7 +71,9 @@ module Target = struct
           let hash = hasher () in
           is_up_to_date target hash
     in
-    if is_fresh then Printf.printf "Target %s is up to date\n%!" target.key
+    if is_fresh then (
+      Printf.printf "Target %s is up to date\n%!" target.key;
+      Ok)
     else (
       Printf.printf "Executing%s\n%!"
         (List.fold_left (fun acc cur -> Printf.sprintf "%s %s" acc cur) "" cmd);
@@ -71,28 +84,41 @@ module Target = struct
       let _, status = Unix.waitpid [] pid in
       match status with
       | WEXITED code ->
-          if code = 0 then ()
+          if code = 0 then Ok
           else
-            let cmd_str =
+            let cmd_str_opt =
               List.fold_left
-                (fun acc cur -> Printf.sprintf "%s, %s" acc cur)
-                "" cmd
+                (fun acc cur ->
+                  match acc with
+                  | None -> Some cur
+                  | Some prev -> Some (Printf.sprintf "%s %s" prev cur))
+                None cmd
             in
-            let msg =
-              Printf.sprintf "Invocation [%s] failed with code %d" cmd_str code
-            in
-            failwith msg
-      | WSIGNALED _ -> failwith "Subprocess failed with a signal"
-      | WSTOPPED _ -> failwith "Subprocess stopped")
+            let cmd_str = Option.get cmd_str_opt in
+            Error [ Printf.sprintf "`%s` failed with code %d" cmd_str code ]
+      | WSIGNALED _ -> Error [ "Subprocess failed with a signal" ]
+      | WSTOPPED _ -> Error [ "Subprocess stopped" ])
 end
 
 let () =
+  let ( let* ) = Target.bind in
   let root =
     Unix.open_process_in "git rev-parse --show-toplevel"
     |> In_channel.input_all |> String.trim
   in
   let create = Target.create root in
-  create "get" (Some "cat sloth_script.opam dune-project | sha256sum")
-  |> Target.run;
-  create "build" None |> Target.run;
-  create "test" None |> Target.run
+  let res =
+    let* () = create "yolos" None |> Target.run in
+    let* () =
+      create "get" (Some "cat sloth_script.opam dune-project | sha256sum")
+      |> Target.run
+    in
+    let* () = create "build" None |> Target.run in
+    let* () = create "check-format" None |> Target.run in
+    create "test" None |> Target.run
+  in
+  match res with
+  | Ok -> print_endline "CI suite successful!"
+  | Error errs ->
+      print_endline "CI suite failed with the following errors:";
+      List.iter (fun msg -> Printf.printf "-> %s\n" msg) errs

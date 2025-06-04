@@ -60,6 +60,7 @@ stmts:
 stmt:
   | e1 = expr; SEMICOLON { ExprStmt e1 }
   | LET; id = ID; EQUALS; e1 = expr; SEMICOLON { LetStmt (id, e1) }
+  (* Does not require semi-colon *)
   | FUNC; i = ID; p = parameter_list ; b = block { FuncStmt {name = i; parameters = p; block = b;} }
   ;
 

@@ -1,24 +1,29 @@
-type frame = (string, Runtime.t) Hashtbl.t
+open Core
 
-type t = frame list
+(* This type is polymorphic to avoid module cycle with Runtime *)
+type 'a t = (string, 'a, String.comparator_witness) Base.Map.t
 
-let create () = Hashtbl.create 8
+let create () = Map.empty (module String)
 
+(* TODO figure out recursion when setting funcs *)
 let set ids id v =
-  let tbl = List.hd ids in
-  let maybe_val = Hashtbl.find_opt tbl id in
+  Printf.printf "setting var %s\n" id;
+  let maybe_val = Map.find ids id in
   match maybe_val with
   | Some _ ->
       let msg = Printf.sprintf "cannot rebind name %s" id in
       failwith msg
-  | None -> Hashtbl.add tbl id v
+  | None -> Map.add_exn ids ~key:id ~data:v
 
 let rec get_opt tbls id =
+  Printf.printf "looking for %s in..." id;
   match tbls with
   | [] -> None
   | hd :: tl -> (
+      Map.iter_keys hd ~f:print_string;
+      Printf.printf "\n";
       (* Use monadic interface? *)
-      match Hashtbl.find_opt hd id with
+      match Map.find hd id with
       | Some v -> Some v
       | None -> (get_opt [@tailrec]) tl id)
 
@@ -26,10 +31,3 @@ let get ids id =
   match get_opt ids id with
   | Some v -> v
   | None -> Printf.sprintf "No variable defined named %s" id |> failwith
-
-let push_new_frame t' = create () :: t'
-
-let pop t' =
-  match t' with
-  | [] -> failwith "can't pop an empty stack!"
-  | _ :: tl -> tl

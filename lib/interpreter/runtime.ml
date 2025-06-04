@@ -7,10 +7,19 @@ type t =
   | Map of (string * t) list
   (* TODO hashmap *)
   | Null
+  | Func of function_t
 
-type function_t =
-  | Native of { parameters : string list; cb : t list -> t }
-  | User of { parameters : string list; block : Compiler.Optimizer.stmt list }
+and function_t =
+  | Native of {
+      parameters : string list;
+      cb : t list -> t;
+      identifiers : t Identifiers.t list;
+    }
+  | User of {
+      parameters : string list;
+      block : Compiler.Optimizer.stmt list;
+      identifiers : t Identifiers.t list;
+    }
 
 let num_of_val v = match v with Num f -> f | _ -> failwith "Cast error!"
 
@@ -37,3 +46,4 @@ let rec to_s = function
           Printf.sprintf "%s\"%s\": %s" acc key (to_s value))
         "{" assoc
       ^ "}"
+  | Func _ -> "func(TODO)"

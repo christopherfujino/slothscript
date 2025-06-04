@@ -54,26 +54,65 @@ let test_specs =
     };
     {
       name = "var reference";
-      program = "let x = 1 + 1;\nx;";
-      ast = "((LetStmt x(Binary Add(Num 1)(Num 1)))(ExprStmt(IdRef x)))";
-      stdout_expect = "";
+      program = "let x = 1 + 1;\nprint(x);";
+      ast =
+        "((LetStmt x(Binary Add(Num 1)(Num 1)))(ExprStmt(FuncInvoc \
+         print((IdRef x)))))";
+      stdout_expect = "2\n";
     };
     {
       name = "func definition";
-      program = "func m() {23+19;}";
-      ast =
-        "((FuncStmt(name m)(parameters())(block((ExprStmt(Binary Add(Num \
-         23)(Num 19)))))))";
+      program = "func m() {}";
+      ast = "((FuncStmt(name m)(parameters())(block())))";
       stdout_expect = "";
     };
     {
       name = "func invocation";
-      program = "func m() {1;2;3;}m();";
+      program = "func m() {1;2;3;}print(m());";
       ast =
         "((FuncStmt(name m)(parameters())(block((ExprStmt(Num 1))(ExprStmt(Num \
-         2))(ExprStmt(Num 3)))))(ExprStmt(FuncInvoc m())))";
+         2))(ExprStmt(Num 3)))))(ExprStmt(FuncInvoc print((FuncInvoc m())))))";
+      stdout_expect = "3\n";
+    };
+    {
+      name = "nested functions";
+      program = "func f1() {let x = 1;func f2() {print(x);}f2();}f1();";
+      ast =
+        "((FuncStmt(name f1)(parameters())(block((LetStmt x(Num \
+         1))(FuncStmt(name f2)(parameters())(block((ExprStmt(FuncInvoc \
+         print((IdRef x)))))))(ExprStmt(FuncInvoc f2())))))(ExprStmt(FuncInvoc \
+         f1())))";
+      stdout_expect = "1\n";
+    };
+    {
+      name = "lexical scope";
+      program = "let x=1;func f() {print(x);}func g() {let x=2;f();}g();";
+      ast =
+        "((LetStmt x(Num 1))(FuncStmt(name \
+         f)(parameters())(block((ExprStmt(FuncInvoc print((IdRef \
+         x)))))))(FuncStmt(name g)(parameters())(block((LetStmt x(Num \
+         2))(ExprStmt(FuncInvoc f())))))(ExprStmt(FuncInvoc g())))";
+      stdout_expect = "1\n";
+    };
+  ]
+
+(* Throw specific runtime exceptions, and assert on them here. *)
+let interpreter_failure_specs =
+  [
+    {
+      name = "vars & funcs share namespace";
+      program = "let x=1;func x(){}";
+      ast = "((LetStmt x(Num 1))(FuncStmt(name x)(parameters())(block())))";
       stdout_expect = "";
     };
+    (*
+    {
+      name = "foo";
+      program = "let x = 0;func f() {print(x);}x = 1;f();";
+      ast = "";
+      stdout_expect = "1\n";
+    }
+    *)
   ]
 
 let rec indent buf n =
@@ -114,7 +153,7 @@ let tests =
     (* Interpreter *)
     let module Lib = Interpreter.Sloth_stdlib.Make_test () in
     let ctx = Interpreter.Context.make_ctx (module Lib) in
-    Interpreter.Interpret.interpret_prog ctx prog;
+    let _, _ = Interpreter.Interpret.interpret_prog ctx prog in
     let catted_output_opt =
       List.fold_left
         (fun acc cur ->
@@ -128,6 +167,25 @@ let tests =
     | None -> assert_equal ~printer spec.stdout_expect ""
     | Some s -> assert_equal ~printer spec.stdout_expect s
   in
-  "slothscript" >::: List.map make_test test_specs
+  let make_failing_test spec =
+    let open Compiler in
+    spec.name >:: fun _ ->
+    (* Parser *)
+    let prog = Main.parse spec.program in
+    assert_equal ~pp_diff ~printer spec.ast (Optimizer.prog_to_str prog);
+
+    (* Interpreter *)
+    let module Lib = Interpreter.Sloth_stdlib.Make_test () in
+    let ctx = Interpreter.Context.make_ctx (module Lib) in
+    try
+      let _, _ = Interpreter.Interpret.interpret_prog ctx prog in
+      assert_failure "test did not throw a runtime error as expected"
+    with Failure _ -> ()
+  in
+  "slothscript"
+  >::: [
+         "green" >::: List.map make_test test_specs;
+         "red" >::: List.map make_failing_test interpreter_failure_specs;
+       ]
 
 let () = run_test_tt_main tests

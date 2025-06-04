@@ -4,6 +4,10 @@ test:
 	# OUNIT_CI=true makes output prettier
 	OUNIT_CI=true dune build @runtest --force
 
+.PHONY: describe
+describe:
+	dune describe
+
 .PHONY: stdlib_test
 stdlib_test:
 	dune exec ocaml_stdlib
@@ -19,7 +23,7 @@ utop: build
 
 .PHONY: build
 build:
-	dune build
+	dune build --verbose
 
 .PHONY: get
 get:
@@ -35,7 +39,20 @@ ci:
 
 .PHONY: todos
 todos:
-	grep -rnI TODO | grep -v '^_build\/'| fgrep -v ignorethisparticularline
+	grep -rnI TODO --exclude-dir='_build/' | fgrep -v ignorethisparticularline
+
+# Detect the string YOLO and fail, unless it also has ignorethisparticularline2
+.PHONY: yolos
+yolos:
+	! grep -rnI YOLO --exclude-dir='_build/' | fgrep -v ignorethisparticularline2
+
+.PHONY: format
+format:
+	dune fmt
+
+.PHONY: check-format
+check-format:
+	dune fmt --preview
 
 .PHONY: clean
 clean:
