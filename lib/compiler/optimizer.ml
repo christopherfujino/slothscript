@@ -13,6 +13,7 @@ and operator = Add [@@deriving sexp]
 
 and stmt =
   | LetStmt of string * expr
+  | AssignStmt of string * expr
   | ExprStmt of expr
   | FuncStmt of { name : string; parameters : string list; block : stmt list }
 [@@deriving sexp]

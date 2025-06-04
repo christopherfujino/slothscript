@@ -61,6 +61,12 @@ let test_specs =
       stdout_expect = "2\n";
     };
     {
+      name = "re-assignment";
+      program = "let x = 0;x = 1;print(x);";
+      ast = "";
+      stdout_expect = "1\n";
+    };
+    {
       name = "func definition";
       program = "func m() {}";
       ast = "((FuncStmt(name m)(parameters())(block())))";
