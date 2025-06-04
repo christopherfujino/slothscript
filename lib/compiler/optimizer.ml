@@ -31,6 +31,9 @@ and optimize_stmt stmts : stmt =
   | LetStmt (name, expr) ->
       let e = optimize_expr expr in
       LetStmt (name, e)
+  | AssignStmt (name, expr) ->
+      let e = optimize_expr expr in
+      AssignStmt (name, e)
   | ExprStmt expr ->
       let e = optimize_expr expr in
       ExprStmt e

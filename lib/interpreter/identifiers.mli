@@ -7,3 +7,5 @@ val set : 'a t -> string -> 'a -> 'a t
 
 val get : 'a t list -> string -> 'a
 (** Will throw if the identifier cannot be found in the stack. *)
+
+val reassign : 'a t list -> string -> 'a -> 'a t list

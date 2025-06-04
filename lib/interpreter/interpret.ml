@@ -10,6 +10,10 @@ let rec interpret_stmt (ctx : Context.t) stmt =
       | current_env_frame :: tail_env_frames ->
           let identifiers = Identifiers.set current_env_frame id v in
           ({ ctx with identifiers = identifiers :: tail_env_frames }, v))
+  | AssignStmt (id, e) -> (
+      let v = interpret_expr ctx e in
+      let identifiers_list = Identifiers.reassign ctx.identifiers id v in
+      ({ ctx with identifiers = identifiers_list }, v))
   | ExprStmt expr -> (ctx, interpret_expr ctx expr)
   | FuncStmt { name; parameters; block } -> (
       match ctx.identifiers with

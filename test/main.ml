@@ -63,7 +63,7 @@ let test_specs =
     {
       name = "re-assignment";
       program = "let x = 0;x = 1;print(x);";
-      ast = "";
+      ast = "((LetStmt x(Num 0))(AssignStmt x(Num 1))(ExprStmt(FuncInvoc print((IdRef x)))))";
       stdout_expect = "1\n";
     };
     {

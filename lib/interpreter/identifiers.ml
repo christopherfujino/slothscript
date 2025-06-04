@@ -31,3 +31,5 @@ let get ids id =
   match get_opt ids id with
   | Some v -> v
   | None -> Printf.sprintf "No variable defined named %s" id |> failwith
+
+let reassign _ _ = failwith "YOLO"
