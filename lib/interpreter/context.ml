@@ -7,8 +7,7 @@ type t = {
 let make_ctx m =
   let module M = (val m : Sloth_stdlib.StdlibSig) in
   let identifiers = Identifiers.create () in
-  let identifiers =
-    Identifiers.set identifiers "print"
+  let () = Identifiers.set identifiers "print"
       (Runtime.Func
          (Native
             {

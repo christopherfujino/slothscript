@@ -119,6 +119,15 @@ let interpreter_failure_specs =
       stdout_expect = "1\n";
     }
     *)
+    {
+      (* Although this works in JS, Python, and Perl, this seems like a mistake *)
+      (* Go does not allow it. *)
+      name = "closures cannot capture future vars";
+      program = "func closure() {print(x);}let x = 1;closure();";
+      ast = "((FuncStmt(name closure)(parameters())(block((ExprStmt(FuncInvoc print((IdRef x)))))))(LetStmt x(Num 1))(ExprStmt(FuncInvoc closure())))";
+      stdout_expect = "1\n";
+    };
+
   ]
 
 let rec indent buf n =
