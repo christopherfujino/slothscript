@@ -29,4 +29,17 @@ let get ids id =
   | Some v -> v
   | None -> Printf.sprintf "No variable defined named %s" id |> failwith
 
-let reassign _ _ _ = failwith "YOLO"
+let rec reassign ids id v =
+  match ids with
+  (* TODO move this to optimizer *)
+  | [] ->
+      Printf.sprintf
+        "Cannot re-assign the undefined name \"%s\"; did you intend to declare \
+         a new var?"
+        id
+      |> failwith
+  | hd :: tl -> (
+      match Hashtbl.find hd id with
+      (* We don't care about the previous value, we just want to replace it *)
+      | Some _ -> Hashtbl.change hd id ~f:(fun _ -> Some v)
+      | None -> (reassign [@tailrec]) tl id v)
