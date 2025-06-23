@@ -4,6 +4,7 @@ type expr =
   | Num of float
   | Bool of bool
   | String of string
+  (* TODO this should be infix invoc expression, storing a lexeme string *)
   | Binary of operator * expr * expr
   | IdRef of string
   | FuncInvoc of string * expr list
@@ -20,7 +21,7 @@ and stmt =
 
 type prog = stmt list [@@deriving sexp]
 
-let rec optimize_stmts prog =
+let rec optimize_prog prog =
   (* TODO Compiler.optimize should compile to IR. *)
   let prog = List.rev prog in
   List.map prog ~f:optimize_stmt
@@ -44,7 +45,7 @@ and optimize_stmt stmts : stmt =
 
 and optimize_operator (o : Ast.operator) : operator = match o with Add -> Add
 
-and optimize_expr e : expr =
+and optimize_expr e =
   let open Ast in
   match e with
   | Num f -> Num f

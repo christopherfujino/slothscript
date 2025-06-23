@@ -8,4 +8,4 @@ let parse line =
       (* TODO Interpolate lexer position *)
       failwith msg
   in
-  Optimizer.optimize_stmts stmts
+  Optimizer.optimize_prog stmts

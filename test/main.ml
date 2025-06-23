@@ -63,7 +63,9 @@ let test_specs =
     {
       name = "re-assignment";
       program = "let x = 0;x = 1;print(x);";
-      ast = "((LetStmt x(Num 0))(AssignStmt x(Num 1))(ExprStmt(FuncInvoc print((IdRef x)))))";
+      ast =
+        "((LetStmt x(Num 0))(AssignStmt x(Num 1))(ExprStmt(FuncInvoc \
+         print((IdRef x)))))";
       stdout_expect = "1\n";
     };
     {
@@ -124,10 +126,12 @@ let interpreter_failure_specs =
       (* Go does not allow it. *)
       name = "closures cannot capture future vars";
       program = "func closure() {print(x);}let x = 1;closure();";
-      ast = "((FuncStmt(name closure)(parameters())(block((ExprStmt(FuncInvoc print((IdRef x)))))))(LetStmt x(Num 1))(ExprStmt(FuncInvoc closure())))";
-      stdout_expect = "1\n";
+      ast =
+        "((FuncStmt(name closure)(parameters())(block((ExprStmt(FuncInvoc \
+         print((IdRef x)))))))(LetStmt x(Num 1))(ExprStmt(FuncInvoc \
+         closure())))";
+      stdout_expect = "";
     };
-
   ]
 
 let rec indent buf n =
@@ -194,7 +198,18 @@ let tests =
     let ctx = Interpreter.Context.make_ctx (module Lib) in
     try
       let _, _ = Interpreter.Interpret.interpret_prog ctx prog in
-      assert_failure "test did not throw a runtime error as expected"
+      let cb =
+       fun acc cur ->
+        match acc with None -> Some cur | Some acc -> Some (acc ^ ", " ^ cur)
+      in
+      let buf_s = List.fold_left cb None !Lib.stdout_buffer |> Option.get in
+      let msg =
+        Printf.sprintf
+          "test did not throw a runtime error as expected\n\
+           stdout_buffer is = %s"
+          buf_s
+      in
+      assert_failure msg
     with Failure _ -> ()
   in
   "slothscript"
