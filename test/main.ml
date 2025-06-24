@@ -44,10 +44,7 @@ let tests =
     let catted_output_opt =
       List.fold_left
         (fun acc cur ->
-          Some
-            (match acc with
-            | None -> cur
-            | Some acc -> acc ^ cur))
+          Some (match acc with None -> cur | Some acc -> acc ^ cur))
         None forward_buffer
     in
     match catted_output_opt with
