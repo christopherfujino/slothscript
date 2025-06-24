@@ -1,3 +1,5 @@
+exception Failure of string
+
 type expr =
   | Num of float
   | Bool of bool

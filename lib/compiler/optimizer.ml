@@ -1,5 +1,7 @@
 open Core
 
+exception Failure of string
+
 type expr =
   | Num of float
   | Bool of bool
@@ -75,6 +77,12 @@ and optimize_expr (env : Environment.t) (e : Ast.expr) : expr =
       let rev_args = List.rev args in
       let rev_mapped_args = List.map rev_args ~f:(optimize_expr env) in
       FuncInvoc (name, rev_mapped_args)
-  | IdRef name -> IdRef name
+  | IdRef name -> (
+      let name_opt = Environment.find env name in
+      match name_opt with
+      | None ->
+          let msg = Printf.sprintf "Undeclared identifier %s" name in
+          raise (Failure msg)
+      | Some _ -> IdRef name)
 
 let prog_to_str stmts = sexp_of_prog stmts |> Sexp.to_string

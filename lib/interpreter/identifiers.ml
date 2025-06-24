@@ -12,7 +12,7 @@ let set ids id v =
   match maybe_val with
   | Some _ ->
       let msg = Printf.sprintf "cannot rebind name %s" id in
-      failwith msg
+      raise (Common.Failure msg)
   | None -> Hashtbl.add_exn ~key:id ~data:v ids
 
 let rec get_opt tbls id =

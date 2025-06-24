@@ -5,52 +5,68 @@ type test_spec = {
   program : string;
   ast : string;
   stdout_expect : string;
+  failure : failure_t option;
 }
+
+and failure_t = Optimizer_error | Runtime_error
 
 let test_specs =
   [
-    { name = "empty program"; program = ""; ast = "()"; stdout_expect = "" };
+    {
+      name = "empty program";
+      program = "";
+      ast = "()";
+      stdout_expect = "";
+      failure = None;
+    };
     {
       name = "num literal";
       program = "11;";
       ast = "((ExprStmt(Num 11)))";
       stdout_expect = "";
+      failure = None;
     };
     {
       name = "print num";
       program = "print(11);";
       ast = "((ExprStmt(FuncInvoc print((Num 11)))))";
       stdout_expect = "11\n";
+      failure = None;
     };
     {
       name = "string literal";
       program = "\"Hello\";";
       ast = "((ExprStmt(String Hello)))";
       stdout_expect = "";
+      failure = None;
     };
     {
       name = "print string";
       program = "print(\"Hello\");";
       ast = "((ExprStmt(FuncInvoc print((String Hello)))))";
       stdout_expect = "Hello\n";
+      failure = None;
     };
     {
       name = "bool literal";
       program = "true;";
       ast = "((ExprStmt(Bool true)))";
       stdout_expect = "";
+      failure = None;
     };
     {
       name = "addition";
       program = "1 + 1;";
       ast = "((ExprStmt(Binary Add(Num 1)(Num 1))))";
       stdout_expect = "";
+      failure = None;
     };
     {
       name = "assignment";
       program = "let x = 1 + 1;";
       ast = "((LetStmt x(Binary Add(Num 1)(Num 1))))";
       stdout_expect = "";
+      failure = None;
     };
     {
       name = "var reference";
@@ -59,6 +75,7 @@ let test_specs =
         "((LetStmt x(Binary Add(Num 1)(Num 1)))(ExprStmt(FuncInvoc \
          print((IdRef x)))))";
       stdout_expect = "2\n";
+      failure = None;
     };
     {
       name = "re-assignment";
@@ -67,12 +84,14 @@ let test_specs =
         "((LetStmt x(Num 0))(AssignStmt x(Num 1))(ExprStmt(FuncInvoc \
          print((IdRef x)))))";
       stdout_expect = "1\n";
+      failure = None;
     };
     {
       name = "func definition";
       program = "func m() {}";
       ast = "((FuncStmt(name m)(parameters())(block())))";
       stdout_expect = "";
+      failure = None;
     };
     {
       name = "func invocation";
@@ -81,6 +100,7 @@ let test_specs =
         "((FuncStmt(name m)(parameters())(block((ExprStmt(Num 1))(ExprStmt(Num \
          2))(ExprStmt(Num 3)))))(ExprStmt(FuncInvoc print((FuncInvoc m())))))";
       stdout_expect = "3\n";
+      failure = None;
     };
     {
       name = "nested functions";
@@ -91,6 +111,7 @@ let test_specs =
          print((IdRef x)))))))(ExprStmt(FuncInvoc f2())))))(ExprStmt(FuncInvoc \
          f1())))";
       stdout_expect = "1\n";
+      failure = None;
     };
     {
       name = "lexical scope";
@@ -101,6 +122,7 @@ let test_specs =
          x)))))))(FuncStmt(name g)(parameters())(block((LetStmt x(Num \
          2))(ExprStmt(FuncInvoc f())))))(ExprStmt(FuncInvoc g())))";
       stdout_expect = "1\n";
+      failure = None;
     };
   ]
 
@@ -112,6 +134,7 @@ let interpreter_failure_specs =
       program = "let x=1;func x(){}";
       ast = "((LetStmt x(Num 1))(FuncStmt(name x)(parameters())(block())))";
       stdout_expect = "";
+      failure = Some Runtime_error;
     };
     (*
     {
@@ -131,6 +154,7 @@ let interpreter_failure_specs =
          print((IdRef x)))))))(LetStmt x(Num 1))(ExprStmt(FuncInvoc \
          closure())))";
       stdout_expect = "";
+      failure = Some Optimizer_error;
     };
   ]
 
@@ -190,13 +214,13 @@ let tests =
     let open Compiler in
     spec.name >:: fun _ ->
     (* Parser *)
-    let prog = Main.parse spec.program in
-    assert_equal ~pp_diff ~printer spec.ast (Optimizer.prog_to_str prog);
-
-    (* Interpreter *)
-    let module Lib = Interpreter.Sloth_stdlib.Make_test () in
-    let ctx = Interpreter.Context.make_ctx (module Lib) in
     try
+      let prog = Main.parse spec.program in
+      assert_equal ~pp_diff ~printer spec.ast (Optimizer.prog_to_str prog);
+
+      (* Interpreter *)
+      let module Lib = Interpreter.Sloth_stdlib.Make_test () in
+      let ctx = Interpreter.Context.make_ctx (module Lib) in
       let _, _ = Interpreter.Interpret.interpret_prog ctx prog in
       let cb =
        fun acc cur ->
@@ -210,7 +234,36 @@ let tests =
           buf_s
       in
       assert_failure msg
-    with Failure _ -> ()
+    with
+    | Optimizer.Failure msg -> (
+        match spec.failure with
+        | None ->
+            Printf.sprintf "Expected no failure, but got Optimizer.Failure (%s)"
+              msg
+            |> assert_failure
+        | Some expectation -> (
+            match expectation with
+            | Optimizer_error -> ()
+            | Runtime_error ->
+                Printf.sprintf
+                  "Expected a Runtime_error, but got a Optimizer.Failure: %s"
+                  msg
+                |> assert_failure))
+    | Interpreter.Common.Failure msg -> (
+        match spec.failure with
+        | None ->
+            Printf.sprintf
+              "Expected no failure, but got Interpreter.Common.Failure (%s)" msg
+            |> assert_failure
+        | Some expectation -> (
+            match expectation with
+            | Optimizer_error ->
+                Printf.sprintf
+                  "Expected an Opimize_error, but got a \
+                   Interpreter.Common.Failure (%s)"
+                  msg
+                |> assert_failure
+            | Runtime_error -> ()))
   in
   "slothscript"
   >::: [
