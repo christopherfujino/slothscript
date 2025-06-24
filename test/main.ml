@@ -15,8 +15,7 @@ let pp_diff formatter left_right_tuple =
     try
       let lchar = String.get left' i in
       let rchar = String.get right' i in
-      if lchar != rchar then i
-      else diff_finder (i + 1) left' right'
+      if lchar != rchar then i else diff_finder (i + 1) left' right'
       (* Catch index out of bounds *)
     with Invalid_argument _ -> i
   in
