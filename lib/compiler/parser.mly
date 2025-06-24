@@ -62,7 +62,8 @@ stmt:
   | LET; id = ID; EQUALS; e1 = expr; SEMICOLON { LetStmt (id, e1) }
   | id = ID; EQUALS; e1 = expr; SEMICOLON { AssignStmt (id, e1) }
   (* Does not require semi-colon *)
-  | FUNC; i = ID; p = parameter_list ; b = block { FuncStmt {name = i; parameters = p; block = b;} }
+  | FUNC; i = ID; LPAREN; RPAREN; b = block { FuncStmt {name = i; parameters = []; block = b;} }
+  | FUNC; i = ID; LPAREN; p = parameter_list ; RPAREN; b = block { FuncStmt {name = i; parameters = p; block = b;} }
   ;
 
 expr:
@@ -93,7 +94,7 @@ argument_list:
   | tl = argument_list; COMMA; e = expr { e :: tl }
 
 parameter_list:
-  (* TODO: support actual params *)
   (* TODO: make parameters different from just strings, to support type
      annotations *)
-  | LPAREN; RPAREN { [] }
+  | i = ID { [i] }
+  | tl = parameter_list; COMMA; hd = ID { hd :: tl }

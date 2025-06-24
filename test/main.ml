@@ -40,14 +40,12 @@ let tests =
     let module Lib = Interpreter.Sloth_stdlib.Make_test () in
     let ctx = Interpreter.Context.make_ctx (module Lib) in
     let _, _ = Interpreter.Interpret.interpret_prog ctx prog in
+    let forward_buffer = List.rev !Lib.stdout_buffer in
     let catted_output_opt =
       List.fold_left
         (fun acc cur ->
-          Some
-            (match acc with
-            | None -> cur
-            | Some acc -> Printf.sprintf "%s\n%s" acc cur))
-        None !Lib.stdout_buffer
+          Some (match acc with None -> cur | Some acc -> acc ^ cur))
+        None forward_buffer
     in
     match catted_output_opt with
     | None -> assert_equal ~printer spec.stdout_expect ""

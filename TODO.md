@@ -6,3 +6,4 @@
 - [x] Lexical scoping
 - [x] Closures
 - [x] Variable re-assignment
+- [x] Function arguments

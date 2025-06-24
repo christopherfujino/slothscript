@@ -43,10 +43,16 @@ and optimize_stmt env stmts : Environment.t * stmt =
   | FuncStmt { name; parameters; block } ->
       let parameters = List.rev parameters in
       (* TODO will need to add `name` to env to support recursion *)
-      let block2 = optimize_block env block in
-      let env3 = Environment.bind env name in
-      (env3, FuncStmt { name; parameters; block = block2 })
+      let env2 = Environment.push_empty env in
+      let env3 =
+        List.fold_left parameters ~init:env2 ~f:(fun env param ->
+            Environment.bind env param)
+      in
+      let block2 = optimize_block env3 block in
+      let env4 = Environment.bind env name in
+      (env4, FuncStmt { name; parameters; block = block2 })
 
+(** You must push a new frame to the env first. *)
 and optimize_block env rev_stmts =
   let stmts = List.rev rev_stmts in
   let cb =
@@ -56,9 +62,7 @@ and optimize_block env rev_stmts =
     (env2, stmt :: stmts)
   in
 
-  let _, rev_stmts2 =
-    List.fold_left ~init:(Environment.push_empty env, []) ~f:cb stmts
-  in
+  let _, rev_stmts2 = List.fold_left ~init:(env, []) ~f:cb stmts in
   List.rev rev_stmts2
 
 and optimize_operator (o : Ast.operator) : operator = match o with Add -> Add

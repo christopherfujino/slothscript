@@ -85,6 +85,16 @@ let green =
     };
     {
       name = "func invocation";
+      program = "func m() {print(1);print(2);}m();";
+      ast =
+        "((FuncStmt(name m)(parameters())(block((ExprStmt(FuncInvoc print((Num \
+         1))))(ExprStmt(FuncInvoc print((Num 2)))))))(ExprStmt(FuncInvoc \
+         m())))";
+      stdout_expect = "1\n2\n";
+      failure = None;
+    };
+    {
+      name = "func implicit return";
       program = "func m() {1;2;3;}print(m());";
       ast =
         "((FuncStmt(name m)(parameters())(block((ExprStmt(Num 1))(ExprStmt(Num \
@@ -122,6 +132,16 @@ let green =
          f)(parameters())(block((ExprStmt(FuncInvoc print((IdRef \
          x)))))))(AssignStmt x(Num 1))(ExprStmt(FuncInvoc f())))";
       stdout_expect = "1\n";
+      failure = None;
+    };
+    {
+      name = "args";
+      program = "func f(x, y) {print(x);print(y);}f(1, 2);";
+      ast =
+        "((FuncStmt(name f)(parameters(x y))(block((ExprStmt(FuncInvoc \
+         print((IdRef x))))(ExprStmt(FuncInvoc print((IdRef \
+         y)))))))(ExprStmt(FuncInvoc f((Num 1)(Num 2)))))";
+      stdout_expect = "1\n2\n";
       failure = None;
     };
   ]
