@@ -58,9 +58,6 @@ and interpret_expr ctx expr =
 
               let temp_ctx =
                 { ctx with identifiers = Identifiers.push_empty identifiers }
-                (*
-                { ctx with identifiers = new_frame :: identifiers }
-                *)
               in
               let rec traverse_stmts ctx stmts =
                 match stmts with
