@@ -44,11 +44,12 @@ and interpret_expr ctx expr =
       | Func f -> (
           match f with
           | User { parameters; block; identifiers } ->
-              let new_frame = Identifiers.create () in
+              let identifiers2 = Identifiers.push_empty identifiers in
               (match
                  List.iter2 parameters args ~f:(fun p a ->
+                     let ctx = { ctx with identifiers } in
                      let v = interpret_expr ctx a in
-                     Identifiers.bind new_frame p v)
+                     Identifiers.bind identifiers2 p v)
                with
               | Ok () -> ()
               | Unequal_lengths ->
@@ -56,9 +57,7 @@ and interpret_expr ctx expr =
                     "Mismatched number of params and args in call to %s" name
                   |> failwith);
 
-              let temp_ctx =
-                { ctx with identifiers = Identifiers.push_empty identifiers }
-              in
+              let temp_ctx = { ctx with identifiers = identifiers2 } in
               let rec traverse_stmts ctx stmts =
                 match stmts with
                 | [] -> (ctx, Runtime.Null)

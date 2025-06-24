@@ -7,6 +7,7 @@ type expr =
   | Binary of operator * expr * expr
   | IdRef of string
   | FuncInvoc of string * expr list
+[@@deriving sexp]
 
 and operator = Add
 
