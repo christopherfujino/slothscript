@@ -49,13 +49,13 @@ and interpret_expr ctx expr =
       match Identifiers.get ctx.identifiers name with
       | Func f -> (
           match f with
-          | User { parameters; block; identifiers } -> (
+          | User { parameters; block; identifiers } ->
               let new_frame = Identifiers.create () in
               (match
-                List.iter2 parameters args ~f:(fun p a ->
-                    let v = interpret_expr ctx a in
-                    Identifiers.set new_frame p v)
-              with
+                 List.iter2 parameters args ~f:(fun p a ->
+                     let v = interpret_expr ctx a in
+                     Identifiers.set new_frame p v)
+               with
               | Ok () -> ()
               | Unequal_lengths ->
                   Printf.sprintf
@@ -75,7 +75,7 @@ and interpret_expr ctx expr =
               in
               (* discard context *)
               let _, v = traverse_stmts temp_ctx block in
-              v)
+              v
           | Native { cb; parameters = _; identifiers = _ } ->
               let vals = List.map args ~f:(interpret_expr ctx) in
               cb vals)
