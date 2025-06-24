@@ -7,27 +7,28 @@ let rec interpret_stmt (ctx : Context.t) stmt =
       let v = interpret_expr ctx e in
       match ctx.identifiers with
       | [] -> failwith "unreachable"
-      | current_env_frame :: tail_env_frames ->
-          let identifiers = Identifiers.set current_env_frame id v in
-          ({ ctx with identifiers = identifiers :: tail_env_frames }, v))
+      | current_env_frame :: _ ->
+          Identifiers.set current_env_frame id v;
+          (ctx, v))
+  | AssignStmt (id, e) ->
+      let v = interpret_expr ctx e in
+      Identifiers.reassign ctx.identifiers id v;
+      (ctx, v)
   | ExprStmt expr -> (ctx, interpret_expr ctx expr)
   | FuncStmt { name; parameters; block } -> (
       match ctx.identifiers with
       | [] -> failwith "unreachable"
-      | current_env_frame :: tail_env_frames ->
-          let identifiers =
-            Identifiers.set current_env_frame name
-              (Func
-                 (User
-                    {
-                      parameters;
-                      block;
-                      (* TODO this should snapshot *)
-                      identifiers = ctx.identifiers;
-                    }))
-          in
-          ( { ctx with identifiers = identifiers :: tail_env_frames },
-            Runtime.Null ))
+      | current_env_frame :: _ ->
+          Identifiers.set current_env_frame name
+            (Func
+               (User
+                  {
+                    parameters;
+                    block;
+                    (* TODO this should snapshot *)
+                    identifiers = ctx.identifiers;
+                  }));
+          (ctx, Runtime.Null))
 
 (* TODO Note this does not return a context--can expressions mutate context?! *)
 (* Yes, if they call a function that mutates a global *)
@@ -50,19 +51,16 @@ and interpret_expr ctx expr =
           match f with
           | User { parameters; block; identifiers } ->
               let new_frame = Identifiers.create () in
-              let new_frame =
-                match
-                  List.fold2 parameters args ~init:new_frame
-                    ~f:(fun frame p a ->
-                      let v = interpret_expr ctx a in
-                      Identifiers.set frame p v)
-                with
-                | Ok frame -> frame
-                | Unequal_lengths ->
-                    Printf.sprintf
-                      "Mismatched number of params and args in call to %s" name
-                    |> failwith
-              in
+              (match
+                 List.iter2 parameters args ~f:(fun p a ->
+                     let v = interpret_expr ctx a in
+                     Identifiers.set new_frame p v)
+               with
+              | Ok () -> ()
+              | Unequal_lengths ->
+                  Printf.sprintf
+                    "Mismatched number of params and args in call to %s" name
+                  |> failwith);
 
               let temp_ctx =
                 { ctx with identifiers = new_frame :: identifiers }
