@@ -1,8 +1,8 @@
 .PHONY: test
 test:
-	# A synonym for dune runtest
 	# OUNIT_CI=true makes output prettier
-	OUNIT_CI=true dune build @runtest --force
+	# --force makes all tests run
+	OUNIT_CI=true dune build @runtest
 
 .PHONY: describe
 describe:
