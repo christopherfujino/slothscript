@@ -1,14 +1,14 @@
 (* Context *)
 type t = {
   l : (module Sloth_stdlib.StdlibSig);
-  identifiers : Runtime.t Identifiers.t list;
+  identifiers : Runtime.t Identifiers.t;
 }
 
 let make_ctx m =
   let module M = (val m : Sloth_stdlib.StdlibSig) in
   let identifiers = Identifiers.create () in
   let () =
-    Identifiers.set identifiers "print"
+    Identifiers.bind identifiers "print"
       (Runtime.Func
          (Native
             {
@@ -21,7 +21,7 @@ let make_ctx m =
                   let arg = List.hd args in
                   M.InputOutput.print arg;
                   Runtime.Null);
-              identifiers = [ identifiers ];
+              identifiers;
             }))
   in
-  { l = m; identifiers = [ identifiers ] }
+  { l = m; identifiers = identifiers }
