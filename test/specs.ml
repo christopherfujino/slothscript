@@ -44,14 +44,6 @@ let green =
          2))(ExprStmt(Num 3)))))(ExprStmt(FuncInvoc(IdRef \
          print)((FuncInvoc(IdRef m)())))))"
       ~stdout_expect:"3\n";
-    make_spec "nested functions"
-      ~program:"func f1() {let x = 1;func f2() {print(x);}f2();}f1();"
-      ~ast:
-        "((FuncStmt(name f1)(parameters())(block((LetStmt x(Num \
-         1))(FuncStmt(name f2)(parameters())(block((ExprStmt(FuncInvoc(IdRef \
-         print)((IdRef x)))))))(ExprStmt(FuncInvoc(IdRef \
-         f2)())))))(ExprStmt(FuncInvoc(IdRef f1)())))"
-      ~stdout_expect:"1\n";
     make_spec "lexical scope"
       ~program:"let x=1;func f() {print(x);}func g() {let x=2;f();}g();"
       ~ast:
@@ -104,4 +96,12 @@ let red =
          print((IdRef x)))))))(LetStmt x(Num 1))(ExprStmt(FuncInvoc \
          closure())))"
       ~failure:Optimizer_error;
+    make_spec "function declarations can only happen at the top level"
+      ~program:"func f1() {let x = 1;func f2() {print(x);}f2();}f1();"
+      ~ast:
+        "((FuncStmt(name f1)(parameters())(block((LetStmt x(Num \
+         1))(FuncStmt(name f2)(parameters())(block((ExprStmt(FuncInvoc(IdRef \
+         print)((IdRef x)))))))(ExprStmt(FuncInvoc(IdRef \
+         f2)())))))(ExprStmt(FuncInvoc(IdRef f1)())))"
+      ~stdout_expect:"1\n" ~failure:Parser_error;
   ]

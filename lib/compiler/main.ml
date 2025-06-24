@@ -6,6 +6,6 @@ let parse line =
     with Parser.Error i ->
       let msg = Printf.sprintf "Parser error (%d)" i in
       (* TODO Interpolate lexer position *)
-      failwith msg
+      raise (Common.ParserFailure msg)
   in
   Optimizer.optimize_prog stmts

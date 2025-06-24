@@ -49,11 +49,22 @@
 
 prog:
   | EOF { [] }
-  | p = stmts; EOF { p }
+  | p = declarations; EOF { p }
+  ;
+
+declarations:
+  | tl = declarations; hd = decl { hd :: tl }
+  | d = decl { [d] }
+  ;
+
+decl:
+  | FUNC; i = ID; LPAREN; RPAREN; b = block { FuncStmt {name = i; parameters = []; block = b;} }
+  | FUNC; i = ID; LPAREN; p = parameter_list ; RPAREN; b = block { FuncStmt {name = i; parameters = p; block = b;} }
+  | s = stmt { s }
   ;
 
 stmts:
-  | tl = stmts; hd = stmt { hd :: tl }
+  | tl = stmts; hd = stmt {hd :: tl}
   | s = stmt { [s] }
   ;
 
@@ -61,9 +72,6 @@ stmt:
   | e1 = expr; SEMICOLON { ExprStmt e1 }
   | LET; id = ID; EQUALS; e1 = expr; SEMICOLON { LetStmt (id, e1) }
   | id = ID; EQUALS; e1 = expr; SEMICOLON { AssignStmt (id, e1) }
-  (* Does not require semi-colon *)
-  | FUNC; i = ID; LPAREN; RPAREN; b = block { FuncStmt {name = i; parameters = []; block = b;} }
-  | FUNC; i = ID; LPAREN; p = parameter_list ; RPAREN; b = block { FuncStmt {name = i; parameters = p; block = b;} }
   ;
 
 expr:

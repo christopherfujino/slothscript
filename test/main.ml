@@ -82,9 +82,9 @@ let make_failing_test spec =
       | Some expectation -> (
           match expectation with
           | Optimizer_error -> ()
-          | Runtime_error ->
+          | _ ->
               Printf.sprintf
-                "Expected a Runtime_error, but got a Optimizer.Failure: %s" msg
+                "Got an Optimizer.Failure but expected something else: %s" msg
               |> assert_failure))
   | Interpreter.Common.Failure msg -> (
       match spec.failure with
@@ -94,13 +94,28 @@ let make_failing_test spec =
           |> assert_failure
       | Some expectation -> (
           match expectation with
-          | Optimizer_error ->
+          | Runtime_error -> ()
+          | _ ->
               Printf.sprintf
-                "Expected an Opimize_error, but got a \
-                 Interpreter.Common.Failure (%s)"
+                "Got an Interpreter.Common.Failure but expected something else \
+                 (%s)"
                 msg
-              |> assert_failure
-          | Runtime_error -> ()))
+              |> assert_failure))
+  | Compiler.Common.ParserFailure msg -> (
+      match spec.failure with
+      | None ->
+          Printf.sprintf
+            "Expected no failure but got Compiler.Common.ParserFailure (%s)" msg
+          |> assert_failure
+      | Some expectation -> (
+          match expectation with
+          | Parser_error -> ()
+          | _ ->
+              Printf.sprintf
+                "Got a Compiler.Common.ParserFailure (%s) but expected a \
+                 different error"
+                msg
+              |> assert_failure))
 
 let tests =
   "slothscript"
