@@ -144,6 +144,20 @@ let green =
       stdout_expect = "1\n2\n";
       failure = None;
     };
+    {
+      name = "first class func";
+      program = "func f() {let x = 1;func() {x;};}let xer = f();print(xer());";
+      ast = "((FuncStmt(name f)(parameters())(block((LetStmt x(Num 1))(ExprStmt(FuncExpr(parameters())(block((ExprStmt(IdRef x)))))))))(LetStmt xer(FuncInvoc f()))(ExprStmt(FuncInvoc print((FuncInvoc xer())))))";
+      stdout_expect = "1\n";
+      failure = None;
+    };
+    {
+      name = "curry";
+      program = "func a(x) {func(y) {x+y;};}print(a(1)(2));";
+      ast = "";
+      stdout_expect = "3\n";
+      failure = None;
+    };
   ]
 
 let red =

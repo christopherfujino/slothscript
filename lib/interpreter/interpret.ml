@@ -76,6 +76,8 @@ and interpret_expr ctx expr =
           Printf.sprintf "Tried to invoke id \"%s\", but it is not a function"
             name
           |> failwith)
+  | FuncExpr { parameters; block } ->
+      Func (User { parameters; block; identifiers = ctx.identifiers })
 
 and interpret_prog ctx prog =
   match prog with

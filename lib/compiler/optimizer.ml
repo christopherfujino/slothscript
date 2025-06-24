@@ -10,6 +10,7 @@ type expr =
   | Binary of operator * expr * expr
   | IdRef of string
   | FuncInvoc of string * expr list
+  | FuncExpr of { parameters : string list; block : stmt list }
 [@@deriving sexp]
 
 and operator = Add [@@deriving sexp]
@@ -41,16 +42,16 @@ and optimize_stmt env stmts : Environment.t * stmt =
       let e = optimize_expr env expr in
       (env, ExprStmt e)
   | FuncStmt { name; parameters; block } ->
-      let parameters = List.rev parameters in
+      let parameters2 = List.rev parameters in
       (* TODO will need to add `name` to env to support recursion *)
       let env2 = Environment.push_empty env in
       let env3 =
-        List.fold_left parameters ~init:env2 ~f:(fun env param ->
+        List.fold_left parameters2 ~init:env2 ~f:(fun env param ->
             Environment.bind env param)
       in
       let block2 = optimize_block env3 block in
       let env4 = Environment.bind env name in
-      (env4, FuncStmt { name; parameters; block = block2 })
+      (env4, FuncStmt { name; parameters = parameters2; block = block2 })
 
 (** You must push a new frame to the env first. *)
 and optimize_block env rev_stmts =
@@ -88,5 +89,14 @@ and optimize_expr (env : Environment.t) (e : Ast.expr) : expr =
           let msg = Printf.sprintf "Undeclared identifier %s" name in
           raise (Failure msg)
       | Some _ -> IdRef name)
+  | FuncExpr { parameters; block } ->
+      let parameters2 = List.rev parameters in
+      let env2 = Environment.push_empty env in
+      let env3 =
+        List.fold_left parameters2 ~init:env2 ~f:(fun env param ->
+            Environment.bind env param)
+      in
+      let block2 = optimize_block env3 block in
+      FuncExpr { parameters = parameters2; block = block2 }
 
 let prog_to_str stmts = sexp_of_prog stmts |> Sexp.to_string

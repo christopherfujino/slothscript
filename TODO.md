@@ -2,6 +2,7 @@
 - [ ] Invoking function expressions
 - [ ] Recursion (depends on conditionals)
 - [ ] Conditionals
+- [ ] Early return from functions?
 
 ## Done
 - [x] Lexical scoping
