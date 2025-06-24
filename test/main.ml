@@ -5,7 +5,7 @@ let rec indent buf n =
   if n = 0 then Buffer.contents buf
   else (
     Buffer.add_char buf ' ';
-    (indent [@tailrec]) buf (n - 1))
+    (indent [@tailcall]) buf (n - 1))
 
 let printer s = Printf.sprintf "\"%s\"" s
 
@@ -16,7 +16,7 @@ let pp_diff formatter left_right_tuple =
       let lchar = String.get left' i in
       let rchar = String.get right' i in
       if lchar != rchar then i
-      else (diff_finder [@tailrec]) (i + 1) left' right'
+      else diff_finder (i + 1) left' right'
       (* Catch index out of bounds *)
     with Invalid_argument _ -> i
   in

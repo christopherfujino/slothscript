@@ -26,7 +26,7 @@ and expr =
   | String of string
   | Binary of operator * expr * expr
   | IdRef of string
-  | FuncInvoc of string * expr list
+  | FuncInvoc of expr * expr list
   | FuncExpr of func_expr_t
 [@@deriving sexp]
 

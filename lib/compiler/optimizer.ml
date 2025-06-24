@@ -9,7 +9,7 @@ type expr =
   (* TODO this should be infix invoc expression, storing a lexeme string *)
   | Binary of operator * expr * expr
   | IdRef of string
-  | FuncInvoc of string * expr list
+  | FuncInvoc of expr * expr list
   | FuncExpr of { parameters : string list; block : stmt list }
 [@@deriving sexp]
 
@@ -25,7 +25,7 @@ and stmt =
 type prog = stmt list [@@deriving sexp]
 
 let rec optimize_prog prog =
-  let env = Environment.create () in
+  let env = Environment.create () |> Stdlib_stubs.populate in
   optimize_block env prog
 
 and optimize_stmt env stmts : Environment.t * stmt =
@@ -78,10 +78,10 @@ and optimize_expr (env : Environment.t) (e : Ast.expr) : expr =
       let e1 = optimize_expr env e1 in
       let e2 = optimize_expr env e2 in
       Binary (optimize_operator o, e1, e2)
-  | FuncInvoc (name, args) ->
+  | FuncInvoc (receiver, args) ->
       let rev_args = List.rev args in
       let rev_mapped_args = List.map rev_args ~f:(optimize_expr env) in
-      FuncInvoc (name, rev_mapped_args)
+      FuncInvoc (optimize_expr env receiver, rev_mapped_args)
   | IdRef name -> (
       let name_opt = Environment.find env name in
       match name_opt with
