@@ -13,12 +13,12 @@ and function_t =
   | Native of {
       parameters : string list;
       cb : t list -> t;
-      identifiers : t Identifiers.t list;
+      identifiers : t Identifiers.t;
     }
   | User of {
       parameters : string list;
       block : Compiler.Optimizer.stmt list;
-      identifiers : t Identifiers.t list;
+      identifiers : t Identifiers.t;
     }
 
 let num_of_val v = match v with Num f -> f | _ -> failwith "Cast error!"

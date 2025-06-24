@@ -3,32 +3,26 @@ open Core
 let rec interpret_stmt (ctx : Context.t) stmt =
   let open Compiler.Optimizer in
   match stmt with
-  | LetStmt (id, e) -> (
+  | LetStmt (id, e) ->
       let v = interpret_expr ctx e in
-      match ctx.identifiers with
-      | [] -> failwith "unreachable"
-      | current_env_frame :: _ ->
-          Identifiers.set current_env_frame id v;
-          (ctx, v))
+      Identifiers.bind ctx.identifiers id v;
+      (ctx, v)
   | AssignStmt (id, e) ->
       let v = interpret_expr ctx e in
       Identifiers.reassign ctx.identifiers id v;
       (ctx, v)
   | ExprStmt expr -> (ctx, interpret_expr ctx expr)
-  | FuncStmt { name; parameters; block } -> (
-      match ctx.identifiers with
-      | [] -> failwith "unreachable"
-      | current_env_frame :: _ ->
-          Identifiers.set current_env_frame name
-            (Func
-               (User
-                  {
-                    parameters;
-                    block;
-                    (* TODO this should snapshot *)
-                    identifiers = ctx.identifiers;
-                  }));
-          (ctx, Runtime.Null))
+  | FuncStmt { name; parameters; block } ->
+      Identifiers.bind ctx.identifiers name
+        (Func
+           (User
+              {
+                parameters;
+                block;
+                (* TODO this should snapshot *)
+                identifiers = ctx.identifiers;
+              }));
+      (ctx, Runtime.Null)
 
 (* TODO Note this does not return a context--can expressions mutate context?! *)
 (* Yes, if they call a function that mutates a global *)
@@ -54,7 +48,7 @@ and interpret_expr ctx expr =
               (match
                  List.iter2 parameters args ~f:(fun p a ->
                      let v = interpret_expr ctx a in
-                     Identifiers.set new_frame p v)
+                     Identifiers.bind new_frame p v)
                with
               | Ok () -> ()
               | Unequal_lengths ->
@@ -63,7 +57,7 @@ and interpret_expr ctx expr =
                   |> failwith);
 
               let temp_ctx =
-                { ctx with identifiers = new_frame :: identifiers }
+                { ctx with identifiers = Identifiers.push_empty identifiers }
               in
               let rec traverse_stmts ctx stmts =
                 match stmts with
