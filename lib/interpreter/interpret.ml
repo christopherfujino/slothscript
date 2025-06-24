@@ -39,8 +39,9 @@ and interpret_expr ctx expr =
           let right_val = Runtime.num_of_val (interpret_expr ctx rhs) in
           Runtime.Num (left_val +. right_val))
   | IdRef i -> Identifiers.get ctx.identifiers i
-  | FuncInvoc (name, args) -> (
-      match Identifiers.get ctx.identifiers name with
+  | FuncInvoc (receiver, args) -> (
+      let receiver' = interpret_expr ctx receiver in
+      match receiver' with
       | Func f -> (
           match f with
           | User { parameters; block; identifiers } ->
@@ -54,7 +55,7 @@ and interpret_expr ctx expr =
               | Ok () -> ()
               | Unequal_lengths ->
                   Printf.sprintf
-                    "Mismatched number of params and args in call to %s" name
+                    "Mismatched number of params and args in call to function"
                   |> failwith);
 
               let temp_ctx = { ctx with identifiers = identifiers2 } in
@@ -73,9 +74,11 @@ and interpret_expr ctx expr =
               let vals = List.map args ~f:(interpret_expr ctx) in
               cb vals)
       | _ ->
-          Printf.sprintf "Tried to invoke id \"%s\", but it is not a function"
-            name
+          Printf.sprintf "Tried to invoke %s, but it is not a function"
+            (Runtime.to_s receiver')
           |> failwith)
+  | FuncExpr { parameters; block } ->
+      Func (User { parameters; block; identifiers = ctx.identifiers })
 
 and interpret_prog ctx prog =
   match prog with

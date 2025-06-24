@@ -6,7 +6,8 @@ type expr =
   | String of string
   | Binary of operator * expr * expr
   | IdRef of string
-  | FuncInvoc of string * expr list
+  | FuncInvoc of expr * expr list
+  | FuncExpr of { parameters : string list; block : stmt list }
 [@@deriving sexp]
 
 and operator = Add

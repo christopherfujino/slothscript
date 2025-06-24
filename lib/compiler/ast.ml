@@ -6,6 +6,7 @@ type func_stmt_t = {
   block : stmt list;
 }
 
+and func_expr_t = { parameters : string list; block : stmt list }
 and prog = stmt list [@@deriving sexp]
 
 and stmt =
@@ -21,7 +22,8 @@ and expr =
   | String of string
   | Binary of operator * expr * expr
   | IdRef of string
-  | FuncInvoc of string * expr list
+  | FuncInvoc of expr * expr list
+  | FuncExpr of func_expr_t
 [@@deriving sexp]
 
 and operator = Add [@@deriving sexp]

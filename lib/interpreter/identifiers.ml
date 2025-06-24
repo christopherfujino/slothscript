@@ -11,7 +11,6 @@ let push_empty t' =
 
 (* TODO figure out recursion when setting funcs *)
 let bind env id v =
-  Printf.printf "setting var %s\n" id;
   let maybe_val = Hashtbl.find env.values id in
   match maybe_val with
   | Some _ ->

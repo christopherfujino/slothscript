@@ -72,9 +72,11 @@ expr:
   | TRUE { Bool true }
   | FALSE { Bool false }
   | s = STRING { String s }
-  | i = ID; LPAREN; a = argument_list; RPAREN { FuncInvoc (i, a) }
-  | i = ID; LPAREN; RPAREN { FuncInvoc (i, []) }
+  | e = expr; LPAREN; a = argument_list; RPAREN { FuncInvoc (e, a) }
+  | e = expr; LPAREN; RPAREN { FuncInvoc (e, []) }
   | i = ID { IdRef i }
+  | FUNC; LPAREN; RPAREN; b = block { FuncExpr {parameters = []; block = b;} }
+  | FUNC; LPAREN; p = parameter_list; RPAREN; b = block { FuncExpr {parameters = p; block = b;} }
   (*
   | e1 = expr; LEQ; e2 = expr { Binary (Leq, e1, e2) }
   | e1 = expr; TIMES; e2 = expr { Binary (Mult, e1, e2) }
