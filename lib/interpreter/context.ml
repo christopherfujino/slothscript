@@ -24,4 +24,4 @@ let make_ctx m =
               identifiers;
             }))
   in
-  { l = m; identifiers = identifiers }
+  { l = m; identifiers }
