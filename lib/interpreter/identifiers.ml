@@ -1,9 +1,15 @@
 open Core
 
 (* This type is polymorphic to avoid module cycle with Runtime *)
-type 'a t = (string, 'a) Hashtbl.t
+type 'a t = {
+  previous : 'a t option;
+  values : (string, 'a) Hashtbl.t;
+}
 
-let create () = Hashtbl.create ~size:8 (module String)
+let create () = {
+  previous = None;
+  values = Hashtbl.create ~size:8 (module String)
+}
 
 (* TODO figure out recursion when setting funcs *)
 let set ids id v =
