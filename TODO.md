@@ -1,6 +1,7 @@
 - [ ] Stack traces
 - [ ] Invoking function expressions
-- [ ] Recursion
+- [ ] Recursion (depends on conditionals)
+- [ ] Conditionals
 
 ## Done
 - [x] Lexical scoping
