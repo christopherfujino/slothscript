@@ -24,13 +24,12 @@
 %token RPAREN
 %token COMMA
 %token IF
+%token ELSE
 (*
 %token LEQ
 %token TIMES
 %token IN
-%token IF
 %token THEN
-%token ELSE
   *)
 
 (* Disambiguate precedence and associativity *)

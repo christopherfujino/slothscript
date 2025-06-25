@@ -83,15 +83,20 @@ let green =
          Add(IdRef x)(IdRef y))))))))))(StmtDecl(ExprStmt(FuncInvoc(IdRef \
          print)((FuncInvoc(FuncInvoc(IdRef a)((Num 1)))((Num 2))))))))"
       ~stdout_expect:"3\n";
-    make_spec "if"
-      ~program:"if true {print(\"True\");};if false {print(\"False\");};"
+    make_spec "if true" ~program:"if true {print(\"True\");};"
       ~ast:
         "((StmtDecl(ExprStmt(IfExpr(conditional(Bool \
-         true))(block((ExprStmt(FuncInvoc(IdRef print)((String \
-         True)))))))))(StmtDecl(ExprStmt(IfExpr(conditional(Bool \
-         false))(block((ExprStmt(FuncInvoc(IdRef print)((String \
-         False))))))))))"
+         true))(block((ExprStmt(FuncInvoc(IdRef print)((String True))))))))))"
       ~stdout_expect:"True\n";
+    make_spec "if false" ~program:"if false {print(\"Unreachable\");};" ~ast:"";
+    make_spec "if/else"
+      ~program:"if false {print(true);} else {print(\"else\");};" ~ast:""
+      ~stdout_expect:"else\n";
+    make_spec "if/else if/else" ~ast:""
+      ~program:
+        "if false {print(\"unreachable\");} else if false \
+         {print(\"unreachable\");} else {print(\"finally\");}"
+      ~stdout_expect:"finally\n";
   ]
 
 let red =

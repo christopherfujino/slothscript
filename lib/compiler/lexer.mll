@@ -23,6 +23,7 @@ rule read =
   | "let" { LET }
   | "func" { FUNC }
   | "if" { IF }
+  | "else" { ELSE }
   | '+' { PLUS }
   | '=' { EQUALS }
   | ';' { SEMICOLON }
@@ -32,11 +33,12 @@ rule read =
   | '(' { LPAREN }
   | ')' { RPAREN }
   | ',' { COMMA }
-  (*| "<=" { LEQ }
+  (*
+  | "<=" { LEQ }
   | '*' { TIMES }
   | "in" { IN }
   | "then" { THEN }
-  | "else" { ELSE } *)
+  *)
   (* Lexing.lexeme means return the string that matched the pattern *)
   | id { ID (Lexing.lexeme lexbuf) }
   | num { NUM (float_of_string (Lexing.lexeme lexbuf)) }
