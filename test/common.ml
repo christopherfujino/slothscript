@@ -6,4 +6,4 @@ type test_spec = {
   failure : failure_t option;
 }
 
-and failure_t = Optimizer_error | Runtime_error
+and failure_t = Parser_error | Optimizer_error | Runtime_error

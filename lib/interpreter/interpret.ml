@@ -1,6 +1,32 @@
 open Core
 
-let rec interpret_stmt (ctx : Context.t) stmt =
+let rec interpret_prog ctx prog =
+  (*List.fold_left prog ~init:ctx ~f:interpret_decl*)
+  match prog with
+  | [] -> ctx
+  | hd :: tl ->
+      let new_ctx = interpret_decl ctx hd in
+      (interpret_prog [@tailcall]) new_ctx tl
+
+and interpret_decl (ctx : Context.t) decl =
+  let open Compiler.Optimizer in
+  match decl with
+  | FuncDecl { name; parameters; block } ->
+      Identifiers.bind ctx.identifiers name
+        (Func
+           (User
+              {
+                parameters;
+                block;
+                (* TODO this should snapshot *)
+                identifiers = ctx.identifiers;
+              }));
+      ctx
+  | StmtDecl s ->
+      let ctx, _ = interpret_stmt ctx s in
+      ctx
+
+and interpret_stmt (ctx : Context.t) stmt =
   let open Compiler.Optimizer in
   match stmt with
   | LetStmt (id, e) ->
@@ -12,17 +38,6 @@ let rec interpret_stmt (ctx : Context.t) stmt =
       Identifiers.reassign ctx.identifiers id v;
       (ctx, v)
   | ExprStmt expr -> (ctx, interpret_expr ctx expr)
-  | FuncStmt { name; parameters; block } ->
-      Identifiers.bind ctx.identifiers name
-        (Func
-           (User
-              {
-                parameters;
-                block;
-                (* TODO this should snapshot *)
-                identifiers = ctx.identifiers;
-              }));
-      (ctx, Runtime.Null)
 
 (* TODO Note this does not return a context--can expressions mutate context?! *)
 (* Yes, if they call a function that mutates a global *)
@@ -79,11 +94,3 @@ and interpret_expr ctx expr =
           |> failwith)
   | FuncExpr { parameters; block } ->
       Func (User { parameters; block; identifiers = ctx.identifiers })
-
-and interpret_prog ctx prog =
-  match prog with
-  | [] -> (ctx, Runtime.Null)
-  | hd :: tl ->
-      let new_ctx, v = interpret_stmt ctx hd in
-      if List.is_empty tl then (new_ctx, v)
-      else (interpret_prog [@tailrec]) new_ctx tl

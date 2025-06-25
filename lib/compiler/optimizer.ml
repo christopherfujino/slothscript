@@ -2,7 +2,19 @@ open Core
 
 exception Failure of string
 
-type expr =
+type prog = decl list
+
+and decl =
+  | FuncDecl of { name : string; parameters : string list; block : stmt list }
+  | StmtDecl of stmt
+
+and stmt =
+  | LetStmt of string * expr
+  | AssignStmt of string * expr
+  | ExprStmt of expr
+[@@deriving sexp]
+
+and expr =
   | Num of float
   | Bool of bool
   | String of string
@@ -15,18 +27,34 @@ type expr =
 
 and operator = Add [@@deriving sexp]
 
-and stmt =
-  | LetStmt of string * expr
-  | AssignStmt of string * expr
-  | ExprStmt of expr
-  | FuncStmt of { name : string; parameters : string list; block : stmt list }
-[@@deriving sexp]
-
-type prog = stmt list [@@deriving sexp]
-
 let rec optimize_prog prog =
+  let prog2 = List.rev prog in
   let env = Environment.create () |> Stdlib_stubs.populate in
-  optimize_block env prog
+  let f =
+   fun acc decl ->
+    let env1, already_opt_decls = acc in
+    let env2, opt_decl = optimize_decl env1 decl in
+    (env2, opt_decl :: already_opt_decls)
+  in
+  let _, decls = List.fold_left prog2 ~f ~init:(env, []) in
+  List.rev decls
+
+and optimize_decl env decl : Environment.t * decl =
+  match decl with
+  | Ast.FuncDecl { name; parameters; block } ->
+      let parameters2 = List.rev parameters in
+      (* TODO will need to add `name` to env to support recursion *)
+      let env2 = Environment.push_empty env in
+      let env3 =
+        List.fold_left parameters2 ~init:env2 ~f:(fun env param ->
+            Environment.bind env param)
+      in
+      let block2 = optimize_block env3 block in
+      let env4 = Environment.bind env name in
+      (env4, FuncDecl { name; parameters = parameters2; block = block2 })
+  | Ast.StmtDecl s ->
+      let env2, stmt = optimize_stmt env s in
+      (env2, StmtDecl stmt)
 
 and optimize_stmt env stmts : Environment.t * stmt =
   let open Ast in
@@ -41,17 +69,6 @@ and optimize_stmt env stmts : Environment.t * stmt =
   | ExprStmt expr ->
       let e = optimize_expr env expr in
       (env, ExprStmt e)
-  | FuncStmt { name; parameters; block } ->
-      let parameters2 = List.rev parameters in
-      (* TODO will need to add `name` to env to support recursion *)
-      let env2 = Environment.push_empty env in
-      let env3 =
-        List.fold_left parameters2 ~init:env2 ~f:(fun env param ->
-            Environment.bind env param)
-      in
-      let block2 = optimize_block env3 block in
-      let env4 = Environment.bind env name in
-      (env4, FuncStmt { name; parameters = parameters2; block = block2 })
 
 (** You must push a new frame to the env first. *)
 and optimize_block env rev_stmts =

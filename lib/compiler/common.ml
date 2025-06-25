@@ -1,0 +1,1 @@
+exception ParserFailure of string
