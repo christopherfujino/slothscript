@@ -1,7 +1,7 @@
 - [ ] Stack traces
 - [ ] Recursion (depends on conditionals)
-- [ ] Conditionals
 - [ ] Early return from functions?
+- [ ] Tooling to diagnose shift/reduce conflicts
 
 ## Done
 - [x] Lexical scoping
@@ -9,3 +9,4 @@
 - [x] Variable re-assignment
 - [x] Function arguments
 - [x] Invoking function expressions
+- [x] Conditionals

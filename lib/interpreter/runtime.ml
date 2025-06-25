@@ -1,3 +1,5 @@
+open Core
+
 type t =
   | String of string
   | Bool of bool
@@ -21,9 +23,17 @@ and function_t =
       identifiers : t Identifiers.t;
     }
 
-let num_of_val v = match v with Num f -> f | _ -> failwith "Cast error!"
+let rec num_of_val v =
+  match v with
+  | Num f -> f
+  | _ -> Printf.sprintf "Expected a Num but got %s" (to_s v) |> failwith
 
-let rec to_s = function
+and bool_of_val b =
+  match b with
+  | Bool b' -> b'
+  | _ -> Printf.sprintf "Expected a Bool but got %s" (to_s b) |> failwith
+
+and to_s = function
   | String s -> s
   | Num f ->
       if Float.is_integer f then Int.of_float f |> Int.to_string
@@ -36,14 +46,14 @@ let rec to_s = function
           acc ^ to_s cur)
         else Printf.sprintf "%s, %s" acc (to_s cur)
       in
-      List.fold_left cb "[" l ^ "]"
+      List.fold_left ~f:cb ~init:"[" l ^ "]"
   | Null -> "null"
   | Bool b -> if b then "true" else "false"
   | Map assoc ->
       List.fold_left
-        (fun acc cur ->
+        ~f:(fun acc cur ->
           let key, value = cur in
           Printf.sprintf "%s\"%s\": %s" acc key (to_s value))
-        "{" assoc
+        ~init:"{" assoc
       ^ "}"
   | Func _ -> "func(TODO)"

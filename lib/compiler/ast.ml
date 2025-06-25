@@ -24,7 +24,16 @@ and expr =
   | IdRef of string
   | FuncInvoc of expr * expr list
   | FuncExpr of func_expr_t
+  | IfExpr of cond_cont
 [@@deriving sexp]
+
+and cond_cont =
+  | IfCont of {
+      conditional : expr;
+      block : stmt list;
+      continuation : cond_cont option;
+    }
+  | ElseCont of stmt list
 
 and operator = Add [@@deriving sexp]
 

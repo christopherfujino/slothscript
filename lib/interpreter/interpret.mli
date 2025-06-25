@@ -5,3 +5,5 @@ val interpret_stmt :
 
 val interpret_expr : Context.t -> Compiler.Optimizer.expr -> Runtime.t
 val interpret_prog : Context.t -> Compiler.Optimizer.decl list -> Context.t
+val interpret_block : Context.t -> Compiler.Optimizer.stmt list -> Runtime.t
+val interpret_cond : Context.t -> Compiler.Optimizer.cond_cont -> Runtime.t

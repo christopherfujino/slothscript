@@ -23,13 +23,13 @@
 %token LPAREN
 %token RPAREN
 %token COMMA
+%token IF
+%token ELSE
 (*
 %token LEQ
 %token TIMES
 %token IN
-%token IF
 %token THEN
-%token ELSE
   *)
 
 (* Disambiguate precedence and associativity *)
@@ -85,14 +85,35 @@ expr:
   | i = ID { IdRef i }
   | FUNC; LPAREN; RPAREN; b = block { FuncExpr {parameters = []; block = b;} }
   | FUNC; LPAREN; p = parameter_list; RPAREN; b = block { FuncExpr {parameters = p; block = b;} }
+  | IF; e1 = expr; b = block; cont = conditional_continuation { IfExpr (IfCont { conditional = e1; block = b; continuation = Some cont }) }
+  | IF; e1 = expr; b = block { IfExpr (IfCont { conditional = e1; block = b; continuation = None } ) }
   (*
   | e1 = expr; LEQ; e2 = expr { Binary (Leq, e1, e2) }
   | e1 = expr; TIMES; e2 = expr { Binary (Mult, e1, e2) }
   | LET; x = ID; EQUALS; e1 = expr; IN; e2 = expr { Let (x, e1, e2) }
-  | IF; e1 = expr; THEN; e2 = expr; ELSE; e3 = expr { If (e1, e2, e3) }
   | LPAREN; e=expr; RPAREN {e}
   *)
   ;
+
+conditional_continuation:
+  | e = elif; ELSE; b = block {
+      let else_cont = ElseCont b in
+      match e with
+      | IfCont {conditional; block; continuation=_} -> IfCont { conditional; block; continuation=(Some else_cont) }
+      | _ -> failwith "Unreachable"
+  }
+  | e = elif { e }
+  | ELSE; b = block { ElseCont b }
+  ;
+
+elif:
+  | prev = elif; ELSE; IF; conditional = expr; block = block {
+    let cur = IfCont {conditional; block; continuation=None} in
+    match prev with
+    | IfCont {conditional; block; continuation=_} -> IfCont {conditional; block; continuation=(Some cur)}
+    | _ -> failwith "Unreachable"
+  }
+  | ELSE; IF; conditional = expr; block = block { IfCont {conditional; block; continuation=None } }
 
 block:
   | LCURLY; RCURLY { [] }

@@ -23,7 +23,16 @@ and expr =
   | IdRef of string
   | FuncInvoc of expr * expr list
   | FuncExpr of { parameters : string list; block : stmt list }
+  | IfExpr of cond_cont
 [@@deriving sexp]
+
+and cond_cont =
+  | IfCont of {
+      conditional : expr;
+      block : stmt list;
+      continuation : cond_cont option;
+    }
+  | ElseCont of stmt list
 
 and operator = Add [@@deriving sexp]
 
@@ -115,5 +124,21 @@ and optimize_expr (env : Environment.t) (e : Ast.expr) : expr =
       in
       let block2 = optimize_block env3 block in
       FuncExpr { parameters = parameters2; block = block2 }
+  | IfExpr cond_cont -> IfExpr (optimize_continuation env cond_cont)
+
+and optimize_continuation env c =
+  match c with
+  | Ast.IfCont { conditional; block; continuation } ->
+      let conditional = optimize_expr env conditional in
+      let env2 = Environment.push_empty env in
+      let block = optimize_block env2 block in
+      let continuation =
+        Option.map continuation ~f:(optimize_continuation env)
+      in
+      IfCont { conditional; block; continuation }
+  | Ast.ElseCont stmts ->
+      let env2 = Environment.push_empty env in
+      let optimized_stmts = optimize_block env2 stmts in
+      ElseCont optimized_stmts
 
 let prog_to_str stmts = sexp_of_prog stmts |> Sexp.to_string
