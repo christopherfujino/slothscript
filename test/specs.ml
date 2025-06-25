@@ -48,11 +48,11 @@ let green =
     make_spec "lexical scope"
       ~program:"let x=1;func f() {print(x);}func g() {let x=2;f();}g();"
       ~ast:
-        "((LetStmt x(Num 1))(FuncStmt(name \
+        "((StmtDecl(LetStmt x(Num 1)))(FuncDecl(name \
          f)(parameters())(block((ExprStmt(FuncInvoc(IdRef print)((IdRef \
-         x)))))))(FuncStmt(name g)(parameters())(block((LetStmt x(Num \
-         2))(ExprStmt(FuncInvoc(IdRef f)())))))(ExprStmt(FuncInvoc(IdRef \
-         g)())))"
+         x)))))))(FuncDecl(name g)(parameters())(block((LetStmt x(Num \
+         2))(ExprStmt(FuncInvoc(IdRef \
+         f)())))))(StmtDecl(ExprStmt(FuncInvoc(IdRef g)()))))"
       ~stdout_expect:"1\n";
     make_spec "closures" ~program:"let x = 0;func f() {print(x);}x = 1;f();"
       ~ast:
