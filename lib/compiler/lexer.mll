@@ -22,6 +22,7 @@ rule read =
   | "false" { FALSE }
   | "let" { LET }
   | "func" { FUNC }
+  | "if" { IF }
   | '+' { PLUS }
   | '=' { EQUALS }
   | ';' { SEMICOLON }
@@ -34,7 +35,6 @@ rule read =
   (*| "<=" { LEQ }
   | '*' { TIMES }
   | "in" { IN }
-  | "if" { IF }
   | "then" { THEN }
   | "else" { ELSE } *)
   (* Lexing.lexeme means return the string that matched the pattern *)

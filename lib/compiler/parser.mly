@@ -23,6 +23,7 @@
 %token LPAREN
 %token RPAREN
 %token COMMA
+%token IF
 (*
 %token LEQ
 %token TIMES
@@ -85,11 +86,11 @@ expr:
   | i = ID { IdRef i }
   | FUNC; LPAREN; RPAREN; b = block { FuncExpr {parameters = []; block = b;} }
   | FUNC; LPAREN; p = parameter_list; RPAREN; b = block { FuncExpr {parameters = p; block = b;} }
+  | IF; e1 = expr; b = block { IfExpr { conditional = e1; block = b } }
   (*
   | e1 = expr; LEQ; e2 = expr { Binary (Leq, e1, e2) }
   | e1 = expr; TIMES; e2 = expr { Binary (Mult, e1, e2) }
   | LET; x = ID; EQUALS; e1 = expr; IN; e2 = expr { Let (x, e1, e2) }
-  | IF; e1 = expr; THEN; e2 = expr; ELSE; e3 = expr { If (e1, e2, e3) }
   | LPAREN; e=expr; RPAREN {e}
   *)
   ;

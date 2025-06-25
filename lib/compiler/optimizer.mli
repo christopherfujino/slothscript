@@ -19,6 +19,7 @@ and expr =
   | IdRef of string
   | FuncInvoc of expr * expr list
   | FuncExpr of { parameters : string list; block : stmt list }
+  | IfExpr of { conditional : expr; block : stmt list }
 [@@deriving sexp]
 
 and operator = Add [@@deriving sexp]

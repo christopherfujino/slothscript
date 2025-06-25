@@ -94,3 +94,27 @@ and interpret_expr ctx expr =
           |> failwith)
   | FuncExpr { parameters; block } ->
       Func (User { parameters; block; identifiers = ctx.identifiers })
+  | IfExpr { conditional; block } ->
+      let conditional_val = interpret_expr ctx conditional in
+      let bool_condition = Runtime.bool_of_val conditional_val in
+      if bool_condition then
+        let ctx2 =
+          { ctx with identifiers = Identifiers.push_empty ctx.identifiers }
+        in
+        interpret_block ctx2 block
+      else failwith "TODO: handle else conditions"
+
+(** You must push an empty env frame on first *)
+and interpret_block ctx stmts =
+  (* TODO use List.fold_left *)
+  let rec traverse_stmts ctx stmts =
+    match stmts with
+    | [] -> (ctx, Runtime.Null)
+    | stmt :: stmts ->
+        let ctx, return_val = interpret_stmt ctx stmt in
+        if List.is_empty stmts then (ctx, return_val)
+        else (traverse_stmts [@tailrec]) ctx stmts
+  in
+  (* discard context *)
+  let _, v = traverse_stmts ctx stmts in
+  v

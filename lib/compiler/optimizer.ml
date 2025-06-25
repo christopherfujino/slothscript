@@ -23,6 +23,7 @@ and expr =
   | IdRef of string
   | FuncInvoc of expr * expr list
   | FuncExpr of { parameters : string list; block : stmt list }
+  | IfExpr of { conditional : expr; block : stmt list }
 [@@deriving sexp]
 
 and operator = Add [@@deriving sexp]
@@ -115,5 +116,9 @@ and optimize_expr (env : Environment.t) (e : Ast.expr) : expr =
       in
       let block2 = optimize_block env3 block in
       FuncExpr { parameters = parameters2; block = block2 }
+  | IfExpr { conditional; block } ->
+      let optimized_conditional = optimize_expr env conditional in
+      let optimized_block = optimize_block env block in
+      IfExpr { conditional = optimized_conditional; block = optimized_block }
 
 let prog_to_str stmts = sexp_of_prog stmts |> Sexp.to_string
