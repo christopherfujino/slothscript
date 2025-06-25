@@ -41,9 +41,9 @@ let green =
       ~stdout_expect:"1\n2\n";
     make_spec "func implicit return" ~program:"func m() {1;2;3;}print(m());"
       ~ast:
-        "((FuncStmt(name m)(parameters())(block((ExprStmt(Num 1))(ExprStmt(Num \
-         2))(ExprStmt(Num 3)))))(ExprStmt(FuncInvoc(IdRef \
-         print)((FuncInvoc(IdRef m)())))))"
+        "((FuncDecl(name m)(parameters())(block((ExprStmt(Num 1))(ExprStmt(Num \
+         2))(ExprStmt(Num 3)))))(StmtDecl(ExprStmt(FuncInvoc(IdRef \
+         print)((FuncInvoc(IdRef m)()))))))"
       ~stdout_expect:"3\n";
     make_spec "lexical scope"
       ~program:"let x=1;func f() {print(x);}func g() {let x=2;f();}g();"
