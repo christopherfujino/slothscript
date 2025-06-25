@@ -31,7 +31,7 @@ let green =
          print)((IdRef x)))))"
       ~stdout_expect:"1\n";
     make_spec "func definition" ~program:"func m() {}"
-      ~ast:"((FuncStmt(name m)(parameters())(block())))";
+      ~ast:"((FuncDecl(name m)(parameters())(block())))";
     make_spec "func invocation" ~program:"func m() {print(1);print(2);}m();"
       ~ast:
         "((FuncStmt(name m)(parameters())(block((ExprStmt(FuncInvoc(IdRef \
