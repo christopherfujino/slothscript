@@ -23,21 +23,21 @@ let green =
       ~ast:"((StmtDecl(LetStmt x(Binary Add(Num 1)(Num 1)))))";
     make_spec "var reference" ~program:"let x = 1 + 1;\nprint(x);"
       ~ast:
-        "((LetStmt x(Binary Add(Num 1)(Num 1)))(ExprStmt(FuncInvoc(IdRef \
-         print)((IdRef x)))))"
+        "((StmtDecl(LetStmt x(Binary Add(Num 1)(Num \
+         1))))(StmtDecl(ExprStmt(FuncInvoc(IdRef print)((IdRef x))))))"
       ~stdout_expect:"2\n";
     make_spec "re-assignment" ~program:"let x = 0;x = 1;print(x);"
       ~ast:
-        "((LetStmt x(Num 0))(AssignStmt x(Num 1))(ExprStmt(FuncInvoc(IdRef \
-         print)((IdRef x)))))"
+        "((StmtDecl(LetStmt x(Num 0)))(StmtDecl(AssignStmt x(Num \
+         1)))(StmtDecl(ExprStmt(FuncInvoc(IdRef print)((IdRef x))))))"
       ~stdout_expect:"1\n";
     make_spec "func definition" ~program:"func m() {}"
       ~ast:"((FuncDecl(name m)(parameters())(block())))";
     make_spec "func invocation" ~program:"func m() {print(1);print(2);}m();"
       ~ast:
-        "((FuncStmt(name m)(parameters())(block((ExprStmt(FuncInvoc(IdRef \
+        "((FuncDecl(name m)(parameters())(block((ExprStmt(FuncInvoc(IdRef \
          print)((Num 1))))(ExprStmt(FuncInvoc(IdRef print)((Num \
-         2)))))))(ExprStmt(FuncInvoc(IdRef m)())))"
+         2)))))))(StmtDecl(ExprStmt(FuncInvoc(IdRef m)()))))"
       ~stdout_expect:"1\n2\n";
     make_spec "func implicit return" ~program:"func m() {1;2;3;}print(m());"
       ~ast:
