@@ -11,7 +11,7 @@ let green =
       ~ast:"((StmtDecl(ExprStmt(FuncInvoc(IdRef print)((Num 11))))))"
       ~stdout_expect:"11\n";
     make_spec "string literal" ~program:"\"Hello\";"
-      ~ast:"((ExprStmt(String Hello)))";
+      ~ast:"((StmtDecl(ExprStmt(String Hello))))";
     make_spec "print string" ~program:"print(\"Hello\");"
       ~ast:"((ExprStmt(FuncInvoc(IdRef print)((String Hello)))))"
       ~stdout_expect:"Hello\n";
