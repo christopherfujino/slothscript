@@ -15,8 +15,8 @@ let rec repl ctx_opt =
   in
   let prog = Compiler.Main.parse line in
   let open Interpreter in
-  let ctx, v = Interpret.interpret_prog ctx prog in
-  Runtime.to_s v |> print_endline;
+  (* TODO this isn't a true REPL cos we can't print *)
+  let ctx = Interpret.interpret_prog ctx prog in
   (repl [@tailcall]) (Some ctx)
 
 let rec interpret () =
@@ -29,7 +29,7 @@ let rec interpret () =
   in
   let prog = Compiler.Main.parse line in
   let open Interpreter in
-  let _, _ =
+  let _ =
     Interpret.interpret_prog (Context.make_ctx (module Sloth_stdlib.Prod)) prog
   in
   (interpret [@tailcall]) ()
