@@ -13,7 +13,7 @@ let green =
     make_spec "string literal" ~program:"\"Hello\";"
       ~ast:"((StmtDecl(ExprStmt(String Hello))))";
     make_spec "print string" ~program:"print(\"Hello\");"
-      ~ast:"((ExprStmt(FuncInvoc(IdRef print)((String Hello)))))"
+      ~ast:"((StmtDecl(ExprStmt(FuncInvoc(IdRef print)((String Hello))))))"
       ~stdout_expect:"Hello\n";
     make_spec "bool literal" ~program:"true;" ~ast:"((ExprStmt(Bool true)))";
     make_spec "addition" ~program:"1 + 1;"
