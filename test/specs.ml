@@ -8,7 +8,7 @@ let green =
     make_spec "empty program" ~program:"" ~ast:"()";
     make_spec "num literal" ~program:"11;" ~ast:"((StmtDecl(ExprStmt(Num 11))))";
     make_spec "print num" ~program:"print(11);"
-      ~ast:"((ExprStmt(FuncInvoc(IdRef print)((Num 11)))))"
+      ~ast:"((StmtDecl(ExprStmt(FuncInvoc(IdRef print)((Num 11))))))"
       ~stdout_expect:"11\n";
     make_spec "string literal" ~program:"\"Hello\";"
       ~ast:"((ExprStmt(String Hello)))";
