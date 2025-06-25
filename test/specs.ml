@@ -56,15 +56,16 @@ let green =
       ~stdout_expect:"1\n";
     make_spec "closures" ~program:"let x = 0;func f() {print(x);}x = 1;f();"
       ~ast:
-        "((LetStmt x(Num 0))(FuncStmt(name \
+        "((StmtDecl(LetStmt x(Num 0)))(FuncDecl(name \
          f)(parameters())(block((ExprStmt(FuncInvoc(IdRef print)((IdRef \
-         x)))))))(AssignStmt x(Num 1))(ExprStmt(FuncInvoc(IdRef f)())))"
+         x)))))))(StmtDecl(AssignStmt x(Num \
+         1)))(StmtDecl(ExprStmt(FuncInvoc(IdRef f)()))))"
       ~stdout_expect:"1\n";
     make_spec "args" ~program:"func f(x, y) {print(x);print(y);}f(1, 2);"
       ~ast:
-        "((FuncStmt(name f)(parameters(x y))(block((ExprStmt(FuncInvoc(IdRef \
+        "((FuncDecl(name f)(parameters(x y))(block((ExprStmt(FuncInvoc(IdRef \
          print)((IdRef x))))(ExprStmt(FuncInvoc(IdRef print)((IdRef \
-         y)))))))(ExprStmt(FuncInvoc(IdRef f)((Num 1)(Num 2)))))"
+         y)))))))(StmtDecl(ExprStmt(FuncInvoc(IdRef f)((Num 1)(Num 2))))))"
       ~stdout_expect:"1\n2\n";
     make_spec "first class func"
       ~program:"func f() {let x = 1;func() {x;};}let xer = f();print(xer());"
