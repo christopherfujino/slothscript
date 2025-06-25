@@ -85,7 +85,8 @@ expr:
   | i = ID { IdRef i }
   | FUNC; LPAREN; RPAREN; b = block { FuncExpr {parameters = []; block = b;} }
   | FUNC; LPAREN; p = parameter_list; RPAREN; b = block { FuncExpr {parameters = p; block = b;} }
-  | IF; e1 = expr; b = block { IfExpr { conditional = e1; block = b } }
+  | IF; e1 = expr; b = block; cont = conditional_continuation { IfExpr (IfCont { conditional = e1; block = b; continuation = Some cont }) }
+  | IF; e1 = expr; b = block { IfExpr (IfCont { conditional = e1; block = b; continuation = None } ) }
   (*
   | e1 = expr; LEQ; e2 = expr { Binary (Leq, e1, e2) }
   | e1 = expr; TIMES; e2 = expr { Binary (Mult, e1, e2) }
@@ -93,6 +94,26 @@ expr:
   | LPAREN; e=expr; RPAREN {e}
   *)
   ;
+
+conditional_continuation:
+  | e = elif; ELSE; b = block {
+      let else_cont = ElseCont b in
+      match e with
+      | IfCont {conditional; block; continuation=_} -> IfCont { conditional; block; continuation=(Some else_cont) }
+      | _ -> failwith "Unreachable"
+  }
+  | e = elif { e }
+  | ELSE; b = block { ElseCont b }
+  ;
+
+elif:
+  | prev = elif; ELSE; IF; conditional = expr; block = block {
+    let cur = IfCont {conditional; block; continuation=None} in
+    match prev with
+    | IfCont {conditional; block; continuation=_} -> IfCont {conditional; block; continuation=(Some cur)}
+    | _ -> failwith "Unreachable"
+  }
+  | ELSE; IF; conditional = expr; block = block { IfCont {conditional; block; continuation=None } }
 
 block:
   | LCURLY; RCURLY { [] }

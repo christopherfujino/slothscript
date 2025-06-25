@@ -85,17 +85,34 @@ let green =
       ~stdout_expect:"3\n";
     make_spec "if true" ~program:"if true {print(\"True\");};"
       ~ast:
-        "((StmtDecl(ExprStmt(IfExpr(conditional(Bool \
-         true))(block((ExprStmt(FuncInvoc(IdRef print)((String True))))))))))"
+        "((StmtDecl(ExprStmt(IfExpr(IfCont(conditional(Bool \
+         true))(block((ExprStmt(FuncInvoc(IdRef print)((String \
+         True))))))(continuation()))))))"
       ~stdout_expect:"True\n";
-    make_spec "if false" ~program:"if false {print(\"Unreachable\");};" ~ast:"";
+    make_spec "if false" ~program:"if false {print(\"Unreachable\");};"
+      ~ast:
+        "((StmtDecl(ExprStmt(IfExpr(IfCont(conditional(Bool \
+         false))(block((ExprStmt(FuncInvoc(IdRef print)((String \
+         Unreachable))))))(continuation()))))))";
     make_spec "if/else"
-      ~program:"if false {print(true);} else {print(\"else\");};" ~ast:""
+      ~program:"if false {print(true);} else {print(\"else\");};"
+      ~ast:
+        "((StmtDecl(ExprStmt(IfExpr(IfCont(conditional(Bool \
+         false))(block((ExprStmt(FuncInvoc(IdRef print)((Bool \
+         true))))))(continuation((ElseCont((ExprStmt(FuncInvoc(IdRef \
+         print)((String else)))))))))))))"
       ~stdout_expect:"else\n";
-    make_spec "if/else if/else" ~ast:""
+    make_spec "if/else if/else"
+      ~ast:
+        "((StmtDecl(ExprStmt(IfExpr(IfCont(conditional(Bool \
+         false))(block((ExprStmt(FuncInvoc(IdRef print)((String \
+         unreachable))))))(continuation((IfCont(conditional(Bool \
+         false))(block((ExprStmt(FuncInvoc(IdRef print)((String \
+         unreachable))))))(continuation((ElseCont((ExprStmt(FuncInvoc(IdRef \
+         print)((String finally))))))))))))))))"
       ~program:
         "if false {print(\"unreachable\");} else if false \
-         {print(\"unreachable\");} else {print(\"finally\");}"
+         {print(\"unreachable\");} else {print(\"finally\");};"
       ~stdout_expect:"finally\n";
   ]
 

@@ -9,6 +9,6 @@
  (modules parser)
  ; https://gallium.inria.fr/~fpottier/menhir/manual.html#sec63
  ; exn-carries-state -> Parser.Error of int
- (flags --exn-carries-state))
+ (flags --exn-carries-state --explain))
 
 (ocamllex lexer)

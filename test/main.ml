@@ -124,5 +124,4 @@ let tests =
          "red" >::: List.map make_failing_test Specs.red;
        ]
 
-let () = print_endline "Hello"
 let () = run_test_tt_main tests

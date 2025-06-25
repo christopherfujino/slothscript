@@ -39,6 +39,22 @@ and interpret_stmt (ctx : Context.t) stmt =
       (ctx, v)
   | ExprStmt expr -> (ctx, interpret_expr ctx expr)
 
+and interpret_cond ctx cond =
+  match cond with
+  | Compiler.Optimizer.IfCont { conditional; block; continuation } -> (
+      let condition = interpret_expr ctx conditional in
+      let condition_b = Runtime.bool_of_val condition in
+      if condition_b then
+        let ctx =
+          { ctx with identifiers = Identifiers.push_empty ctx.identifiers }
+        in
+        interpret_block ctx block
+      else
+        match continuation with
+        | None -> Runtime.Null
+        | Some cond -> (interpret_cond [@tailcall]) ctx cond)
+  | Compiler.Optimizer.ElseCont stmts -> interpret_block ctx stmts
+
 (* TODO Note this does not return a context--can expressions mutate context?! *)
 (* Yes, if they call a function that mutates a global *)
 and interpret_expr ctx expr =
@@ -94,15 +110,7 @@ and interpret_expr ctx expr =
           |> failwith)
   | FuncExpr { parameters; block } ->
       Func (User { parameters; block; identifiers = ctx.identifiers })
-  | IfExpr { conditional; block } ->
-      let conditional_val = interpret_expr ctx conditional in
-      let bool_condition = Runtime.bool_of_val conditional_val in
-      if bool_condition then
-        let ctx2 =
-          { ctx with identifiers = Identifiers.push_empty ctx.identifiers }
-        in
-        interpret_block ctx2 block
-      else failwith "TODO: handle else conditions"
+  | IfExpr cond -> interpret_cond ctx cond
 
 (** You must push an empty env frame on first *)
 and interpret_block ctx stmts =
