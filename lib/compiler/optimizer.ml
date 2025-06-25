@@ -28,7 +28,7 @@ and expr =
 and operator = Add [@@deriving sexp]
 
 let rec optimize_prog prog =
-  (*let prog = List.rev prog in*)
+  let prog2 = List.rev prog in
   let env = Environment.create () |> Stdlib_stubs.populate in
   let f =
    fun acc decl ->
@@ -36,8 +36,8 @@ let rec optimize_prog prog =
     let env2, opt_decl = optimize_decl env1 decl in
     (env2, opt_decl :: already_opt_decls)
   in
-  let _, decls = List.fold_left prog ~f ~init:(env, []) in
-  decls
+  let _, decls = List.fold_left prog2 ~f ~init:(env, []) in
+  List.rev decls
 
 and optimize_decl env decl : Environment.t * decl =
   match decl with

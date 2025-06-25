@@ -15,7 +15,8 @@ let green =
     make_spec "print string" ~program:"print(\"Hello\");"
       ~ast:"((StmtDecl(ExprStmt(FuncInvoc(IdRef print)((String Hello))))))"
       ~stdout_expect:"Hello\n";
-    make_spec "bool literal" ~program:"true;" ~ast:"((StmtDecl(ExprStmt(Bool true))))";
+    make_spec "bool literal" ~program:"true;"
+      ~ast:"((StmtDecl(ExprStmt(Bool true))))";
     make_spec "addition" ~program:"1 + 1;"
       ~ast:"((StmtDecl(ExprStmt(Binary Add(Num 1)(Num 1)))))";
     make_spec "assignment" ~program:"let x = 1 + 1;"
@@ -75,10 +76,10 @@ let green =
       ~stdout_expect:"1\n";
     make_spec "curry" ~program:"func a(x) {func(y) {x+y;};}print(a(1)(2));"
       ~ast:
-        "((FuncStmt(name \
+        "((FuncDecl(name \
          a)(parameters(x))(block((ExprStmt(FuncExpr(parameters(y))(block((ExprStmt(Binary \
-         Add(IdRef x)(IdRef y))))))))))(ExprStmt(FuncInvoc(IdRef \
-         print)((FuncInvoc(FuncInvoc(IdRef a)((Num 1)))((Num 2)))))))"
+         Add(IdRef x)(IdRef y))))))))))(StmtDecl(ExprStmt(FuncInvoc(IdRef \
+         print)((FuncInvoc(FuncInvoc(IdRef a)((Num 1)))((Num 2))))))))"
       ~stdout_expect:"3\n";
   ]
 
