@@ -1,5 +1,4 @@
 - [ ] Stack traces
-- [ ] Invoking function expressions
 - [ ] Recursion (depends on conditionals)
 - [ ] Conditionals
 - [ ] Early return from functions?
@@ -9,3 +8,4 @@
 - [x] Closures
 - [x] Variable re-assignment
 - [x] Function arguments
+- [x] Invoking function expressions

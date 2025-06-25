@@ -1,4 +1,4 @@
 (test
  (name main)
  (libraries ounit2 sloth_script)
- (modes byte exe))
+ (modes byte))

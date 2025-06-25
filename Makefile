@@ -2,7 +2,7 @@
 test:
 	# OUNIT_CI=true makes output prettier
 	# --force makes all tests run
-	OUNIT_CI=true dune build @runtest
+	OUNIT_CI=true dune build @runtest --force
 
 .PHONY: describe
 describe:
