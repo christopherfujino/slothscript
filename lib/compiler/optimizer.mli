@@ -21,8 +21,7 @@ and expr =
   | FuncExpr of { parameters : string list; block : stmt list }
 [@@deriving sexp]
 
-and operator = Add
-[@@deriving sexp]
+and operator = Add [@@deriving sexp]
 
 val optimize_prog : Ast.decl list -> decl list
 val prog_to_str : decl list -> string
