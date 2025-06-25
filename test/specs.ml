@@ -6,7 +6,7 @@ let make_spec ~program ~ast ?(stdout_expect = "") ?failure name =
 let green =
   [
     make_spec "empty program" ~program:"" ~ast:"()";
-    make_spec "num literal" ~program:"11;" ~ast:"((ExprStmt(Num 11)))";
+    make_spec "num literal" ~program:"11;" ~ast:"((StmtDecl(ExprStmt(Num 11))))";
     make_spec "print num" ~program:"print(11);"
       ~ast:"((ExprStmt(FuncInvoc(IdRef print)((Num 11)))))"
       ~stdout_expect:"11\n";
@@ -85,7 +85,9 @@ let green =
 let red =
   [
     make_spec "vars & funcs share namespace" ~program:"let x=1;func x(){}"
-      ~ast:"((LetStmt x(Num 1))(FuncStmt(name x)(parameters())(block())))"
+      ~ast:
+        "((StmtDecl(LetStmt x(Num 1)))(FuncDecl(name \
+         x)(parameters())(block())))"
       ~failure:Runtime_error;
     (* Although this works in JS, Python, and Perl, this seems like a mistake *)
     (* Go does not allow it. *)

@@ -43,7 +43,7 @@
 *)
 
 (* Declare the starting point for parsing (root of AST) *)
-%start <Ast.stmt list> prog
+%start <Ast.decl list> prog
 
 %%
 
@@ -58,9 +58,9 @@ declarations:
   ;
 
 decl:
-  | FUNC; i = ID; LPAREN; RPAREN; b = block { FuncStmt {name = i; parameters = []; block = b;} }
-  | FUNC; i = ID; LPAREN; p = parameter_list ; RPAREN; b = block { FuncStmt {name = i; parameters = p; block = b;} }
-  | s = stmt { s }
+  | FUNC; i = ID; LPAREN; RPAREN; b = block { FuncDecl {name = i; parameters = []; block = b;} }
+  | FUNC; i = ID; LPAREN; p = parameter_list ; RPAREN; b = block { FuncDecl {name = i; parameters = p; block = b;} }
+  | s = stmt { StmtDecl s }
   ;
 
 stmts:

@@ -9,11 +9,14 @@ type func_stmt_t = {
 and func_expr_t = { parameters : string list; block : stmt list }
 and prog = stmt list [@@deriving sexp]
 
+and decl =
+  | FuncDecl of func_stmt_t
+  | StmtDecl of stmt
+
 and stmt =
   | LetStmt of string * expr
   | AssignStmt of string * expr
   | ExprStmt of expr
-  | FuncStmt of func_stmt_t
 [@@deriving sexp]
 
 and expr =
