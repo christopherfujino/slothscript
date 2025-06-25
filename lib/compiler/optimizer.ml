@@ -28,12 +28,13 @@ and expr =
 and operator = Add [@@deriving sexp]
 
 let rec optimize_prog prog =
+  (*let prog = List.rev prog in*)
   let env = Environment.create () |> Stdlib_stubs.populate in
   let f =
    fun acc decl ->
-    let env, decls = acc in
-    let env2, opt_decl = optimize_decl env decl in
-    (env2, opt_decl :: decls)
+    let env1, already_opt_decls = acc in
+    let env2, opt_decl = optimize_decl env1 decl in
+    (env2, opt_decl :: already_opt_decls)
   in
   let _, decls = List.fold_left prog ~f ~init:(env, []) in
   decls
@@ -52,8 +53,8 @@ and optimize_decl env decl : Environment.t * decl =
       let env4 = Environment.bind env name in
       (env4, FuncDecl { name; parameters = parameters2; block = block2 })
   | Ast.StmtDecl s ->
-      let env, stmt = optimize_stmt env s in
-      (env, StmtDecl stmt)
+      let env2, stmt = optimize_stmt env s in
+      (env2, StmtDecl stmt)
 
 and optimize_stmt env stmts : Environment.t * stmt =
   let open Ast in

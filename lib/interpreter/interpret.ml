@@ -1,6 +1,14 @@
 open Core
 
-let rec interpret_decl (ctx : Context.t) decl =
+let rec interpret_prog ctx prog =
+  (*List.fold_left prog ~init:ctx ~f:interpret_decl*)
+  match prog with
+  | [] -> ctx
+  | hd :: tl ->
+      let new_ctx = interpret_decl ctx hd in
+      (interpret_prog [@tailcall]) new_ctx tl
+
+and interpret_decl (ctx : Context.t) decl =
   let open Compiler.Optimizer in
   match decl with
   | FuncDecl { name; parameters; block } ->
@@ -86,10 +94,3 @@ and interpret_expr ctx expr =
           |> failwith)
   | FuncExpr { parameters; block } ->
       Func (User { parameters; block; identifiers = ctx.identifiers })
-
-and interpret_prog ctx prog =
-  match prog with
-  | [] -> ctx
-  | hd :: tl ->
-      let new_ctx = interpret_decl ctx hd in
-      (interpret_prog [@tailcall]) new_ctx tl

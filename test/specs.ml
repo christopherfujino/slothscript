@@ -15,7 +15,7 @@ let green =
     make_spec "print string" ~program:"print(\"Hello\");"
       ~ast:"((StmtDecl(ExprStmt(FuncInvoc(IdRef print)((String Hello))))))"
       ~stdout_expect:"Hello\n";
-    make_spec "bool literal" ~program:"true;" ~ast:"((ExprStmt(Bool true)))";
+    make_spec "bool literal" ~program:"true;" ~ast:"((StmtDecl(ExprStmt(Bool true))))";
     make_spec "addition" ~program:"1 + 1;"
       ~ast:"((ExprStmt(Binary Add(Num 1)(Num 1))))";
     make_spec "assignment" ~program:"let x = 1 + 1;"
