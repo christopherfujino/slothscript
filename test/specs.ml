@@ -19,7 +19,7 @@ let green =
     make_spec "addition" ~program:"1 + 1;"
       ~ast:"((ExprStmt(Binary Add(Num 1)(Num 1))))";
     make_spec "assignment" ~program:"let x = 1 + 1;"
-      ~ast:"((LetStmt x(Binary Add(Num 1)(Num 1))))";
+      ~ast:"((StmtDecl(LetStmt x(Binary Add(Num 1)(Num 1)))))";
     make_spec "var reference" ~program:"let x = 1 + 1;\nprint(x);"
       ~ast:
         "((LetStmt x(Binary Add(Num 1)(Num 1)))(ExprStmt(FuncInvoc(IdRef \
