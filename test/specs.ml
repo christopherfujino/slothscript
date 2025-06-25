@@ -69,10 +69,11 @@ let green =
     make_spec "first class func"
       ~program:"func f() {let x = 1;func() {x;};}let xer = f();print(xer());"
       ~ast:
-        "((FuncStmt(name f)(parameters())(block((LetStmt x(Num \
+        "((FuncDecl(name f)(parameters())(block((LetStmt x(Num \
          1))(ExprStmt(FuncExpr(parameters())(block((ExprStmt(IdRef \
-         x)))))))))(LetStmt xer(FuncInvoc(IdRef \
-         f)()))(ExprStmt(FuncInvoc(IdRef print)((FuncInvoc(IdRef xer)())))))"
+         x)))))))))(StmtDecl(LetStmt xer(FuncInvoc(IdRef \
+         f)())))(StmtDecl(ExprStmt(FuncInvoc(IdRef print)((FuncInvoc(IdRef \
+         xer)()))))))"
       ~stdout_expect:"1\n";
     make_spec "curry" ~program:"func a(x) {func(y) {x+y;};}print(a(1)(2));"
       ~ast:
