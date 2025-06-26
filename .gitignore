@@ -31,5 +31,8 @@ setup.log
 # Dune generated files
 *.install
 
+# This is a menhir diagnostic file
+lib/compiler/parser.conflicts
+
 # Local OPAM switch
 _opam/

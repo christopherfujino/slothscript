@@ -33,6 +33,10 @@ get:
 list-errors:
 	menhir --list-errors lib/compiler/parser.mly
 
+.PHONY: explain
+explain: clean
+	dune exec -- menhir --explain lib/compiler/parser.mly
+
 .PHONY: ci
 ci:
 	dune exec tool/ci.exe
