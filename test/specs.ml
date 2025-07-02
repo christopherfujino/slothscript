@@ -18,8 +18,13 @@ let green =
     make_spec "bool literal" ~program:"true;"
       ~ast:"((StmtDecl(ExprStmt(Bool true))))";
     make_spec "addition" ~program:"1 + 1;"
-      ~ast:"((StmtDecl(ExprStmt(Binary Add(Num 1)(Num 1)))))";
-    make_spec "chained infix calls" ~program:"1 + 2 + 3;" ~ast:"";
+      ~ast:
+        "((StmtDecl(ExprStmt(MethodInvoc(receiver(Num 1))(target +)(args((Num \
+         1)))))))";
+    make_spec "chained infix calls" ~program:"1 + 2 + 3;"
+      ~ast:
+        "((StmtDecl(ExprStmt(MethodInvoc(receiver(MethodInvoc(receiver(Num \
+         1))(target +)(args((Num 2)))))(target +)(args((Num 3)))))))";
     make_spec "assignment" ~program:"let x = 1 + 1;"
       ~ast:
         "((StmtDecl(LetStmt x(MethodInvoc(receiver(Num 1))(target +)(args((Num \
