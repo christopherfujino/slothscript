@@ -21,7 +21,9 @@ let green =
       ~ast:"((StmtDecl(ExprStmt(Binary Add(Num 1)(Num 1)))))";
     make_spec "chained infix calls" ~program:"1 + 2 + 3;" ~ast:"";
     make_spec "assignment" ~program:"let x = 1 + 1;"
-      ~ast:"((StmtDecl(LetStmt x(Binary Add(Num 1)(Num 1)))))";
+      ~ast:
+        "((StmtDecl(LetStmt x(MethodInvoc(receiver(Num 1))(target +)(args((Num \
+         1)))))))";
     make_spec "var reference" ~program:"let x = 1 + 1;\nprint(x);"
       ~ast:
         "((StmtDecl(LetStmt x(MethodInvoc(receiver(Num 1))(target +)(args((Num \
