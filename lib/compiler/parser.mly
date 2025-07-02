@@ -25,6 +25,7 @@
 %token COMMA
 %token IF
 %token ELSE
+%token DOT
 (*
 %token LEQ
 %token TIMES
@@ -74,8 +75,11 @@ stmt:
   | id = ID; EQUALS; e1 = expr; SEMICOLON { AssignStmt (id, e1) }
   ;
 
+(* TODO make levels of expressions *)
 expr:
-  | e1 = expr; PLUS; e2 = expr { Binary (Add, e1, e2) }
+  | e1 = expr; PLUS; e2 = expr {
+    MethodInvoc { receiver=e1; target="+"; args=[e2] }
+  }
   | f = NUM { Num f }
   | TRUE { Bool true }
   | FALSE { Bool false }

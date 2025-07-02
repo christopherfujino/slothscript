@@ -19,6 +19,7 @@ let green =
       ~ast:"((StmtDecl(ExprStmt(Bool true))))";
     make_spec "addition" ~program:"1 + 1;"
       ~ast:"((StmtDecl(ExprStmt(Binary Add(Num 1)(Num 1)))))";
+    make_spec "chained infix calls" ~program:"1 + 2 + 3;" ~ast:"";
     make_spec "assignment" ~program:"let x = 1 + 1;"
       ~ast:"((StmtDecl(LetStmt x(Binary Add(Num 1)(Num 1)))))";
     make_spec "var reference" ~program:"let x = 1 + 1;\nprint(x);"
@@ -79,8 +80,9 @@ let green =
     make_spec "curry" ~program:"func a(x) {func(y) {x+y;};}print(a(1)(2));"
       ~ast:
         "((FuncDecl(name \
-         a)(parameters(x))(block((ExprStmt(FuncExpr(parameters(y))(block((ExprStmt(Binary \
-         Add(IdRef x)(IdRef y))))))))))(StmtDecl(ExprStmt(FuncInvoc(IdRef \
+         a)(parameters(x))(block((ExprStmt(FuncExpr(parameters(y))(block((ExprStmt(MethodInvoc(receiver(IdRef \
+         x))(target +)(args((IdRef \
+         y))))))))))))(StmtDecl(ExprStmt(FuncInvoc(IdRef \
          print)((FuncInvoc(FuncInvoc(IdRef a)((Num 1)))((Num 2))))))))"
       ~stdout_expect:"3\n";
     make_spec "if true" ~program:"if true {print(\"True\");};"

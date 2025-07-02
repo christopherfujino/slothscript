@@ -22,6 +22,7 @@ and expr =
   | Binary of operator * expr * expr
   | IdRef of string
   | FuncInvoc of expr * expr list
+  | MethodInvoc of { receiver : expr; target : string; args : expr list }
   | FuncExpr of { parameters : string list; block : stmt list }
   | IfExpr of cond_cont
 [@@deriving sexp]
@@ -125,6 +126,10 @@ and optimize_expr (env : Environment.t) (e : Ast.expr) : expr =
       let block2 = optimize_block env3 block in
       FuncExpr { parameters = parameters2; block = block2 }
   | IfExpr cond_cont -> IfExpr (optimize_continuation env cond_cont)
+  | MethodInvoc { target; receiver; args } ->
+      let optim_receiver = optimize_expr env receiver in
+      let optim_args = List.rev args |> List.map ~f:(optimize_expr env) in
+      MethodInvoc { target; receiver = optim_receiver; args = optim_args }
 
 and optimize_continuation env c =
   match c with

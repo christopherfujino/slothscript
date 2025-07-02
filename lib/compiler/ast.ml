@@ -23,6 +23,7 @@ and expr =
   | Binary of operator * expr * expr
   | IdRef of string
   | FuncInvoc of expr * expr list
+  | MethodInvoc of { receiver : expr; target : string; args : expr list }
   | FuncExpr of func_expr_t
   | IfExpr of cond_cont
 [@@deriving sexp]
