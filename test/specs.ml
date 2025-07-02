@@ -24,8 +24,8 @@ let green =
       ~ast:"((StmtDecl(LetStmt x(Binary Add(Num 1)(Num 1)))))";
     make_spec "var reference" ~program:"let x = 1 + 1;\nprint(x);"
       ~ast:
-        "((StmtDecl(LetStmt x(Binary Add(Num 1)(Num \
-         1))))(StmtDecl(ExprStmt(FuncInvoc(IdRef print)((IdRef x))))))"
+        "((StmtDecl(LetStmt x(MethodInvoc(receiver(Num 1))(target +)(args((Num \
+         1))))))(StmtDecl(ExprStmt(FuncInvoc(IdRef print)((IdRef x))))))"
       ~stdout_expect:"2\n";
     make_spec "re-assignment" ~program:"let x = 0;x = 1;print(x);"
       ~ast:
