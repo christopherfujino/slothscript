@@ -10,3 +10,4 @@
 - [x] Invoking function expressions
 - [x] Conditionals
 - [x] Tooling to diagnose shift/reduce conflicts
+- [x] Infix functions
