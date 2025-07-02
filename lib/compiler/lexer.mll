@@ -33,6 +33,7 @@ rule read =
   | '(' { LPAREN }
   | ')' { RPAREN }
   | ',' { COMMA }
+  | '.' { DOT }
   (*
   | "<=" { LEQ }
   | '*' { TIMES }

@@ -1,5 +1,13 @@
 open Core
 
+let check_arity desired_count actual_list name =
+  let actual_count = List.length actual_list in
+  if not (desired_count = actual_count) then
+    raise
+      (Common.Failure
+         (Printf.sprintf "The function %s expected %d arguments but received %d"
+            name desired_count actual_count))
+
 let rec interpret_prog ctx prog =
   (*List.fold_left prog ~init:ctx ~f:interpret_decl*)
   match prog with
@@ -70,6 +78,29 @@ and interpret_expr ctx expr =
           let right_val = Runtime.num_of_val (interpret_expr ctx rhs) in
           Runtime.Num (left_val +. right_val))
   | IdRef i -> Identifiers.get ctx.identifiers i
+  | MethodInvoc { receiver; target; args } -> (
+      let rt_receiver = interpret_expr ctx receiver in
+      let not_implemented receiver =
+        let msg =
+          Printf.sprintf "The type %s does not implement the method %s" receiver
+            target
+        in
+        raise (Common.Failure msg)
+      in
+      match rt_receiver with
+      | Null -> raise (Common.Failure "NPE!")
+      | String _ -> not_implemented "String"
+      | Num f -> (
+          (* Does it matter this is O(n)? *)
+          match target with
+          | "+" ->
+              check_arity 1 args "Num.+";
+              let arg = List.hd_exn args in
+              let arg_val = interpret_expr ctx arg in
+              let arg_f = Runtime.num_of_val arg_val in
+              Num (f +. arg_f)
+          | _ -> not_implemented "Num")
+      | _ -> failwith "TODO")
   | FuncInvoc (receiver, args) -> (
       let receiver' = interpret_expr ctx receiver in
       match receiver' with

@@ -16,7 +16,7 @@ let rec sexp_formatter_inner indent buffer (s : Sexp.t) =
         match l with
         | [] -> ()
         | hd :: tail ->
-            sexp_formatter_inner (indent + 2) buffer hd;
+            sexp_formatter_inner (indent + 1) buffer hd;
             (f [@tailrec]) tail false
       in
       f l true;
