@@ -123,6 +123,10 @@ let green =
         "if false {print(\"unreachable\");} else if false \
          {print(\"unreachable\");} else {print(\"finally\");};"
       ~stdout_expect:"finally\n";
+    make_spec "fibonacci" ~ast:""
+      ~program:
+        "func fib(n) {if n <= 1 {} else {fib(n - 1) + fib(n - \
+         2);};}print(fib(20));" ~stdout_expect:"6765\n";
   ]
 
 let red =

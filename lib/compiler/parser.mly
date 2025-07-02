@@ -13,6 +13,7 @@
 %token TRUE
 %token FALSE
 %token PLUS
+%token MINUS
 %token LET
 %token EQUALS
 %token EOF
@@ -25,21 +26,23 @@
 %token COMMA
 %token IF
 %token ELSE
-%token DOT
-(*
 %token LEQ
+(*
+%token DOT
 %token TIMES
 %token IN
 %token THEN
   *)
 
 (* Disambiguate precedence and associativity *)
-(* TODO figure this out *)
+(* These are optional, and could have been done exclusively with production
+   rules. *)
 %left PLUS
+%left MINUS
+%left LEQ
 (*
 %nonassoc IN
 %nonassoc ELSE
-%left LEQ
 %left TIMES
 *)
 
@@ -77,27 +80,43 @@ stmt:
 
 (* TODO make levels of expressions *)
 expr:
-  | e1 = expr; PLUS; e2 = expr {
-    MethodInvoc { receiver=e1; target="+"; args=[e2] }
-  }
-  | f = NUM { Num f }
-  | TRUE { Bool true }
-  | FALSE { Bool false }
-  | s = STRING { String s }
-  | e = expr; LPAREN; a = argument_list; RPAREN { FuncInvoc (e, a) }
-  | e = expr; LPAREN; RPAREN { FuncInvoc (e, []) }
-  | i = ID { IdRef i }
   | FUNC; LPAREN; RPAREN; b = block { FuncExpr {parameters = []; block = b;} }
   | FUNC; LPAREN; p = parameter_list; RPAREN; b = block { FuncExpr {parameters = p; block = b;} }
   | IF; e1 = expr; b = block; cont = conditional_continuation { IfExpr (IfCont { conditional = e1; block = b; continuation = Some cont }) }
   | IF; e1 = expr; b = block { IfExpr (IfCont { conditional = e1; block = b; continuation = None } ) }
+  | e = expr2 { e }
+
+expr2:
+  | e1 = expr; PLUS; e2 = expr {
+    MethodInvoc { receiver=e1; target="+"; args=[e2] }
+  }
+  | e1 = expr; LEQ; e2 = expr {
+    MethodInvoc { receiver=e1; target="<="; args=[e2] }
+  }
+  | e1 = expr; MINUS; e2 = expr {
+    MethodInvoc { receiver=e1; target="-"; args=[e2] }
+  }
+  | e = expr3 { e }
+
+expr3:
+  | e = expr; LPAREN; a = argument_list; RPAREN { FuncInvoc (e, a) }
+  | e = expr; LPAREN; RPAREN { FuncInvoc (e, []) }
   (*
   | e1 = expr; LEQ; e2 = expr { Binary (Leq, e1, e2) }
   | e1 = expr; TIMES; e2 = expr { Binary (Mult, e1, e2) }
   | LET; x = ID; EQUALS; e1 = expr; IN; e2 = expr { Let (x, e1, e2) }
   | LPAREN; e=expr; RPAREN {e}
   *)
+  | e = expr_last { e }
   ;
+
+(* Primary - literals or grouping *)
+expr_last:
+  | f = NUM { Num f }
+  | TRUE { Bool true }
+  | FALSE { Bool false }
+  | s = STRING { String s }
+  | i = ID { IdRef i }
 
 conditional_continuation:
   | e = elif; ELSE; b = block {

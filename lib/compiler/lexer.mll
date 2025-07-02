@@ -33,12 +33,11 @@ rule read =
   | '(' { LPAREN }
   | ')' { RPAREN }
   | ',' { COMMA }
-  | '.' { DOT }
-  (*
   | "<=" { LEQ }
+  | '-' { MINUS }
+  (*
+  | '.' { DOT }
   | '*' { TIMES }
-  | "in" { IN }
-  | "then" { THEN }
   *)
   (* Lexing.lexeme means return the string that matched the pattern *)
   | id { ID (Lexing.lexeme lexbuf) }
