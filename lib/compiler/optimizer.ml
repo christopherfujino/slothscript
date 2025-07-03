@@ -17,6 +17,7 @@ and stmt =
 and expr =
   | Num of float
   | Bool of bool
+  | Null
   | String of string
   (* TODO this should be infix invoc expression, storing a lexeme string *)
   | Binary of operator * expr * expr
@@ -37,31 +38,33 @@ and cond_cont =
 
 and operator = Add [@@deriving sexp]
 
-let rec optimize_prog prog =
+let rec optimize_prog env prog =
   let prog2 = List.rev prog in
+  (* TODO lift this so it can be shared across calls in the REPL
   let env = Environment.create () |> Stdlib_stubs.populate in
+  *)
   let f =
    fun acc decl ->
     let env1, already_opt_decls = acc in
     let env2, opt_decl = optimize_decl env1 decl in
     (env2, opt_decl :: already_opt_decls)
   in
-  let _, decls = List.fold_left prog2 ~f ~init:(env, []) in
-  List.rev decls
+  let final_env, decls = List.fold_left prog2 ~f ~init:(env, []) in
+  (final_env, List.rev decls)
 
 and optimize_decl env decl : Environment.t * decl =
   match decl with
   | Ast.FuncDecl { name; parameters; block } ->
       let parameters2 = List.rev parameters in
-      (* TODO will need to add `name` to env to support recursion *)
-      let env2 = Environment.push_empty env in
-      let env3 =
-        List.fold_left parameters2 ~init:env2 ~f:(fun env param ->
+      (* Bind name to the env, both for recursion and return value *)
+      let env2 = Environment.bind env name in
+      let env3 = Environment.push_empty env2 in
+      let env4 =
+        List.fold_left parameters2 ~init:env3 ~f:(fun env param ->
             Environment.bind env param)
       in
-      let block2 = optimize_block env3 block in
-      let env4 = Environment.bind env name in
-      (env4, FuncDecl { name; parameters = parameters2; block = block2 })
+      let block2 = optimize_block env4 block in
+      (env2, FuncDecl { name; parameters = parameters2; block = block2 })
   | Ast.StmtDecl s ->
       let env2, stmt = optimize_stmt env s in
       (env2, StmtDecl stmt)
@@ -100,6 +103,7 @@ and optimize_expr (env : Environment.t) (e : Ast.expr) : expr =
   match e with
   | Num f -> Num f
   | Bool b -> Bool b
+  | Null -> Null
   | String s -> String s
   | Binary (o, e1, e2) ->
       let e1 = optimize_expr env e1 in

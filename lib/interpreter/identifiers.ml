@@ -16,20 +16,24 @@ let bind env id v =
   | Some _ ->
       let msg = Printf.sprintf "cannot rebind name %s" id in
       raise (Common.Failure msg)
-  | None -> Hashtbl.add_exn ~key:id ~data:v env.values
+  | None ->
+      Printf.printf "Binding %s\n" id (* TODO delete debug print *);
+      Hashtbl.add_exn ~key:id ~data:v env.values
 
 let rec get_opt env id =
   match Hashtbl.find env.values id with
   | None -> (
       match env.previous with
       | None -> None
-      | Some prev -> (get_opt [@tailrec]) prev id)
+      | Some prev -> (get_opt [@tailcall]) prev id)
   | Some v -> Some v
 
 let get env id =
   match get_opt env id with
   | Some v -> v
-  | None -> Printf.sprintf "No variable defined named %s" id |> failwith
+  | None ->
+      let msg = Printf.sprintf "No variable defined named %s" id in
+      raise (Common.Failure msg)
 
 let rec reassign env id v =
   match Hashtbl.find env.values id with
@@ -37,7 +41,7 @@ let rec reassign env id v =
   | Some _ -> Hashtbl.change env.values id ~f:(fun _ -> Some v)
   | None -> (
       match env.previous with
-      | Some prev -> (reassign [@tailrec]) prev id v
+      | Some prev -> (reassign [@tailcall]) prev id v
       | None ->
           Printf.sprintf
             "No previous variable named %s; did you intend to declare a new \

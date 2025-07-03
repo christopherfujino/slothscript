@@ -19,6 +19,7 @@ and stmt =
 and expr =
   | Num of float
   | Bool of bool
+  | Null
   | String of string
   | Binary of operator * expr * expr
   | IdRef of string

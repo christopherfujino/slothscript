@@ -12,6 +12,7 @@
 %token <string> STRING
 %token TRUE
 %token FALSE
+%token NULL
 %token PLUS
 %token MINUS
 %token LET
@@ -115,6 +116,7 @@ expr_last:
   | f = NUM { Num f }
   | TRUE { Bool true }
   | FALSE { Bool false }
+  | NULL { Null }
   | s = STRING { String s }
   | i = ID { IdRef i }
 

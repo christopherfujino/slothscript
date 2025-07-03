@@ -14,6 +14,7 @@ and stmt =
 and expr =
   | Num of float
   | Bool of bool
+  | Null
   | String of string
   | Binary of operator * expr * expr
   | IdRef of string
@@ -34,5 +35,5 @@ and cond_cont =
 
 and operator = Add [@@deriving sexp]
 
-val optimize_prog : Ast.decl list -> decl list
+val optimize_prog : Environment.t -> Ast.decl list -> Environment.t * decl list
 val prog_to_str : decl list -> string

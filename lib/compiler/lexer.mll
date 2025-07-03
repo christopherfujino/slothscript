@@ -20,6 +20,7 @@ rule read =
   | white { (read [@tailcall]) lexbuf }
   | "true" { TRUE }
   | "false" { FALSE }
+  | "null" { NULL }
   | "let" { LET }
   | "func" { FUNC }
   | "if" { IF }
