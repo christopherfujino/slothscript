@@ -39,9 +39,7 @@ and interpret_stmt (ctx : Context.t) stmt =
   match stmt with
   | LetStmt (id, e) ->
       let v = interpret_expr ctx e in
-      Printf.printf "About to bind %s to %s\n" (Runtime.to_s v) id;
       Identifiers.bind ctx.identifiers id v;
-      Identifiers.debug ctx.identifiers Runtime.to_s;
       (ctx, v)
   | AssignStmt (id, e) ->
       let v = interpret_expr ctx e in
@@ -130,9 +128,8 @@ and interpret_expr ctx expr =
               (* Bind args to env *)
               (match
                  List.iter2 parameters args ~f:(fun param_name arg_expr ->
-                     let ctx = { ctx with identifiers } in
+                     (* Note this is interpreted with the enclosing env *)
                      let v = interpret_expr ctx arg_expr in
-                     Printf.printf "About to bind %s to %s\n" (Runtime.to_s v) param_name;
                      Identifiers.bind identifiers2 param_name v)
                with
               | Ok () -> ()
@@ -140,8 +137,6 @@ and interpret_expr ctx expr =
                   Printf.sprintf
                     "Mismatched number of params and args in call to function"
                   |> failwith);
-
-              Identifiers.debug identifiers2 Runtime.to_s;
               let temp_ctx = { ctx with identifiers = identifiers2 } in
               let rec traverse_stmts ctx stmts =
                 match stmts with
@@ -169,13 +164,13 @@ and interpret_expr ctx expr =
 and interpret_block ctx stmts =
   (* TODO can't use List.fold_left because we want to handle empty list
      differently *)
-  let rec traverse_stmts ctx stmts =
+  let rec traverse_stmts ctx' stmts =
     match stmts with
-    | [] -> (ctx, Runtime.Null)
+    | [] -> (ctx', Runtime.Null)
     | stmt :: stmts ->
-        let ctx, return_val = interpret_stmt ctx stmt in
-        if List.is_empty stmts then (ctx, return_val)
-        else (traverse_stmts [@tailcall]) ctx stmts
+        let ctx'', return_val = interpret_stmt ctx' stmt in
+        if List.is_empty stmts then (ctx'', return_val)
+        else (traverse_stmts [@tailcall]) ctx'' stmts
   in
   (* discard context *)
   let _, v = traverse_stmts ctx stmts in
