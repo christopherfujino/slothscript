@@ -23,13 +23,29 @@ let rec get_opt env id =
   | None -> (
       match env.previous with
       | None -> None
-      | Some prev -> (get_opt [@tailrec]) prev id)
+      | Some prev -> (get_opt [@tailcall]) prev id)
   | Some v -> Some v
 
 let get env id =
   match get_opt env id with
   | Some v -> v
-  | None -> Printf.sprintf "No variable defined named %s" id |> failwith
+  | None ->
+      let buf = Buffer.create 4 in
+      Buffer.add_string buf (Printf.sprintf "No variable defined named %s\n" id);
+      let rec walk_env env =
+        let keys = Hashtbl.keys env.values in
+        List.iter keys ~f:(fun n ->
+            let msg = Printf.sprintf "%s, " n in
+            Buffer.add_string buf msg);
+        match env.previous with
+        | None -> ()
+        | Some p ->
+            Buffer.add_char buf '\n';
+            walk_env p
+      in
+      walk_env env;
+      let msg = Buffer.contents buf in
+      raise (Common.Failure msg)
 
 let rec reassign env id v =
   match Hashtbl.find env.values id with
@@ -37,10 +53,24 @@ let rec reassign env id v =
   | Some _ -> Hashtbl.change env.values id ~f:(fun _ -> Some v)
   | None -> (
       match env.previous with
-      | Some prev -> (reassign [@tailrec]) prev id v
+      | Some prev -> (reassign [@tailcall]) prev id v
       | None ->
           Printf.sprintf
             "No previous variable named %s; did you intend to declare a new \
              variable?"
             id
           |> failwith)
+
+let rec debug_rec indent t' to_s =
+  let keys = Hashtbl.keys t'.values in
+  List.iter keys ~f:(fun key ->
+      let value = Hashtbl.find_exn t'.values key in
+      let value_s = to_s value in
+      let indent_s = String.make indent ' ' in
+      (* TODO recurse for prev *)
+      Printf.printf "%s%s => %s\n" indent_s key value_s);
+  match t'.previous with
+  | None -> ()
+  | Some prev -> debug_rec (indent + 2) prev to_s
+
+let debug t' to_s = debug_rec 0 t' to_s

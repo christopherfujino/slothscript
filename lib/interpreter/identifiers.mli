@@ -10,3 +10,4 @@ val bind : 'a t -> string -> 'a -> unit
 (** Will throw if the identifier already exists on the head of the stack. *)
 
 val reassign : 'a t -> string -> 'a -> unit
+val debug : 'a t -> ('a -> string) -> unit

@@ -1,6 +1,6 @@
 open Core
 
-let parse line =
+let parse env line =
   let decls =
     try Lexing.from_string line |> Parser.prog Lexer.read
     with Parser.Error i ->
@@ -8,4 +8,4 @@ let parse line =
       (* TODO Interpolate lexer position *)
       raise (Common.ParserFailure msg)
   in
-  Optimizer.optimize_prog decls
+  Optimizer.optimize_prog env decls

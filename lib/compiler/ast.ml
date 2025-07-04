@@ -19,7 +19,9 @@ and stmt =
 and expr =
   | Num of float
   | Bool of bool
+  | Null
   | String of string
+  (* TODO delete *)
   | Binary of operator * expr * expr
   | IdRef of string
   | FuncInvoc of expr * expr list

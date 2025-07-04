@@ -123,6 +123,42 @@ let green =
         "if false {print(\"unreachable\");} else if false \
          {print(\"unreachable\");} else {print(\"finally\");};"
       ~stdout_expect:"finally\n";
+    make_spec "recurse once"
+      ~program:"func rec(b) {if b {b;} else {rec(true);};}print(rec(false));"
+      ~ast:
+        "((FuncDecl(name \
+         rec)(parameters(b))(block((ExprStmt(IfExpr(IfCont(conditional(IdRef \
+         b))(block((ExprStmt(IdRef \
+         b))))(continuation((ElseCont((ExprStmt(FuncInvoc(IdRef rec)((Bool \
+         true))))))))))))))(StmtDecl(ExprStmt(FuncInvoc(IdRef \
+         print)((FuncInvoc(IdRef rec)((Bool false))))))))"
+      ~stdout_expect:"true\n";
+    make_spec "regression test"
+      ~program:"if false {} else {let x = 1; print(x);};"
+      ~ast:
+        "((StmtDecl(ExprStmt(IfExpr(IfCont(conditional(Bool \
+         false))(block())(continuation((ElseCont((LetStmt x(Num \
+         1))(ExprStmt(FuncInvoc(IdRef print)((IdRef x)))))))))))))"
+      ~stdout_expect:"1\n";
+    make_spec "subtraction" ~program:"1-1;"
+      ~ast:
+        "((StmtDecl(ExprStmt(MethodInvoc(receiver(Num 1))(target -)(args((Num \
+         1)))))))";
+    make_spec "fibonacci"
+      ~program:
+        "func fib(n) {if n <= 1 {n;} else {fib(n - 1) + fib(n - \
+         2);};}print(fib(20));"
+      ~ast:
+        "((FuncDecl(name \
+         fib)(parameters(n))(block((ExprStmt(IfExpr(IfCont(conditional(MethodInvoc(receiver(IdRef \
+         n))(target <=)(args((Num 1)))))(block((ExprStmt(IdRef \
+         n))))(continuation((ElseCont((ExprStmt(MethodInvoc(receiver(FuncInvoc(IdRef \
+         fib)((MethodInvoc(receiver(IdRef n))(target -)(args((Num \
+         1)))))))(target +)(args((FuncInvoc(IdRef \
+         fib)((MethodInvoc(receiver(IdRef n))(target -)(args((Num \
+         2))))))))))))))))))))(StmtDecl(ExprStmt(FuncInvoc(IdRef \
+         print)((FuncInvoc(IdRef fib)((Num 20))))))))"
+      ~stdout_expect:"6765\n";
   ]
 
 let red =

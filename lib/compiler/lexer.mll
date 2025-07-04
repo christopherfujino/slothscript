@@ -8,7 +8,7 @@ exception SyntaxError of string
 (* identifiers *)
 let white = [' ' '\t' '\n']+
 let digit = ['0'-'9']
-let num = '-'? digit+
+let num = digit+
 let letter = ['a'-'z' 'A'-'Z']
 let id = ['a'-'z' 'A'-'Z' '_'] ['a'-'z' 'A'-'Z' '0'-'9' '_']*
 
@@ -20,6 +20,7 @@ rule read =
   | white { (read [@tailcall]) lexbuf }
   | "true" { TRUE }
   | "false" { FALSE }
+  | "null" { NULL }
   | "let" { LET }
   | "func" { FUNC }
   | "if" { IF }
@@ -33,12 +34,11 @@ rule read =
   | '(' { LPAREN }
   | ')' { RPAREN }
   | ',' { COMMA }
-  | '.' { DOT }
-  (*
   | "<=" { LEQ }
+  | '-' { MINUS }
+  (*
+  | '.' { DOT }
   | '*' { TIMES }
-  | "in" { IN }
-  | "then" { THEN }
   *)
   (* Lexing.lexeme means return the string that matched the pattern *)
   | id { ID (Lexing.lexeme lexbuf) }

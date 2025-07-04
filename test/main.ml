@@ -31,7 +31,8 @@ let make_test spec =
   let open Compiler in
   spec.name >:: fun _ ->
   (* Parser *)
-  let prog = Main.parse spec.program in
+  let env = Compiler.Environment.create () |> Stdlib_stubs.populate in
+  let _, prog = Main.parse env spec.program in
   assert_equal ~pp_diff ~printer spec.ast (Optimizer.prog_to_str prog);
 
   (* Interpreter *)
@@ -54,7 +55,8 @@ let make_failing_test spec =
   spec.name >:: fun _ ->
   (* Parser *)
   try
-    let prog = Main.parse spec.program in
+    let env = Compiler.Environment.create () |> Stdlib_stubs.populate in
+    let _, prog = Main.parse env spec.program in
     assert_equal ~pp_diff ~printer spec.ast (Optimizer.prog_to_str prog);
 
     (* Interpreter *)
