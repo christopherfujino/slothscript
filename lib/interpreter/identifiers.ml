@@ -16,8 +16,7 @@ let bind env id v =
   | Some _ ->
       let msg = Printf.sprintf "cannot rebind name %s" id in
       raise (Common.Failure msg)
-  | None ->
-      Hashtbl.add_exn ~key:id ~data:v env.values
+  | None -> Hashtbl.add_exn ~key:id ~data:v env.values
 
 let rec get_opt env id =
   match Hashtbl.find env.values id with

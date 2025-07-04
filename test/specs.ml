@@ -140,9 +140,10 @@ let green =
          false))(block())(continuation((ElseCont((LetStmt x(Num \
          1))(ExprStmt(FuncInvoc(IdRef print)((IdRef x)))))))))))))"
       ~stdout_expect:"1\n";
-    make_spec "subtraction"
-      ~program:"1-1;"
-      ~ast:"((StmtDecl(ExprStmt(MethodInvoc(receiver(Num 1))(target -)(args((Num 1)))))))";
+    make_spec "subtraction" ~program:"1-1;"
+      ~ast:
+        "((StmtDecl(ExprStmt(MethodInvoc(receiver(Num 1))(target -)(args((Num \
+         1)))))))";
     make_spec "fibonacci"
       ~program:
         "func fib(n) {if n <= 1 {n;} else {fib(n - 1) + fib(n - \

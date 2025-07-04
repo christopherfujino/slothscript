@@ -37,14 +37,14 @@ let interpreter env_opt ctx_opt =
     | None -> Compiler.Environment.create () |> Compiler.Stdlib_stubs.populate
   in
   let rec read_all buf =
-    let cur_line_opt = try Some (read_line ())
-    with End_of_file -> None in
+    let cur_line_opt = try Some (read_line ()) with End_of_file -> None in
     match cur_line_opt with
     | None -> Buffer.contents buf
     | Some cur_line ->
         Buffer.add_string buf cur_line;
         Buffer.add_char buf '\n';
-        (read_all[@tailcall]) buf in
+        (read_all [@tailcall]) buf
+  in
   let program = read_all (Buffer.create 16) in
   print_endline program;
   let _, ir = Compiler.Main.parse env program in
@@ -52,5 +52,4 @@ let interpreter env_opt ctx_opt =
   ()
 
 let () =
-  if Unix.isatty Unix.stdin then repl None None
-  else interpreter None None
+  if Unix.isatty Unix.stdin then repl None None else interpreter None None
