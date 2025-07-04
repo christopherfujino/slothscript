@@ -1,4 +1,8 @@
+(data_only_dirs green_specs)
+
 (test
  (name main)
- (libraries ounit2 sloth_script)
+ (libraries ounit2 sloth_script re)
+ ; Teach dune to depend on green_specs, and copy to build
+ (deps (source_tree green_specs))
  (modes byte))

@@ -1,0 +1,8 @@
+### Name
+Number Literal
+
+### Program
+11;
+
+### Ast
+((StmtDecl(ExprStmt(Num 11))))
