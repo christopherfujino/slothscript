@@ -133,6 +133,13 @@ let green =
          true))))))))))))))(StmtDecl(ExprStmt(FuncInvoc(IdRef \
          print)((FuncInvoc(IdRef rec)((Bool false))))))))"
       ~stdout_expect:"true\n";
+    make_spec "regression test"
+      ~program:"if false {} else {let x = 1; print(x);};"
+      ~ast:
+        "((StmtDecl(ExprStmt(IfExpr(IfCont(conditional(Bool \
+         false))(block())(continuation((ElseCont((LetStmt x(Num \
+         1))(ExprStmt(FuncInvoc(IdRef print)((IdRef x)))))))))))))"
+      ~stdout_expect:"1\n";
     make_spec "TODO works"
       ~program:"func fib(n) {if n <= 1 {n;} else {n;};}print(fib(20));"
       ~ast:
@@ -143,15 +150,19 @@ let green =
          n))))))))))))(StmtDecl(ExprStmt(FuncInvoc(IdRef \
          print)((FuncInvoc(IdRef fib)((Num 20))))))))"
       ~stdout_expect:"20\n";
+    make_spec "subtraction"
+      ~program:"1-1;"
+      ~ast:"((StmtDecl(ExprStmt(MethodInvoc(receiver(Num 1))(target -)(args((Num 1)))))))";
     make_spec "TODO fails"
-      ~program:"func fib(n) {if n <= 1 {n;} else {fib(n - 1);};}print(fib(20));"
+      ~program:
+        "func fib(n) {if n <= 1 {n;} else {let x = n - 1;fib(x);};}print(fib(20));"
       ~ast:
         "((FuncDecl(name \
          fib)(parameters(n))(block((ExprStmt(IfExpr(IfCont(conditional(MethodInvoc(receiver(IdRef \
          n))(target <=)(args((Num 1)))))(block((ExprStmt(IdRef \
-         n))))(continuation((ElseCont((ExprStmt(FuncInvoc(IdRef \
-         fib)((MethodInvoc(receiver(IdRef n))(target -)(args((Num \
-         1)))))))))))))))))(StmtDecl(ExprStmt(FuncInvoc(IdRef \
+         n))))(continuation((ElseCont((LetStmt x(MethodInvoc(receiver(IdRef \
+         n))(target -)(args((Num 1)))))(ExprStmt(FuncInvoc(IdRef fib)((IdRef \
+         x))))))))))))))(StmtDecl(ExprStmt(FuncInvoc(IdRef \
          print)((FuncInvoc(IdRef fib)((Num 20))))))))";
     make_spec "fibonacci"
       ~program:

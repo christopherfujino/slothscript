@@ -17,7 +17,6 @@ let bind env id v =
       let msg = Printf.sprintf "cannot rebind name %s" id in
       raise (Common.Failure msg)
   | None ->
-      Printf.printf "Binding %s\n" id (* TODO delete debug print *);
       Hashtbl.add_exn ~key:id ~data:v env.values
 
 let rec get_opt env id =
@@ -32,7 +31,21 @@ let get env id =
   match get_opt env id with
   | Some v -> v
   | None ->
-      let msg = Printf.sprintf "No variable defined named %s" id in
+      let buf = Buffer.create 4 in
+      Buffer.add_string buf (Printf.sprintf "No variable defined named %s\n" id);
+      let rec walk_env env =
+        let keys = Hashtbl.keys env.values in
+        List.iter keys ~f:(fun n ->
+            let msg = Printf.sprintf "%s, " n in
+            Buffer.add_string buf msg);
+        match env.previous with
+        | None -> ()
+        | Some p ->
+            Buffer.add_char buf '\n';
+            walk_env p
+      in
+      walk_env env;
+      let msg = Buffer.contents buf in
       raise (Common.Failure msg)
 
 let rec reassign env id v =
@@ -48,3 +61,17 @@ let rec reassign env id v =
              variable?"
             id
           |> failwith)
+
+let rec debug_rec indent t' to_s =
+  let keys = Hashtbl.keys t'.values in
+  List.iter keys ~f:(fun key ->
+      let value = Hashtbl.find_exn t'.values key in
+      let value_s = to_s value in
+      let indent_s = String.make indent ' ' in
+      (* TODO recurse for prev *)
+      Printf.printf "%s%s => %s\n" indent_s key value_s);
+  match t'.previous with
+  | None -> ()
+  | Some prev -> debug_rec (indent + 2) prev to_s
+
+let debug t' to_s = debug_rec 0 t' to_s

@@ -8,7 +8,7 @@ exception SyntaxError of string
 (* identifiers *)
 let white = [' ' '\t' '\n']+
 let digit = ['0'-'9']
-let num = '-'? digit+
+let num = digit+
 let letter = ['a'-'z' 'A'-'Z']
 let id = ['a'-'z' 'A'-'Z' '_'] ['a'-'z' 'A'-'Z' '0'-'9' '_']*
 
