@@ -2,7 +2,7 @@
 
 (test
  (name main)
- (libraries ounit2 sloth_script re)
+ (libraries ounit2 sloth_script re core_unix)
  ; Teach dune to depend on green_specs, and copy to build
  (deps (source_tree green_specs))
  (modes byte))

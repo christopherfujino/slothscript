@@ -4,234 +4,178 @@ open Common
 let make_spec ~program ~ast ?(stdout_expect = "") ?failure name =
   { name; program; ast; stdout_expect; failure }
 
-module SpecParser = struct
-  type state = NotParsing | Parsing of string * string list
+let rec find_child_specs ?(acc = []) dir_fd =
+  let res_opt = Core_unix.readdir_opt dir_fd in
+  match res_opt with
+  | None -> acc
+  | Some name ->
+      if Filename.check_suffix name "sloth" then
+        let name = "./green_specs/" ^ name in
+        find_child_specs ~acc:(name :: acc) dir_fd
+      else find_child_specs ~acc dir_fd
 
-  let read path =
-    let chan = In_channel.create path in
-    let lines = In_channel.input_lines chan in
-    In_channel.close chan;
-    let rec process_line state' lines acc =
-      match lines with
-      | line :: tail ->
-          let r = Re.Pcre.regexp "^### ([a-zA-Z].*)" in
-          let groups_opt = Re.exec_opt r line in
-          let next_state, acc =
-            match groups_opt with
-            | Some groups -> (
-                let title = Re.Group.get groups 1 in
-                Printf.printf "Got %s!\n" title;
-                match state' with
-                | NotParsing -> (Parsing (title, []), acc)
-                | Parsing (prev_title, lines) ->
-                    let forward_lines = List.rev lines in
-                    (Parsing (title, []), (prev_title, forward_lines) :: acc))
-            | None -> (
-                match state' with
-                | NotParsing -> (state', acc)
-                | Parsing (prev_title, lines) ->
-                    (Parsing (prev_title, line :: lines), acc))
-          in
-          (process_line [@tailcall]) next_state tail acc
-      | [] -> (
-          match state' with
-          | NotParsing -> acc
-          | Parsing (prev_title, lines) ->
-              let forward_lines = List.rev lines in
-              (prev_title, forward_lines) :: acc)
-    in
-    let parts = process_line NotParsing lines [] in
-    let name_opt_ref = ref None in
-    let ast_opt_ref = ref None in
-    let program_opt_ref = ref None in
-    let stdout_expect_opt_ref = ref None in
-    let failure_opt_ref = ref None in
-    List.iter parts ~f:(fun part ->
-        let title, lines = part in
-        let buf = Buffer.create 2 in
-        List.iter lines ~f:(Buffer.add_string buf);
-        let body = Buffer.contents buf in
-        match title with
-        | "Name" -> name_opt_ref := Some body
-        | "Program" -> program_opt_ref := Some body
-        | "Ast" -> ast_opt_ref := Some (String.strip body)
-        | "Failure" ->
-            let body = String.strip body in
-            failure_opt_ref :=
-              Some
-                (match body with
-                | "Parser_error" -> Parser_error
-                | "Optimizer_error" -> Optimizer_error
-                | "Runtime_error" -> Runtime_error
-                | _ -> Printf.sprintf "Huh? %s" body |> failwith)
-        | _ -> Printf.sprintf "Huh? %s" title |> failwith);
-
-    {
-      name = Option.value_exn !name_opt_ref;
-      ast = Option.value !ast_opt_ref ~default:"()";
-      program = Option.value_exn !program_opt_ref;
-      stdout_expect = Option.value !stdout_expect_opt_ref ~default:"";
-      failure = !failure_opt_ref;
-    }
-end
-
-let green =
-  [
-    make_spec "empty program" ~program:"" ~ast:"()";
-    SpecParser.read "./green_specs/num_literal.sloth";
-    make_spec "print num" ~program:"print(11);"
-      ~ast:"((StmtDecl(ExprStmt(FuncInvoc(IdRef print)((Num 11))))))"
-      ~stdout_expect:"11\n";
-    make_spec "string literal" ~program:"\"Hello\";"
-      ~ast:"((StmtDecl(ExprStmt(String Hello))))";
-    make_spec "print string" ~program:"print(\"Hello\");"
-      ~ast:"((StmtDecl(ExprStmt(FuncInvoc(IdRef print)((String Hello))))))"
-      ~stdout_expect:"Hello\n";
-    make_spec "bool literal" ~program:"true;"
-      ~ast:"((StmtDecl(ExprStmt(Bool true))))";
-    make_spec "addition" ~program:"1 + 1;"
-      ~ast:
-        "((StmtDecl(ExprStmt(MethodInvoc(receiver(Num 1))(target +)(args((Num \
-         1)))))))";
-    make_spec "chained infix calls" ~program:"1 + 2 + 3;"
-      ~ast:
-        "((StmtDecl(ExprStmt(MethodInvoc(receiver(MethodInvoc(receiver(Num \
-         1))(target +)(args((Num 2)))))(target +)(args((Num 3)))))))";
-    make_spec "assignment" ~program:"let x = 1 + 1;"
-      ~ast:
-        "((StmtDecl(LetStmt x(MethodInvoc(receiver(Num 1))(target +)(args((Num \
-         1)))))))";
-    make_spec "var reference" ~program:"let x = 1 + 1;\nprint(x);"
-      ~ast:
-        "((StmtDecl(LetStmt x(MethodInvoc(receiver(Num 1))(target +)(args((Num \
-         1))))))(StmtDecl(ExprStmt(FuncInvoc(IdRef print)((IdRef x))))))"
-      ~stdout_expect:"2\n";
-    make_spec "re-assignment" ~program:"let x = 0;x = 1;print(x);"
-      ~ast:
-        "((StmtDecl(LetStmt x(Num 0)))(StmtDecl(AssignStmt x(Num \
-         1)))(StmtDecl(ExprStmt(FuncInvoc(IdRef print)((IdRef x))))))"
-      ~stdout_expect:"1\n";
-    make_spec "func definition" ~program:"func m() {}"
-      ~ast:"((FuncDecl(name m)(parameters())(block())))";
-    make_spec "func invocation" ~program:"func m() {print(1);print(2);}m();"
-      ~ast:
-        "((FuncDecl(name m)(parameters())(block((ExprStmt(FuncInvoc(IdRef \
-         print)((Num 1))))(ExprStmt(FuncInvoc(IdRef print)((Num \
-         2)))))))(StmtDecl(ExprStmt(FuncInvoc(IdRef m)()))))"
-      ~stdout_expect:"1\n2\n";
-    make_spec "func implicit return" ~program:"func m() {1;2;3;}print(m());"
-      ~ast:
-        "((FuncDecl(name m)(parameters())(block((ExprStmt(Num 1))(ExprStmt(Num \
-         2))(ExprStmt(Num 3)))))(StmtDecl(ExprStmt(FuncInvoc(IdRef \
-         print)((FuncInvoc(IdRef m)()))))))"
-      ~stdout_expect:"3\n";
-    make_spec "lexical scope"
-      ~program:"let x=1;func f() {print(x);}func g() {let x=2;f();}g();"
-      ~ast:
-        "((StmtDecl(LetStmt x(Num 1)))(FuncDecl(name \
-         f)(parameters())(block((ExprStmt(FuncInvoc(IdRef print)((IdRef \
-         x)))))))(FuncDecl(name g)(parameters())(block((LetStmt x(Num \
-         2))(ExprStmt(FuncInvoc(IdRef \
-         f)())))))(StmtDecl(ExprStmt(FuncInvoc(IdRef g)()))))"
-      ~stdout_expect:"1\n";
-    make_spec "closures" ~program:"let x = 0;func f() {print(x);}x = 1;f();"
-      ~ast:
-        "((StmtDecl(LetStmt x(Num 0)))(FuncDecl(name \
-         f)(parameters())(block((ExprStmt(FuncInvoc(IdRef print)((IdRef \
-         x)))))))(StmtDecl(AssignStmt x(Num \
-         1)))(StmtDecl(ExprStmt(FuncInvoc(IdRef f)()))))"
-      ~stdout_expect:"1\n";
-    make_spec "args" ~program:"func f(x, y) {print(x);print(y);}f(1, 2);"
-      ~ast:
-        "((FuncDecl(name f)(parameters(x y))(block((ExprStmt(FuncInvoc(IdRef \
-         print)((IdRef x))))(ExprStmt(FuncInvoc(IdRef print)((IdRef \
-         y)))))))(StmtDecl(ExprStmt(FuncInvoc(IdRef f)((Num 1)(Num 2))))))"
-      ~stdout_expect:"1\n2\n";
-    make_spec "first class func"
-      ~program:"func f() {let x = 1;func() {x;};}let xer = f();print(xer());"
-      ~ast:
-        "((FuncDecl(name f)(parameters())(block((LetStmt x(Num \
-         1))(ExprStmt(FuncExpr(parameters())(block((ExprStmt(IdRef \
-         x)))))))))(StmtDecl(LetStmt xer(FuncInvoc(IdRef \
-         f)())))(StmtDecl(ExprStmt(FuncInvoc(IdRef print)((FuncInvoc(IdRef \
-         xer)()))))))"
-      ~stdout_expect:"1\n";
-    make_spec "curry" ~program:"func a(x) {func(y) {x+y;};}print(a(1)(2));"
-      ~ast:
-        "((FuncDecl(name \
-         a)(parameters(x))(block((ExprStmt(FuncExpr(parameters(y))(block((ExprStmt(MethodInvoc(receiver(IdRef \
-         x))(target +)(args((IdRef \
-         y))))))))))))(StmtDecl(ExprStmt(FuncInvoc(IdRef \
-         print)((FuncInvoc(FuncInvoc(IdRef a)((Num 1)))((Num 2))))))))"
-      ~stdout_expect:"3\n";
-    make_spec "if true" ~program:"if true {print(\"True\");};"
-      ~ast:
-        "((StmtDecl(ExprStmt(IfExpr(IfCont(conditional(Bool \
-         true))(block((ExprStmt(FuncInvoc(IdRef print)((String \
-         True))))))(continuation()))))))"
-      ~stdout_expect:"True\n";
-    make_spec "if false" ~program:"if false {print(\"Unreachable\");};"
-      ~ast:
-        "((StmtDecl(ExprStmt(IfExpr(IfCont(conditional(Bool \
-         false))(block((ExprStmt(FuncInvoc(IdRef print)((String \
-         Unreachable))))))(continuation()))))))";
-    make_spec "if/else"
-      ~program:"if false {print(true);} else {print(\"else\");};"
-      ~ast:
-        "((StmtDecl(ExprStmt(IfExpr(IfCont(conditional(Bool \
-         false))(block((ExprStmt(FuncInvoc(IdRef print)((Bool \
-         true))))))(continuation((ElseCont((ExprStmt(FuncInvoc(IdRef \
-         print)((String else)))))))))))))"
-      ~stdout_expect:"else\n";
-    make_spec "if/else if/else"
-      ~ast:
-        "((StmtDecl(ExprStmt(IfExpr(IfCont(conditional(Bool \
-         false))(block((ExprStmt(FuncInvoc(IdRef print)((String \
-         unreachable))))))(continuation((IfCont(conditional(Bool \
-         false))(block((ExprStmt(FuncInvoc(IdRef print)((String \
-         unreachable))))))(continuation((ElseCont((ExprStmt(FuncInvoc(IdRef \
-         print)((String finally))))))))))))))))"
-      ~program:
-        "if false {print(\"unreachable\");} else if false \
-         {print(\"unreachable\");} else {print(\"finally\");};"
-      ~stdout_expect:"finally\n";
-    make_spec "recurse once"
-      ~program:"func rec(b) {if b {b;} else {rec(true);};}print(rec(false));"
-      ~ast:
-        "((FuncDecl(name \
-         rec)(parameters(b))(block((ExprStmt(IfExpr(IfCont(conditional(IdRef \
-         b))(block((ExprStmt(IdRef \
-         b))))(continuation((ElseCont((ExprStmt(FuncInvoc(IdRef rec)((Bool \
-         true))))))))))))))(StmtDecl(ExprStmt(FuncInvoc(IdRef \
-         print)((FuncInvoc(IdRef rec)((Bool false))))))))"
-      ~stdout_expect:"true\n";
-    make_spec "regression test"
-      ~program:"if false {} else {let x = 1; print(x);};"
-      ~ast:
-        "((StmtDecl(ExprStmt(IfExpr(IfCont(conditional(Bool \
-         false))(block())(continuation((ElseCont((LetStmt x(Num \
-         1))(ExprStmt(FuncInvoc(IdRef print)((IdRef x)))))))))))))"
-      ~stdout_expect:"1\n";
-    make_spec "subtraction" ~program:"1-1;"
-      ~ast:
-        "((StmtDecl(ExprStmt(MethodInvoc(receiver(Num 1))(target -)(args((Num \
-         1)))))))";
-    make_spec "fibonacci"
-      ~program:
-        "func fib(n) {if n <= 1 {n;} else {fib(n - 1) + fib(n - \
-         2);};}print(fib(20));"
-      ~ast:
-        "((FuncDecl(name \
-         fib)(parameters(n))(block((ExprStmt(IfExpr(IfCont(conditional(MethodInvoc(receiver(IdRef \
-         n))(target <=)(args((Num 1)))))(block((ExprStmt(IdRef \
-         n))))(continuation((ElseCont((ExprStmt(MethodInvoc(receiver(FuncInvoc(IdRef \
-         fib)((MethodInvoc(receiver(IdRef n))(target -)(args((Num \
-         1)))))))(target +)(args((FuncInvoc(IdRef \
-         fib)((MethodInvoc(receiver(IdRef n))(target -)(args((Num \
-         2))))))))))))))))))))(StmtDecl(ExprStmt(FuncInvoc(IdRef \
-         print)((FuncInvoc(IdRef fib)((Num 20))))))))"
-      ~stdout_expect:"6765\n";
-  ]
+let green () =
+  let green_specs_desc = Core_unix.opendir "./green_specs" in
+  let stats = find_child_specs green_specs_desc in
+  List.iter stats ~f:(fun name -> print_endline name);
+  let specs_from_file = List.map stats ~f:Spec_parser.deserialize in
+  List.append specs_from_file
+    [
+      make_spec "print num" ~program:"print(11);"
+        ~ast:"((StmtDecl(ExprStmt(FuncInvoc(IdRef print)((Num 11))))))"
+        ~stdout_expect:"11\n";
+      make_spec "string literal" ~program:"\"Hello\";"
+        ~ast:"((StmtDecl(ExprStmt(String Hello))))";
+      make_spec "print string" ~program:"print(\"Hello\");"
+        ~ast:"((StmtDecl(ExprStmt(FuncInvoc(IdRef print)((String Hello))))))"
+        ~stdout_expect:"Hello\n";
+      make_spec "bool literal" ~program:"true;"
+        ~ast:"((StmtDecl(ExprStmt(Bool true))))";
+      make_spec "addition" ~program:"1 + 1;"
+        ~ast:
+          "((StmtDecl(ExprStmt(MethodInvoc(receiver(Num 1))(target \
+           +)(args((Num 1)))))))";
+      make_spec "chained infix calls" ~program:"1 + 2 + 3;"
+        ~ast:
+          "((StmtDecl(ExprStmt(MethodInvoc(receiver(MethodInvoc(receiver(Num \
+           1))(target +)(args((Num 2)))))(target +)(args((Num 3)))))))";
+      make_spec "assignment" ~program:"let x = 1 + 1;"
+        ~ast:
+          "((StmtDecl(LetStmt x(MethodInvoc(receiver(Num 1))(target \
+           +)(args((Num 1)))))))";
+      make_spec "var reference" ~program:"let x = 1 + 1;\nprint(x);"
+        ~ast:
+          "((StmtDecl(LetStmt x(MethodInvoc(receiver(Num 1))(target \
+           +)(args((Num 1))))))(StmtDecl(ExprStmt(FuncInvoc(IdRef \
+           print)((IdRef x))))))"
+        ~stdout_expect:"2\n";
+      make_spec "re-assignment" ~program:"let x = 0;x = 1;print(x);"
+        ~ast:
+          "((StmtDecl(LetStmt x(Num 0)))(StmtDecl(AssignStmt x(Num \
+           1)))(StmtDecl(ExprStmt(FuncInvoc(IdRef print)((IdRef x))))))"
+        ~stdout_expect:"1\n";
+      make_spec "func definition" ~program:"func m() {}"
+        ~ast:"((FuncDecl(name m)(parameters())(block())))";
+      make_spec "func invocation" ~program:"func m() {print(1);print(2);}m();"
+        ~ast:
+          "((FuncDecl(name m)(parameters())(block((ExprStmt(FuncInvoc(IdRef \
+           print)((Num 1))))(ExprStmt(FuncInvoc(IdRef print)((Num \
+           2)))))))(StmtDecl(ExprStmt(FuncInvoc(IdRef m)()))))"
+        ~stdout_expect:"1\n2\n";
+      make_spec "func implicit return" ~program:"func m() {1;2;3;}print(m());"
+        ~ast:
+          "((FuncDecl(name m)(parameters())(block((ExprStmt(Num \
+           1))(ExprStmt(Num 2))(ExprStmt(Num \
+           3)))))(StmtDecl(ExprStmt(FuncInvoc(IdRef print)((FuncInvoc(IdRef \
+           m)()))))))"
+        ~stdout_expect:"3\n";
+      make_spec "lexical scope"
+        ~program:"let x=1;func f() {print(x);}func g() {let x=2;f();}g();"
+        ~ast:
+          "((StmtDecl(LetStmt x(Num 1)))(FuncDecl(name \
+           f)(parameters())(block((ExprStmt(FuncInvoc(IdRef print)((IdRef \
+           x)))))))(FuncDecl(name g)(parameters())(block((LetStmt x(Num \
+           2))(ExprStmt(FuncInvoc(IdRef \
+           f)())))))(StmtDecl(ExprStmt(FuncInvoc(IdRef g)()))))"
+        ~stdout_expect:"1\n";
+      make_spec "closures" ~program:"let x = 0;func f() {print(x);}x = 1;f();"
+        ~ast:
+          "((StmtDecl(LetStmt x(Num 0)))(FuncDecl(name \
+           f)(parameters())(block((ExprStmt(FuncInvoc(IdRef print)((IdRef \
+           x)))))))(StmtDecl(AssignStmt x(Num \
+           1)))(StmtDecl(ExprStmt(FuncInvoc(IdRef f)()))))"
+        ~stdout_expect:"1\n";
+      make_spec "args" ~program:"func f(x, y) {print(x);print(y);}f(1, 2);"
+        ~ast:
+          "((FuncDecl(name f)(parameters(x y))(block((ExprStmt(FuncInvoc(IdRef \
+           print)((IdRef x))))(ExprStmt(FuncInvoc(IdRef print)((IdRef \
+           y)))))))(StmtDecl(ExprStmt(FuncInvoc(IdRef f)((Num 1)(Num 2))))))"
+        ~stdout_expect:"1\n2\n";
+      make_spec "first class func"
+        ~program:"func f() {let x = 1;func() {x;};}let xer = f();print(xer());"
+        ~ast:
+          "((FuncDecl(name f)(parameters())(block((LetStmt x(Num \
+           1))(ExprStmt(FuncExpr(parameters())(block((ExprStmt(IdRef \
+           x)))))))))(StmtDecl(LetStmt xer(FuncInvoc(IdRef \
+           f)())))(StmtDecl(ExprStmt(FuncInvoc(IdRef print)((FuncInvoc(IdRef \
+           xer)()))))))"
+        ~stdout_expect:"1\n";
+      make_spec "curry" ~program:"func a(x) {func(y) {x+y;};}print(a(1)(2));"
+        ~ast:
+          "((FuncDecl(name \
+           a)(parameters(x))(block((ExprStmt(FuncExpr(parameters(y))(block((ExprStmt(MethodInvoc(receiver(IdRef \
+           x))(target +)(args((IdRef \
+           y))))))))))))(StmtDecl(ExprStmt(FuncInvoc(IdRef \
+           print)((FuncInvoc(FuncInvoc(IdRef a)((Num 1)))((Num 2))))))))"
+        ~stdout_expect:"3\n";
+      make_spec "if true" ~program:"if true {print(\"True\");};"
+        ~ast:
+          "((StmtDecl(ExprStmt(IfExpr(IfCont(conditional(Bool \
+           true))(block((ExprStmt(FuncInvoc(IdRef print)((String \
+           True))))))(continuation()))))))"
+        ~stdout_expect:"True\n";
+      make_spec "if false" ~program:"if false {print(\"Unreachable\");};"
+        ~ast:
+          "((StmtDecl(ExprStmt(IfExpr(IfCont(conditional(Bool \
+           false))(block((ExprStmt(FuncInvoc(IdRef print)((String \
+           Unreachable))))))(continuation()))))))";
+      make_spec "if/else"
+        ~program:"if false {print(true);} else {print(\"else\");};"
+        ~ast:
+          "((StmtDecl(ExprStmt(IfExpr(IfCont(conditional(Bool \
+           false))(block((ExprStmt(FuncInvoc(IdRef print)((Bool \
+           true))))))(continuation((ElseCont((ExprStmt(FuncInvoc(IdRef \
+           print)((String else)))))))))))))"
+        ~stdout_expect:"else\n";
+      make_spec "if/else if/else"
+        ~ast:
+          "((StmtDecl(ExprStmt(IfExpr(IfCont(conditional(Bool \
+           false))(block((ExprStmt(FuncInvoc(IdRef print)((String \
+           unreachable))))))(continuation((IfCont(conditional(Bool \
+           false))(block((ExprStmt(FuncInvoc(IdRef print)((String \
+           unreachable))))))(continuation((ElseCont((ExprStmt(FuncInvoc(IdRef \
+           print)((String finally))))))))))))))))"
+        ~program:
+          "if false {print(\"unreachable\");} else if false \
+           {print(\"unreachable\");} else {print(\"finally\");};"
+        ~stdout_expect:"finally\n";
+      make_spec "recurse once"
+        ~program:"func rec(b) {if b {b;} else {rec(true);};}print(rec(false));"
+        ~ast:
+          "((FuncDecl(name \
+           rec)(parameters(b))(block((ExprStmt(IfExpr(IfCont(conditional(IdRef \
+           b))(block((ExprStmt(IdRef \
+           b))))(continuation((ElseCont((ExprStmt(FuncInvoc(IdRef rec)((Bool \
+           true))))))))))))))(StmtDecl(ExprStmt(FuncInvoc(IdRef \
+           print)((FuncInvoc(IdRef rec)((Bool false))))))))"
+        ~stdout_expect:"true\n";
+      make_spec "regression test"
+        ~program:"if false {} else {let x = 1; print(x);};"
+        ~ast:
+          "((StmtDecl(ExprStmt(IfExpr(IfCont(conditional(Bool \
+           false))(block())(continuation((ElseCont((LetStmt x(Num \
+           1))(ExprStmt(FuncInvoc(IdRef print)((IdRef x)))))))))))))"
+        ~stdout_expect:"1\n";
+      make_spec "subtraction" ~program:"1-1;"
+        ~ast:
+          "((StmtDecl(ExprStmt(MethodInvoc(receiver(Num 1))(target \
+           -)(args((Num 1)))))))";
+      make_spec "fibonacci"
+        ~program:
+          "func fib(n) {if n <= 1 {n;} else {fib(n - 1) + fib(n - \
+           2);};}print(fib(20));"
+        ~ast:
+          "((FuncDecl(name \
+           fib)(parameters(n))(block((ExprStmt(IfExpr(IfCont(conditional(MethodInvoc(receiver(IdRef \
+           n))(target <=)(args((Num 1)))))(block((ExprStmt(IdRef \
+           n))))(continuation((ElseCont((ExprStmt(MethodInvoc(receiver(FuncInvoc(IdRef \
+           fib)((MethodInvoc(receiver(IdRef n))(target -)(args((Num \
+           1)))))))(target +)(args((FuncInvoc(IdRef \
+           fib)((MethodInvoc(receiver(IdRef n))(target -)(args((Num \
+           2))))))))))))))))))))(StmtDecl(ExprStmt(FuncInvoc(IdRef \
+           print)((FuncInvoc(IdRef fib)((Num 20))))))))"
+        ~stdout_expect:"6765\n";
+    ]
 
 let red =
   [

@@ -122,7 +122,7 @@ let make_failing_test spec =
 let tests =
   "slothscript"
   >::: [
-         "green" >::: List.map make_test Specs.green;
+         "green" >::: List.map make_test (Specs.green ());
          "red" >::: List.map make_failing_test Specs.red;
        ]
 
