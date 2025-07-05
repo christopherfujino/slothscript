@@ -11,13 +11,15 @@
  (name train)
  (libraries
    sloth_script
-   core_unix))
+   core_unix
+   re))
 
 (rule
   (alias train)
   (deps
     (file train.exe)
     (source_tree green_specs)
+    ; Required to define a rule without any targets
     (universe))
   (action
     (run ./train.exe)))

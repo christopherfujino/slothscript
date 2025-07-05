@@ -16,7 +16,6 @@ let deserialize path =
           match groups_opt with
           | Some groups -> (
               let title = Re.Group.get groups 1 in
-              Printf.printf "Got %s!\n" title;
               match state' with
               | NotParsing -> (Parsing (title, []), acc)
               | Parsing (prev_title, lines) ->

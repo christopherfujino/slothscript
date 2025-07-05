@@ -2,5 +2,6 @@ open Common
 open Core
 
 let () =
-  let _ = find_child_specs "./green_specs" in
-  failwith "TODO"
+  find_child_specs "./green_specs"
+  |> List.map ~f:Spec_parser.deserialize
+  |> List.iter ~f:(fun spec -> print_endline spec.ast)

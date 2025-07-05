@@ -7,7 +7,7 @@ test:
 
 .PHONY: train
 train:
-	dune exec train
+	dune build @train
 
 .PHONY: describe
 describe:
