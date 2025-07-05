@@ -61,9 +61,14 @@ let deserialize path =
               | _ -> Printf.sprintf "Huh? %s" body |> failwith)
       | _ -> Printf.sprintf "Huh? %s" title |> failwith);
 
+  let raw_ast = Option.value !ast_opt_ref ~default:"()" in
+  let ast = try
+    Printer.sexp_formatter raw_ast
+    with Printer.Error msg -> Printf.sprintf "Malformed AST in file %s\n\n%s" path msg |> failwith
+  in
   {
     name = Option.value_exn !name_opt_ref;
-    ast = Option.value !ast_opt_ref ~default:"()";
+    ast;
     program = Option.value_exn !program_opt_ref;
     stdout_expect = Option.value !stdout_expect_opt_ref ~default:"";
     failure = !failure_opt_ref;

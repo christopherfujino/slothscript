@@ -1,5 +1,7 @@
 open Core
 
+exception Error of string
+
 let rec indent_str b i s =
   if i <= 0 then Buffer.add_string b s
   else (
@@ -24,7 +26,6 @@ let rec sexp_formatter_inner indent buffer (s : Sexp.t) =
 
 let sexp_formatter str =
   let b = Buffer.create 20 in
-  Buffer.add_char b '\n';
-  let s = Sexp.of_string str in
+  let s = try Sexp.of_string str with Failure msg -> raise (Error msg) in
   sexp_formatter_inner 0 b s;
   Buffer.contents b
