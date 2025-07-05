@@ -59,12 +59,14 @@ let deserialize path =
               | "Optimizer_error" -> Optimizer_error
               | "Runtime_error" -> Runtime_error
               | _ -> Printf.sprintf "Huh? %s" body |> failwith)
+      | "Foo" (* No-op *) -> ()
       | _ -> Printf.sprintf "Huh? %s" title |> failwith);
 
   let raw_ast = Option.value !ast_opt_ref ~default:"()" in
-  let ast = try
-    Printer.sexp_formatter raw_ast
-    with Printer.Error msg -> Printf.sprintf "Malformed AST in file %s\n\n%s" path msg |> failwith
+  let ast =
+    try Printer.sexp_formatter raw_ast
+    with Printer.Error msg ->
+      Printf.sprintf "Malformed AST in file %s\n\n%s" path msg |> failwith
   in
   {
     name = Option.value_exn !name_opt_ref;
