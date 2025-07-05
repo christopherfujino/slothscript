@@ -4,19 +4,8 @@ open Common
 let make_spec ~program ~ast ?(stdout_expect = "") ?failure name =
   { name; program; ast; stdout_expect; failure }
 
-let rec find_child_specs ?(acc = []) dir_fd =
-  let res_opt = Core_unix.readdir_opt dir_fd in
-  match res_opt with
-  | None -> acc
-  | Some name ->
-      if Filename.check_suffix name "sloth" then
-        let name = "./green_specs/" ^ name in
-        find_child_specs ~acc:(name :: acc) dir_fd
-      else find_child_specs ~acc dir_fd
-
 let green () =
-  let green_specs_desc = Core_unix.opendir "./green_specs" in
-  let stats = find_child_specs green_specs_desc in
+  let stats = find_child_specs "./green_specs" in
   List.iter stats ~f:(fun name -> print_endline name);
   let specs_from_file = List.map stats ~f:Spec_parser.deserialize in
   List.append specs_from_file

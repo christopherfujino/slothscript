@@ -3,6 +3,21 @@
 (test
  (name main)
  (libraries ounit2 sloth_script re core_unix)
- ; Teach dune to depend on green_specs, and copy to build
  (deps (source_tree green_specs))
  (modes byte))
+
+(executable
+ (public_name train_runner)
+ (name train)
+ (libraries
+   sloth_script
+   core_unix))
+
+(rule
+  (alias train)
+  (deps
+    (file train.exe)
+    (source_tree green_specs)
+    (universe))
+  (action
+    (run ./train.exe)))

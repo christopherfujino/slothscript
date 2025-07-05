@@ -5,6 +5,10 @@ test:
 	#OUNIT_CI=true dune build @runtest --force
 	OUNIT_CI=true dune build @runtest
 
+.PHONY: train
+train:
+	dune exec train
+
 .PHONY: describe
 describe:
 	dune describe
