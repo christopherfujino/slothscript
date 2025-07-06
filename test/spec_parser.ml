@@ -4,11 +4,12 @@ open Common
 type state = NotParsing | Parsing of string * string list
 
 let serialize path spec =
-  Printf.printf "Serializing %s..." path;
+  Printf.printf "(1) Serializing %s..." path;
   let buf = Buffer.create 100 in
   let print s =
     Buffer.add_string buf s;
-    Buffer.add_char buf '\n' in
+    Buffer.add_char buf '\n'
+  in
 
   print "### Name";
   print spec.name;
@@ -27,11 +28,13 @@ let serialize path spec =
   print "\n";
 
   print "### Failure";
-  match spec.failure with
+  (match spec.failure with
   | None -> ()
-  | Some f -> string_of_failure f |> print;
+  | Some f -> string_of_failure f |> print);
   print "\n";
 
+  Printf.printf "(2) Serializing %s..." path;
+  (*let chan = Out_channel.create path ~append:true in*)
   let chan = Out_channel.create path in
   Out_channel.output_string chan "foo";
   Out_channel.close chan
