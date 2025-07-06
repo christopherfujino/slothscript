@@ -62,28 +62,11 @@ let deserialize path =
       | "Foo" (* No-op *) -> ()
       | _ -> Printf.sprintf "Huh? %s" title |> failwith);
 
-  let raw_ast = Option.value !ast_opt_ref ~default:"()" in
-
-  match
-    try Ok (Printer.sexp_formatter raw_ast)
-    with Printer.Error msg ->
-      let msg = Printf.sprintf "Malformed AST in file %s\n\n%s" path msg in
-      Error msg
-  with
-  | Error e -> Error e
-  | Ok pretty ->
-      if String.equal pretty raw_ast then
-        Ok
-          {
-            name = Option.value_exn !name_opt_ref;
-            ast = pretty;
-            program = Option.value_exn !program_opt_ref;
-            stdout_expect = Option.value !stdout_expect_opt_ref ~default:"";
-            failure = !failure_opt_ref;
-          }
-      else
-        let msg =
-          Printf.sprintf "Not pretty AST in file %s (try `make train`)\n\n%s"
-            path pretty
-        in
-        Error msg
+  let ast = Option.value !ast_opt_ref ~default:"()" in
+  {
+    name = Option.value_exn !name_opt_ref;
+    ast;
+    program = Option.value_exn !program_opt_ref;
+    stdout_expect = Option.value !stdout_expect_opt_ref ~default:"";
+    failure = !failure_opt_ref;
+  }

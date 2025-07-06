@@ -2,7 +2,7 @@ open Core
 open Common
 
 let make_spec ~program ~ast ?(stdout_expect = "") ?failure name =
-  Ok { name; program; ast; stdout_expect; failure }
+  { name; program; ast; stdout_expect; failure }
 
 let green () =
   let stats = find_child_specs "./green_specs" in
