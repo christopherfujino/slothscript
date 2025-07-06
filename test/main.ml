@@ -28,7 +28,7 @@ let pp_diff formatter left_right_tuple =
     (indent (Buffer.create i) i)
 
 let make_test = function
-  | Error msg -> assert_failure msg
+  | Error msg -> "Test spec parser failure" >:: fun _ -> assert_failure msg
   | Ok spec -> (
       let open Compiler in
       spec.name >:: fun _ ->
