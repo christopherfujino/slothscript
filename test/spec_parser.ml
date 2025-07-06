@@ -4,6 +4,7 @@ open Common
 type state = NotParsing | Parsing of string * string list
 
 let serialize path spec =
+  Printf.printf "Serializing %s..." path;
   let buf = Buffer.create 100 in
   let print s =
     Buffer.add_string buf s;
