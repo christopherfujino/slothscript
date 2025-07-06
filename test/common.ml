@@ -1,14 +1,12 @@
 open Core
 
-type test_spec =
-  | Valid of {
-      name : string;
-      program : string;
-      ast : string;
-      stdout_expect : string;
-      failure : failure_t option;
-    }
-  | Invalid of string
+type test_spec = {
+  name : string;
+  program : string;
+  ast : string;
+  stdout_expect : string;
+  failure : failure_t option;
+}
 
 and failure_t = Parser_error | Optimizer_error | Runtime_error
 

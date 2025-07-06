@@ -68,12 +68,12 @@ let deserialize path =
     try Ok (Printer.sexp_formatter raw_ast)
     with Printer.Error msg ->
       let msg = Printf.sprintf "Malformed AST in file %s\n\n%s" path msg in
-      Error (Invalid msg)
+      Error msg
   with
-  | Error e -> e
+  | Error e -> Error e
   | Ok pretty ->
       if String.equal pretty raw_ast then
-        Valid
+        Ok
           {
             name = Option.value_exn !name_opt_ref;
             ast = pretty;
@@ -86,4 +86,4 @@ let deserialize path =
           Printf.sprintf "Not pretty AST in file %s (try `make train`)\n\n%s"
             path pretty
         in
-        Invalid msg
+        Error msg
