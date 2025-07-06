@@ -3,6 +3,38 @@ open Common
 
 type state = NotParsing | Parsing of string * string list
 
+let serialize path spec =
+  let buf = Buffer.create 100 in
+  let print s =
+    Buffer.add_string buf s;
+    Buffer.add_char buf '\n' in
+
+  print "### Name";
+  print spec.name;
+  print "\n";
+
+  print "### Program";
+  print spec.program;
+  print "\n";
+
+  print "### Ast";
+  print spec.ast;
+  print "\n";
+
+  print "### Stdout";
+  print spec.stdout_expect;
+  print "\n";
+
+  print "### Failure";
+  match spec.failure with
+  | None -> ()
+  | Some f -> string_of_failure f |> print;
+  print "\n";
+
+  let chan = Out_channel.create path in
+  Out_channel.output_string chan "foo";
+  Out_channel.close chan
+
 let deserialize path =
   let chan = In_channel.create path in
   let lines = In_channel.input_lines chan in

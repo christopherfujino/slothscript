@@ -10,6 +10,11 @@ type test_spec = {
 
 and failure_t = Parser_error | Optimizer_error | Runtime_error
 
+let string_of_failure = function
+  | Parser_error -> "Parser_error"
+  | Optimizer_error -> "Optimizer_error"
+  | Runtime_error -> "Runtime_error"
+
 let find_child_specs dir_path =
   let dir_fd = Core_unix.opendir dir_path in
   let rec inner_rec acc dir_fd =
