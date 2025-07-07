@@ -17,12 +17,12 @@ chained infix calls
             +)
           (args
             ((Num
-  2)))))
+              2)))))
       (target
         +)
       (args
         ((Num
-  3)))))))
+          3)))))))
 
 ### Stdout
 

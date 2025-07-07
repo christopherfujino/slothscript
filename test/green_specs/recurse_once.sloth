@@ -12,33 +12,33 @@ func rec(b) {if b {b;} else {rec(true);};}print(rec(false));
     (b))
   (block
     ((ExprStmt
-  (IfExpr
-    (IfCont
-      (conditional
-        (IdRef
-          b))
-      (block
-        ((ExprStmt
-  (IdRef
-    b))))
-      (continuation
-        ((ElseCont
-  ((ExprStmt
-  (FuncInvoc
-    (IdRef
-      rec)
-    ((Bool
-  true))))))))))))))
+      (IfExpr
+        (IfCont
+          (conditional
+            (IdRef
+              b))
+          (block
+            ((ExprStmt
+              (IdRef
+                b))))
+          (continuation
+            ((ElseCont
+              ((ExprStmt
+                (FuncInvoc
+                  (IdRef
+                    rec)
+                  ((Bool
+                    true))))))))))))))
   (StmtDecl
     (ExprStmt
       (FuncInvoc
         (IdRef
           print)
         ((FuncInvoc
-  (IdRef
-    rec)
-  ((Bool
-  false))))))))
+          (IdRef
+            rec)
+          ((Bool
+            false))))))))
 
 ### Stdout
 true

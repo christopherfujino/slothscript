@@ -16,16 +16,16 @@ if false {} else {let x = 1; print(x);};
           ())
         (continuation
           ((ElseCont
-  ((LetStmt
-  x
-  (Num
-    1))
-    (ExprStmt
-      (FuncInvoc
-        (IdRef
-          print)
-        ((IdRef
-  x)))))))))))))
+            ((LetStmt
+              x
+              (Num
+                1))
+              (ExprStmt
+                (FuncInvoc
+                  (IdRef
+                    print)
+                  ((IdRef
+                    x)))))))))))))
 
 ### Stdout
 1

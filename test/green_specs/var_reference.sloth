@@ -17,14 +17,14 @@ print(x);
         +)
       (args
         ((Num
-  1))))))
+          1))))))
   (StmtDecl
     (ExprStmt
       (FuncInvoc
         (IdRef
           print)
         ((IdRef
-  x))))))
+          x))))))
 
 ### Stdout
 2

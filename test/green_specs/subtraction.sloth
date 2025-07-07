@@ -15,7 +15,7 @@ subtraction
         -)
       (args
         ((Num
-  1)))))))
+          1)))))))
 
 ### Stdout
 

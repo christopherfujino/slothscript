@@ -8,7 +8,7 @@ let rec indent_str b i s =
     Buffer.add_string b "  ";
     (indent_str [@tailcall]) b (i - 1) s)
 
-let rec sexp_formatter_inner indent buffer (s : Sexp.t) =
+let rec sexp_formatter_inner parent_indent indent buffer (s : Sexp.t) =
   let print = indent_str buffer indent in
   match s with
   | Atom a -> print a
@@ -18,7 +18,7 @@ let rec sexp_formatter_inner indent buffer (s : Sexp.t) =
       | 1 ->
           indent_str buffer indent "(";
           let el = List.hd_exn l in
-          sexp_formatter_inner 0 buffer el;
+          sexp_formatter_inner parent_indent 0 buffer el;
           Buffer.add_string buffer ")"
       | _ ->
           print "(";
@@ -26,10 +26,11 @@ let rec sexp_formatter_inner indent buffer (s : Sexp.t) =
             match l with
             | [] -> ()
             | hd :: tail ->
-                if is_first then sexp_formatter_inner 0 buffer hd
+                if is_first then sexp_formatter_inner parent_indent 0 buffer hd
                 else (
                   Buffer.add_string buffer "\n";
-                  sexp_formatter_inner (indent + 1) buffer hd);
+                  let next_indent = parent_indent + 1 in
+                  sexp_formatter_inner next_indent next_indent buffer hd);
                 (f [@tailcall]) tail false
           in
           f l true;
@@ -38,5 +39,5 @@ let rec sexp_formatter_inner indent buffer (s : Sexp.t) =
 let sexp_formatter str =
   let b = Buffer.create 20 in
   let s = try Sexp.of_string str with Failure msg -> raise (Error msg) in
-  sexp_formatter_inner 0 b s;
+  sexp_formatter_inner 0 0 b s;
   Buffer.contents b

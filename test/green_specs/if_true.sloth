@@ -14,11 +14,11 @@ if true {print("True");};
             true))
         (block
           ((ExprStmt
-  (FuncInvoc
-    (IdRef
-      print)
-    ((String
-  True))))))
+            (FuncInvoc
+              (IdRef
+                print)
+              ((String
+                True))))))
         (continuation
           ()))))))
 

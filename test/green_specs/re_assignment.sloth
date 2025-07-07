@@ -21,7 +21,7 @@ let x = 0;x = 1;print(x);
         (IdRef
           print)
         ((IdRef
-  x))))))
+          x))))))
 
 ### Stdout
 1

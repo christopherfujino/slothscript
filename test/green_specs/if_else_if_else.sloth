@@ -14,31 +14,31 @@ if false {print("unreachable");} else if false {print("unreachable");} else {pri
             false))
         (block
           ((ExprStmt
-  (FuncInvoc
-    (IdRef
-      print)
-    ((String
-  unreachable))))))
+            (FuncInvoc
+              (IdRef
+                print)
+              ((String
+                unreachable))))))
         (continuation
           ((IfCont
-  (conditional
-    (Bool
-      false))
-  (block
-    ((ExprStmt
-  (FuncInvoc
-    (IdRef
-      print)
-    ((String
-  unreachable))))))
-  (continuation
-    ((ElseCont
-  ((ExprStmt
-  (FuncInvoc
-    (IdRef
-      print)
-    ((String
-  finally))))))))))))))))
+            (conditional
+              (Bool
+                false))
+            (block
+              ((ExprStmt
+                (FuncInvoc
+                  (IdRef
+                    print)
+                  ((String
+                    unreachable))))))
+            (continuation
+              ((ElseCont
+                ((ExprStmt
+                  (FuncInvoc
+                    (IdRef
+                      print)
+                    ((String
+                      finally))))))))))))))))
 
 ### Stdout
 finally

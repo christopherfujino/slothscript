@@ -13,24 +13,24 @@ func f(x, y) {print(x);print(y);}f(1, 2);
       y))
   (block
     ((ExprStmt
-  (FuncInvoc
-    (IdRef
-      print)
-    ((IdRef
-  x))))
+      (FuncInvoc
+        (IdRef
+          print)
+        ((IdRef
+          x))))
       (ExprStmt
         (FuncInvoc
           (IdRef
             print)
           ((IdRef
-  y)))))))
+            y)))))))
   (StmtDecl
     (ExprStmt
       (FuncInvoc
         (IdRef
           f)
         ((Num
-  1)
+          1)
           (Num
             2))))))
 

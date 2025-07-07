@@ -14,19 +14,19 @@ if false {print(true);} else {print("else");};
             false))
         (block
           ((ExprStmt
-  (FuncInvoc
-    (IdRef
-      print)
-    ((Bool
-  true))))))
+            (FuncInvoc
+              (IdRef
+                print)
+              ((Bool
+                true))))))
         (continuation
           ((ElseCont
-  ((ExprStmt
-  (FuncInvoc
-    (IdRef
-      print)
-    ((String
-  else)))))))))))))
+            ((ExprStmt
+              (FuncInvoc
+                (IdRef
+                  print)
+                ((String
+                  else)))))))))))))
 
 ### Stdout
 else

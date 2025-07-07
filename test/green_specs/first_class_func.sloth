@@ -12,17 +12,17 @@ func f() {let x = 1;func() {x;};}let xer = f();print(xer());
     ())
   (block
     ((LetStmt
-  x
-  (Num
-    1))
+      x
+      (Num
+        1))
       (ExprStmt
         (FuncExpr
           (parameters
             ())
           (block
             ((ExprStmt
-  (IdRef
-    x)))))))))
+              (IdRef
+                x)))))))))
   (StmtDecl
     (LetStmt
       xer
@@ -36,9 +36,9 @@ func f() {let x = 1;func() {x;};}let xer = f();print(xer());
         (IdRef
           print)
         ((FuncInvoc
-  (IdRef
-    xer)
-  ()))))))
+          (IdRef
+            xer)
+          ()))))))
 
 ### Stdout
 1

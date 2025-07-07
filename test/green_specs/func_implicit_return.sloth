@@ -12,8 +12,8 @@ func m() {1;2;3;}print(m());
     ())
   (block
     ((ExprStmt
-  (Num
-    1))
+      (Num
+        1))
       (ExprStmt
         (Num
           2))
@@ -26,9 +26,9 @@ func m() {1;2;3;}print(m());
         (IdRef
           print)
         ((FuncInvoc
-  (IdRef
-    m)
-  ()))))))
+          (IdRef
+            m)
+          ()))))))
 
 ### Stdout
 3

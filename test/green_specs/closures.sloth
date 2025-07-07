@@ -17,11 +17,11 @@ let x = 0;func f() {print(x);}x = 1;f();
       ())
     (block
       ((ExprStmt
-  (FuncInvoc
-    (IdRef
-      print)
-    ((IdRef
-  x)))))))
+        (FuncInvoc
+          (IdRef
+            print)
+          ((IdRef
+            x)))))))
   (StmtDecl
     (AssignStmt
       x

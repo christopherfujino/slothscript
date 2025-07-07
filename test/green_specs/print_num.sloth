@@ -11,7 +11,7 @@ print(11);
       (IdRef
         print)
       ((Num
-  11))))))
+        11))))))
 
 ### Stdout
 11

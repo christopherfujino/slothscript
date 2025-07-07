@@ -17,11 +17,11 @@ let x=1;func f() {print(x);}func g() {let x=2;f();}g();
       ())
     (block
       ((ExprStmt
-  (FuncInvoc
-    (IdRef
-      print)
-    ((IdRef
-  x)))))))
+        (FuncInvoc
+          (IdRef
+            print)
+          ((IdRef
+            x)))))))
   (FuncDecl
     (name
       g)
@@ -29,9 +29,9 @@ let x=1;func f() {print(x);}func g() {let x=2;f();}g();
       ())
     (block
       ((LetStmt
-  x
-  (Num
-    2))
+        x
+        (Num
+          2))
         (ExprStmt
           (FuncInvoc
             (IdRef
