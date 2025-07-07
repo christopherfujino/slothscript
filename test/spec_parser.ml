@@ -34,7 +34,6 @@ let serialize path spec =
   print "\n";
 
   Printf.printf "(2) Serializing %s..." path;
-  (*let chan = Out_channel.create path ~append:true in*)
   let chan = Out_channel.create path in
   Out_channel.output_string chan "foo";
   Out_channel.close chan
