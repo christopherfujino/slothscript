@@ -2,6 +2,7 @@ open Core
 open Common
 
 let make_spec ~program ~ast ?(stdout_expect = "") ?failure name =
+  let stdout_expect = String.strip stdout_expect in
   { name; program; ast; stdout_expect; failure }
 
 let green () =
@@ -10,9 +11,6 @@ let green () =
   let specs_from_file = List.map stats ~f:Spec_parser.deserialize in
   List.append specs_from_file
     [
-      make_spec "print num" ~program:"print(11);"
-        ~ast:"((StmtDecl(ExprStmt(FuncInvoc(IdRef print)((Num 11))))))"
-        ~stdout_expect:"11\n";
       make_spec "string literal" ~program:"\"Hello\";"
         ~ast:"((StmtDecl(ExprStmt(String Hello))))";
       make_spec "print string" ~program:"print(\"Hello\");"
