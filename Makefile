@@ -7,7 +7,7 @@ test:
 
 .PHONY: train
 train:
-	dune build @train
+	TEST_DIR=$(PWD)/test dune build @train
 
 .PHONY: describe
 describe:

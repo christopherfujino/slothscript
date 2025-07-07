@@ -4,7 +4,7 @@ open Common
 type state = NotParsing | Parsing of string * string list
 
 let serialize path spec =
-  Printf.printf "(1) Serializing %s..." path;
+  Printf.printf "(1) Serializing %s...\n" path;
   let buf = Buffer.create 100 in
   let print s =
     Buffer.add_string buf s;
@@ -13,19 +13,19 @@ let serialize path spec =
 
   print "### Name";
   print spec.name;
-  print "\n";
+  print "";
 
   print "### Program";
   print spec.program;
-  print "\n";
+  print "";
 
   print "### Ast";
   print spec.ast;
-  print "\n";
+  print "";
 
   print "### Stdout";
   print spec.stdout_expect;
-  print "\n";
+  print "";
 
   print "### Failure";
   (match spec.failure with
@@ -33,12 +33,13 @@ let serialize path spec =
   | Some f -> string_of_failure f |> print);
   print "\n";
 
-  Printf.printf "(2) Serializing %s..." path;
   let chan = Out_channel.create path in
-  Out_channel.output_string chan "foo";
+  Buffer.contents buf |> Out_channel.output_string chan;
   Out_channel.close chan
 
 let deserialize path =
+  if not (Filename.check_suffix path ".sloth") then
+    Printf.sprintf "%s is not a valid slothscript file" path |> failwith;
   let chan = In_channel.create path in
   let lines = In_channel.input_lines chan in
   In_channel.close chan;
@@ -99,9 +100,11 @@ let deserialize path =
 
   let ast = Option.value !ast_opt_ref ~default:"()" in
   {
-    name = Option.value_exn !name_opt_ref;
+    name = Option.value_exn !name_opt_ref ~message:"Foo Bar name";
     ast;
-    program = Option.value_exn !program_opt_ref;
+    program =
+      Option.value_exn !program_opt_ref
+        ~message:(Printf.sprintf "%s is missing a \"program\" field" path);
     stdout_expect = Option.value !stdout_expect_opt_ref ~default:"";
     failure = !failure_opt_ref;
   }

@@ -17,9 +17,9 @@
 (rule
   (alias train)
   (deps
+    (:specs (source_tree green_specs))
     (file train.exe)
-    (source_tree green_specs)
     ; Required to define a rule without any targets
     (universe))
   (action
-    (run ./train.exe)))
+    (run ./train.exe %{specs})))
