@@ -43,8 +43,7 @@ let make_test spec =
   (* Parser *)
   let env = Compiler.Environment.create () |> Stdlib_stubs.populate in
   let _, prog = Main.parse env spec.program in
-  assert_equal ~pp_diff ~printer
-    (spec.ast |> Printer.sexp_formatter (* TODO delete this hack *))
+  assert_equal ~pp_diff ~printer spec.ast
     (Optimizer.prog_to_str prog |> Printer.sexp_formatter);
 
   (* Interpreter *)
