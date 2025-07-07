@@ -8,9 +8,7 @@ let () =
     | Some d -> d
   in
   let args = Sys.get_argv () in
-  (if (Array.length args = 1) then
-    failwith "Usage: train.exe [SPEC_PATH]+"
-  );
+  if Array.length args = 1 then failwith "Usage: train.exe [SPEC_PATH]+";
   Array.iteri args ~f:(fun i arg ->
       print_endline arg;
       if i = 0 then
