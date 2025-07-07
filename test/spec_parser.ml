@@ -81,20 +81,20 @@ let deserialize path =
       let title, lines = part in
       let buf = Buffer.create 2 in
       List.iter lines ~f:(Buffer.add_string buf);
-      let body = Buffer.contents buf in
+      let body = Buffer.contents buf |> String.strip in
       match title with
       | "Name" -> name_opt_ref := Some body
       | "Program" -> program_opt_ref := Some body
-      | "Ast" -> ast_opt_ref := Some (String.strip body)
-      | "Failure" ->
-          let body = String.strip body in
+      | "Ast" -> ast_opt_ref := Some body
+      | "Failure" -> (
           failure_opt_ref :=
-            Some
-              (match body with
-              | "Parser_error" -> Parser_error
-              | "Optimizer_error" -> Optimizer_error
-              | "Runtime_error" -> Runtime_error
-              | _ -> Printf.sprintf "Huh? %s" body |> failwith)
+            match body with
+            | "Parser_error" -> Some Parser_error
+            | "Optimizer_error" -> Some Optimizer_error
+            | "Runtime_error" -> Some Runtime_error
+            | "" -> None
+            | _ -> Printf.sprintf "Huh? %s" body |> failwith)
+      | "Stdout" -> stdout_expect_opt_ref := Some body
       | "Foo" (* No-op *) -> ()
       | _ -> Printf.sprintf "Huh? %s" title |> failwith);
 
