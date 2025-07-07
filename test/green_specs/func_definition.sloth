@@ -5,7 +5,13 @@ func definition
 func m() {}
 
 ### Ast
-((FuncDecl(name m)(parameters())(block())))
+((FuncDecl
+  (name
+    m)
+  (parameters
+    ())
+  (block
+    ())))
 
 ### Stdout
 

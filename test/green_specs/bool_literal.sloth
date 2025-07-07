@@ -5,7 +5,10 @@ bool literal
 true;
 
 ### Ast
-((StmtDecl(ExprStmt(Bool true))))
+((StmtDecl
+  (ExprStmt
+    (Bool
+      true))))
 
 ### Stdout
 

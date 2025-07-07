@@ -5,7 +5,27 @@ regression test
 if false {} else {let x = 1; print(x);};
 
 ### Ast
-((StmtDecl(ExprStmt(IfExpr(IfCont(conditional(Bool false))(block())(continuation((ElseCont((LetStmt x(Num 1))(ExprStmt(FuncInvoc(IdRef print)((IdRef x)))))))))))))
+((StmtDecl
+  (ExprStmt
+    (IfExpr
+      (IfCont
+        (conditional
+          (Bool
+            false))
+        (block
+          ())
+        (continuation
+          ((ElseCont
+  ((LetStmt
+  x
+  (Num
+    1))
+    (ExprStmt
+      (FuncInvoc
+        (IdRef
+          print)
+        ((IdRef
+  x)))))))))))))
 
 ### Stdout
 1

@@ -33,7 +33,6 @@ let make_test spec =
   let open Compiler in
   spec.name >:: fun _ ->
   (* Is AST pretty? *)
-  (* TODO un-comment this
   let pretty_ast = Printer.sexp_formatter spec.ast in
   (if not (String.equal pretty_ast spec.ast) then
      let msg =
@@ -41,7 +40,6 @@ let make_test spec =
          pretty_ast
      in
      assert_failure msg);
-     *)
   (* Parser *)
   let env = Compiler.Environment.create () |> Stdlib_stubs.populate in
   let _, prog = Main.parse env spec.program in

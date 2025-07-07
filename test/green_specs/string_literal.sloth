@@ -5,7 +5,10 @@ string literal
 "Hello";
 
 ### Ast
-((StmtDecl(ExprStmt(String Hello))))
+((StmtDecl
+  (ExprStmt
+    (String
+      Hello))))
 
 ### Stdout
 

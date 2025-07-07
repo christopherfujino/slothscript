@@ -5,7 +5,13 @@ print string
 print("Hello");
 
 ### Ast
-((StmtDecl(ExprStmt(FuncInvoc(IdRef print)((String Hello))))))
+((StmtDecl
+  (ExprStmt
+    (FuncInvoc
+      (IdRef
+        print)
+      ((String
+  Hello))))))
 
 ### Stdout
 Hello

@@ -6,7 +6,25 @@ let x = 1 + 1;
 print(x);
 
 ### Ast
-((StmtDecl(LetStmt x(MethodInvoc(receiver(Num 1))(target +)(args((Num 1))))))(StmtDecl(ExprStmt(FuncInvoc(IdRef print)((IdRef x))))))
+((StmtDecl
+  (LetStmt
+    x
+    (MethodInvoc
+      (receiver
+        (Num
+          1))
+      (target
+        +)
+      (args
+        ((Num
+  1))))))
+  (StmtDecl
+    (ExprStmt
+      (FuncInvoc
+        (IdRef
+          print)
+        ((IdRef
+  x))))))
 
 ### Stdout
 2

@@ -5,7 +5,17 @@ addition
 1 + 1;
 
 ### Ast
-((StmtDecl(ExprStmt(MethodInvoc(receiver(Num 1))(target +)(args((Num 1)))))))
+((StmtDecl
+  (ExprStmt
+    (MethodInvoc
+      (receiver
+        (Num
+          1))
+      (target
+        +)
+      (args
+        ((Num
+  1)))))))
 
 ### Stdout
 

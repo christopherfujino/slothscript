@@ -5,7 +5,22 @@ if true
 if true {print("True");};
 
 ### Ast
-((StmtDecl(ExprStmt(IfExpr(IfCont(conditional(Bool true))(block((ExprStmt(FuncInvoc(IdRef print)((String True))))))(continuation()))))))
+((StmtDecl
+  (ExprStmt
+    (IfExpr
+      (IfCont
+        (conditional
+          (Bool
+            true))
+        (block
+          ((ExprStmt
+  (FuncInvoc
+    (IdRef
+      print)
+    ((String
+  True))))))
+        (continuation
+          ()))))))
 
 ### Stdout
 True

@@ -5,7 +5,30 @@ func implicit return
 func m() {1;2;3;}print(m());
 
 ### Ast
-((FuncDecl(name m)(parameters())(block((ExprStmt(Num 1))(ExprStmt(Num 2))(ExprStmt(Num 3)))))(StmtDecl(ExprStmt(FuncInvoc(IdRef print)((FuncInvoc(IdRef m)()))))))
+((FuncDecl
+  (name
+    m)
+  (parameters
+    ())
+  (block
+    ((ExprStmt
+  (Num
+    1))
+      (ExprStmt
+        (Num
+          2))
+      (ExprStmt
+        (Num
+          3)))))
+  (StmtDecl
+    (ExprStmt
+      (FuncInvoc
+        (IdRef
+          print)
+        ((FuncInvoc
+  (IdRef
+    m)
+  ()))))))
 
 ### Stdout
 3

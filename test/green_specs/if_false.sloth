@@ -5,7 +5,22 @@ if false
 if false {print("Unreachable");};
 
 ### Ast
-((StmtDecl(ExprStmt(IfExpr(IfCont(conditional(Bool false))(block((ExprStmt(FuncInvoc(IdRef print)((String Unreachable))))))(continuation()))))))
+((StmtDecl
+  (ExprStmt
+    (IfExpr
+      (IfCont
+        (conditional
+          (Bool
+            false))
+        (block
+          ((ExprStmt
+  (FuncInvoc
+    (IdRef
+      print)
+    ((String
+  Unreachable))))))
+        (continuation
+          ()))))))
 
 ### Stdout
 

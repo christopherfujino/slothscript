@@ -5,7 +5,18 @@ assignment
 let x = 1 + 1;
 
 ### Ast
-((StmtDecl(LetStmt x(MethodInvoc(receiver(Num 1))(target +)(args((Num 1)))))))
+((StmtDecl
+  (LetStmt
+    x
+    (MethodInvoc
+      (receiver
+        (Num
+          1))
+      (target
+        +)
+      (args
+        ((Num
+  1)))))))
 
 ### Stdout
 
