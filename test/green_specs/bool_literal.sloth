@@ -1,0 +1,18 @@
+### Name
+bool literal
+
+### Program
+true;
+
+### Ast
+((StmtDecl
+  (ExprStmt
+    (Bool
+      true))))
+
+### Stdout
+
+
+### Failure
+
+

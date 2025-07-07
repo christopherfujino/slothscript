@@ -1,0 +1,21 @@
+### Name
+print num
+
+### Program
+print(11);
+
+### Ast
+((StmtDecl
+  (ExprStmt
+    (FuncInvoc
+      (IdRef
+        print)
+      ((Num
+        11))))))
+
+### Stdout
+11
+
+### Failure
+
+

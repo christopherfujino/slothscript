@@ -1,4 +1,24 @@
+(data_only_dirs green_specs)
+
 (test
  (name main)
- (libraries ounit2 sloth_script)
+ (libraries ounit2 sloth_script re core_unix)
+ (deps
+  (source_tree green_specs))
  (modes byte))
+
+(executable
+ (public_name train_runner)
+ (name train)
+ (libraries sloth_script core_unix re))
+
+(rule
+ (alias train)
+ (deps
+  (:specs
+   (source_tree green_specs))
+  (file train.exe)
+  ; Required to define a rule without any targets
+  (universe))
+ (action
+  (run ./train.exe %{specs})))

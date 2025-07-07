@@ -1,0 +1,52 @@
+### Name
+lexical scope
+
+### Program
+let x=1;func f() {print(x);}func g() {let x=2;f();}g();
+
+### Ast
+((StmtDecl
+  (LetStmt
+    x
+    (Num
+      1)))
+  (FuncDecl
+    (name
+      f)
+    (parameters
+      ())
+    (block
+      ((ExprStmt
+        (FuncInvoc
+          (IdRef
+            print)
+          ((IdRef
+            x)))))))
+  (FuncDecl
+    (name
+      g)
+    (parameters
+      ())
+    (block
+      ((LetStmt
+        x
+        (Num
+          2))
+        (ExprStmt
+          (FuncInvoc
+            (IdRef
+              f)
+            ())))))
+  (StmtDecl
+    (ExprStmt
+      (FuncInvoc
+        (IdRef
+          g)
+        ()))))
+
+### Stdout
+1
+
+### Failure
+
+

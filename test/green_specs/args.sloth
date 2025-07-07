@@ -1,0 +1,43 @@
+### Name
+args
+
+### Program
+func f(x, y) {print(x);print(y);}f(1, 2);
+
+### Ast
+((FuncDecl
+  (name
+    f)
+  (parameters
+    (x
+      y))
+  (block
+    ((ExprStmt
+      (FuncInvoc
+        (IdRef
+          print)
+        ((IdRef
+          x))))
+      (ExprStmt
+        (FuncInvoc
+          (IdRef
+            print)
+          ((IdRef
+            y)))))))
+  (StmtDecl
+    (ExprStmt
+      (FuncInvoc
+        (IdRef
+          f)
+        ((Num
+          1)
+          (Num
+            2))))))
+
+### Stdout
+1
+2
+
+### Failure
+
+

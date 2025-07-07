@@ -1,0 +1,18 @@
+### Name
+string literal
+
+### Program
+"Hello";
+
+### Ast
+((StmtDecl
+  (ExprStmt
+    (String
+      Hello))))
+
+### Stdout
+
+
+### Failure
+
+

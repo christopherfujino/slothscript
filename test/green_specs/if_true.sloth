@@ -1,0 +1,30 @@
+### Name
+if true
+
+### Program
+if true {print("True");};
+
+### Ast
+((StmtDecl
+  (ExprStmt
+    (IfExpr
+      (IfCont
+        (conditional
+          (Bool
+            true))
+        (block
+          ((ExprStmt
+            (FuncInvoc
+              (IdRef
+                print)
+              ((String
+                True))))))
+        (continuation
+          ()))))))
+
+### Stdout
+True
+
+### Failure
+
+

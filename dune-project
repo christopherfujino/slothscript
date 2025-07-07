@@ -25,7 +25,10 @@
    dune
    ounit2
    (core (and (>= v0.17.1) (< v0.18)))
+   (core_unix (and (>= v0.17.1) (< v0.18)))
    (ppx_jane (and (>= v0.17) (< v0.18)))
+   ; Sep 3, 2024
+   (re (>= 1.12.0))
  )
  (tags
   (topics "to describe" your project)))
