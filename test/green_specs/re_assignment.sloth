@@ -1,0 +1,15 @@
+### Name
+re-assignment
+
+### Program
+let x = 0;x = 1;print(x);
+
+### Ast
+((StmtDecl(LetStmt x(Num 0)))(StmtDecl(AssignStmt x(Num 1)))(StmtDecl(ExprStmt(FuncInvoc(IdRef print)((IdRef x))))))
+
+### Stdout
+1
+
+### Failure
+
+

@@ -4,7 +4,6 @@ open Common
 type state = NotParsing | Parsing of string * string list
 
 let serialize path spec =
-  Printf.printf "(1) Serializing %s...\n" path;
   let buf = Buffer.create 100 in
   let print s =
     Buffer.add_string buf s;
@@ -80,7 +79,9 @@ let deserialize path =
   List.iter parts ~f:(fun part ->
       let title, lines = part in
       let buf = Buffer.create 2 in
-      List.iter lines ~f:(Buffer.add_string buf);
+      List.iter lines ~f:(fun line ->
+          Buffer.add_string buf line;
+          Buffer.add_char buf '\n');
       let body = Buffer.contents buf |> String.strip in
       match title with
       | "Name" -> name_opt_ref := Some body

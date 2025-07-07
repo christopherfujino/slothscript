@@ -1,0 +1,15 @@
+### Name
+print string
+
+### Program
+print("Hello");
+
+### Ast
+((StmtDecl(ExprStmt(FuncInvoc(IdRef print)((String Hello))))))
+
+### Stdout
+Hello
+
+### Failure
+
+

@@ -1,0 +1,16 @@
+### Name
+func invocation
+
+### Program
+func m() {print(1);print(2);}m();
+
+### Ast
+((FuncDecl(name m)(parameters())(block((ExprStmt(FuncInvoc(IdRef print)((Num 1))))(ExprStmt(FuncInvoc(IdRef print)((Num 2)))))))(StmtDecl(ExprStmt(FuncInvoc(IdRef m)()))))
+
+### Stdout
+1
+2
+
+### Failure
+
+

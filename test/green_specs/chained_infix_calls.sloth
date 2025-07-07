@@ -1,0 +1,15 @@
+### Name
+chained infix calls
+
+### Program
+1 + 2 + 3;
+
+### Ast
+((StmtDecl(ExprStmt(MethodInvoc(receiver(MethodInvoc(receiver(Num 1))(target +)(args((Num 2)))))(target +)(args((Num 3)))))))
+
+### Stdout
+
+
+### Failure
+
+

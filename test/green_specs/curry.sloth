@@ -1,0 +1,15 @@
+### Name
+curry
+
+### Program
+func a(x) {func(y) {x+y;};}print(a(1)(2));
+
+### Ast
+((FuncDecl(name a)(parameters(x))(block((ExprStmt(FuncExpr(parameters(y))(block((ExprStmt(MethodInvoc(receiver(IdRef x))(target +)(args((IdRef y))))))))))))(StmtDecl(ExprStmt(FuncInvoc(IdRef print)((FuncInvoc(FuncInvoc(IdRef a)((Num 1)))((Num 2))))))))
+
+### Stdout
+3
+
+### Failure
+
+

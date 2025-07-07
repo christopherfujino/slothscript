@@ -1,0 +1,15 @@
+### Name
+first class func
+
+### Program
+func f() {let x = 1;func() {x;};}let xer = f();print(xer());
+
+### Ast
+((FuncDecl(name f)(parameters())(block((LetStmt x(Num 1))(ExprStmt(FuncExpr(parameters())(block((ExprStmt(IdRef x)))))))))(StmtDecl(LetStmt xer(FuncInvoc(IdRef f)())))(StmtDecl(ExprStmt(FuncInvoc(IdRef print)((FuncInvoc(IdRef xer)()))))))
+
+### Stdout
+1
+
+### Failure
+
+

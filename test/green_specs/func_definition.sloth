@@ -1,0 +1,15 @@
+### Name
+func definition
+
+### Program
+func m() {}
+
+### Ast
+((FuncDecl(name m)(parameters())(block())))
+
+### Stdout
+
+
+### Failure
+
+

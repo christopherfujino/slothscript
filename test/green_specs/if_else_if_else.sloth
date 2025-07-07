@@ -1,0 +1,15 @@
+### Name
+if/else if/else
+
+### Program
+if false {print("unreachable");} else if false {print("unreachable");} else {print("finally");};
+
+### Ast
+((StmtDecl(ExprStmt(IfExpr(IfCont(conditional(Bool false))(block((ExprStmt(FuncInvoc(IdRef print)((String unreachable))))))(continuation((IfCont(conditional(Bool false))(block((ExprStmt(FuncInvoc(IdRef print)((String unreachable))))))(continuation((ElseCont((ExprStmt(FuncInvoc(IdRef print)((String finally))))))))))))))))
+
+### Stdout
+finally
+
+### Failure
+
+

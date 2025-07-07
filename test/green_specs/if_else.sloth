@@ -1,0 +1,15 @@
+### Name
+if/else
+
+### Program
+if false {print(true);} else {print("else");};
+
+### Ast
+((StmtDecl(ExprStmt(IfExpr(IfCont(conditional(Bool false))(block((ExprStmt(FuncInvoc(IdRef print)((Bool true))))))(continuation((ElseCont((ExprStmt(FuncInvoc(IdRef print)((String else)))))))))))))
+
+### Stdout
+else
+
+### Failure
+
+

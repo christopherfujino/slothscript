@@ -6,11 +6,10 @@ let make_spec ~program ~ast ?(stdout_expect = "") ?failure name =
   { name; program; ast; stdout_expect; failure }
 
 let green () =
-  (* TODO bring this back
-  let stats = find_child_specs "./green_specs" in *)
-  let stats = [] in
+  let stats = find_child_specs "./green_specs" in
   List.iter stats ~f:(fun name -> print_endline name);
-  let specs_from_file = List.map stats ~f:Spec_parser.deserialize in
+  List.map stats ~f:Spec_parser.deserialize
+  (*
   List.append specs_from_file
     [
       make_spec "string literal" ~program:"\"Hello\";"
@@ -165,6 +164,7 @@ let green () =
            print)((FuncInvoc(IdRef fib)((Num 20))))))))"
         ~stdout_expect:"6765\n";
     ]
+    *)
 
 let red =
   [
