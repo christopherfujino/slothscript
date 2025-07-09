@@ -42,8 +42,8 @@
 %left MINUS
 %left LEQ
 (*
-%nonassoc IN
 %nonassoc ELSE
+%nonassoc IN
 %left TIMES
 *)
 
@@ -88,20 +88,20 @@ expr:
   | e = expr2 { e }
 
 expr2:
-  | e1 = expr; PLUS; e2 = expr {
+  | e1 = expr2; PLUS; e2 = expr2 {
     MethodInvoc { receiver=e1; target="+"; args=[e2] }
   }
-  | e1 = expr; LEQ; e2 = expr {
+  | e1 = expr2; LEQ; e2 = expr2 {
     MethodInvoc { receiver=e1; target="<="; args=[e2] }
   }
-  | e1 = expr; MINUS; e2 = expr {
+  | e1 = expr2; MINUS; e2 = expr2 {
     MethodInvoc { receiver=e1; target="-"; args=[e2] }
   }
   | e = expr3 { e }
 
 expr3:
-  | e = expr; LPAREN; a = argument_list; RPAREN { FuncInvoc (e, a) }
-  | e = expr; LPAREN; RPAREN { FuncInvoc (e, []) }
+  | e = expr3; LPAREN; a = argument_list; RPAREN { FuncInvoc (e, a) }
+  | e = expr3; LPAREN; RPAREN { FuncInvoc (e, []) }
   (*
   | e1 = expr; LEQ; e2 = expr { Binary (Leq, e1, e2) }
   | e1 = expr; TIMES; e2 = expr { Binary (Mult, e1, e2) }
