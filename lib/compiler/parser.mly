@@ -74,20 +74,20 @@ stmts:
   ;
 
 stmt:
-  | e1 = expr; SEMICOLON { ExprStmt e1 }
-  | LET; id = ID; EQUALS; e1 = expr; SEMICOLON { LetStmt (id, e1) }
-  | id = ID; EQUALS; e1 = expr; SEMICOLON { AssignStmt (id, e1) }
+  | e1 = expr1; SEMICOLON { ExprStmt e1 }
+  | LET; id = ID; EQUALS; e1 = expr1; SEMICOLON { LetStmt (id, e1) }
+  | id = ID; EQUALS; e1 = expr1; SEMICOLON { AssignStmt (id, e1) }
   ;
 
 (* TODO make levels of expressions *)
-expr:
-  | FUNC; LPAREN; RPAREN; b = block { FuncExpr {parameters = []; block = b;} }
-  | FUNC; LPAREN; p = parameter_list; RPAREN; b = block { FuncExpr {parameters = p; block = b;} }
-  | IF; e1 = expr; b = block; cont = conditional_continuation { IfExpr (IfCont { conditional = e1; block = b; continuation = Some cont }) }
-  | IF; e1 = expr; b = block { IfExpr (IfCont { conditional = e1; block = b; continuation = None } ) }
+expr1:
+  | IF; e1 = expr2; b = block; cont = conditional_continuation { IfExpr (IfCont { conditional = e1; block = b; continuation = Some cont }) }
+  | IF; e1 = expr2; b = block { IfExpr (IfCont { conditional = e1; block = b; continuation = None } ) }
   | e = expr2 { e }
 
 expr2:
+  | FUNC; LPAREN; RPAREN; b = block { FuncExpr {parameters = []; block = b;} }
+  | FUNC; LPAREN; p = parameter_list; RPAREN; b = block { FuncExpr {parameters = p; block = b;} }
   | e1 = expr2; PLUS; e2 = expr2 {
     MethodInvoc { receiver=e1; target="+"; args=[e2] }
   }
@@ -108,11 +108,12 @@ expr3:
   | LET; x = ID; EQUALS; e1 = expr; IN; e2 = expr { Let (x, e1, e2) }
   | LPAREN; e=expr; RPAREN {e}
   *)
-  | e = expr_last { e }
+  | e = expr4 { e }
   ;
 
+
 (* Primary - literals or grouping *)
-expr_last:
+expr4:
   | f = NUM { Num f }
   | TRUE { Bool true }
   | FALSE { Bool false }
@@ -132,13 +133,13 @@ conditional_continuation:
   ;
 
 elif:
-  | prev = elif; ELSE; IF; conditional = expr; block = block {
+  | prev = elif; ELSE; IF; conditional = expr2; block = block {
     let cur = IfCont {conditional; block; continuation=None} in
     match prev with
     | IfCont {conditional; block; continuation=_} -> IfCont {conditional; block; continuation=(Some cur)}
     | _ -> failwith "Unreachable"
   }
-  | ELSE; IF; conditional = expr; block = block { IfCont {conditional; block; continuation=None } }
+  | ELSE; IF; conditional = expr2; block = block { IfCont {conditional; block; continuation=None } }
 
 block:
   | LCURLY; RCURLY { [] }
@@ -146,8 +147,8 @@ block:
 
 argument_list:
   (* TODO: support actual args *)
-  | e = expr { [e] }
-  | tl = argument_list; COMMA; e = expr { e :: tl }
+  | e = expr1 { [e] }
+  | tl = argument_list; COMMA; e = expr1 { e :: tl }
 
 parameter_list:
   (* TODO: make parameters different from just strings, to support type

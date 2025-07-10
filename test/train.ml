@@ -26,10 +26,10 @@ let f spec_dir i arg =
     | `Good -> ()
     | `Bad ->
         Printf.printf "[Bad]  %s\n" arg;
-        Spec_parser.serialize src_path { spec with ast = pretty_ast }
+        Spec_parser.serialize src_path { spec with ast = canonical_ast }
     | `Ugly ->
         Printf.printf "[Ugly] %s\n" arg;
-        Spec_parser.serialize src_path { spec with ast = pretty_ast });
+        Spec_parser.serialize src_path { spec with ast = canonical_ast });
     ()
 
 let () =

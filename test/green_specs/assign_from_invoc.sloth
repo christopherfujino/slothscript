@@ -1,0 +1,42 @@
+### Name
+Assign from invocation
+
+### Program
+func fn() {
+  1;
+}
+
+let n = fn();
+print(n);
+
+### Ast
+((FuncDecl
+  (name
+    fn)
+  (parameters
+    ())
+  (block
+    ((ExprStmt
+      (Num
+        1)))))
+  (StmtDecl
+    (LetStmt
+      n
+      (FuncInvoc
+        (IdRef
+          fn)
+        ())))
+  (StmtDecl
+    (ExprStmt
+      (FuncInvoc
+        (IdRef
+          print)
+        ((IdRef
+          n))))))
+
+### Stdout
+1
+
+### Failure
+
+

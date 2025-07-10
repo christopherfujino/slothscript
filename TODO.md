@@ -1,4 +1,5 @@
-- [ ] Stack traces
+- [ ] Store locs in runtime values
+- [ ] Stack traces; depends on storing locs in runtime values
 - [ ] Early return from functions?
 
 ## Done
