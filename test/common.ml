@@ -8,9 +8,10 @@ type test_spec = {
   failure : failure_t option;
 }
 
-and failure_t = Parser_error | Optimizer_error | Runtime_error
+and failure_t = Scanner_error | Parser_error | Optimizer_error | Runtime_error
 
 let string_of_failure = function
+  | Scanner_error -> "Scanner_error"
   | Parser_error -> "Parser_error"
   | Optimizer_error -> "Optimizer_error"
   | Runtime_error -> "Runtime_error"

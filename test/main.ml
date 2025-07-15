@@ -88,10 +88,25 @@ let make_failing_test spec =
     in
     assert_failure msg
   with
+  | Compiler.Lexer.SyntaxError err -> (
+      match spec.failure with
+      | Some expectation -> (
+          match expectation with
+          | Scanner_error -> ()
+          | _ ->
+              Printf.sprintf
+                "Expected %s but got Compiler.Lexer.SyntaxError(%s)"
+                (string_of_failure expectation)
+                err
+              |> failwith)
+      | None ->
+          Printf.sprintf
+            "Expected no failure, but got Compiler.Lexer.SyntaxError(%s)" err
+          |> failwith)
   | Optimizer.Failure msg -> (
       match spec.failure with
       | None ->
-          Printf.sprintf "Expected no failure, but got Optimizer.Failure (%s)"
+          Printf.sprintf "Expected no failure, but got Optimizer.Failure(%s)"
             msg
           |> assert_failure
       | Some expectation -> (
