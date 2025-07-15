@@ -1,6 +1,8 @@
 - [ ] Store locs in runtime values
 - [ ] Stack traces; depends on storing locs in runtime values
 - [ ] Early return from functions?
+- [ ] Pattern matching
+- [ ] Formatter
 
 ## Done
 - [x] Lexical scoping
@@ -12,3 +14,4 @@
 - [x] Tooling to diagnose shift/reduce conflicts
 - [x] Infix functions
 - [x] Recursion (depends on conditionals)
+- [x] Comments
