@@ -120,6 +120,7 @@ expr4:
   | NULL { Null }
   | s = STRING { String s }
   | i = ID { IdRef i }
+  | LPAREN e = expr1 RPAREN { e }
 
 conditional_continuation:
   | e = elif; ELSE; b = block {

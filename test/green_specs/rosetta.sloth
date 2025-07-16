@@ -1,0 +1,37 @@
+### Name
+rosetta program
+
+### Program
+(func(arg) {
+  let private = arg;
+
+  print(private);
+})("message");
+
+### Ast
+((StmtDecl
+  (ExprStmt
+    (FuncInvoc
+      (FuncExpr
+        (parameters
+          (arg))
+        (block
+          ((LetStmt
+            private
+            (IdRef
+              arg))
+            (ExprStmt
+              (FuncInvoc
+                (IdRef
+                  print)
+                ((IdRef
+                  private)))))))
+      ((String
+        message))))))
+
+### Stdout
+message
+
+### Failure
+
+
