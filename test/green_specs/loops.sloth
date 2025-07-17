@@ -1,0 +1,103 @@
+### Name
+loops
+
+### Program
+for let i = 1; i <= 10; i = i + 1 {
+  print(i);
+};
+
+let fold = for let i = 1; i <= 10; i = i + 1 {
+  i;
+};
+
+print(fold);
+
+### Ast
+((StmtDecl
+  (ExprStmt
+    (ForLoop
+      (LetStmt
+        i
+        (Num
+          1))
+      (MethodInvoc
+        (receiver
+          (IdRef
+            i))
+        (target
+          <=)
+        (args
+          ((Num
+            10))))
+      (AssignStmt
+        i
+        (MethodInvoc
+          (receiver
+            (IdRef
+              i))
+          (target
+            +)
+          (args
+            ((Num
+              1)))))
+      ((ExprStmt
+        (FuncInvoc
+          (IdRef
+            print)
+          ((IdRef
+            i))))))))
+  (StmtDecl
+    (LetStmt
+      fold
+      (ForLoop
+        (LetStmt
+          i
+          (Num
+            1))
+        (MethodInvoc
+          (receiver
+            (IdRef
+              i))
+          (target
+            <=)
+          (args
+            ((Num
+              10))))
+        (AssignStmt
+          i
+          (MethodInvoc
+            (receiver
+              (IdRef
+                i))
+            (target
+              +)
+            (args
+              ((Num
+                1)))))
+        ((ExprStmt
+          (IdRef
+            i))))))
+  (StmtDecl
+    (ExprStmt
+      (FuncInvoc
+        (IdRef
+          print)
+        ((IdRef
+          fold))))))
+
+### Stdout
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+10
+
+### Failure
+
+

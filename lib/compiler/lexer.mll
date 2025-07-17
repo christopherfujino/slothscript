@@ -25,6 +25,7 @@ rule read =
   | "func" { FUNC }
   | "if" { IF }
   | "else" { ELSE }
+  | "for" { FOR }
   | '+' { PLUS }
   | '=' { EQUALS }
   | ';' { SEMICOLON }
@@ -34,6 +35,7 @@ rule read =
   | '(' { LPAREN }
   | ')' { RPAREN }
   | ',' { COMMA }
+  | '<' { LESS }
   | "<=" { LEQ }
   | '-' { MINUS }
   | '[' { LBRACKET }

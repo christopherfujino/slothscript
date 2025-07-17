@@ -187,7 +187,20 @@ and interpret_expr ctx expr =
           |> failwith)
   | FuncExpr { parameters; block } ->
       Func (User { parameters; block; identifiers = ctx.identifiers })
+  | ForLoop (init, cmp, inc, bl) ->
+      let identifiers = Identifiers.push_empty ctx.identifiers in
+      let ctx' = { ctx with identifiers } in
+      let ctx'', _ = interpret_stmt ctx' init in
+      interpret_for_loop ctx'' cmp inc bl Runtime.Null
   | IfExpr cond -> interpret_cond ctx cond
+
+and interpret_for_loop ctx cmp inc bl last_val =
+  let cmp_val = interpret_expr ctx cmp |> Runtime.bool_of_val in
+  if not cmp_val then last_val
+  else
+    let cur_val = interpret_block ctx bl in
+    let ctx, _ = interpret_stmt ctx inc in
+    (interpret_for_loop [@tailcall]) ctx cmp inc bl cur_val
 
 (** You must push an empty env frame on first *)
 and interpret_block ctx stmts =

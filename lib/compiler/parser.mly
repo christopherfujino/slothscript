@@ -16,6 +16,7 @@
 %token PLUS
 %token MINUS
 %token LET
+%token FOR
 %token EQUALS
 %token EOF
 %token SEMICOLON
@@ -30,6 +31,7 @@
 %token IF
 %token ELSE
 %token LEQ
+%token LESS
 (*
 %token DOT
 %token TIMES
@@ -43,6 +45,7 @@
 %left PLUS
 %left MINUS
 %left LEQ
+%left LESS
 (*
 %nonassoc ELSE
 %nonassoc IN
@@ -76,15 +79,31 @@ stmts:
   ;
 
 stmt:
-  | e1 = expr1; SEMICOLON { ExprStmt e1 }
-  | LET; id = ID; EQUALS; e1 = expr1; SEMICOLON { LetStmt (id, e1) }
-  | id = ID; EQUALS; e1 = expr1; SEMICOLON { AssignStmt (id, e1) }
+  | s = stmt_sans_semicolon; SEMICOLON { s }
   ;
 
-(* Conditionals *)
+(* Used in for loops *)
+stmt_sans_semicolon:
+  | e1 = expr1 { ExprStmt e1 }
+  | LET; id = ID; EQUALS; e1 = expr1 { LetStmt (id, e1) }
+  | id = ID; EQUALS; e1 = expr1 { AssignStmt (id, e1) }
+  ;
+
+(* Conditionals & Loops *)
 expr1:
-  | IF; e1 = expr2; b = block; cont = conditional_continuation { IfExpr (IfCont { conditional = e1; block = b; continuation = Some cont }) }
+  | IF; e1 = expr2; b = block; cont = conditional_continuation {
+    IfExpr (
+      IfCont {
+        conditional = e1;
+        block = b;
+        continuation = Some cont;
+      }
+    )
+  }
   | IF; e1 = expr2; b = block { IfExpr (IfCont { conditional = e1; block = b; continuation = None } ) }
+  | FOR; st = stmt; comp = expr1; SEMICOLON; inc = stmt_sans_semicolon; bl = block {
+    ForLoop (st, comp, inc, bl)
+  }
   | e = expr2 { e }
 
 (* closure literals and infix funcs *)
@@ -93,6 +112,9 @@ expr2:
   | FUNC; LPAREN; p = parameter_list; RPAREN; b = block { FuncExpr {parameters = p; block = b;} }
   | e1 = expr2; PLUS; e2 = expr2 {
     MethodInvoc { receiver=e1; target="+"; args=[e2] }
+  }
+  | e1 = expr2; LESS; e2 = expr2 {
+    MethodInvoc { receiver=e1; target="<"; args=[e2] }
   }
   | e1 = expr2; LEQ; e2 = expr2 {
     MethodInvoc { receiver=e1; target="<="; args=[e2] }

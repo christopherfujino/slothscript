@@ -27,6 +27,7 @@ and expr =
   | FuncInvoc of expr * expr list
   | MethodInvoc of { receiver : expr; target : string; args : expr list }
   | FuncExpr of { parameters : string list; block : stmt list }
+  | ForLoop of stmt * expr * stmt * stmt list
   | IfExpr of cond_cont
 [@@deriving sexp]
 
@@ -138,6 +139,12 @@ and optimize_expr (env : Environment.t) (e : Ast.expr) : expr =
       in
       let block2 = optimize_block env3 block in
       FuncExpr { parameters = parameters2; block = block2 }
+  | ForLoop (init, comp, inc, block) ->
+      let env2, init' = optimize_stmt env init in
+      let comp' = optimize_expr env2 comp in
+      let env3, inc' = optimize_stmt env2 inc in
+      let block' = optimize_block env3 block in
+      ForLoop (init', comp', inc', block')
   | IfExpr cond_cont -> IfExpr (optimize_continuation env cond_cont)
   | MethodInvoc { target; receiver; args } ->
       let optim_receiver = optimize_expr env receiver in
