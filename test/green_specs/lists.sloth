@@ -7,7 +7,7 @@ func getTwo() {
 }
 
 let l = [2, 3, 5, 7, 11, 13];
-print(l[3]);
+print(l[getTwo()]);
 
 ### Ast
 ((FuncDecl
@@ -43,11 +43,13 @@ print(l[3]);
         ((Subscript
           (IdRef
             l)
-          (Num
-            3)))))))
+          (FuncInvoc
+            (IdRef
+              getTwo)
+            ())))))))
 
 ### Stdout
-7
+5
 
 ### Failure
 
