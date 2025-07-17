@@ -106,8 +106,7 @@ expr2:
 expr3:
   | e = expr3; LPAREN; a = expr_list; RPAREN { FuncInvoc (e, a) }
   | e = expr3; LPAREN; RPAREN { FuncInvoc (e, []) }
-  (* TODO this could be anything, right? *)
-  | e = expr3; LBRACKET; sub = expr3 ; RBRACKET { Subscript (e, sub) }
+  | e = expr3; LBRACKET; sub = expr1 ; RBRACKET { Subscript (e, sub) }
   (*
   | e1 = expr; LEQ; e2 = expr { Binary (Leq, e1, e2) }
   | e1 = expr; TIMES; e2 = expr { Binary (Mult, e1, e2) }

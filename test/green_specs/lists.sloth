@@ -8,6 +8,7 @@ func getTwo() {
 
 let l = [2, 3, 5, 7, 11, 13];
 print(l[getTwo()]);
+print(l[2 + 3]);
 
 ### Ast
 ((FuncDecl
@@ -46,10 +47,28 @@ print(l[getTwo()]);
           (FuncInvoc
             (IdRef
               getTwo)
-            ())))))))
+            ()))))))
+  (StmtDecl
+    (ExprStmt
+      (FuncInvoc
+        (IdRef
+          print)
+        ((Subscript
+          (IdRef
+            l)
+          (MethodInvoc
+            (receiver
+              (Num
+                2))
+            (target
+              +)
+            (args
+              ((Num
+                3))))))))))
 
 ### Stdout
 5
+13
 
 ### Failure
 
