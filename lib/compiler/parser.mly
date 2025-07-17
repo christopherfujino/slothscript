@@ -81,12 +81,13 @@ stmt:
   | id = ID; EQUALS; e1 = expr1; SEMICOLON { AssignStmt (id, e1) }
   ;
 
-(* TODO make levels of expressions *)
+(* Conditionals *)
 expr1:
   | IF; e1 = expr2; b = block; cont = conditional_continuation { IfExpr (IfCont { conditional = e1; block = b; continuation = Some cont }) }
   | IF; e1 = expr2; b = block { IfExpr (IfCont { conditional = e1; block = b; continuation = None } ) }
   | e = expr2 { e }
 
+(* closure literals and infix funcs *)
 expr2:
   | FUNC; LPAREN; RPAREN; b = block { FuncExpr {parameters = []; block = b;} }
   | FUNC; LPAREN; p = parameter_list; RPAREN; b = block { FuncExpr {parameters = p; block = b;} }
@@ -101,9 +102,12 @@ expr2:
   }
   | e = expr3 { e }
 
+(* function invocation *)
 expr3:
   | e = expr3; LPAREN; a = expr_list; RPAREN { FuncInvoc (e, a) }
   | e = expr3; LPAREN; RPAREN { FuncInvoc (e, []) }
+  (* TODO this could be anything, right? *)
+  | e = expr3; LBRACKET; sub = expr3 ; RBRACKET { Subscript (e, sub) }
   (*
   | e1 = expr; LEQ; e2 = expr { Binary (Leq, e1, e2) }
   | e1 = expr; TIMES; e2 = expr { Binary (Mult, e1, e2) }

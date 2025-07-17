@@ -20,6 +20,7 @@ and expr =
   | Null
   | String of string
   | List of expr list
+  | Subscript of expr * expr
   (* TODO this should be infix invoc expression, storing a lexeme string *)
   | Binary of operator * expr * expr
   | IdRef of string
@@ -109,6 +110,10 @@ and optimize_expr (env : Environment.t) (e : Ast.expr) : expr =
   | List els ->
       let rev_opt_els = List.rev els |> List.map ~f:(optimize_expr env) in
       List rev_opt_els
+  | Subscript (receiver, sub) ->
+      let receiver' = optimize_expr env receiver in
+      let sub' = optimize_expr env sub in
+      Subscript (receiver', sub')
   | Binary (o, e1, e2) ->
       let e1 = optimize_expr env e1 in
       let e2 = optimize_expr env e2 in

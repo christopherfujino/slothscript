@@ -17,6 +17,7 @@ and expr = private
   | Null
   | String of string
   | List of expr list
+  | Subscript of expr * expr
   | Binary of operator * expr * expr
   | IdRef of string
   | FuncInvoc of expr * expr list

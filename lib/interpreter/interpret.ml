@@ -77,6 +77,34 @@ and interpret_expr ctx expr =
   | Bool b -> Runtime.Bool b
   | Null -> Runtime.Null
   | List els -> Runtime.List (List.map els ~f:(interpret_expr ctx))
+  | Subscript (receiver, subscript) -> (
+      let receiver' = interpret_expr ctx receiver in
+      let subscript' = interpret_expr ctx subscript in
+      match receiver' with
+      | Runtime.List elements -> (
+          match subscript' with
+          | Runtime.Num idx ->
+              if (Float.is_integer idx) then
+                let i = Stdlib.int_of_float idx in
+                let el_opt = List.nth elements i in
+                match el_opt with Some el -> el | None -> failwith "TODO"
+              else
+                Common.Failure
+                  (Printf.sprintf
+                     "Lists can only be subscripted by integers, you used %s"
+                     (Runtime.to_s subscript'))
+                |> raise
+          | _ ->
+              Common.Failure
+                (Runtime.to_s subscript'
+                |> Printf.sprintf
+                     "Lists can only be subscripted by nums, you used %s")
+              |> raise)
+      | _ ->
+          raise
+            (Common.Failure
+               (Printf.sprintf "Cannot subscript the value %s"
+                  (Runtime.to_s receiver'))))
   | Binary (op, lhs, rhs) -> (
       match op with
       | Add ->
