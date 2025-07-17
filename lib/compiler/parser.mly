@@ -80,6 +80,9 @@ stmts:
 
 stmt:
   | s = stmt_sans_semicolon; SEMICOLON { s }
+  | FOR; st = stmt; comp = expr1; SEMICOLON; inc = stmt_sans_semicolon; bl = block {
+    ForLoop (st, comp, inc, bl)
+  }
   ;
 
 (* Used in for loops *)
@@ -89,7 +92,7 @@ stmt_sans_semicolon:
   | id = ID; EQUALS; e1 = expr1 { AssignStmt (id, e1) }
   ;
 
-(* Conditionals & Loops *)
+(* Conditionals *)
 expr1:
   | IF; e1 = expr2; b = block; cont = conditional_continuation {
     IfExpr (
@@ -101,9 +104,6 @@ expr1:
     )
   }
   | IF; e1 = expr2; b = block { IfExpr (IfCont { conditional = e1; block = b; continuation = None } ) }
-  | FOR; st = stmt; comp = expr1; SEMICOLON; inc = stmt_sans_semicolon; bl = block {
-    ForLoop (st, comp, inc, bl)
-  }
   | e = expr2 { e }
 
 (* closure literals and infix funcs *)

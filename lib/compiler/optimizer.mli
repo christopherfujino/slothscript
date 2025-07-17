@@ -9,6 +9,7 @@ and stmt = private
   | LetStmt of string * expr
   | AssignStmt of string * expr
   | ExprStmt of expr
+  | ForLoop of stmt * expr * stmt * stmt list
 [@@deriving sexp]
 
 and expr = private
@@ -23,7 +24,6 @@ and expr = private
   | FuncInvoc of expr * expr list
   | MethodInvoc of { receiver : expr; target : string; args : expr list }
   | FuncExpr of { parameters : string list; block : stmt list }
-  | ForLoop of stmt * expr * stmt * stmt list
   | IfExpr of cond_cont
 [@@deriving sexp]
 
