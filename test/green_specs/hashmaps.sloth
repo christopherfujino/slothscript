@@ -1,0 +1,12 @@
+### Name
+hashmaps
+
+### Program
+let h = {};
+
+h[true] = "true";
+h[1] = 2;
+
+print(h[1]);
+print(h[true]);
+print(h[false]);
