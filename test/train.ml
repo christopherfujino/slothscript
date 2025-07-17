@@ -55,5 +55,6 @@ let () =
   if List.length errors > 0 then
     List.iter errors ~f:(fun (name, e) ->
         match e with
-        | Compiler.Common.ParserFailure msg -> Printf.printf "[Bad] %s - %s" name msg
+        | Compiler.Common.ParserFailure msg ->
+            Printf.printf "[Bad] %s - %s" name msg
         | _ -> raise e)

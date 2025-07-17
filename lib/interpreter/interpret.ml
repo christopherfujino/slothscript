@@ -84,7 +84,7 @@ and interpret_expr ctx expr =
       | Runtime.List elements -> (
           match subscript' with
           | Runtime.Num idx ->
-              if (Float.is_integer idx) then
+              if Float.is_integer idx then
                 let i = Stdlib.int_of_float idx in
                 let el_opt = List.nth elements i in
                 match el_opt with Some el -> el | None -> failwith "TODO"
