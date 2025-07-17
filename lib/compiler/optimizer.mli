@@ -16,6 +16,7 @@ and expr = private
   | Bool of bool
   | Null
   | String of string
+  | List of expr list
   | Binary of operator * expr * expr
   | IdRef of string
   | FuncInvoc of expr * expr list

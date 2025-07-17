@@ -76,6 +76,7 @@ and interpret_expr ctx expr =
   | String s -> Runtime.String s
   | Bool b -> Runtime.Bool b
   | Null -> Runtime.Null
+  | List els -> Runtime.List (List.map els ~f:(interpret_expr ctx))
   | Binary (op, lhs, rhs) -> (
       match op with
       | Add ->

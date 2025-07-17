@@ -24,6 +24,8 @@
 %token RCURLY
 %token LPAREN
 %token RPAREN
+%token LBRACKET
+%token RBRACKET
 %token COMMA
 %token IF
 %token ELSE
@@ -100,7 +102,7 @@ expr2:
   | e = expr3 { e }
 
 expr3:
-  | e = expr3; LPAREN; a = argument_list; RPAREN { FuncInvoc (e, a) }
+  | e = expr3; LPAREN; a = expr_list; RPAREN { FuncInvoc (e, a) }
   | e = expr3; LPAREN; RPAREN { FuncInvoc (e, []) }
   (*
   | e1 = expr; LEQ; e2 = expr { Binary (Leq, e1, e2) }
@@ -114,6 +116,7 @@ expr3:
 
 (* Primary - literals or grouping *)
 expr4:
+  | l = list_literals { l }
   | f = NUM { Num f }
   | TRUE { Bool true }
   | FALSE { Bool false }
@@ -121,6 +124,12 @@ expr4:
   | s = STRING { String s }
   | i = ID { IdRef i }
   | LPAREN e = expr1 RPAREN { e }
+  ;
+
+list_literals:
+  | LBRACKET; RBRACKET { List [] }
+  | LBRACKET; l = expr_list ; RBRACKET { List l }
+  ;
 
 conditional_continuation:
   | e = elif; ELSE; b = block {
@@ -146,10 +155,11 @@ block:
   | LCURLY; RCURLY { [] }
   | LCURLY; s = stmts; RCURLY { s }
 
-argument_list:
+(* arg-list or list literal *)
+expr_list:
   (* TODO: support actual args *)
   | e = expr1 { [e] }
-  | tl = argument_list; COMMA; e = expr1 { e :: tl }
+  | tl = expr_list; COMMA; e = expr1 { e :: tl }
 
 parameter_list:
   (* TODO: make parameters different from just strings, to support type

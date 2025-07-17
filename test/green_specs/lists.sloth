@@ -1,0 +1,30 @@
+### Name
+Lists
+
+### Program
+let l = [2, 3, 5, 7, 11, 13];
+
+### Ast
+((StmtDecl
+  (LetStmt
+    l
+    (List
+      ((Num
+        2)
+        (Num
+          3)
+        (Num
+          5)
+        (Num
+          7)
+        (Num
+          11)
+        (Num
+          13))))))
+
+### Stdout
+
+
+### Failure
+
+

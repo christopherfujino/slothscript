@@ -4,7 +4,7 @@ type t =
   | String of string
   | Bool of bool
   | Num of float
-  | Array of t list
+  | List of t list
   (* TODO use dynamic array *)
   | Map of (string * t) list
   (* TODO hashmap *)
@@ -38,7 +38,7 @@ and to_s = function
   | Num f ->
       if Float.is_integer f then Int.of_float f |> Int.to_string
       else Float.to_string f
-  | Array l ->
+  | List l ->
       let is_first = ref true in
       let cb acc cur =
         if !is_first then (

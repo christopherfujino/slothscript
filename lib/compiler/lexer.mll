@@ -36,6 +36,8 @@ rule read =
   | ',' { COMMA }
   | "<=" { LEQ }
   | '-' { MINUS }
+  | '[' { LBRACKET }
+  | ']' { RBRACKET }
   (*
   | '.' { DOT }
   | '*' { TIMES }

@@ -19,6 +19,7 @@ and expr =
   | Bool of bool
   | Null
   | String of string
+  | List of expr list
   (* TODO this should be infix invoc expression, storing a lexeme string *)
   | Binary of operator * expr * expr
   | IdRef of string
@@ -105,6 +106,9 @@ and optimize_expr (env : Environment.t) (e : Ast.expr) : expr =
   | Bool b -> Bool b
   | Null -> Null
   | String s -> String s
+  | List els ->
+      let rev_opt_els = List.rev els |> List.map ~f:(optimize_expr env) in
+      List rev_opt_els
   | Binary (o, e1, e2) ->
       let e1 = optimize_expr env e1 in
       let e2 = optimize_expr env e2 in
