@@ -46,6 +46,20 @@ and interpret_stmt (ctx : Context.t) stmt =
       Identifiers.reassign ctx.identifiers id v;
       (ctx, v)
   | ExprStmt expr -> (ctx, interpret_expr ctx expr)
+  | ForLoop (init, cmp, inc, bl) ->
+      let identifiers = Identifiers.push_empty ctx.identifiers in
+      let ctx' = { ctx with identifiers } in
+      let ctx'', _ = interpret_stmt ctx' init in
+
+      let rec interpret_for_loop ctx cmp inc bl last_val =
+        let cmp_val = interpret_expr ctx cmp |> Runtime.bool_of_val in
+        if not cmp_val then last_val
+        else
+          let cur_val = interpret_block ctx bl in
+          let ctx, _ = interpret_stmt ctx inc in
+          (interpret_for_loop [@tailcall]) ctx cmp inc bl cur_val
+      in
+      (ctx, interpret_for_loop ctx'' cmp inc bl Runtime.Null)
 
 and interpret_cond ctx cond =
   match cond with

@@ -14,6 +14,7 @@ and stmt =
   | LetStmt of string * expr
   | AssignStmt of string * expr
   | ExprStmt of expr
+  | ForLoop of stmt * expr * stmt * stmt list
 [@@deriving sexp]
 
 and expr =

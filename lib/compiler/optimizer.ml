@@ -12,6 +12,7 @@ and stmt =
   | LetStmt of string * expr
   | AssignStmt of string * expr
   | ExprStmt of expr
+  | ForLoop of stmt * expr * stmt * stmt list
 [@@deriving sexp]
 
 and expr =
@@ -84,6 +85,12 @@ and optimize_stmt env stmts : Environment.t * stmt =
   | ExprStmt expr ->
       let e = optimize_expr env expr in
       (env, ExprStmt e)
+  | ForLoop (init, comp, inc, block) ->
+      let env2, init' = optimize_stmt env init in
+      let comp' = optimize_expr env2 comp in
+      let env3, inc' = optimize_stmt env2 inc in
+      let block' = optimize_block env3 block in
+      (env, ForLoop (init', comp', inc', block'))
 
 (** You must push a new frame to the env first. *)
 and optimize_block env rev_stmts =
