@@ -1,0 +1,75 @@
+### Name
+Lists
+
+### Program
+func getTwo() {
+  2;
+}
+
+let l = [2, 3, 5, 7, 11, 13];
+print(l[getTwo()]);
+print(l[2 + 3]);
+
+### Ast
+((FuncDecl
+  (name
+    getTwo)
+  (parameters
+    ())
+  (block
+    ((ExprStmt
+      (Num
+        2)))))
+  (StmtDecl
+    (LetStmt
+      l
+      (List
+        ((Num
+          2)
+          (Num
+            3)
+          (Num
+            5)
+          (Num
+            7)
+          (Num
+            11)
+          (Num
+            13)))))
+  (StmtDecl
+    (ExprStmt
+      (FuncInvoc
+        (IdRef
+          print)
+        ((Subscript
+          (IdRef
+            l)
+          (FuncInvoc
+            (IdRef
+              getTwo)
+            ()))))))
+  (StmtDecl
+    (ExprStmt
+      (FuncInvoc
+        (IdRef
+          print)
+        ((Subscript
+          (IdRef
+            l)
+          (MethodInvoc
+            (receiver
+              (Num
+                2))
+            (target
+              +)
+            (args
+              ((Num
+                3))))))))))
+
+### Stdout
+5
+13
+
+### Failure
+
+

@@ -21,6 +21,8 @@ and expr =
   | Bool of bool
   | Null
   | String of string
+  | List of expr list
+  | Subscript of expr * expr
   (* TODO delete *)
   | Binary of operator * expr * expr
   | IdRef of string

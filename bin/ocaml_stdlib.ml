@@ -6,7 +6,7 @@ open Interpreter.Sloth_stdlib
 let main () =
   let open Interpreter.Sloth_stdlib.Prod in
   let open Interpreter.Runtime in
-  let a = Array [ String "One"; Num 2.0 ] in
+  let a = List [ String "One"; Num 2.0 ] in
   InputOutput.print a;
   let m = Map [ ("key", String "value") ] in
   InputOutput.print m;

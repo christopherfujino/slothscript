@@ -1,3 +1,4 @@
+- [ ] Loops
 - [ ] Store locs in runtime values
 - [ ] Stack traces; depends on storing locs in runtime values
 - [ ] Early return from functions?
@@ -15,3 +16,4 @@
 - [x] Infix functions
 - [x] Recursion (depends on conditionals)
 - [x] Comments
+- [x] Lists

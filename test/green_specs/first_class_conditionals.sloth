@@ -1,0 +1,49 @@
+### Name
+first class conditionals
+
+### Program
+let b = false;
+let v = if b {
+  1;
+} else {
+  2;
+};
+print(v);
+
+### Ast
+((StmtDecl
+  (LetStmt
+    b
+    (Bool
+      false)))
+  (StmtDecl
+    (LetStmt
+      v
+      (IfExpr
+        (IfCont
+          (conditional
+            (IdRef
+              b))
+          (block
+            ((ExprStmt
+              (Num
+                1))))
+          (continuation
+            ((ElseCont
+              ((ExprStmt
+                (Num
+                  2))))))))))
+  (StmtDecl
+    (ExprStmt
+      (FuncInvoc
+        (IdRef
+          print)
+        ((IdRef
+          v))))))
+
+### Stdout
+2
+
+### Failure
+
+

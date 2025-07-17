@@ -4,7 +4,7 @@ type t =
   | String of string
   | Bool of bool
   | Num of float
-  | Array of t list
+  | List of t list
   (* TODO use dynamic array *)
   | Map of (string * t) list
   (* TODO hashmap *)
@@ -23,22 +23,12 @@ and function_t =
       identifiers : t Identifiers.t;
     }
 
-let rec num_of_val v =
-  match v with
-  | Num f -> f
-  | _ -> Printf.sprintf "Expected a Num but got %s" (to_s v) |> failwith
-
-and bool_of_val b =
-  match b with
-  | Bool b' -> b'
-  | _ -> Printf.sprintf "Expected a Bool but got %s" (to_s b) |> failwith
-
-and to_s = function
+let rec to_s = function
   | String s -> s
   | Num f ->
       if Float.is_integer f then Int.of_float f |> Int.to_string
       else Float.to_string f
-  | Array l ->
+  | List l ->
       let is_first = ref true in
       let cb acc cur =
         if !is_first then (
@@ -57,3 +47,13 @@ and to_s = function
         ~init:"{" assoc
       ^ "}"
   | Func _ -> "func(TODO)"
+
+let num_of_val v =
+  match v with
+  | Num f -> f
+  | _ -> Printf.sprintf "Expected a Num but got %s" (to_s v) |> failwith
+
+let bool_of_val b =
+  match b with
+  | Bool b' -> b'
+  | _ -> Printf.sprintf "Expected a Bool but got %s" (to_s b) |> failwith
