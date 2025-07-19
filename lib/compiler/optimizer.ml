@@ -11,7 +11,7 @@ and decl =
 and stmt =
   | LetStmt of string * expr
   | AssignStmt of string * expr
-  | SubAssignStmt of {subscript : expr; value : expr}
+  | SubAssignStmt of { subscript : expr; value : expr }
   | ExprStmt of expr
   | ForLoop of stmt * expr * stmt * stmt list
 [@@deriving sexp]
@@ -87,7 +87,7 @@ and optimize_stmt env stmts : Environment.t * stmt =
   | SubAssignStmt { subscript; value } ->
       let subscript = optimize_expr env subscript in
       let value = optimize_expr env value in
-      (env, SubAssignStmt {subscript; value})
+      (env, SubAssignStmt { subscript; value })
   | ExprStmt expr ->
       let e = optimize_expr env expr in
       (env, ExprStmt e)

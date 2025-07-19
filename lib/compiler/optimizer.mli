@@ -8,7 +8,7 @@ type decl = private
 and stmt = private
   | LetStmt of string * expr
   | AssignStmt of string * expr
-  | SubAssignStmt of {subscript : expr; value : expr}
+  | SubAssignStmt of { subscript : expr; value : expr }
   | ExprStmt of expr
   | ForLoop of stmt * expr * stmt * stmt list
 [@@deriving sexp]

@@ -13,7 +13,7 @@ and decl = FuncDecl of func_stmt_t | StmtDecl of stmt
 and stmt =
   | LetStmt of string * expr
   | AssignStmt of string * expr
-  | SubAssignStmt of {subscript : expr; value : expr}
+  | SubAssignStmt of { subscript : expr; value : expr }
   | ExprStmt of expr
   | ForLoop of stmt * expr * stmt * stmt list
 [@@deriving sexp]
