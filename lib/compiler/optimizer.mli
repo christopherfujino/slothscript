@@ -8,6 +8,7 @@ type decl = private
 and stmt = private
   | LetStmt of string * expr
   | AssignStmt of string * expr
+  | SubAssignStmt of { subscript : expr; value : expr }
   | ExprStmt of expr
   | ForLoop of stmt * expr * stmt * stmt list
 [@@deriving sexp]
@@ -18,6 +19,7 @@ and expr = private
   | Null
   | String of string
   | List of expr list
+  | HashMap of (expr * expr) list
   | Subscript of expr * expr
   | Binary of operator * expr * expr
   | IdRef of string

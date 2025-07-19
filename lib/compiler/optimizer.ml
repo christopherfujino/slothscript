@@ -11,6 +11,7 @@ and decl =
 and stmt =
   | LetStmt of string * expr
   | AssignStmt of string * expr
+  | SubAssignStmt of { subscript : expr; value : expr }
   | ExprStmt of expr
   | ForLoop of stmt * expr * stmt * stmt list
 [@@deriving sexp]
@@ -21,6 +22,7 @@ and expr =
   | Null
   | String of string
   | List of expr list
+  | HashMap of (expr * expr) list
   | Subscript of expr * expr
   (* TODO this should be infix invoc expression, storing a lexeme string *)
   | Binary of operator * expr * expr
@@ -82,6 +84,10 @@ and optimize_stmt env stmts : Environment.t * stmt =
   | AssignStmt (name, expr) ->
       let e = optimize_expr env expr in
       (env, AssignStmt (name, e))
+  | SubAssignStmt { subscript; value } ->
+      let subscript = optimize_expr env subscript in
+      let value = optimize_expr env value in
+      (env, SubAssignStmt { subscript; value })
   | ExprStmt expr ->
       let e = optimize_expr env expr in
       (env, ExprStmt e)
@@ -117,6 +123,13 @@ and optimize_expr (env : Environment.t) (e : Ast.expr) : expr =
   | List els ->
       let rev_opt_els = List.rev els |> List.map ~f:(optimize_expr env) in
       List rev_opt_els
+  | HashMap kvps ->
+      (* TODO use a Hashtbl? *)
+      let kvps' =
+        List.map kvps ~f:(fun (k, v) ->
+            (optimize_expr env k, optimize_expr env v))
+      in
+      HashMap kvps'
   | Subscript (receiver, sub) ->
       let receiver' = optimize_expr env receiver in
       let sub' = optimize_expr env sub in

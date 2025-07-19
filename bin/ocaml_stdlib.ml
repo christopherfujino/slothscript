@@ -8,8 +8,10 @@ let main () =
   let open Interpreter.Runtime in
   let a = List [ String "One"; Num 2.0 ] in
   InputOutput.print a;
-  let m = Map [ ("key", String "value") ] in
+  (*
+  let m = HashMap [ ("key", String "value") ] in
   InputOutput.print m;
+  *)
   let exit = Process.run "uname" [ "-a" ] in
   Printf.printf "exited with code %d\n" exit;
   InputOutput.print (String "The End.")

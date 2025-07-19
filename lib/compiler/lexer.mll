@@ -29,6 +29,7 @@ rule read =
   | '+' { PLUS }
   | '=' { EQUALS }
   | ';' { SEMICOLON }
+  | ':' { COLON }
   | '"' { read_string (Buffer.create 33) lexbuf }
   | '{' { LCURLY }
   | '}' { RCURLY }
