@@ -13,6 +13,7 @@ and decl = FuncDecl of func_stmt_t | StmtDecl of stmt
 and stmt =
   | LetStmt of string * expr
   | AssignStmt of string * expr
+  | SubAssignStmt of {subscript : expr; value : expr}
   | ExprStmt of expr
   | ForLoop of stmt * expr * stmt * stmt list
 [@@deriving sexp]
@@ -23,6 +24,7 @@ and expr =
   | Null
   | String of string
   | List of expr list
+  | HashMap of (expr * expr) list
   | Subscript of expr * expr
   (* TODO delete *)
   | Binary of operator * expr * expr

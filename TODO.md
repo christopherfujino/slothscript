@@ -1,4 +1,4 @@
-- [ ] Hashmaps
+- [ ] Updating lists
 - [ ] Modules
 - [ ] Structs
 - [ ] Store locs in runtime values
@@ -20,3 +20,4 @@
 - [x] Comments
 - [x] Lists
 - [x] Loops
+- [x] Hashmaps

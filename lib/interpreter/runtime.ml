@@ -5,8 +5,7 @@ type t =
   | Bool of bool
   | Num of float
   | List of t list
-  (* TODO use dynamic array *)
-  | Map of (string * t) list
+  | HashMap of (t, t) Stdlib.Hashtbl.t
   (* TODO hashmap *)
   | Null
   | Func of function_t
@@ -22,6 +21,10 @@ and function_t =
       block : Compiler.Optimizer.stmt list;
       identifiers : t Identifiers.t;
     }
+
+let sexp_of_t _ = failwith "TODO"
+let compare _ = failwith "TODO"
+let hash _ = failwith "TODO"
 
 let rec to_s = function
   | String s -> s
@@ -39,12 +42,11 @@ let rec to_s = function
       List.fold_left ~f:cb ~init:"[" l ^ "]"
   | Null -> "null"
   | Bool b -> if b then "true" else "false"
-  | Map assoc ->
-      List.fold_left
-        ~f:(fun acc cur ->
-          let key, value = cur in
-          Printf.sprintf "%s\"%s\": %s" acc key (to_s value))
-        ~init:"{" assoc
+  | HashMap tbl ->
+      Stdlib.Hashtbl.fold
+        (fun key data acc ->
+          Printf.sprintf "%s%s: %s," acc (to_s key) (to_s data))
+        tbl "{"
       ^ "}"
   | Func _ -> "func(TODO)"
 

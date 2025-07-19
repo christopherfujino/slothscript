@@ -19,6 +19,7 @@
 %token FOR
 %token EQUALS
 %token EOF
+%token COLON
 %token SEMICOLON
 %token FUNC
 %token LCURLY
@@ -90,6 +91,7 @@ stmt_sans_semicolon:
   | e1 = expr1 { ExprStmt e1 }
   | LET; id = ID; EQUALS; e1 = expr1 { LetStmt (id, e1) }
   | id = ID; EQUALS; e1 = expr1 { AssignStmt (id, e1) }
+  | subscript = subscript; EQUALS; rhs = expr1 { SubAssignStmt {subscript; value=rhs } }
   ;
 
 (* Conditionals *)
@@ -128,7 +130,7 @@ expr2:
 expr3:
   | e = expr3; LPAREN; a = expr_list; RPAREN { FuncInvoc (e, a) }
   | e = expr3; LPAREN; RPAREN { FuncInvoc (e, []) }
-  | e = expr3; LBRACKET; sub = expr1 ; RBRACKET { Subscript (e, sub) }
+  | s = subscript { s }
   (*
   | e1 = expr; LEQ; e2 = expr { Binary (Leq, e1, e2) }
   | e1 = expr; TIMES; e2 = expr { Binary (Mult, e1, e2) }
@@ -148,12 +150,28 @@ expr4:
   | NULL { Null }
   | s = STRING { String s }
   | i = ID { IdRef i }
-  | LPAREN e = expr1 RPAREN { e }
+  | LPAREN; e = expr1; RPAREN { e }
+  | h = hash_literals { h }
   ;
 
 list_literals:
   | LBRACKET; RBRACKET { List [] }
   | LBRACKET; l = expr_list ; RBRACKET { List l }
+  ;
+
+hash_literals:
+  | LCURLY; RCURLY { HashMap [] }
+  ;
+
+hash_literal_pair:
+  (* Are other types of expressions allowed for keys? *)
+  (* TODO allow non-trailing comma? *)
+  | k = expr4; COLON; v = expr1; COMMA { [(k, v)] }
+  ;
+
+(* Could be expr or stmt for assignment *)
+subscript:
+  | e = expr3; LBRACKET; sub = expr1 ; RBRACKET { Subscript (e, sub) }
   ;
 
 conditional_continuation:

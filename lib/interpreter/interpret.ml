@@ -9,7 +9,6 @@ let check_arity desired_count actual_list name =
             name desired_count actual_count))
 
 let rec interpret_prog ctx prog =
-  (*List.fold_left prog ~init:ctx ~f:interpret_decl*)
   match prog with
   | [] -> ctx
   | hd :: tl ->
@@ -45,6 +44,23 @@ and interpret_stmt (ctx : Context.t) stmt =
       let v = interpret_expr ctx e in
       Identifiers.reassign ctx.identifiers id v;
       (ctx, v)
+  | SubAssignStmt { subscript; value } -> (
+      match subscript with
+      | Subscript (receiver, subscript) -> (
+          let receiver' = interpret_expr ctx receiver in
+          let subscript' = interpret_expr ctx subscript in
+          match receiver' with
+          | HashMap tbl ->
+              let value' = interpret_expr ctx value in
+              Stdlib.Hashtbl.add tbl subscript' value';
+              (ctx, value')
+          | _ ->
+              raise
+                (Common.Failure
+                   (Printf.sprintf
+                      "Assigning via subscript to %s not implemented"
+                      (Runtime.to_s receiver'))))
+      | _ -> failwith "TODO" (* TODO implement for List *))
   | ExprStmt expr -> (ctx, interpret_expr ctx expr)
   | ForLoop (init, cmp, inc, bl) ->
       let identifiers = Identifiers.push_empty ctx.identifiers in
@@ -91,6 +107,14 @@ and interpret_expr ctx expr =
   | Bool b -> Runtime.Bool b
   | Null -> Runtime.Null
   | List els -> Runtime.List (List.map els ~f:(interpret_expr ctx))
+  | HashMap kvps ->
+      let kvps' =
+        List.map kvps ~f:(fun (k, v) ->
+            (interpret_expr ctx k, interpret_expr ctx v))
+      in
+      let tbl = Stdlib.Hashtbl.create 8 in
+      List.iter kvps' ~f:(fun (k, v) -> Stdlib.Hashtbl.add tbl k v);
+      HashMap tbl
   | Subscript (receiver, subscript) -> (
       let receiver' = interpret_expr ctx receiver in
       let subscript' = interpret_expr ctx subscript in
@@ -114,6 +138,7 @@ and interpret_expr ctx expr =
                 |> Printf.sprintf
                      "Lists can only be subscripted by nums, you used %s")
               |> raise)
+      | Runtime.HashMap tbl -> Stdlib.Hashtbl.find tbl subscript'
       | _ ->
           raise
             (Common.Failure

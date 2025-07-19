@@ -9,4 +9,60 @@ h[1] = 2;
 
 print(h[1]);
 print(h[true]);
-print(h[false]);
+
+### Ast
+((StmtDecl
+  (LetStmt
+    h
+    (HashMap
+      ())))
+  (StmtDecl
+    (SubAssignStmt
+      (subscript
+        (Subscript
+          (IdRef
+            h)
+          (Bool
+            true)))
+      (value
+        (String
+          true))))
+  (StmtDecl
+    (SubAssignStmt
+      (subscript
+        (Subscript
+          (IdRef
+            h)
+          (Num
+            1)))
+      (value
+        (Num
+          2))))
+  (StmtDecl
+    (ExprStmt
+      (FuncInvoc
+        (IdRef
+          print)
+        ((Subscript
+          (IdRef
+            h)
+          (Num
+            1))))))
+  (StmtDecl
+    (ExprStmt
+      (FuncInvoc
+        (IdRef
+          print)
+        ((Subscript
+          (IdRef
+            h)
+          (Bool
+            true)))))))
+
+### Stdout
+2
+true
+
+### Failure
+
+

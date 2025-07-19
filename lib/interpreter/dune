@@ -1,3 +1,5 @@
 (library
  (name interpreter)
- (libraries compiler unix))
+ (libraries compiler unix)
+ (preprocess
+   (pps ppx_jane)))
