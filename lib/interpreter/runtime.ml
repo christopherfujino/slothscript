@@ -22,10 +22,6 @@ and function_t =
       identifiers : t Identifiers.t;
     }
 
-let sexp_of_t _ = failwith "TODO"
-let compare _ = failwith "TODO"
-let hash _ = failwith "TODO"
-
 let rec to_s = function
   | String s -> s
   | Num f ->

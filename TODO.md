@@ -1,4 +1,5 @@
 - [ ] Updating lists
+- [ ] Methods
 - [ ] Modules
 - [ ] Structs
 - [ ] Store locs in runtime values
