@@ -1,13 +1,64 @@
 open Core
 
-type t =
+module type pType = sig end
+
+module MakeType (P : pType) = struct
+  module type T = sig
+    type t = P
+
+    val to_s : t -> string
+  end
+end
+
+module type tType = sig
+  type 'a t
+
+  val to_s : 'a t -> string
+end
+
+module type pType = sig end
+
+module Make (T : tType) (P : pType) : tType = struct
+  (*
+    type P t
+  *)
+
+  let to_s = T.to_s
+end
+
+module Num = Make (struct
+  type t = Float.t
+
+  let to_s f =
+    if Float.is_integer f then Int.of_float f |> Int.to_string
+    else Float.to_string f
+end)
+
+module SlothString = Make (struct
+  type t = String.t
+
+  let to_s = Fun.id
+end)
+
+module SlothBool = Make (struct
+  type t = Bool.t
+
+  let to_s = Bool.to_string
+end)
+
+module SlothList = Make (struct
+  type t = mType list
+
+  let to_s _ = "TODO"
+end)
+
+(*
   | String of string
   | Bool of bool
   | Num of float
+  | Null
   | List of t list
   | HashMap of (t, t) Stdlib.Hashtbl.t
-  (* TODO hashmap *)
-  | Null
   | Func of function_t
 
 and function_t =
@@ -55,3 +106,5 @@ let bool_of_val b =
   match b with
   | Bool b' -> b'
   | _ -> Printf.sprintf "Expected a Bool but got %s" (to_s b) |> failwith
+
+*)
