@@ -27,7 +27,7 @@ print("The answer is: ${f()}.");
           "The answer is: ${f()}."))))))
 
 ### Stdout
-
+The answer is: 42
 
 ### Failure
 
