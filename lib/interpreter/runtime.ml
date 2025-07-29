@@ -4,7 +4,7 @@ type t =
   | String of string
   | Bool of bool
   | Num of float
-  | List of t list
+  | List of t Array.t
   | HashMap of (t, t) Stdlib.Hashtbl.t
   (* TODO hashmap *)
   | Null
@@ -39,7 +39,7 @@ let rec to_s = function
           acc ^ to_s cur)
         else Printf.sprintf "%s, %s" acc (to_s cur)
       in
-      List.fold_left ~f:cb ~init:"[" l ^ "]"
+      Array.fold ~f:cb ~init:"[" l ^ "]"
   | Null -> "null"
   | Bool b -> if b then "true" else "false"
   | HashMap tbl ->
@@ -54,6 +54,11 @@ let num_of_val v =
   match v with
   | Num f -> f
   | _ -> Printf.sprintf "Expected a Num but got %s" (to_s v) |> failwith
+
+let int_of_val v =
+  let f = num_of_val v in
+  if Float.is_integer f then Int.of_float f
+  else Printf.sprintf "The Num value %f is not an integer" f |> failwith
 
 let bool_of_val b =
   match b with

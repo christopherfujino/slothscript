@@ -10,28 +10,30 @@ let check_arity desired_count actual_list name =
 
 let rec interpret_prog ctx prog =
   match prog with
-  | [] -> ctx
-  | hd :: tl ->
-      let new_ctx = interpret_decl ctx hd in
-      (interpret_prog [@tailcall]) new_ctx tl
+  | [] -> (ctx, Runtime.Null)
+  | hd :: tl -> (
+      let new_ctx, v = interpret_decl ctx hd in
+      match tl with
+      | [] -> (ctx, v)
+      | _ -> (interpret_prog [@tailcall]) new_ctx tl)
 
 and interpret_decl (ctx : Context.t) decl =
   let open Compiler.Optimizer in
   match decl with
   | FuncDecl { name; parameters; block } ->
-      Identifiers.bind ctx.identifiers name
-        (Func
-           (User
-              {
-                parameters;
-                block;
-                (* TODO this should snapshot *)
-                identifiers = ctx.identifiers;
-              }));
-      ctx
-  | StmtDecl s ->
-      let ctx, _ = interpret_stmt ctx s in
-      ctx
+      let f =
+        Runtime.Func
+          (User
+             {
+               parameters;
+               block;
+               (* TODO this should snapshot *)
+               identifiers = ctx.identifiers;
+             })
+      in
+      Identifiers.bind ctx.identifiers name f;
+      (ctx, f)
+  | StmtDecl s -> interpret_stmt ctx s
 
 and interpret_stmt (ctx : Context.t) stmt =
   let open Compiler.Optimizer in
@@ -49,18 +51,22 @@ and interpret_stmt (ctx : Context.t) stmt =
       | Subscript (receiver, subscript) -> (
           let receiver' = interpret_expr ctx receiver in
           let subscript' = interpret_expr ctx subscript in
+          let value' = interpret_expr ctx value in
           match receiver' with
           | HashMap tbl ->
-              let value' = interpret_expr ctx value in
               Stdlib.Hashtbl.add tbl subscript' value';
               (ctx, value')
+          | List elements ->
+              let i = Runtime.int_of_val subscript' in
+              Array.set elements i value';
+              (ctx, receiver')
           | _ ->
               raise
                 (Common.Failure
                    (Printf.sprintf
                       "Assigning via subscript to %s not implemented"
                       (Runtime.to_s receiver'))))
-      | _ -> failwith "TODO" (* TODO implement for List *))
+      | _ -> failwith "TODO")
   | ExprStmt expr -> (ctx, interpret_expr ctx expr)
   | ForLoop (init, cmp, inc, bl) ->
       let identifiers = Identifiers.push_empty ctx.identifiers in
@@ -106,7 +112,9 @@ and interpret_expr ctx expr =
   | String s -> Runtime.String s
   | Bool b -> Runtime.Bool b
   | Null -> Runtime.Null
-  | List els -> Runtime.List (List.map els ~f:(interpret_expr ctx))
+  | List els ->
+      let arr = List.map els ~f:(interpret_expr ctx) |> Array.of_list in
+      Runtime.List arr
   | HashMap kvps ->
       let kvps' =
         List.map kvps ~f:(fun (k, v) ->
@@ -124,8 +132,7 @@ and interpret_expr ctx expr =
           | Runtime.Num idx ->
               if Float.is_integer idx then
                 let i = Stdlib.int_of_float idx in
-                let el_opt = List.nth elements i in
-                match el_opt with Some el -> el | None -> failwith "TODO"
+                Array.get elements i
               else
                 Common.Failure
                   (Printf.sprintf

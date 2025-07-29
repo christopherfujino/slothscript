@@ -9,6 +9,8 @@ func getTwo() {
 let l = [2, 3, 5, 7, 11, 13];
 print(l[getTwo()]);
 print(l[2 + 3]);
+l[1] = 2.5;
+print(l);
 
 ### Ast
 ((FuncDecl
@@ -64,11 +66,30 @@ print(l[2 + 3]);
               +)
             (args
               ((Num
-                3))))))))))
+                3)))))))))
+  (StmtDecl
+    (SubAssignStmt
+      (subscript
+        (Subscript
+          (IdRef
+            l)
+          (Num
+            1)))
+      (value
+        (Num
+          2.5))))
+  (StmtDecl
+    (ExprStmt
+      (FuncInvoc
+        (IdRef
+          print)
+        ((IdRef
+          l))))))
 
 ### Stdout
 5
 13
+[2, 2.5, 5, 7, 11, 13]
 
 ### Failure
 
