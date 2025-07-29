@@ -20,7 +20,7 @@ and expr =
   | Num of float
   | Bool of bool
   | Null
-  | String of string
+  | String of string_parts list
   | List of expr list
   | HashMap of (expr * expr) list
   | Subscript of expr * expr
@@ -31,6 +31,14 @@ and expr =
   | MethodInvoc of { receiver : expr; target : string; args : expr list }
   | FuncExpr of { parameters : string list; block : stmt list }
   | IfExpr of cond_cont
+[@@deriving sexp]
+
+and string_parts =
+  | FullString of string
+  | StartStringInterp of string
+  | MiddleStringInterp of string
+  | EndStringInterp of string
+  | ExpressionStringInterp of expr
 [@@deriving sexp]
 
 and cond_cont =
@@ -114,12 +122,21 @@ and optimize_block env rev_stmts =
 and optimize_operator (o : Ast.operator) : operator = match o with Add -> Add
 
 and optimize_expr (env : Environment.t) (e : Ast.expr) : expr =
-  let open Ast in
   match e with
   | Num f -> Num f
   | Bool b -> Bool b
   | Null -> Null
-  | String s -> String s
+  | String s ->
+      String
+        (List.map s ~f:(fun part ->
+             match part with
+             | FullString s' -> FullString s'
+             | StartStringInterp s' -> StartStringInterp s'
+             | MiddleStringInterp s' -> MiddleStringInterp s'
+             | EndStringInterp s' -> EndStringInterp s'
+             | ExpressionStringInterp e ->
+                 let e' = optimize_expr env e in
+                 ExpressionStringInterp e'))
   | List els ->
       let rev_opt_els = List.rev els |> List.map ~f:(optimize_expr env) in
       List rev_opt_els

@@ -11,7 +11,8 @@ print("Hello");
       (IdRef
         print)
       ((String
-        Hello))))))
+        ((FullString
+          Hello))))))))
 
 ### Stdout
 Hello

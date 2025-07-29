@@ -27,7 +27,8 @@ rosetta program
                 ((IdRef
                   private)))))))
       ((String
-        message))))))
+        ((FullString
+          message))))))))
 
 ### Stdout
 message

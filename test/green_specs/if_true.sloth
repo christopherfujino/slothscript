@@ -18,7 +18,8 @@ if true {print("True");};
               (IdRef
                 print)
               ((String
-                True))))))
+                ((FullString
+                  True))))))))
         (continuation
           ()))))))
 

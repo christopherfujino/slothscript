@@ -26,7 +26,8 @@ print(h[true]);
             true)))
       (value
         (String
-          true))))
+          ((FullString
+            true))))))
   (StmtDecl
     (SubAssignStmt
       (subscript

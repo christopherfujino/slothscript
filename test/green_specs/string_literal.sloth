@@ -8,7 +8,8 @@ string literal
 ((StmtDecl
   (ExprStmt
     (String
-      Hello))))
+      ((FullString
+        Hello))))))
 
 ### Stdout
 

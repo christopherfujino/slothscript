@@ -24,7 +24,8 @@ print("The answer is: ${f()}.");
         (IdRef
           print)
         ((String
-          "The answer is: ${f()}."))))))
+          ((FullString
+            "The answer is: ${f()}."))))))))
 
 ### Stdout
 The answer is: 42

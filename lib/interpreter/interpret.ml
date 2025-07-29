@@ -109,7 +109,13 @@ and interpret_expr ctx expr =
   let open Compiler.Optimizer in
   match expr with
   | Num f -> Runtime.Num f
-  | String s -> Runtime.String s
+  | String parts -> (
+    let buf = Buffer.create 128 in
+    List.iter parts ~f:(fun part -> match part with
+    | FullString contents -> Buffer.add_string buf contents
+    | _ -> failwith "TODO");
+    Runtime.String (Buffer.contents buf)
+  )
   | Bool b -> Runtime.Bool b
   | Null -> Runtime.Null
   | List els ->

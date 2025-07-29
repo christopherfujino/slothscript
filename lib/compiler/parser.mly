@@ -9,7 +9,10 @@
 (* In OCaml, `float` is a 64-bit IEEE float *)
 %token <float> NUM
 %token <string> ID
-%token <string> STRING
+%token <string> STRING_FULL
+%token <string> STRING_START
+%token <string> STRING_MIDDLE
+%token <string> STRING_END
 %token TRUE
 %token FALSE
 %token NULL
@@ -148,7 +151,8 @@ expr4:
   | TRUE { Bool true }
   | FALSE { Bool false }
   | NULL { Null }
-  | s = STRING { String s }
+  (* TODO implement the rest of the string parts *)
+  | s = STRING_FULL { String [FullString s] }
   | i = ID { IdRef i }
   | LPAREN; e = expr1; RPAREN { e }
   | h = hash_literals { h }

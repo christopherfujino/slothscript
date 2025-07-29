@@ -3,6 +3,11 @@
 open Parser
 
 exception SyntaxError of string
+
+type stringLexerState =
+  | ScanningStart
+  | ScanningMiddle
+
 }
 
 (* identifiers *)
@@ -29,7 +34,7 @@ rule read =
   | '=' { EQUALS }
   | ';' { SEMICOLON }
   | ':' { COLON }
-  | '"' { read_string (Buffer.create 33) lexbuf }
+  | '"' { read_string (Buffer.create 33, ScanningStart) lexbuf }
   | '{' { LCURLY }
   | '}' { RCURLY }
   | '(' { LPAREN }
@@ -51,11 +56,17 @@ rule read =
   (* Here `eof` is a special regex built into ocamllex *)
   | eof { EOF }
 
-and read_string buf =
+and read_string buf_state_tuple =
   (* TODO implement escapes *)
   parse
-  | '"' { STRING (Buffer.contents buf) }
+  | '"' {
+    let (buf, state) = buf_state_tuple in
+    match state with
+    | ScanningStart -> STRING_FULL (Buffer.contents buf)
+    | _ -> failwith "TODO"
+  }
   | [^ '"']+ {
+    let (buf, state) = buf_state_tuple in
     let chunk = (Lexing.lexeme lexbuf) in
     Buffer.add_string buf chunk;
-    read_string buf lexbuf }
+      read_string (buf, state) lexbuf }
