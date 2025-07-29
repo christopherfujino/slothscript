@@ -1,7 +1,8 @@
-- [ ] Updating lists
 - [ ] String interpolation
+- [ ] Implement all arithmetic operators
+- [ ] List mutation methods
 - [ ] Modules
-- [ ] Structs
+- [ ] Structs/Methods
 - [ ] Store locs in runtime values
 - [ ] Stack traces; depends on storing locs in runtime values
 - [ ] Early return from functions?
@@ -22,3 +23,4 @@
 - [x] Lists
 - [x] Loops
 - [x] Hashmaps
+- [x] Updating lists
