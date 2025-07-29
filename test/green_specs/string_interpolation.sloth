@@ -1,0 +1,34 @@
+### Name
+string interpolation
+
+### Program
+func f() {
+  42;
+}
+
+print("The answer is: ${f()}.");
+
+### Ast
+((FuncDecl
+  (name
+    f)
+  (parameters
+    ())
+  (block
+    ((ExprStmt
+      (Num
+        42)))))
+  (StmtDecl
+    (ExprStmt
+      (FuncInvoc
+        (IdRef
+          print)
+        ((String
+          The answer is: ${f()}.))))))
+
+### Stdout
+
+
+### Failure
+
+

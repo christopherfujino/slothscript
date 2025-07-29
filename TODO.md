@@ -3,6 +3,8 @@
 - [ ] List mutation methods
 - [ ] Modules
 - [ ] Structs/Methods
+- [ ] Security policy
+- [ ] Language versioning
 - [ ] Store locs in runtime values
 - [ ] Stack traces; depends on storing locs in runtime values
 - [ ] Early return from functions?
