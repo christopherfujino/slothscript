@@ -152,6 +152,9 @@ expr4:
   | FALSE { Bool false }
   | NULL { Null }
   (* TODO implement the rest of the string parts *)
+  | s1 = STRING_START; e = expr1; s2 = STRING_END {
+    String [StartStringInterp s1; ExpressionStringInterp e; EndStringInterp s2]
+  }
   | s = STRING_FULL { String [FullString s] }
   | i = ID { IdRef i }
   | LPAREN; e = expr1; RPAREN { e }

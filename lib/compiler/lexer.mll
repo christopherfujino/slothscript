@@ -4,10 +4,13 @@ open Parser
 
 exception SyntaxError of string
 
-type stringLexerState =
-  | ScanningStart
-  | ScanningMiddle
+type globalLexerState =
+  | NotInterpolating
+  | Interpolating
 
+let string_buffer_size = 33
+
+let state = ref NotInterpolating
 }
 
 (* identifiers *)
@@ -15,6 +18,7 @@ let white = [' ' '\t' '\n']+
 let num = ('0'|(['1'-'9']['0'-'9']*)) ('.' ['0'-'9']+)?
 let letter = ['a'-'z' 'A'-'Z']
 let id = ['a'-'z' 'A'-'Z' '_'] ['a'-'z' 'A'-'Z' '0'-'9' '_']*
+let interpolation_continuation = '"' '}'
 
 (* rule and parse are keywords *)
 rule read =
@@ -34,9 +38,23 @@ rule read =
   | '=' { EQUALS }
   | ';' { SEMICOLON }
   | ':' { COLON }
-  | '"' { read_string (Buffer.create 33, ScanningStart) lexbuf }
+  | interpolation_continuation {
+    match !state with
+    | NotInterpolating -> (
+    failwith "TODO: figure out how to move back one on the lexbuf"
+    (*read_string (Buffer.create string_buffer_size) lexbuf*)
+    )
+    | Interpolating -> read_string (Buffer.create string_buffer_size) lexbuf
+  }
+  | '"' {
+    read_string (Buffer.create string_buffer_size) lexbuf
+  }
   | '{' { LCURLY }
-  | '}' { RCURLY }
+  | '}' {
+    match !state with
+    | NotInterpolating -> RCURLY
+    | Interpolating -> read_string (Buffer.create string_buffer_size) lexbuf
+  }
   | '(' { LPAREN }
   | ')' { RPAREN }
   | ',' { COMMA }
@@ -56,17 +74,26 @@ rule read =
   (* Here `eof` is a special regex built into ocamllex *)
   | eof { EOF }
 
-and read_string buf_state_tuple =
+and read_string buf =
   (* TODO implement escapes *)
   parse
   | '"' {
-    let (buf, state) = buf_state_tuple in
-    match state with
-    | ScanningStart -> STRING_FULL (Buffer.contents buf)
-    | _ -> failwith "TODO"
+    match !state with
+    | NotInterpolating -> STRING_FULL (Buffer.contents buf)
+    | Interpolating -> (
+      state := NotInterpolating;
+      STRING_END (Buffer.contents buf)
+    )
   }
-  | [^ '"']+ {
-    let (buf, state) = buf_state_tuple in
+  | "${" {
+    match !state with
+    | NotInterpolating -> (
+      state := Interpolating;
+      STRING_START (Buffer.contents buf)
+    )
+    | Interpolating -> STRING_MIDDLE (Buffer.contents buf)
+  }
+  | [^ '"' '$']+ {
     let chunk = (Lexing.lexeme lexbuf) in
     Buffer.add_string buf chunk;
-      read_string (buf, state) lexbuf }
+      (read_string[@tailcall]) buf lexbuf }

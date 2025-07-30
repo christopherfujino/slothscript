@@ -24,11 +24,18 @@ print("The answer is: ${f()}.");
         (IdRef
           print)
         ((String
-          ((FullString
-            "The answer is: ${f()}."))))))))
+          ((StartStringInterp
+            "The answer is: ")
+            (ExpressionStringInterp
+              (FuncInvoc
+                (IdRef
+                  f)
+                ()))
+            (EndStringInterp
+              .))))))))
 
 ### Stdout
-The answer is: 42
+The answer is: 42.
 
 ### Failure
 
