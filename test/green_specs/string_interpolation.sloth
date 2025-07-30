@@ -1,0 +1,86 @@
+### Name
+string interpolation
+
+### Program
+func f() {
+  42;
+}
+
+let one = 1;
+let two = 2;
+let three = 3;
+
+print("The answer is: ${f()}.");
+print("${one}, ${two}, ${three}.");
+
+### Ast
+((FuncDecl
+  (name
+    f)
+  (parameters
+    ())
+  (block
+    ((ExprStmt
+      (Num
+        42)))))
+  (StmtDecl
+    (LetStmt
+      one
+      (Num
+        1)))
+  (StmtDecl
+    (LetStmt
+      two
+      (Num
+        2)))
+  (StmtDecl
+    (LetStmt
+      three
+      (Num
+        3)))
+  (StmtDecl
+    (ExprStmt
+      (FuncInvoc
+        (IdRef
+          print)
+        ((String
+          ((StartStringInterp
+            "The answer is: ")
+            (ExpressionStringInterp
+              (FuncInvoc
+                (IdRef
+                  f)
+                ()))
+            (EndStringInterp
+              .)))))))
+  (StmtDecl
+    (ExprStmt
+      (FuncInvoc
+        (IdRef
+          print)
+        ((String
+          ((StartStringInterp
+            "")
+            (ExpressionStringInterp
+              (IdRef
+                one))
+            (MiddleStringInterp
+              ", ")
+            (ExpressionStringInterp
+              (IdRef
+                two))
+            (MiddleStringInterp
+              ", ")
+            (ExpressionStringInterp
+              (IdRef
+                three))
+            (EndStringInterp
+              .))))))))
+
+### Stdout
+The answer is: 42.
+1, 2, 3.
+
+### Failure
+
+

@@ -9,7 +9,10 @@
 (* In OCaml, `float` is a 64-bit IEEE float *)
 %token <float> NUM
 %token <string> ID
-%token <string> STRING
+%token <string> STRING_FULL
+%token <string> STRING_START
+%token <string> STRING_MIDDLE
+%token <string> STRING_END
 %token TRUE
 %token FALSE
 %token NULL
@@ -148,11 +151,34 @@ expr4:
   | TRUE { Bool true }
   | FALSE { Bool false }
   | NULL { Null }
-  | s = STRING { String s }
+  (* TODO implement the rest of the string parts *)
+  | ss = STRING_START; e = expr1; se = STRING_END {
+    let end_part = EndStringInterp (e, se) in
+    String (StartStringInterp (ss, end_part))
+  }
+  | ss = STRING_START; cont = string_middle; e = expr1; se = STRING_END {
+    let end_part = EndStringInterp (e, se) in
+    (* We are iterating from back to front... *)
+    let cont2_opt = List.fold_left (fun acc cur -> (
+      let (e, s) = cur in
+      match acc with
+      | None -> Some (MiddleStringInterp (e, s, end_part))
+      | Some prev -> Some (MiddleStringInterp (e, s, prev))
+    )) None cont in
+    String (StartStringInterp (ss, Option.get cont2_opt))
+  }
+  | s = STRING_FULL { String (FullString s) }
   | i = ID { IdRef i }
   | LPAREN; e = expr1; RPAREN { e }
   | h = hash_literals { h }
   ;
+
+(* Returns reversed list *)
+string_middle:
+  | e = expr1 ; s = STRING_MIDDLE { [(e, s)] }
+  | cont = string_middle; e = expr1; s = STRING_MIDDLE {
+    (e, s) :: cont
+  }
 
 list_literals:
   | LBRACKET; RBRACKET { List [] }

@@ -17,7 +17,7 @@ and expr = private
   | Num of float
   | Bool of bool
   | Null
-  | String of string
+  | String of string_parts list
   | List of expr list
   | HashMap of (expr * expr) list
   | Subscript of expr * expr
@@ -27,6 +27,14 @@ and expr = private
   | MethodInvoc of { receiver : expr; target : string; args : expr list }
   | FuncExpr of { parameters : string list; block : stmt list }
   | IfExpr of cond_cont
+[@@deriving sexp]
+
+and string_parts =
+  | FullString of string
+  | StartStringInterp of string
+  | MiddleStringInterp of string
+  | EndStringInterp of string
+  | ExpressionStringInterp of expr
 [@@deriving sexp]
 
 and cond_cont = private

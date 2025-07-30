@@ -11,7 +11,20 @@ let rec indent_str b i s =
 let rec sexp_formatter_inner parent_indent indent buffer (s : Sexp.t) =
   let print = indent_str buffer indent in
   match s with
-  | Atom a -> print a
+  | Atom a -> (
+      let whitespace_opt =
+        String.find a ~f:(fun c ->
+            match c with
+            | ' ' -> true
+            | '\t' -> true
+            | '\r' -> true
+            | '\n' -> true
+            | _ -> false)
+      in
+      match whitespace_opt with
+      (* Escape if our atom includes whitespace *)
+      | Some _ -> print (Printf.sprintf "\"%s\"" a)
+      | None -> if String.length a = 0 then print "\"\"" else print a)
   | List l -> (
       match List.length l with
       | 0 -> print "()"
@@ -37,7 +50,9 @@ let rec sexp_formatter_inner parent_indent indent buffer (s : Sexp.t) =
           Buffer.add_string buffer ")")
 
 let sexp_formatter str =
-  let b = Buffer.create 20 in
-  let s = try Sexp.of_string str with Failure msg -> raise (Error msg) in
-  sexp_formatter_inner 0 0 b s;
+  let b = Buffer.create 64 in
+  let sexp_tree =
+    try Sexp.of_string str with Failure msg -> raise (Error msg)
+  in
+  sexp_formatter_inner 0 0 b sexp_tree;
   Buffer.contents b

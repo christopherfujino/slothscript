@@ -22,7 +22,7 @@ and expr =
   | Num of float
   | Bool of bool
   | Null
-  | String of string
+  | String of string_parts
   | List of expr list
   | HashMap of (expr * expr) list
   | Subscript of expr * expr
@@ -33,6 +33,16 @@ and expr =
   | MethodInvoc of { receiver : expr; target : string; args : expr list }
   | FuncExpr of func_expr_t
   | IfExpr of cond_cont
+[@@deriving sexp]
+
+and string_parts =
+  | FullString of string
+  | StartStringInterp of string * string_continuation
+[@@deriving sexp]
+
+and string_continuation =
+  | MiddleStringInterp of expr * string * string_continuation
+  | EndStringInterp of expr * string
 [@@deriving sexp]
 
 and cond_cont =

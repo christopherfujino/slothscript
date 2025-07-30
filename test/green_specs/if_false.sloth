@@ -18,7 +18,8 @@ if false {print("Unreachable");};
               (IdRef
                 print)
               ((String
-                Unreachable))))))
+                ((FullString
+                  Unreachable))))))))
         (continuation
           ()))))))
 
