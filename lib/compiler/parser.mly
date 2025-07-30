@@ -152,14 +152,33 @@ expr4:
   | FALSE { Bool false }
   | NULL { Null }
   (* TODO implement the rest of the string parts *)
-  | s1 = STRING_START; e = expr1; s2 = STRING_END {
-    String [StartStringInterp s1; ExpressionStringInterp e; EndStringInterp s2]
+  | ss = STRING_START; e = expr1; se = STRING_END {
+    let end_part = EndStringInterp (e, se) in
+    String (StartStringInterp (ss, end_part))
   }
-  | s = STRING_FULL { String [FullString s] }
+  | ss = STRING_START; cont = string_middle; e = expr1; se = STRING_END {
+    let end_part = EndStringInterp (e, se) in
+    (* We are iterating from back to front... *)
+    let cont2_opt = List.fold_left (fun acc cur -> (
+      let (e, s) = cur in
+      match acc with
+      | None -> Some (MiddleStringInterp (e, s, end_part))
+      | Some prev -> Some (MiddleStringInterp (e, s, prev))
+    )) None cont in
+    String (StartStringInterp (ss, Option.get cont2_opt))
+  }
+  | s = STRING_FULL { String (FullString s) }
   | i = ID { IdRef i }
   | LPAREN; e = expr1; RPAREN { e }
   | h = hash_literals { h }
   ;
+
+(* Returns reversed list *)
+string_middle:
+  | e = expr1 ; s = STRING_MIDDLE { [(e, s)] }
+  | cont = string_middle; e = expr1; s = STRING_MIDDLE {
+    (e, s) :: cont
+  }
 
 list_literals:
   | LBRACKET; RBRACKET { List [] }

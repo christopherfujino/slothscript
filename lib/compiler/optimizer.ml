@@ -126,17 +126,7 @@ and optimize_expr (env : Environment.t) (e : Ast.expr) : expr =
   | Num f -> Num f
   | Bool b -> Bool b
   | Null -> Null
-  | String s ->
-      String
-        (List.map s ~f:(fun part ->
-             match part with
-             | FullString s' -> FullString s'
-             | StartStringInterp s' -> StartStringInterp s'
-             | MiddleStringInterp s' -> MiddleStringInterp s'
-             | EndStringInterp s' -> EndStringInterp s'
-             | ExpressionStringInterp e ->
-                 let e' = optimize_expr env e in
-                 ExpressionStringInterp e'))
+  | String s -> optimize_string env s
   | List els ->
       let rev_opt_els = List.rev els |> List.map ~f:(optimize_expr env) in
       List rev_opt_els
@@ -180,6 +170,23 @@ and optimize_expr (env : Environment.t) (e : Ast.expr) : expr =
       let optim_receiver = optimize_expr env receiver in
       let optim_args = List.rev args |> List.map ~f:(optimize_expr env) in
       MethodInvoc { target; receiver = optim_receiver; args = optim_args }
+
+and optimize_string env s =
+  String
+    (match s with
+    | FullString s' -> [ FullString s' ]
+    | StartStringInterp (s', cont1) ->
+        let cont2 = optimize_string_continuation env cont1 in
+        StartStringInterp s' :: cont2)
+
+and optimize_string_continuation env cont =
+  match cont with
+  | MiddleStringInterp (e, s, cont2) ->
+      let e2 = optimize_expr env e in
+      let cont3 = optimize_string_continuation env cont2 in
+      ExpressionStringInterp e2 :: MiddleStringInterp s :: cont3
+  | EndStringInterp (e, s) ->
+      [ ExpressionStringInterp (optimize_expr env e); EndStringInterp s ]
 
 and optimize_continuation env c =
   match c with

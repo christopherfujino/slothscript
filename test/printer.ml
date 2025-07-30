@@ -24,7 +24,7 @@ let rec sexp_formatter_inner parent_indent indent buffer (s : Sexp.t) =
       match whitespace_opt with
       (* Escape if our atom includes whitespace *)
       | Some _ -> print (Printf.sprintf "\"%s\"" a)
-      | None -> print a)
+      | None -> if String.length a = 0 then print "\"\"" else print a)
   | List l -> (
       match List.length l with
       | 0 -> print "()"

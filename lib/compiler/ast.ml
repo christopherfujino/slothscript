@@ -22,7 +22,7 @@ and expr =
   | Num of float
   | Bool of bool
   | Null
-  | String of string_parts list
+  | String of string_parts
   | List of expr list
   | HashMap of (expr * expr) list
   | Subscript of expr * expr
@@ -37,10 +37,12 @@ and expr =
 
 and string_parts =
   | FullString of string
-  | StartStringInterp of string
-  | MiddleStringInterp of string
-  | EndStringInterp of string
-  | ExpressionStringInterp of expr
+  | StartStringInterp of string * string_continuation
+[@@deriving sexp]
+
+and string_continuation =
+  | MiddleStringInterp of expr * string * string_continuation
+  | EndStringInterp of expr * string
 [@@deriving sexp]
 
 and cond_cont =
