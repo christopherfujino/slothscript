@@ -1,3 +1,5 @@
+- [ ] HashMap literals
+- [ ] Nicer lambdas
 - [ ] Implement all arithmetic operators
 - [ ] List mutation methods
 - [ ] Modules
