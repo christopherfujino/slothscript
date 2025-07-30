@@ -1,4 +1,3 @@
-- [ ] String interpolation
 - [ ] Implement all arithmetic operators
 - [ ] List mutation methods
 - [ ] Modules
@@ -26,3 +25,4 @@
 - [x] Loops
 - [x] Hashmaps
 - [x] Updating lists
+- [x] String interpolation
