@@ -43,8 +43,9 @@ let make_test spec =
     Format.pp_print_newline formatter ();
     let msg = Buffer.contents buf in
     let msg =
-      Printf.sprintf "Un-pretty AST for %s\n\nExpected:\n%s\n\nShould be:\n%s\n\n%s" spec.name
-        spec.ast pretty_ast msg
+      Printf.sprintf
+        "Un-pretty AST for %s\n\nExpected:\n%s\n\nShould be:\n%s\n\n%s"
+        spec.name spec.ast pretty_ast msg
     in
     assert_failure msg);
   (* Parser *)
