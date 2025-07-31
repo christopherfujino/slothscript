@@ -11,7 +11,6 @@ type globalLexerState =
 let string_buffer_size = 33
 
 let state = ref NotInterpolating
-let last_token = ref None
 }
 
 (* identifiers *)
@@ -21,11 +20,11 @@ let letter = ['a'-'z' 'A'-'Z']
 let id = ['a'-'z' 'A'-'Z' '_'] ['a'-'z' 'A'-'Z' '0'-'9' '_']*
 
 (* rule and parse are keywords *)
-rule read =
+rule read last_token =
   parse
   (* means if `white` matches, call the read rule again and return its
      results--i.e. skip this match *)
-  | white { (read [@tailcall]) lexbuf }
+  | white { (read [@tailcall]) last_token lexbuf }
   | '\n' {
     (* https://ohama.github.io/ocaml/ocamllex-tutorial/actions/position/ *)
     lexbuf.lex_curr_p <- { lexbuf.lex_curr_p with
@@ -39,7 +38,7 @@ rule read =
     let asi () =
       last_token := Some SEMICOLON; SEMICOLON in
     match !last_token with
-    | None -> (read [@tailcall]) lexbuf
+    | None -> (read [@tailcall]) last_token lexbuf
     | Some t -> (match t with
         | ID _ -> asi ()
         | RPAREN -> asi ()
@@ -48,7 +47,7 @@ rule read =
         | NUM _ -> asi ()
         | STRING_FULL _ -> asi ()
         | STRING_END _ -> asi ()
-        | _ -> (read [@tailcall]) lexbuf
+        | _ -> (read [@tailcall]) last_token lexbuf
     )
   }
   | "true" { last_token := Some TRUE; Option.get !last_token }
@@ -72,7 +71,7 @@ rule read =
     | None -> parse_semicolon ()
     | Some t -> (match t with
         (* Allow no-op repeat semicolons *)
-        | SEMICOLON -> (read [@tailcall]) lexbuf
+        | SEMICOLON -> (read [@tailcall]) last_token lexbuf
         | _ -> parse_semicolon ()
     )
   }
@@ -105,8 +104,6 @@ rule read =
   | _ { raise (SyntaxError (Lexing.lexeme lexbuf))}
   (* Here `eof` is a special regex built into ocamllex *)
   | eof {
-    (* Reset state for tests *)
-    last_token := None;
     (* TODO handle semicolon insertion at end of file *)
     EOF
   }

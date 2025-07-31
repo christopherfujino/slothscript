@@ -2,7 +2,10 @@ open Core
 
 let parse env line =
   let decls =
-    try Lexing.from_string line |> Parser.prog Lexer.read
+    try
+      let r = ref None in
+      let lexbuf = Lexing.from_string line in
+      Parser.prog (Lexer.read r) lexbuf
     with Parser.Error i ->
       let msg = Printf.sprintf "Parser error (%d)" i in
       (* TODO Interpolate lexer position *)
@@ -16,7 +19,7 @@ let to_s token =
   | COLON -> "COLON"
   | SEMICOLON -> "SEMICOLON"
   | TRUE -> "TRUE"
-  | RPAREN -> "TRUE"
+  | RPAREN -> "RPAREN"
   | RCURLY -> "RCURLY"
   | RBRACKET -> "RBRACKET"
   | PRODUCT -> "PRODUCT"
@@ -46,11 +49,11 @@ let to_s token =
   | ID s -> Printf.sprintf "ID(%s)" s
 
 (* TODO delete *)
-let rec debug buf ?(idx = 0) prev =
-  let cur = Lexer.read buf in
+let rec debug buf ?(idx = 0) ?(r = ref None) prev =
+  let cur = Lexer.read r buf in
   if phys_equal cur Parser.EOF then (
     let prev = List.rev prev in
     print_endline "[Start]";
     List.iter prev ~f:(fun t -> to_s t |> print_endline);
     ())
-  else (debug [@tailcall]) buf ~idx:(idx + 1) (Lexer.read buf :: prev)
+  else (debug [@tailcall]) buf ~idx:(idx + 1) ~r (cur :: prev)
