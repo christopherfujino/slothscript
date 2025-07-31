@@ -14,11 +14,6 @@ func f() {
 
 print("The answer is: ${f()}.")|} in
 
-        (*
-        let buf = Lexing.from_string src in
-        Compiler.Main.debug buf [];
-        print_endline src;
-        *)
         let env =
           Compiler.Environment.create () |> Compiler.Stdlib_stubs.populate
         in

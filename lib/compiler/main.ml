@@ -17,7 +17,9 @@ let parse env line =
           | Some last_token -> (
               match last_token with
               | SEMICOLON -> EOF
-              | _ -> should_spit_eof := true; SEMICOLON))
+              | _ ->
+                  should_spit_eof := true;
+                  SEMICOLON))
       | _ ->
           last_token := Some token;
           token

@@ -33,7 +33,6 @@ let red =
          print)((IdRef x)))))))(ExprStmt(FuncInvoc(IdRef \
          f2)())))))(ExprStmt(FuncInvoc(IdRef f1)())))"
       ~stdout_expect:"1\n" ~failure:Parser_error;
-      (*
     make_spec "comments"
       ~program:
         {|
@@ -50,5 +49,4 @@ let x = 1 +
 
 # Trailing comment|}
       ~ast:"()" ~failure:Scanner_error;
-      *)
   ]
