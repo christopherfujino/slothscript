@@ -3,11 +3,11 @@ args
 
 ### Program
 func f(x, y) {
-  print(x);
-  print(y);
+  print(x)
+  print(y)
 }
 
-f(1, 2);
+f(1, 2)
 
 ### Ast
 ((FuncDecl

@@ -10,7 +10,7 @@ func fib(n) {
   }
 }
 
-print(fib(20));
+print(fib(20))
 
 ### Ast
 ((FuncDecl

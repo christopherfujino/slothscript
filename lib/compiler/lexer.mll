@@ -104,16 +104,9 @@ rule read last_token =
   | _ { raise (SyntaxError (Lexing.lexeme lexbuf))}
   (* Here `eof` is a special regex built into ocamllex *)
   | eof {
-    (* TODO handle semicolon insertion at end of file *)
+    (* Note: if needed, a semicolon will be inserted later in filtering
+       between lexing & parsing *)
     EOF
-    (*
-    match !last_token with
-    | None -> EOF
-    | Some token -> (match token with
-        | SEMICOLON -> EOF
-        | _ -> SEMICOLON
-    )
-    *)
   }
 
 and read_string buf =

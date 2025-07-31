@@ -1,11 +1,12 @@
 open Core
 
-let parse env line =
+(* insert semicolon before EOF *)
+let make_lex_filter () =
   let r = ref None in
   let last_token = ref None in
   let should_spit_eof = ref false in
   (* insert semicolon before EOF *)
-  let filter_lex buf =
+  fun buf ->
     let open Parser in
     if !should_spit_eof then EOF
     else
@@ -23,11 +24,13 @@ let parse env line =
       | _ ->
           last_token := Some token;
           token
-  in
+
+let parse env line =
+  let lex_filter = make_lex_filter () in
   let decls =
     try
       let lexbuf = Lexing.from_string line in
-      Parser.prog filter_lex lexbuf
+      Parser.prog lex_filter lexbuf
     with Parser.Error i ->
       let msg = Printf.sprintf "Parser error (%d)" i in
       (* TODO Interpolate lexer position *)
@@ -70,12 +73,15 @@ let to_s token =
   | NUM n -> Printf.sprintf "NUM(%f)" n
   | ID s -> Printf.sprintf "ID(%s)" s
 
-(* TODO delete *)
-let rec debug buf ?(idx = 0) ?(r = ref None) prev =
-  let cur = Lexer.read r buf in
-  if phys_equal cur Parser.EOF then (
-    let prev = List.rev prev in
-    print_endline "[Start]";
-    List.iter prev ~f:(fun t -> to_s t |> print_endline);
-    ())
-  else (debug [@tailcall]) buf ~idx:(idx + 1) ~r (cur :: prev)
+let debug buf prev =
+  let lex_filter = make_lex_filter () in
+  let rec inner buf idx r prev =
+    let cur = lex_filter buf in
+    if phys_equal cur Parser.EOF then (
+      let prev = List.rev prev in
+      print_endline "[Start]";
+      List.iter prev ~f:(fun t -> to_s t |> print_endline);
+      ())
+    else (inner [@tailcall]) buf (idx + 1) r (cur :: prev)
+  in
+  inner buf 0 (ref None) prev
