@@ -76,8 +76,8 @@ declarations:
   ;
 
 decl:
-  | FUNC; i = ID; LPAREN; RPAREN; b = block { FuncDecl {name = i; parameters = []; block = b;} }
-  | FUNC; i = ID; LPAREN; p = parameter_list ; RPAREN; b = block { FuncDecl {name = i; parameters = p; block = b;} }
+  | FUNC; i = ID; LPAREN; RPAREN; b = block; SEMICOLON { FuncDecl {name = i; parameters = []; block = b;} }
+  | FUNC; i = ID; LPAREN; p = parameter_list ; RPAREN; b = block; SEMICOLON { FuncDecl {name = i; parameters = p; block = b;} }
   | s = stmt { StmtDecl s }
   ;
 
@@ -88,7 +88,7 @@ stmts:
 
 stmt:
   | s = stmt_sans_semicolon; SEMICOLON { s }
-  | FOR; st = stmt; comp = expr1; SEMICOLON; inc = stmt_sans_semicolon; bl = block {
+  | FOR; st = stmt; comp = expr1; SEMICOLON; inc = stmt_sans_semicolon; bl = block; SEMICOLON {
     ForLoop (st, comp, inc, bl)
   }
   ;

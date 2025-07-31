@@ -11,7 +11,7 @@ let green () =
 
 let red =
   [
-    make_spec "vars & funcs share namespace" ~program:"let x=1;func x(){}"
+    make_spec "vars & funcs share namespace" ~program:"let x=1;func x(){};"
       ~ast:
         "((StmtDecl(LetStmt x(Num 1)))(FuncDecl(name \
          x)(parameters())(block())))"
@@ -19,7 +19,7 @@ let red =
     (* Although this works in JS, Python, and Perl, this seems like a mistake *)
     (* Go does not allow it. *)
     make_spec "closures cannot capture future vars"
-      ~program:"func closure() {print(x);}let x = 1;closure();"
+      ~program:"func closure() {print(x);};let x = 1;closure();"
       ~ast:
         "zzz((FuncStmt(name closure)(parameters())(block((ExprStmt(FuncInvoc \
          print((IdRef x)))))))(LetStmt x(Num 1))(ExprStmt(FuncInvoc \

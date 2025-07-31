@@ -2,7 +2,7 @@
 func definition
 
 ### Program
-func m() {}
+func m() {};
 
 ### Ast
 ((FuncDecl

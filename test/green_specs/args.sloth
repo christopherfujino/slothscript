@@ -2,7 +2,12 @@
 args
 
 ### Program
-func f(x, y) {print(x);print(y);}f(1, 2);
+func f(x, y) {
+  print(x)
+  print(y)
+}
+
+f(1, 2)
 
 ### Ast
 ((FuncDecl

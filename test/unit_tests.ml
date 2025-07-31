@@ -6,16 +6,18 @@ let pretty =
     ( "escapes string literals with whitespace",
       fun _ ->
         let src = {|
+
+
 func f() {
   42;
 }
 
-print("The answer is: ${f()}.");|} in
-        let _, ast =
-          (Compiler.Environment.create ()
-          |> Compiler.Stdlib_stubs.populate |> Compiler.Main.parse)
-          @@ src
+print("The answer is: ${f()}.")|} in
+
+        let env =
+          Compiler.Environment.create () |> Compiler.Stdlib_stubs.populate
         in
+        let _, ast = Compiler.Main.parse env src in
         let ast_str = Compiler.Optimizer.prog_to_str ast in
         let pretty = Printer.sexp_formatter ast_str in
         let double_quote_count =

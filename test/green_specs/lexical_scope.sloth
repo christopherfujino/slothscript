@@ -2,7 +2,7 @@
 lexical scope
 
 ### Program
-let x=1;func f() {print(x);}func g() {let x=2;f();}g();
+let x=1;func f() {print(x);};func g() {let x=2;f();};g();
 
 ### Ast
 ((StmtDecl
