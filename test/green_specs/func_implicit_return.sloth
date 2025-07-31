@@ -2,7 +2,9 @@
 func implicit return
 
 ### Program
-func m() {1;2;3;}print(m());
+func m() {1;2;3;}
+
+print(m());
 
 ### Ast
 ((FuncDecl
