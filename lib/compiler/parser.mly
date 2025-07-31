@@ -18,6 +18,8 @@
 %token NULL
 %token PLUS
 %token MINUS
+%token PRODUCT
+%token DIVIDE
 %token LET
 %token FOR
 %token EQUALS
@@ -48,6 +50,8 @@
    rules. *)
 %left PLUS
 %left MINUS
+%left PRODUCT
+%left DIVIDE
 %left LEQ
 %left LESS
 (*
@@ -126,6 +130,12 @@ expr2:
   }
   | e1 = expr2; MINUS; e2 = expr2 {
     MethodInvoc { receiver=e1; target="-"; args=[e2] }
+  }
+  | e1 = expr2; PRODUCT; e2 = expr2 {
+    MethodInvoc { receiver=e1; target="*"; args=[e2] }
+  }
+  | e1 = expr2; DIVIDE; e2 = expr2 {
+    MethodInvoc { receiver=e1; target="/"; args=[e2] }
   }
   | e = expr3 { e }
 

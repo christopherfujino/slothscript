@@ -1,6 +1,5 @@
 - [ ] HashMap literals
 - [ ] Nicer lambdas
-- [ ] Implement all arithmetic operators
 - [ ] List mutation methods
 - [ ] Modules
 - [ ] Structs/Methods
@@ -8,9 +7,10 @@
 - [ ] Language versioning
 - [ ] Store locs in runtime values
 - [ ] Stack traces; depends on storing locs in runtime values
-- [ ] Early return from functions?
 - [ ] Pattern matching
 - [ ] Formatter
+- [ ] For-in loops?
+- [ ] Early return from functions?
 
 ## Done
 - [x] Lexical scoping
@@ -28,3 +28,4 @@
 - [x] Hashmaps
 - [x] Updating lists
 - [x] String interpolation
+- [x] Implement all arithmetic operators

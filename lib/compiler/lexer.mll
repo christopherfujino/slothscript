@@ -36,6 +36,8 @@ rule read =
   | "for" { FOR }
   | '+' { PLUS }
   | '=' { EQUALS }
+  | '*' { PRODUCT }
+  | '/' { DIVIDE }
   | ';' { SEMICOLON }
   | ':' { COLON }
   | interpolation_continuation {

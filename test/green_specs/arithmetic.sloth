@@ -1,0 +1,56 @@
+### Name
+arithmetic
+
+### Program
+let value = 2 + 3 * 4 / 5 - 6;
+
+print(value);
+
+### Ast
+((StmtDecl
+  (LetStmt
+    value
+    (MethodInvoc
+      (receiver
+        (Num
+          2))
+      (target
+        +)
+      (args
+        ((MethodInvoc
+          (receiver
+            (MethodInvoc
+              (receiver
+                (Num
+                  3))
+              (target
+                *)
+              (args
+                ((MethodInvoc
+                  (receiver
+                    (Num
+                      4))
+                  (target
+                    /)
+                  (args
+                    ((Num
+                      5))))))))
+          (target
+            -)
+          (args
+            ((Num
+              6)))))))))
+  (StmtDecl
+    (ExprStmt
+      (FuncInvoc
+        (IdRef
+          print)
+        ((IdRef
+          value))))))
+
+### Stdout
+-1.5999999999999996
+
+### Failure
+
+

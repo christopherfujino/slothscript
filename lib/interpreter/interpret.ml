@@ -197,6 +197,18 @@ and interpret_expr ctx expr =
               let arg_val = interpret_expr ctx arg in
               let arg_f = Runtime.num_of_val arg_val in
               Num (f -. arg_f)
+          | "*" ->
+              check_arity 1 args "Num.*";
+              let arg = List.hd_exn args in
+              let arg_val = interpret_expr ctx arg in
+              let arg_f = Runtime.num_of_val arg_val in
+              Num (f *. arg_f)
+          | "/" ->
+              check_arity 1 args "Num./";
+              let arg = List.hd_exn args in
+              let arg_val = interpret_expr ctx arg in
+              let arg_f = Runtime.num_of_val arg_val in
+              Num (f /. arg_f)
           | "<=" ->
               check_arity 1 args "Num.<=";
               let arg = List.hd_exn args in
