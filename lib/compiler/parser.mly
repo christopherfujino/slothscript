@@ -144,12 +144,6 @@ expr3:
   | e = expr3; LPAREN; a = expr_list; RPAREN { FuncInvoc (e, a) }
   | e = expr3; LPAREN; RPAREN { FuncInvoc (e, []) }
   | s = subscript { s }
-  (*
-  | e1 = expr; LEQ; e2 = expr { Binary (Leq, e1, e2) }
-  | e1 = expr; TIMES; e2 = expr { Binary (Mult, e1, e2) }
-  | LET; x = ID; EQUALS; e1 = expr; IN; e2 = expr { Let (x, e1, e2) }
-  | LPAREN; e=expr; RPAREN {e}
-  *)
   | e = expr4 { e }
   ;
 
