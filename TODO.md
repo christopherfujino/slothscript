@@ -1,3 +1,5 @@
+## TODO
+- [ ] Automatic semicolon insertion
 - [ ] HashMap literals
 - [ ] Nicer lambdas
 - [ ] List mutation methods
