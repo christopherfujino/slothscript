@@ -1,5 +1,4 @@
 ## TODO
-- [ ] HashMap literals
 - [ ] Nicer lambdas
 - [ ] List mutation methods
 - [ ] Modules
@@ -31,3 +30,4 @@
 - [x] String interpolation
 - [x] Implement all arithmetic operators
 - [x] Automatic semicolon insertion
+- [x] HashMap literals

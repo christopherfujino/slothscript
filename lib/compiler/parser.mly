@@ -191,12 +191,16 @@ list_literals:
 
 hash_literals:
   | LCURLY; RCURLY { HashMap [] }
+  (* Allow single line literal without trailing comma *)
+  | LCURLY; k = expr4; COLON; v = expr1; RCURLY { HashMap [(k, v)] }
+  | LCURLY; p = hash_literal_pair; RCURLY { HashMap p }
   ;
 
 hash_literal_pair:
   (* Are other types of expressions allowed for keys? *)
-  (* TODO allow non-trailing comma? *)
+  (* Note: trailing commas required because of ASI *)
   | k = expr4; COLON; v = expr1; COMMA { [(k, v)] }
+  | p = hash_literal_pair; k = expr4; COLON; v = expr1; COMMA { (k, v) :: p }
   ;
 
 (* Could be expr or stmt for assignment *)

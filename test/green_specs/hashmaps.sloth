@@ -2,20 +2,35 @@
 hashmaps
 
 ### Program
-let h = {};
+let h = {
+  "foo": "bar",
+  3: 4,
+}
 
-h[true] = "true";
-h[1] = 2;
+h[true] = "true"
+h[1] = 2
 
-print(h[1]);
-print(h[true]);
+print(h[1])
+print(h[true])
+print(h["foo"])
+
+h = {"on a": "single line"}
 
 ### Ast
 ((StmtDecl
   (LetStmt
     h
     (HashMap
-      ())))
+      (((Num
+        3)
+        (Num
+          4))
+        ((String
+          ((FullString
+            foo)))
+          (String
+            ((FullString
+              bar))))))))
   (StmtDecl
     (SubAssignStmt
       (subscript
@@ -58,11 +73,33 @@ print(h[true]);
           (IdRef
             h)
           (Bool
-            true)))))))
+            true))))))
+  (StmtDecl
+    (ExprStmt
+      (FuncInvoc
+        (IdRef
+          print)
+        ((Subscript
+          (IdRef
+            h)
+          (String
+            ((FullString
+              foo))))))))
+  (StmtDecl
+    (AssignStmt
+      h
+      (HashMap
+        (((String
+          ((FullString
+            "on a")))
+          (String
+            ((FullString
+              "single line")))))))))
 
 ### Stdout
 2
 true
+bar
 
 ### Failure
 
