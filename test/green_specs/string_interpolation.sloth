@@ -10,6 +10,7 @@ let one = 1;
 let two = 2;
 let three = 3;
 
+print("} This should be a vanilla string literal");
 print("The answer is: ${f()}.");
 print("${one}, ${two}, ${three}.");
 
@@ -38,6 +39,14 @@ print("${one}, ${two}, ${three}.");
       three
       (Num
         3)))
+  (StmtDecl
+    (ExprStmt
+      (FuncInvoc
+        (IdRef
+          print)
+        ((String
+          ((FullString
+            "} This should be a vanilla string literal")))))))
   (StmtDecl
     (ExprStmt
       (FuncInvoc
@@ -78,6 +87,7 @@ print("${one}, ${two}, ${three}.");
               .))))))))
 
 ### Stdout
+} This should be a vanilla string literal
 The answer is: 42.
 1, 2, 3.
 

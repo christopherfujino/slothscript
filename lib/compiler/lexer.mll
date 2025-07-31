@@ -14,11 +14,10 @@ let state = ref NotInterpolating
 }
 
 (* identifiers *)
-let white = [' ' '\t' '\n']+
+let white = [' ' '\t']+
 let num = ('0'|(['1'-'9']['0'-'9']*)) ('.' ['0'-'9']+)?
 let letter = ['a'-'z' 'A'-'Z']
 let id = ['a'-'z' 'A'-'Z' '_'] ['a'-'z' 'A'-'Z' '0'-'9' '_']*
-let interpolation_continuation = '"' '}'
 
 (* rule and parse are keywords *)
 rule read =
@@ -26,6 +25,14 @@ rule read =
   (* means if `white` matches, call the read rule again and return its
      results--i.e. skip this match *)
   | white { (read [@tailcall]) lexbuf }
+  | '\n' {
+    (* https://ohama.github.io/ocaml/ocamllex-tutorial/actions/position/ *)
+    lexbuf.lex_curr_p <- { lexbuf.lex_curr_p with
+      pos_lnum = lexbuf.lex_curr_p.pos_lnum + 1;
+      pos_bol = lexbuf.lex_curr_p.pos_cnum;
+    };
+    (read [@tailcall]) lexbuf
+  }
   | "true" { TRUE }
   | "false" { FALSE }
   | "null" { NULL }
@@ -40,14 +47,6 @@ rule read =
   | '/' { DIVIDE }
   | ';' { SEMICOLON }
   | ':' { COLON }
-  | interpolation_continuation {
-    match !state with
-    | NotInterpolating -> (
-    failwith "TODO: figure out how to move back one on the lexbuf"
-    (*read_string (Buffer.create string_buffer_size) lexbuf*)
-    )
-    | Interpolating -> read_string (Buffer.create string_buffer_size) lexbuf
-  }
   | '"' {
     read_string (Buffer.create string_buffer_size) lexbuf
   }
