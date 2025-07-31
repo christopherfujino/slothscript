@@ -55,7 +55,7 @@ rule read =
   | "false" { last_token := Some FALSE; Option.get !last_token }
   | "null" { last_token := Some NULL; Option.get !last_token }
   | "let" { last_token := Some LET; Option.get !last_token }
-  | "func" { last_token := Some FUNC; Option.get !last_token }
+  | "func" { last_token := Some FUNC; FUNC }
   | "if" { last_token := Some IF; Option.get !last_token }
   | "else" { last_token := Some ELSE; Option.get !last_token }
   | "for" { last_token := Some FOR; Option.get !last_token }
@@ -63,7 +63,19 @@ rule read =
   | '=' { last_token := Some EQUALS; Option.get !last_token }
   | '*' { last_token := Some PRODUCT; Option.get !last_token }
   | '/' { last_token := Some DIVIDE; Option.get !last_token }
-  | ';' { last_token := Some SEMICOLON; Option.get !last_token }
+  | ';' {
+    let parse_semicolon () =
+      last_token := Some SEMICOLON;
+      SEMICOLON
+    in
+    match !last_token with
+    | None -> parse_semicolon ()
+    | Some t -> (match t with
+        (* Allow no-op repeat semicolons *)
+        | SEMICOLON -> (read [@tailcall]) lexbuf
+        | _ -> parse_semicolon ()
+    )
+  }
   | ':' { last_token := Some COLON; Option.get !last_token }
   | '"' {
     last_token := Some (read_string (Buffer.create string_buffer_size) lexbuf);
@@ -93,6 +105,8 @@ rule read =
   | _ { raise (SyntaxError (Lexing.lexeme lexbuf))}
   (* Here `eof` is a special regex built into ocamllex *)
   | eof {
+    (* Reset state for tests *)
+    last_token := None;
     (* TODO handle semicolon insertion at end of file *)
     EOF
   }

@@ -2,7 +2,12 @@
 func invocation
 
 ### Program
-func m() {print(1);print(2);}m();
+func m() {
+  print(1)
+  print(2)
+}
+
+m()
 
 ### Ast
 ((FuncDecl

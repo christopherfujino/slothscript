@@ -2,7 +2,7 @@
 first class func
 
 ### Program
-func f() {let x = 1;func() {x;};}let xer = f();print(xer());
+func f() {let x = 1;func() {x;};};let xer = f();print(xer());
 
 ### Ast
 ((FuncDecl
