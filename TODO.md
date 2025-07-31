@@ -1,5 +1,4 @@
 ## TODO
-- [ ] Automatic semicolon insertion
 - [ ] HashMap literals
 - [ ] Nicer lambdas
 - [ ] List mutation methods
@@ -31,3 +30,4 @@
 - [x] Updating lists
 - [x] String interpolation
 - [x] Implement all arithmetic operators
+- [x] Automatic semicolon insertion
