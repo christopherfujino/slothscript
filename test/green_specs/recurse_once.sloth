@@ -2,7 +2,7 @@
 recurse once
 
 ### Program
-func rec(b) {if b {b;} else {rec(true);};}print(rec(false));
+func rec(b) {if b {b;} else {rec(true);};};print(rec(false));
 
 ### Ast
 ((FuncDecl

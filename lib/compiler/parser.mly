@@ -67,7 +67,7 @@
 
 prog:
   | EOF { [] }
-  | p = declarations; EOF { p }
+  | p = declarations EOF { p }
   ;
 
 declarations:
@@ -76,8 +76,8 @@ declarations:
   ;
 
 decl:
-  | FUNC; i = ID; LPAREN; RPAREN; b = block { FuncDecl {name = i; parameters = []; block = b;} }
-  | FUNC; i = ID; LPAREN; p = parameter_list ; RPAREN; b = block { FuncDecl {name = i; parameters = p; block = b;} }
+  | FUNC; i = ID; LPAREN; RPAREN; b = block; SEMICOLON { FuncDecl {name = i; parameters = []; block = b;} }
+  | FUNC; i = ID; LPAREN; p = parameter_list ; RPAREN; b = block; SEMICOLON { FuncDecl {name = i; parameters = p; block = b;} }
   | s = stmt { StmtDecl s }
   ;
 

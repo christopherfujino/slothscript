@@ -2,7 +2,7 @@
 curry
 
 ### Program
-func a(x) {func(y) {x+y;};}print(a(1)(2));
+func a(x) {func(y) {x+y;};};print(a(1)(2));
 
 ### Ast
 ((FuncDecl
