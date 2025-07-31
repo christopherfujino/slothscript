@@ -3,23 +3,6 @@ open Core
 
 let pretty =
   [
-    ( "TODO func invoc", fun _ ->
-      let src = {|
-func m() {
-  print(1)
-  print(2)
-}
-
-m()|} in
-        let buf = Lexing.from_string src in
-        Compiler.Main.debug buf [];
-        Printf.printf "%sEOF\n" src;
-        let env =
-          Compiler.Environment.create () |> Compiler.Stdlib_stubs.populate
-        in
-        let _, _ = Compiler.Main.parse env src in
-        ()
-    );
     ( "escapes string literals with whitespace",
       fun _ ->
         let src = {|
@@ -29,12 +12,12 @@ func f() {
   42;
 }
 
-print("The answer is: ${f()}.");|} in
+print("The answer is: ${f()}.")|} in
 
         (*
         let buf = Lexing.from_string src in
         Compiler.Main.debug buf [];
-        debug_src_print src;
+        print_endline src;
         *)
         let env =
           Compiler.Environment.create () |> Compiler.Stdlib_stubs.populate

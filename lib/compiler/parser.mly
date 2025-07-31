@@ -67,7 +67,7 @@
 
 prog:
   | EOF { [] }
-  | p = declarations EOF { p }
+  | p = declarations; EOF { p }
   ;
 
 declarations:
@@ -88,7 +88,7 @@ stmts:
 
 stmt:
   | s = stmt_sans_semicolon; SEMICOLON { s }
-  | FOR; st = stmt; comp = expr1; SEMICOLON; inc = stmt_sans_semicolon; bl = block {
+  | FOR; st = stmt; comp = expr1; SEMICOLON; inc = stmt_sans_semicolon; bl = block; SEMICOLON {
     ForLoop (st, comp, inc, bl)
   }
   ;

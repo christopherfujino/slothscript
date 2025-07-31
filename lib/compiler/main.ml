@@ -1,11 +1,31 @@
 open Core
 
 let parse env line =
+  let r = ref None in
+  let last_token = ref None in
+  let should_spit_eof = ref false in
+  (* insert semicolon before EOF *)
+  let filter_lex buf =
+    let open Parser in
+    if !should_spit_eof then EOF
+    else
+      let token = Lexer.read r buf in
+      match token with
+      | EOF -> (
+          match !last_token with
+          | None -> EOF
+          | Some last_token -> (
+              match last_token with
+              | SEMICOLON -> EOF
+              | _ -> should_spit_eof := true; SEMICOLON))
+      | _ ->
+          last_token := Some token;
+          token
+  in
   let decls =
     try
-      let r = ref None in
       let lexbuf = Lexing.from_string line in
-      Parser.prog (Lexer.read r) lexbuf
+      Parser.prog filter_lex lexbuf
     with Parser.Error i ->
       let msg = Printf.sprintf "Parser error (%d)" i in
       (* TODO Interpolate lexer position *)

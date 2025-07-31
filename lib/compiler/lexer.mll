@@ -106,6 +106,14 @@ rule read last_token =
   | eof {
     (* TODO handle semicolon insertion at end of file *)
     EOF
+    (*
+    match !last_token with
+    | None -> EOF
+    | Some token -> (match token with
+        | SEMICOLON -> EOF
+        | _ -> SEMICOLON
+    )
+    *)
   }
 
 and read_string buf =
