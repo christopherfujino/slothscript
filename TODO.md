@@ -3,6 +3,8 @@
 - [ ] List mutation methods
 - [ ] Modules
 - [ ] Structs/Methods
+- [ ] Standard Library
+- [ ] README.md
 - [ ] Security policy
 - [ ] Language versioning
 - [ ] Store locs in runtime values
