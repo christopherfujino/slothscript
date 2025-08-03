@@ -16,12 +16,12 @@ jobs:
       image: ocaml/opam:debian-12-ocaml-5.3
 
     steps:
-      #- name: Install OS deps
-      #  shell: bash -exo pipefail {0}
-      #  run: |
-      #    apt-get update
-      #    apt-get --yes upgrade
-      #    apt-get install --yes make opam git
+      - name: Install OS deps
+        shell: bash -exo pipefail {0}
+        run: |
+          apt-get update
+          apt-get --yes upgrade
+          apt-get install --yes golang
 
       - name: Chmod dirs
         shell: bash -exuo pipefail {0}
@@ -44,11 +44,20 @@ jobs:
           opam switch create default-switch 5.2.0
           opam install --yes dune ocamlformat
 
+      - name: Download doc-builder
+        shell: bash -exuo pipefail {0}
+        run: |
+          curl -L https://github.com/christopherfujino/doc-builder/archive/refs/tags/v0.3.tar.gz -o db.tar.gz
+          tar xvzf db.tar.gz
+          pushd db/
+          go build .
+
       - name: Run CI
         shell: bash -exuo pipefail {0}
         working-directory: ./slothscript
         run: |
           eval $(opam env --switch=default-switch)
+          PATH="./db:$PATH"
           make yolos
           make get
           make build
