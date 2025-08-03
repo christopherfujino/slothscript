@@ -33,7 +33,7 @@ jobs:
       - name: Download doc-builder
         shell: bash -exuo pipefail {0}
         run: |
-          VERSION='0.3'
+          VERSION='0.4'
           ARCH='amd64'
           REMOTE="https://github.com/christopherfujino/doc-builder/releases/download/v${VERSION}/db-${VERSION}-linux-${ARCH}.tar.gz"
           curl -L "$REMOTE" -o db.tar.gz
