@@ -65,7 +65,7 @@ check-format:
 
 .PHONY: docs
 docs:
-	db
+	db -ensure
 
 .PHONY: clean
 clean:

@@ -16,12 +16,12 @@ jobs:
       image: ocaml/opam:debian-12-ocaml-5.3
 
     steps:
-      #- name: Install OS deps
-      #  shell: bash -exo pipefail {0}
-      #  run: |
-      #    sudo apt-get update
-      #    sudo apt-get --yes upgrade
-      #    sudo apt-get install --yes golang
+      - name: Install OS deps
+        shell: bash -exo pipefail {0}
+        run: |
+          sudo apt-get update
+          sudo apt-get --yes upgrade
+          sudo apt-get install --yes golang
 
       - name: Chmod dirs
         shell: bash -exuo pipefail {0}
@@ -33,12 +33,16 @@ jobs:
       - name: Download doc-builder
         shell: bash -exuo pipefail {0}
         run: |
-          VERSION='0.4'
-          ARCH='amd64'
-          REMOTE="https://github.com/christopherfujino/doc-builder/releases/download/v${VERSION}/db-${VERSION}-linux-${ARCH}.tar.gz"
-          curl -L "$REMOTE" -o db.tar.gz
-          tar xvzf db.tar.gz
-          mv "./db-${VERSION}-linux-${ARCH}" ./db
+          REF='942dea4277b6a8743a192afa8ab4e4e549ebc398'
+          git clone https://github.com/christopherfujino/doc-builder -b "$REF" ./db
+          cd db
+          go build . -o db
+          #VERSION='0.4'
+          #ARCH='amd64'
+          #REMOTE="https://github.com/christopherfujino/doc-builder/releases/download/v${VERSION}/db-${VERSION}-linux-${ARCH}.tar.gz"
+          #curl -L "$REMOTE" -o db.tar.gz
+          #tar xvzf db.tar.gz
+          #mv "./db-${VERSION}-linux-${ARCH}" ./db
 
       - name: Check out repo
         shell: bash -exuo pipefail {0}
@@ -60,12 +64,12 @@ jobs:
         run: |
           eval $(opam env --switch=default-switch)
           PATH="../db:$PATH"
+          make docs
           make yolos
           make get
           make build
           make check-format
           make test
-          make docs
       # TODO use tool/ci.exe
       #  run: |
       #    eval $(opam env --switch=default-switch)
