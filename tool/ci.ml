@@ -115,7 +115,8 @@ let () =
     in
     let* () = create "build" None |> Target.run in
     let* () = create "check-format" None |> Target.run in
-    create "test" None |> Target.run
+    let* () = create "test" None |> Target.run in
+    create "docs" None |> Target.run
   in
   match res with
   | Ok -> print_endline "CI suite successful!"

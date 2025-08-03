@@ -3,10 +3,6 @@
 A slow scripting language.
 
 ```sloth
-### Name
-fibonacci
-
-### Program
 func fib(n) {
   if n <= 1 {
     n
@@ -16,76 +12,30 @@ func fib(n) {
 }
 
 print(fib(20))
+```
 
-### Ast
-((FuncDecl
-  (name
-    fib)
-  (parameters
-    (n))
-  (block
-    ((ExprStmt
-      (IfExpr
-        (IfCont
-          (conditional
-            (MethodInvoc
-              (receiver
-                (IdRef
-                  n))
-              (target
-                <=)
-              (args
-                ((Num
-                  1)))))
-          (block
-            ((ExprStmt
-              (IdRef
-                n))))
-          (continuation
-            ((ElseCont
-              ((ExprStmt
-                (MethodInvoc
-                  (receiver
-                    (FuncInvoc
-                      (IdRef
-                        fib)
-                      ((MethodInvoc
-                        (receiver
-                          (IdRef
-                            n))
-                        (target
-                          -)
-                        (args
-                          ((Num
-                            1)))))))
-                  (target
-                    +)
-                  (args
-                    ((FuncInvoc
-                      (IdRef
-                        fib)
-                      ((MethodInvoc
-                        (receiver
-                          (IdRef
-                            n))
-                        (target
-                          -)
-                        (args
-                          ((Num
-                            2))))))))))))))))))))
-  (StmtDecl
-    (ExprStmt
-      (FuncInvoc
-        (IdRef
-          print)
-        ((FuncInvoc
-          (IdRef
-            fib)
-          ((Num
-            20))))))))
+## Tour
 
-### Stdout
-6765
+Variables:
 
-### Failure
+```sloth
+let x = 1 + 1;
+
+print(x);
+```
+
+First-class functions:
+
+```sloth
+func makeCounter() {
+  let x = 0
+  func() {
+    x = x + 1
+    x
+  }
+}
+
+let counter = makeCounter()
+print(counter())
+print(counter())
 ```

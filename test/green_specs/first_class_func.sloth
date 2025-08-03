@@ -2,33 +2,54 @@
 first class func
 
 ### Program
-func f() {let x = 1;func() {x;};};let xer = f();print(xer());
+func makeCounter() {
+  let x = 0
+  func() {
+    x = x + 1
+    x
+  }
+}
+
+let counter = makeCounter()
+print(counter())
+print(counter())
 
 ### Ast
 ((FuncDecl
   (name
-    f)
+    makeCounter)
   (parameters
     ())
   (block
     ((LetStmt
       x
       (Num
-        1))
+        0))
       (ExprStmt
         (FuncExpr
           (parameters
             ())
           (block
-            ((ExprStmt
-              (IdRef
-                x)))))))))
+            ((AssignStmt
+              x
+              (MethodInvoc
+                (receiver
+                  (IdRef
+                    x))
+                (target
+                  +)
+                (args
+                  ((Num
+                    1)))))
+              (ExprStmt
+                (IdRef
+                  x)))))))))
   (StmtDecl
     (LetStmt
-      xer
+      counter
       (FuncInvoc
         (IdRef
-          f)
+          makeCounter)
         ())))
   (StmtDecl
     (ExprStmt
@@ -37,11 +58,21 @@ func f() {let x = 1;func() {x;};};let xer = f();print(xer());
           print)
         ((FuncInvoc
           (IdRef
-            xer)
+            counter)
+          ())))))
+  (StmtDecl
+    (ExprStmt
+      (FuncInvoc
+        (IdRef
+          print)
+        ((FuncInvoc
+          (IdRef
+            counter)
           ()))))))
 
 ### Stdout
 1
+2
 
 ### Failure
 

@@ -3,7 +3,23 @@
     {
       "output": "README.md",
       "template": "README.tmpl.md",
-      "inputs": ["test/green_specs/fibonacci.sloth"]
+      "inputs": [
+        "test/green_specs/fibonacci.sloth",
+        "test/green_specs/var_reference.sloth",
+        "test/green_specs/first_class_func.sloth"
+      ]
+    },
+    {
+      "output": "test/green_specs/fibonacci.sloth",
+      "filter": "awk '/### Program/{f=1; next} /### /{f=0} f'"
+    },
+    {
+      "output": "test/green_specs/var_reference.sloth",
+      "filter": "awk '/### Program/{f=1; next} /### /{f=0} f'"
+    },
+    {
+      "output": "test/green_specs/first_class_func.sloth",
+      "filter": "awk '/### Program/{f=1; next} /### /{f=0} f'"
     }
   ]
 }
