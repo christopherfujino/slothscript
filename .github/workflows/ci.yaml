@@ -38,7 +38,7 @@ jobs:
           REMOTE="https://github.com/christopherfujino/doc-builder/releases/download/v${VERSION}/db-${VERSION}-linux-${ARCH}.tar.gz"
           curl -L "$REMOTE" -o db.tar.gz
           tar xvzf db.tar.gz
-          mv "./db-${VERSION}-linux-${ARCH}" ./db
+          mv "./doc-builder-${VERSION}-linux-${ARCH}" ./db
 
       - name: Check out repo
         shell: bash -exuo pipefail {0}
