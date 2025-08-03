@@ -1,0 +1,9 @@
+{
+  "targets": [
+    {
+      "output": "README.md",
+      "template": "README.tmpl.md",
+      "inputs": ["test/green_specs/fibonacci.sloth"]
+    }
+  ]
+}
