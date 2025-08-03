@@ -19,9 +19,9 @@ jobs:
       - name: Install OS deps
         shell: bash -exo pipefail {0}
         run: |
-          apt-get update
-          apt-get --yes upgrade
-          apt-get install --yes golang
+          sudo apt-get update
+          sudo apt-get --yes upgrade
+          sudo apt-get install --yes golang
 
       - name: Chmod dirs
         shell: bash -exuo pipefail {0}
