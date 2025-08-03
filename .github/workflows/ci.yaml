@@ -34,8 +34,10 @@ jobs:
         shell: bash -exuo pipefail {0}
         run: |
           REF='942dea4277b6a8743a192afa8ab4e4e549ebc398'
-          git clone https://github.com/christopherfujino/doc-builder -b "$REF" ./db
+          git clone https://github.com/christopherfujino/doc-builder ./db
           cd db
+          git fetch
+          git checkout "$REF"
           go build . -o db
           #VERSION='0.4'
           #ARCH='amd64'
