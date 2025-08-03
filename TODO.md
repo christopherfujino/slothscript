@@ -1,5 +1,6 @@
 ## TODO
 - [ ] Nicer lambdas
+- [ ] assertions
 - [ ] List mutation methods
 - [ ] Modules
 - [ ] Structs/Methods

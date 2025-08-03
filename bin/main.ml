@@ -42,7 +42,6 @@ let interpreter env_opt ctx_opt =
         (read_all [@tailcall]) buf
   in
   let program = read_all (Buffer.create 16) in
-  print_endline program;
   let _, ir = Compiler.Main.parse env program in
   let _ = Interpreter.Interpret.interpret_prog ctx ir in
   ()

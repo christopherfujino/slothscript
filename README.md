@@ -19,9 +19,9 @@ print(fib(20))
 Variables:
 
 ```sloth
-let x = 1 + 1;
+let x = 1 + 1
 
-print(x);
+print(x)
 ```
 
 First-class functions:
