@@ -38,7 +38,8 @@ jobs:
           cd db
           git fetch
           git checkout "$REF"
-          go build . -o db
+          go get .
+          go build -o db .
           #VERSION='0.4'
           #ARCH='amd64'
           #REMOTE="https://github.com/christopherfujino/doc-builder/releases/download/v${VERSION}/db-${VERSION}-linux-${ARCH}.tar.gz"
