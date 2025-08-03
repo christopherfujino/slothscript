@@ -33,7 +33,7 @@ jobs:
       - name: Download doc-builder
         shell: bash -exuo pipefail {0}
         run: |
-          REF='942dea4277b6a8743a192afa8ab4e4e549ebc398'
+          REF='46db2d951bdb0467581ca6d3a03494dd4e5c259d'
           git clone https://github.com/christopherfujino/doc-builder ./db
           cd db
           git fetch
