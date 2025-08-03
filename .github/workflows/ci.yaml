@@ -54,6 +54,7 @@ jobs:
           make build
           make check-format
           make test
+          make docs
       # TODO use tool/ci.exe
       #  run: |
       #    eval $(opam env --switch=default-switch)
