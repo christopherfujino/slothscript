@@ -63,6 +63,11 @@ format:
 check-format:
 	dune fmt --preview
 
+.PHONY: docs
+docs:
+	db -ensure
+
 .PHONY: clean
 clean:
 	dune clean
+	rm -f README.md

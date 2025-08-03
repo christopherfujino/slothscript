@@ -16,12 +16,12 @@ jobs:
       image: ocaml/opam:debian-12-ocaml-5.3
 
     steps:
-      #- name: Install OS deps
-      #  shell: bash -exo pipefail {0}
-      #  run: |
-      #    apt-get update
-      #    apt-get --yes upgrade
-      #    apt-get install --yes make opam git
+      - name: Install OS deps
+        shell: bash -exo pipefail {0}
+        run: |
+          sudo apt-get update
+          sudo apt-get --yes upgrade
+          sudo apt-get install --yes golang
 
       - name: Chmod dirs
         shell: bash -exuo pipefail {0}
@@ -29,6 +29,23 @@ jobs:
           sudo chown "$(id -u):$(id -g)" "$GITHUB_WORKSPACE"
           sudo chmod -R 777 "$GITHUB_WORKSPACE"
           sudo chmod -R 777 "$RUNNER_TEMP"
+
+      - name: Download doc-builder
+        shell: bash -exuo pipefail {0}
+        run: |
+          REF='da72ac8ccda2b1f088d86ca7dcbcfe70ea81a67c'
+          git clone https://github.com/christopherfujino/doc-builder ./db
+          cd db
+          git fetch
+          git checkout "$REF"
+          go get .
+          go build -o db .
+          #VERSION='0.4'
+          #ARCH='amd64'
+          #REMOTE="https://github.com/christopherfujino/doc-builder/releases/download/v${VERSION}/db-${VERSION}-linux-${ARCH}.tar.gz"
+          #curl -L "$REMOTE" -o db.tar.gz
+          #tar xvzf db.tar.gz
+          #mv "./db-${VERSION}-linux-${ARCH}" ./db
 
       - name: Check out repo
         shell: bash -exuo pipefail {0}
@@ -49,6 +66,8 @@ jobs:
         working-directory: ./slothscript
         run: |
           eval $(opam env --switch=default-switch)
+          PATH="../db:$PATH"
+          make docs
           make yolos
           make get
           make build

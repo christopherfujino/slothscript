@@ -3,6 +3,7 @@ var reference
 
 ### Program
 let x = 1 + 1;
+
 print(x);
 
 ### Ast
