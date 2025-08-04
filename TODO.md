@@ -1,9 +1,12 @@
 ## TODO
-- [ ] Nicer lambdas
+- [ ] For-in loops?
+- [ ] comments
 - [ ] assertions
+- [ ] Nicer lambdas
+- [ ] Do blocks
+- [ ] Structs/Methods
 - [ ] List mutation methods
 - [ ] Modules
-- [ ] Structs/Methods
 - [ ] Standard Library
 - [ ] README.md
 - [ ] Security policy
@@ -12,7 +15,6 @@
 - [ ] Stack traces; depends on storing locs in runtime values
 - [ ] Pattern matching
 - [ ] Formatter
-- [ ] For-in loops?
 - [ ] Early return from functions?
 
 ## Done
