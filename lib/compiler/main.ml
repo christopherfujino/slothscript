@@ -71,7 +71,7 @@ let to_s token =
   | STRING_MIDDLE s -> Printf.sprintf "STRING_MIDDLE(%s)" s
   | STRING_FULL s -> Printf.sprintf "STRING_FULL(%s)" s
   | STRING_END s -> Printf.sprintf "STRING_END(%s)" s
-  | NUM n -> Printf.sprintf "NUM(%f)" n
+  | NUM (n, _) -> Printf.sprintf "NUM(%f)" n
   | ID s -> Printf.sprintf "ID(%s)" s
 
 let debug buf prev =

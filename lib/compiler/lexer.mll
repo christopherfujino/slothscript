@@ -100,7 +100,7 @@ rule read last_token =
   *)
   (* Lexing.lexeme means return the string that matched the pattern *)
   | id { last_token := Some (ID (Lexing.lexeme lexbuf)); Option.get !last_token }
-  | num { last_token := Some (NUM (float_of_string (Lexing.lexeme lexbuf))); Option.get !last_token }
+  | num { last_token := Some (NUM (float_of_string (Lexing.lexeme lexbuf), lexbuf.lex_curr_p)); Option.get !last_token }
   | _ { raise (SyntaxError (Lexing.lexeme lexbuf))}
   (* Here `eof` is a special regex built into ocamllex *)
   | eof {

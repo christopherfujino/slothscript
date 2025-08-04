@@ -7,7 +7,7 @@
 
 (* Declarations *)
 (* In OCaml, `float` is a 64-bit IEEE float *)
-%token <float> NUM
+%token <float * Lexing.position> NUM
 %token <string> ID
 %token <string> STRING_FULL
 %token <string> STRING_START
@@ -151,7 +151,7 @@ expr3:
 (* Primary - literals or grouping *)
 expr4:
   | l = list_literals { l }
-  | f = NUM { Num f }
+  | f = NUM { let f, _ = f in Num f }
   | TRUE { Bool true }
   | FALSE { Bool false }
   | NULL { Null }
