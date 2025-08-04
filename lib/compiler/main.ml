@@ -38,12 +38,13 @@ let parse env line =
   in
   Optimizer.optimize_prog env decls
 
+(* TODO figure out how to derive this *)
 let to_s token =
   let open Parser in
   match token with
   | COLON -> "COLON"
   | SEMICOLON -> "SEMICOLON"
-  | TRUE -> "TRUE"
+  | TRUE _ -> "TRUE"
   | RPAREN -> "RPAREN"
   | RCURLY -> "RCURLY"
   | RBRACKET -> "RBRACKET"

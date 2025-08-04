@@ -50,7 +50,7 @@ rule read last_token =
         | _ -> (read [@tailcall]) last_token lexbuf
     )
   }
-  | "true" { last_token := Some TRUE; Option.get !last_token }
+  | "true" { last_token := Some (TRUE lexbuf.lex_curr_p); TRUE lexbuf.lex_curr_p }
   | "false" { last_token := Some FALSE; Option.get !last_token }
   | "null" { last_token := Some NULL; Option.get !last_token }
   | "let" { last_token := Some LET; Option.get !last_token }

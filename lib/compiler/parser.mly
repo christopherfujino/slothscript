@@ -13,7 +13,7 @@
 %token <string> STRING_START
 %token <string> STRING_MIDDLE
 %token <string> STRING_END
-%token TRUE
+%token <Lexing.position> TRUE
 %token FALSE
 %token NULL
 %token PLUS
