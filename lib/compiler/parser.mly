@@ -3,47 +3,44 @@
 (* header *)
 %{
   open Ast
+  open Sloth_common.Position
 %}
 
 (* Declarations *)
 (* In OCaml, `float` is a 64-bit IEEE float *)
 %token <float * Lexing.position> NUM
-%token <string> ID
-%token <string> STRING_FULL
-%token <string> STRING_START
-%token <string> STRING_MIDDLE
-%token <string> STRING_END
+%token <string * Lexing.position> ID
+%token <string * Lexing.position> STRING_FULL
+%token <string * Lexing.position> STRING_START
+%token <string * Lexing.position> STRING_MIDDLE
+%token <string * Lexing.position> STRING_END
 %token <Lexing.position> TRUE
-%token FALSE
-%token NULL
-%token PLUS
-%token MINUS
-%token PRODUCT
-%token DIVIDE
-%token LET
-%token FOR
-%token EQUALS
-%token EOF
-%token COLON
-%token SEMICOLON
-%token FUNC
-%token LCURLY
-%token RCURLY
-%token LPAREN
-%token RPAREN
-%token LBRACKET
-%token RBRACKET
-%token COMMA
-%token IF
-%token ELSE
-%token LEQ
-%token LESS
-(*
-%token DOT
-%token TIMES
-%token IN
-%token THEN
-  *)
+%token <Lexing.position> FALSE
+%token <Lexing.position> NULL
+%token <Lexing.position> LET
+%token <Lexing.position> FUNC
+%token <Lexing.position> IF
+%token <Lexing.position> ELSE
+%token <Lexing.position> FOR
+%token <Lexing.position> PLUS
+%token <Lexing.position> MINUS
+%token <Lexing.position> EQUALS
+%token <Lexing.position> PRODUCT
+%token <Lexing.position> DIVIDE
+%token <Lexing.position> SEMICOLON
+
+%token <Lexing.position> COLON
+%token <Lexing.position> LCURLY
+%token <Lexing.position> RCURLY
+%token <Lexing.position> LPAREN
+%token <Lexing.position> RPAREN
+%token <Lexing.position> LBRACKET
+%token <Lexing.position> RBRACKET
+%token <Lexing.position> COMMA
+%token <Lexing.position> LEQ
+%token <Lexing.position> LESS
+
+%token <Lexing.position> EOF
 
 (* Disambiguate precedence and associativity *)
 (* These are optional, and could have been done exclusively with production
@@ -97,7 +94,10 @@ stmt:
 stmt_sans_semicolon:
   | e1 = expr1 { ExprStmt e1 }
   | LET; id = ID; EQUALS; e1 = expr1 { LetStmt (id, e1) }
-  | id = ID; EQUALS; e1 = expr1 { AssignStmt (id, e1) }
+  | id_pos = ID; EQUALS; e1 = expr1 {
+    (* TODO use position *)
+    let (id, _) = id_pos in
+    AssignStmt (id, e1) }
   | subscript = subscript; EQUALS; rhs = expr1 { SubAssignStmt {subscript; value=rhs } }
   ;
 
@@ -151,7 +151,7 @@ expr3:
 (* Primary - literals or grouping *)
 expr4:
   | l = list_literals { l }
-  | f = NUM { let f, _ = f in Num f }
+  | f = NUM { let f, pos = f in Num (f, t_of_lexing_position pos) }
   | TRUE { Bool true }
   | FALSE { Bool false }
   | NULL { Null }

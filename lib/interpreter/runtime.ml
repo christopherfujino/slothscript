@@ -50,15 +50,18 @@ let rec to_s = function
       ^ "}"
   | Func _ -> "func(TODO)"
 
-let num_of_val v =
+let num_of_val v pos =
   match v with
   | Num f -> f
-  | _ -> Printf.sprintf "Expected a Num but got %s" (to_s v) |> failwith
+  | _ ->
+      Printf.sprintf "Expected a Num but got %s at %s" (to_s v)
+        (Sloth_common.Position.string_of_t pos)
+      |> failwith
 
-let int_of_val v =
-  let f = num_of_val v in
+let int_of_val v pos =
+  let f = num_of_val v pos in
   if Float.is_integer f then Int.of_float f
-  else Printf.sprintf "The Num value %f is not an integer" f |> failwith
+  else Printf.sprintf "The Num value %f is not an integer" f |> Common.failure pos
 
 let bool_of_val b =
   match b with

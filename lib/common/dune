@@ -1,0 +1,5 @@
+(library
+  (name sloth_common)
+  (libraries core)
+  (preprocess (pps ppx_jane))
+  )

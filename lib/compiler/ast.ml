@@ -19,7 +19,7 @@ and stmt =
 [@@deriving sexp]
 
 and expr =
-  | Num of float
+  | Num of float * Sloth_common.Position.t
   | Bool of bool
   | Null
   | String of string_parts
@@ -57,7 +57,7 @@ and operator = Add [@@deriving sexp]
 
 let num_of_expr expr =
   match expr with
-  | Num f -> f
+  | Num (f, _) -> f
   | _ ->
       let sexp = sexp_of_expr expr in
       let s = Sexp.to_string sexp in

@@ -1,26 +1,31 @@
 open Core
 
+type lex_filter_state =
+  | False
+  | True of Lexing.position
+
 (* insert semicolon before EOF *)
 let make_lex_filter () =
   let r = ref None in
   let last_token = ref None in
-  let should_spit_eof = ref false in
+  let should_spit_eof = ref False in
   (* insert semicolon before EOF *)
   fun buf ->
     let open Parser in
-    if !should_spit_eof then EOF
-    else
+    match !should_spit_eof with
+    | True pos -> EOF pos
+    | False ->
       let token = Lexer.read r buf in
       match token with
-      | EOF -> (
+      | EOF pos -> (
           match !last_token with
           | None -> EOF
           | Some last_token -> (
               match last_token with
               | SEMICOLON -> EOF
               | _ ->
-                  should_spit_eof := true;
-                  SEMICOLON))
+                  should_spit_eof := True pos;
+                  SEMICOLON pos))
       | _ ->
           last_token := Some token;
           token

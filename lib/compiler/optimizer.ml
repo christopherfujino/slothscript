@@ -17,7 +17,7 @@ and stmt =
 [@@deriving sexp]
 
 and expr =
-  | Num of float
+  | Num of float * Sloth_common.Position.t
   | Bool of bool
   | Null
   | String of string_parts list
@@ -123,7 +123,7 @@ and optimize_operator (o : Ast.operator) : operator = match o with Add -> Add
 
 and optimize_expr (env : Environment.t) (e : Ast.expr) : expr =
   match e with
-  | Num f -> Num f
+  | Num (f, pos) -> Num (f, pos)
   | Bool b -> Bool b
   | Null -> Null
   | String s -> optimize_string env s

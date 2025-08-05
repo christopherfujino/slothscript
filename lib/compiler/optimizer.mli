@@ -14,7 +14,7 @@ and stmt = private
 [@@deriving sexp]
 
 and expr = private
-  | Num of float
+  | Num of float * Sloth_common.Position.t
   | Bool of bool
   | Null
   | String of string_parts list

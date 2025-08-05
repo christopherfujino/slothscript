@@ -56,8 +56,8 @@ and interpret_stmt (ctx : Context.t) stmt =
           | HashMap tbl ->
               Stdlib.Hashtbl.add tbl subscript' value';
               (ctx, value')
-          | List elements ->
-              let i = Runtime.int_of_val subscript' in
+          | List (elements, pos) ->
+              let i = Runtime.int_of_val subscript' pos in
               Array.set elements i value';
               (ctx, receiver')
           | _ ->
@@ -108,7 +108,7 @@ and interpret_cond ctx cond =
 and interpret_expr ctx expr =
   let open Compiler.Optimizer in
   match expr with
-  | Num f -> Runtime.Num f
+  | Num (f, pos) -> Runtime.Num (f, pos)
   | String parts ->
       let buf = Buffer.create 128 in
       List.iter parts ~f:(fun part ->
@@ -141,16 +141,16 @@ and interpret_expr ctx expr =
       match receiver' with
       | Runtime.List elements -> (
           match subscript' with
-          | Runtime.Num idx ->
+          | Runtime.Num (idx, pos) ->
               if Float.is_integer idx then
                 let i = Stdlib.int_of_float idx in
                 Array.get elements i
               else
-                Common.Failure
+                Common.failure
                   (Printf.sprintf
                      "Lists can only be subscripted by integers, you used %s"
                      (Runtime.to_s subscript'))
-                |> raise
+                  pos
           | _ ->
               Common.Failure
                 (Runtime.to_s subscript'
