@@ -93,10 +93,12 @@ stmt:
 (* Used in for loops *)
 stmt_sans_semicolon:
   | e1 = expr1 { ExprStmt e1 }
-  | LET; id = ID; EQUALS; e1 = expr1 { LetStmt (id, e1) }
-  | id_pos = ID; EQUALS; e1 = expr1 {
+  | LET; id = ID; EQUALS; e1 = expr1 {
+    let (id, _) = id in
+    LetStmt (id, e1) }
+  | id = ID; EQUALS; e1 = expr1 {
     (* TODO use position *)
-    let (id, _) = id_pos in
+    let (id, _) = id in
     AssignStmt (id, e1) }
   | subscript = subscript; EQUALS; rhs = expr1 { SubAssignStmt {subscript; value=rhs } }
   ;
@@ -172,7 +174,7 @@ expr4:
     String (StartStringInterp (ss, Option.get cont2_opt))
   }
   | s = STRING_FULL { String (FullString s) }
-  | i = ID { IdRef i }
+  | i = ID { let (i, _) = i in IdRef i }
   | LPAREN; e = expr1; RPAREN { e }
   | h = hash_literals { h }
   ;
