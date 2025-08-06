@@ -10,7 +10,11 @@ let failure msg pos =
 type prog = decl list
 
 and decl =
-  | FuncDecl of { name : string; parameters : (string * Sloth_common.Position.t) list; block : stmt list }
+  | FuncDecl of {
+      name : string;
+      parameters : (string * Sloth_common.Position.t) list;
+      block : stmt list;
+    }
   | StmtDecl of stmt
 
 and stmt =

@@ -6,7 +6,12 @@ type func_stmt_t = {
   block : stmt list;
 }
 
-and func_expr_t = { parameters : (string * Sloth_common.Position.t) list; block : stmt list; pos : Sloth_common.Position.t }
+and func_expr_t = {
+  parameters : (string * Sloth_common.Position.t) list;
+  block : stmt list;
+  pos : Sloth_common.Position.t;
+}
+
 and prog = stmt list [@@deriving sexp]
 and decl = FuncDecl of func_stmt_t | StmtDecl of stmt
 
@@ -31,11 +36,11 @@ and expr =
   | IdRef of string * Sloth_common.Position.t
   | FuncInvoc of expr * expr list * Sloth_common.Position.t
   | MethodInvoc of {
-    receiver : expr;
-    target : string;
-    args : expr list;
-    pos : Sloth_common.Position.t;
-  }
+      receiver : expr;
+      target : string;
+      args : expr list;
+      pos : Sloth_common.Position.t;
+    }
   | FuncExpr of func_expr_t
   | IfExpr of cond_cont * Sloth_common.Position.t
 [@@deriving sexp]
@@ -46,7 +51,8 @@ and string_parts =
 [@@deriving sexp]
 
 and string_continuation =
-  | MiddleStringInterp of expr * string * string_continuation * Sloth_common.Position.t
+  | MiddleStringInterp of
+      expr * string * string_continuation * Sloth_common.Position.t
   | EndStringInterp of expr * string * Sloth_common.Position.t
 [@@deriving sexp]
 

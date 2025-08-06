@@ -54,16 +54,12 @@ let rec to_s = function
 let num_of_val pos v =
   match v with
   | Num f -> f
-  | _ ->
-      Printf.sprintf "Expected a Num but got %s"
-        (to_s v)
-      |> failure pos
+  | _ -> Printf.sprintf "Expected a Num but got %s" (to_s v) |> failure pos
 
 let int_of_val pos v =
   let f = num_of_val pos v in
   if Float.is_integer f then Int.of_float f
-  else
-    Printf.sprintf "The Num value %f is not an integer" f |> failure pos
+  else Printf.sprintf "The Num value %f is not an integer" f |> failure pos
 
 let bool_of_val pos b =
   match b with

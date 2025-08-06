@@ -1,7 +1,11 @@
 exception Failure of string
 
 type decl = private
-  | FuncDecl of { name : string; parameters : (string * Sloth_common.Position.t) list; block : stmt list }
+  | FuncDecl of {
+      name : string;
+      parameters : (string * Sloth_common.Position.t) list;
+      block : stmt list;
+    }
   | StmtDecl of stmt
 [@@deriving sexp]
 
