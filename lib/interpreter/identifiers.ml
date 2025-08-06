@@ -1,4 +1,5 @@
 open Core
+open Common
 
 (* This type is polymorphic to avoid module cycle with Runtime *)
 type 'a t = { previous : 'a t option; values : (string, 'a) Hashtbl.t }
@@ -26,7 +27,7 @@ let rec get_opt env id =
       | Some prev -> (get_opt [@tailcall]) prev id)
   | Some v -> Some v
 
-let get env id =
+let get ~pos env id =
   match get_opt env id with
   | Some v -> v
   | None ->
@@ -45,7 +46,7 @@ let get env id =
       in
       walk_env env;
       let msg = Buffer.contents buf in
-      raise (Common.Failure msg)
+      failure pos msg
 
 let rec reassign env id v =
   match Hashtbl.find env.values id with

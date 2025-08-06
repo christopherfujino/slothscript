@@ -3,7 +3,7 @@ type 'a t
 val create : unit -> 'a t
 val push_empty : 'a t -> 'a t
 
-val get : 'a t -> string -> 'a
+val get : pos:Sloth_common.Position.t -> 'a t -> string -> 'a
 (** Will throw if the identifier cannot be found in the stack. *)
 
 val bind : 'a t -> string -> 'a -> unit

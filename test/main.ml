@@ -96,14 +96,16 @@ let make_failing_test spec =
     in
     assert_failure msg
   with
-  | Compiler.Lexer.SyntaxError err -> (
+  | Compiler.Lexer.SyntaxError (err, pos) -> (
       match spec.failure with
       | Some expectation -> (
           match expectation with
           | Scanner_error -> ()
           | _ ->
+              let open Sloth_common.Position in
               Printf.sprintf
-                "Expected %s but got Compiler.Lexer.SyntaxError(%s)"
+                "[%s] Expected %s but got Compiler.Lexer.SyntaxError(%s)"
+                (t_of_lexing_position pos |> string_of_t)
                 (string_of_failure expectation)
                 err
               |> failwith)

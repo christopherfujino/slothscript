@@ -1,4 +1,5 @@
 open Core
+open Common
 
 type t =
   | String of string
@@ -50,20 +51,21 @@ let rec to_s = function
       ^ "}"
   | Func _ -> "func(TODO)"
 
-let num_of_val v pos =
+let num_of_val pos v =
   match v with
   | Num f -> f
   | _ ->
-      Printf.sprintf "Expected a Num but got %s at %s" (to_s v)
-        (Sloth_common.Position.string_of_t pos)
-      |> failwith
+      Printf.sprintf "Expected a Num but got %s"
+        (to_s v)
+      |> failure pos
 
-let int_of_val v pos =
-  let f = num_of_val v pos in
+let int_of_val pos v =
+  let f = num_of_val pos v in
   if Float.is_integer f then Int.of_float f
-  else Printf.sprintf "The Num value %f is not an integer" f |> Common.failure pos
+  else
+    Printf.sprintf "The Num value %f is not an integer" f |> failure pos
 
-let bool_of_val b =
+let bool_of_val pos b =
   match b with
   | Bool b' -> b'
-  | _ -> Printf.sprintf "Expected a Bool but got %s" (to_s b) |> failwith
+  | _ -> Printf.sprintf "Expected a Bool but got %s" (to_s b) |> failure pos

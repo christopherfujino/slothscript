@@ -45,47 +45,48 @@ let parse env line =
 let to_s token =
   let open Parser in
   match token with
-  | COLON -> "COLON"
-  | SEMICOLON -> "SEMICOLON"
+  | COLON _ -> "COLON"
+  | SEMICOLON _ -> "SEMICOLON"
   | TRUE _ -> "TRUE"
-  | RPAREN -> "RPAREN"
-  | RCURLY -> "RCURLY"
-  | RBRACKET -> "RBRACKET"
-  | PRODUCT -> "PRODUCT"
-  | PLUS -> "PLUS"
-  | NULL -> "NULL"
-  | MINUS -> "MINUS"
-  | LPAREN -> "LPAREN"
-  | LET -> "LET"
-  | LESS -> "LESS"
-  | LEQ -> "LEQ"
-  | LCURLY -> "LCURLY"
-  | LBRACKET -> "LBRACKET"
-  | IF -> "IF"
-  | FUNC -> "FUNC"
-  | FOR -> "FOR"
-  | FALSE -> "FALSE"
-  | EQUALS -> "EQUALS"
-  | EOF -> "EOF"
-  | ELSE -> "ELSE"
-  | DIVIDE -> "DIVIDE"
-  | COMMA -> "COMMA"
-  | STRING_START s -> Printf.sprintf "STRING_START(%s)" s
-  | STRING_MIDDLE s -> Printf.sprintf "STRING_MIDDLE(%s)" s
-  | STRING_FULL s -> Printf.sprintf "STRING_FULL(%s)" s
-  | STRING_END s -> Printf.sprintf "STRING_END(%s)" s
+  | RPAREN _ -> "RPAREN"
+  | RCURLY _ -> "RCURLY"
+  | RBRACKET _ -> "RBRACKET"
+  | PRODUCT _ -> "PRODUCT"
+  | PLUS _ -> "PLUS"
+  | NULL _ -> "NULL"
+  | MINUS _ -> "MINUS"
+  | LPAREN _ -> "LPAREN"
+  | LET _ -> "LET"
+  | LESS _ -> "LESS"
+  | LEQ _ -> "LEQ"
+  | LCURLY _ -> "LCURLY"
+  | LBRACKET _ -> "LBRACKET"
+  | IF _ -> "IF"
+  | FUNC _ -> "FUNC"
+  | FOR _ -> "FOR"
+  | FALSE _ -> "FALSE"
+  | EQUALS _ -> "EQUALS"
+  | EOF _ -> "EOF"
+  | ELSE _ -> "ELSE"
+  | DIVIDE _ -> "DIVIDE"
+  | COMMA _ -> "COMMA"
+  | STRING_START (s, _) -> Printf.sprintf "STRING_START(%s)" s
+  | STRING_MIDDLE (s, _) -> Printf.sprintf "STRING_MIDDLE(%s)" s
+  | STRING_FULL (s, _) -> Printf.sprintf "STRING_FULL(%s)" s
+  | STRING_END (s, _) -> Printf.sprintf "STRING_END(%s)" s
   | NUM (n, _) -> Printf.sprintf "NUM(%f)" n
-  | ID s -> Printf.sprintf "ID(%s)" s
+  | ID (s, _) -> Printf.sprintf "ID(%s)" s
 
 let debug buf prev =
   let lex_filter = make_lex_filter () in
   let rec inner buf idx r prev =
     let cur = lex_filter buf in
-    if phys_equal cur Parser.EOF then (
-      let prev = List.rev prev in
-      print_endline "[Start]";
-      List.iter prev ~f:(fun t -> to_s t |> print_endline);
-      ())
-    else (inner [@tailcall]) buf (idx + 1) r (cur :: prev)
+    match cur with
+    | Parser.EOF _ ->
+        let prev = List.rev prev in
+        print_endline "[Start]";
+        List.iter prev ~f:(fun t -> to_s t |> print_endline);
+        ()
+    | _ -> (inner [@tailcall]) buf (idx + 1) r (cur :: prev)
   in
   inner buf 0 (ref None) prev
