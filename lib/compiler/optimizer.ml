@@ -33,8 +33,6 @@ and expr =
   | List of expr list * Sloth_common.Position.t
   | HashMap of (expr * expr) list * Sloth_common.Position.t
   | Subscript of expr * expr * Sloth_common.Position.t
-  (* TODO this should be infix invoc expression, storing a lexeme string *)
-  | Binary of operator * expr * expr * Sloth_common.Position.t
   | IdRef of string * Sloth_common.Position.t
   | FuncInvoc of expr * expr list * Sloth_common.Position.t
   | MethodInvoc of {
@@ -139,8 +137,6 @@ and optimize_block env rev_stmts =
   let _, rev_stmts2 = List.fold_left ~init:(env, []) ~f:cb stmts in
   List.rev rev_stmts2
 
-and optimize_operator (o : Ast.operator) : operator = match o with Add -> Add
-
 and optimize_expr (env : Environment.t) (e : Ast.expr) : expr =
   match e with
   | Num (f, pos) -> Num (f, pos)
@@ -161,10 +157,6 @@ and optimize_expr (env : Environment.t) (e : Ast.expr) : expr =
       let receiver' = optimize_expr env receiver in
       let sub' = optimize_expr env sub in
       Subscript (receiver', sub', pos)
-  | Binary (o, e1, e2, pos) ->
-      let e1 = optimize_expr env e1 in
-      let e2 = optimize_expr env e2 in
-      Binary (optimize_operator o, e1, e2, pos)
   | FuncInvoc (receiver, args, pos) ->
       let rev_args = List.rev args in
       let rev_mapped_args = List.map rev_args ~f:(optimize_expr env) in

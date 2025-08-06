@@ -167,13 +167,6 @@ and interpret_expr ctx expr =
             (Common.Failure
                (Printf.sprintf "Cannot subscript the value %s"
                   (Runtime.to_s receiver'))))
-  | Binary (op, lhs, rhs, _) -> (
-      match op with
-      | Add ->
-          let dummy = Sloth_common.Position.dummy in
-          let left_val = Runtime.num_of_val dummy (interpret_expr ctx lhs) in
-          let right_val = Runtime.num_of_val dummy (interpret_expr ctx rhs) in
-          Runtime.Num (left_val +. right_val))
   | IdRef (i, pos) -> Identifiers.get ~pos ctx.identifiers i
   | MethodInvoc { receiver; target; args; pos } -> (
       let rt_receiver = interpret_expr ctx receiver in
