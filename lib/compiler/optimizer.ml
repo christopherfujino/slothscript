@@ -60,8 +60,9 @@ and cond_cont =
       conditional : expr;
       block : stmt list;
       continuation : cond_cont option;
+      pos : Sloth_common.Position.t;
     }
-  | ElseCont of stmt list
+  | ElseCont of stmt list * Sloth_common.Position.t
 
 and operator = Add [@@deriving sexp]
 
@@ -205,7 +206,7 @@ and optimize_string_continuation env cont =
 
 and optimize_continuation env c =
   match c with
-  | Ast.IfCont { conditional; block; continuation } ->
+  | Ast.IfCont { conditional; block; continuation; pos } ->
       let conditional = optimize_expr env conditional in
       let env2 = Environment.push_empty env in
       let block = optimize_block env2 block in
@@ -213,9 +214,9 @@ and optimize_continuation env c =
         Option.map continuation ~f:(optimize_continuation env)
       in
       IfCont { conditional; block; continuation }
-  | Ast.ElseCont stmts ->
+  | Ast.ElseCont (stmts, pos) ->
       let env2 = Environment.push_empty env in
       let optimized_stmts = optimize_block env2 stmts in
-      ElseCont optimized_stmts
+      ElseCont (optimized_stmts, pos)
 
 let prog_to_str stmts = sexp_of_prog stmts |> Sexp.to_string

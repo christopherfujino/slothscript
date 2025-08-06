@@ -210,11 +210,11 @@ hash_literals:
   (* Allow single line literal without trailing comma *)
   | pos = LCURLY; k = expr4; COLON; v = expr1; RCURLY {
     let pos = Sloth_common.Position.t_of_lexing_position pos in
-    HashMap [(k, v)]
+    HashMap ([(k, v)], pos)
   }
   | pos = LCURLY; p = hash_literal_pair; RCURLY {
     let pos = Sloth_common.Position.t_of_lexing_position pos in
-    HashMap p
+    HashMap (p, pos)
   }
   ;
 
