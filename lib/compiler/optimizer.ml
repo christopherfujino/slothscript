@@ -2,6 +2,11 @@ open Core
 
 exception Failure of string
 
+let failure msg pos =
+  let pos_msg = Sloth_common.Position.string_of_t pos in
+  let msg2 = Printf.sprintf "[%s] Optimizer error: %s" pos_msg msg in
+  raise (Failure msg2)
+
 type prog = decl list
 
 and decl =
@@ -18,26 +23,35 @@ and stmt =
 
 and expr =
   | Num of float * Sloth_common.Position.t
-  | Bool of bool
-  | Null
-  | String of string_parts list
-  | List of expr list
-  | HashMap of (expr * expr) list
-  | Subscript of expr * expr
+  | Bool of bool * Sloth_common.Position.t
+  | Null of Sloth_common.Position.t
+  | String of string_parts list * Sloth_common.Position.t
+  | List of expr list * Sloth_common.Position.t
+  | HashMap of (expr * expr) list * Sloth_common.Position.t
+  | Subscript of expr * expr * Sloth_common.Position.t
   (* TODO this should be infix invoc expression, storing a lexeme string *)
-  | Binary of operator * expr * expr
-  | IdRef of string
-  | FuncInvoc of expr * expr list
-  | MethodInvoc of { receiver : expr; target : string; args : expr list }
-  | FuncExpr of { parameters : string list; block : stmt list }
-  | IfExpr of cond_cont
+  | Binary of operator * expr * expr * Sloth_common.Position.t
+  | IdRef of string * Sloth_common.Position.t
+  | FuncInvoc of expr * expr list * Sloth_common.Position.t
+  | MethodInvoc of {
+      receiver : expr;
+      target : string;
+      args : expr list;
+      pos : Sloth_common.Position.t;
+    }
+  | FuncExpr of {
+      parameters : string list;
+      block : stmt list;
+      pos : Sloth_common.Position.t;
+    }
+  | IfExpr of cond_cont * Sloth_common.Position.t
 [@@deriving sexp]
 
 and string_parts =
-  | FullString of string
-  | StartStringInterp of string
-  | MiddleStringInterp of string
-  | EndStringInterp of string
+  | FullString of string * Sloth_common.Position.t
+  | StartStringInterp of string * Sloth_common.Position.t
+  | MiddleStringInterp of string * Sloth_common.Position.t
+  | EndStringInterp of string * Sloth_common.Position.t
   | ExpressionStringInterp of expr
 [@@deriving sexp]
 
@@ -124,39 +138,39 @@ and optimize_operator (o : Ast.operator) : operator = match o with Add -> Add
 and optimize_expr (env : Environment.t) (e : Ast.expr) : expr =
   match e with
   | Num (f, pos) -> Num (f, pos)
-  | Bool b -> Bool b
-  | Null -> Null
-  | String s -> optimize_string env s
-  | List els ->
+  | Bool (b, pos) -> Bool (b, pos)
+  | Null pos -> Null pos
+  | String (s, pos) -> optimize_string env s pos
+  | List (els, pos) ->
       let rev_opt_els = List.rev els |> List.map ~f:(optimize_expr env) in
-      List rev_opt_els
-  | HashMap kvps ->
+      List (rev_opt_els, pos)
+  | HashMap (kvps, pos) ->
       (* TODO use a Hashtbl? *)
       let kvps' =
         List.map kvps ~f:(fun (k, v) ->
             (optimize_expr env k, optimize_expr env v))
       in
-      HashMap kvps'
-  | Subscript (receiver, sub) ->
+      HashMap (kvps', pos)
+  | Subscript (receiver, sub, pos) ->
       let receiver' = optimize_expr env receiver in
       let sub' = optimize_expr env sub in
-      Subscript (receiver', sub')
-  | Binary (o, e1, e2) ->
+      Subscript (receiver', sub', pos)
+  | Binary (o, e1, e2, pos) ->
       let e1 = optimize_expr env e1 in
       let e2 = optimize_expr env e2 in
-      Binary (optimize_operator o, e1, e2)
-  | FuncInvoc (receiver, args) ->
+      Binary (optimize_operator o, e1, e2, pos)
+  | FuncInvoc (receiver, args, pos) ->
       let rev_args = List.rev args in
       let rev_mapped_args = List.map rev_args ~f:(optimize_expr env) in
-      FuncInvoc (optimize_expr env receiver, rev_mapped_args)
-  | IdRef name -> (
+      FuncInvoc (optimize_expr env receiver, rev_mapped_args, pos)
+  | IdRef (name, pos) -> (
       let name_opt = Environment.find env name in
       match name_opt with
       | None ->
           let msg = Printf.sprintf "Undeclared identifier %s" name in
           raise (Failure msg)
-      | Some _ -> IdRef name)
-  | FuncExpr { parameters; block } ->
+      | Some _ -> IdRef (name, pos))
+  | FuncExpr { parameters; block; pos } ->
       let parameters2 = List.rev parameters in
       let env2 = Environment.push_empty env in
       let env3 =
@@ -164,29 +178,30 @@ and optimize_expr (env : Environment.t) (e : Ast.expr) : expr =
             Environment.bind env param)
       in
       let block2 = optimize_block env3 block in
-      FuncExpr { parameters = parameters2; block = block2 }
-  | IfExpr cond_cont -> IfExpr (optimize_continuation env cond_cont)
-  | MethodInvoc { target; receiver; args } ->
+      FuncExpr { parameters = parameters2; block = block2; pos }
+  | IfExpr (cond_cont, pos) -> IfExpr (optimize_continuation env cond_cont, pos)
+  | MethodInvoc { target; receiver; args; pos } ->
       let optim_receiver = optimize_expr env receiver in
       let optim_args = List.rev args |> List.map ~f:(optimize_expr env) in
-      MethodInvoc { target; receiver = optim_receiver; args = optim_args }
+      MethodInvoc { target; receiver = optim_receiver; args = optim_args; pos }
 
-and optimize_string env s =
+and optimize_string env s pos =
   String
-    (match s with
-    | FullString s' -> [ FullString s' ]
-    | StartStringInterp (s', cont1) ->
-        let cont2 = optimize_string_continuation env cont1 in
-        StartStringInterp s' :: cont2)
+    ( (match s with
+      | FullString (s', pos) -> [ FullString (s', pos) ]
+      | StartStringInterp (s', cont1, pos) ->
+          let cont2 = optimize_string_continuation env cont1 in
+          StartStringInterp (s', pos) :: cont2),
+      pos )
 
 and optimize_string_continuation env cont =
   match cont with
-  | MiddleStringInterp (e, s, cont2) ->
+  | MiddleStringInterp (e, s, cont2, pos) ->
       let e2 = optimize_expr env e in
       let cont3 = optimize_string_continuation env cont2 in
-      ExpressionStringInterp e2 :: MiddleStringInterp s :: cont3
-  | EndStringInterp (e, s) ->
-      [ ExpressionStringInterp (optimize_expr env e); EndStringInterp s ]
+      ExpressionStringInterp e2 :: MiddleStringInterp (s, pos) :: cont3
+  | EndStringInterp (e, s, pos) ->
+      [ ExpressionStringInterp (optimize_expr env e); EndStringInterp (s, pos) ]
 
 and optimize_continuation env c =
   match c with

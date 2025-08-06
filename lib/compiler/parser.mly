@@ -105,13 +105,15 @@ stmt_sans_semicolon:
 
 (* Conditionals *)
 expr1:
-  | IF; e1 = expr2; b = block; cont = conditional_continuation {
+  | pos = IF; e1 = expr2; b = block; cont = conditional_continuation {
+    let pos = Sloth_common.Position.t_of_lexing_position pos in
     IfExpr (
-      IfCont {
+      IfCont ({
         conditional = e1;
         block = b;
         continuation = Some cont;
-      }
+        pos;
+      }, pos)
     )
   }
   | IF; e1 = expr2; b = block { IfExpr (IfCont { conditional = e1; block = b; continuation = None } ) }
@@ -173,7 +175,10 @@ expr4:
     )) None cont in
     String (StartStringInterp (ss, Option.get cont2_opt))
   }
-  | s = STRING_FULL { String (FullString s) }
+  | s = STRING_FULL {
+    let (s, pos) = s in
+    let pos = Sloth_common.Position.t_of_lexing_position pos in
+    String (FullString (s, pos)) }
   | i = ID { let (i, _) = i in IdRef i }
   | LPAREN; e = expr1; RPAREN { e }
   | h = hash_literals { h }
@@ -187,15 +192,30 @@ string_middle:
   }
 
 list_literals:
-  | LBRACKET; RBRACKET { List [] }
-  | LBRACKET; l = expr_list ; RBRACKET { List l }
+  | pos = LBRACKET; RBRACKET {
+    let pos = Sloth_common.Position.t_of_lexing_position pos in
+    List ([], pos)
+  }
+  | pos = LBRACKET; l = expr_list ; RBRACKET {
+    let pos = Sloth_common.Position.t_of_lexing_position pos in
+    List (l, pos)
+  }
   ;
 
 hash_literals:
-  | LCURLY; RCURLY { HashMap [] }
+  | pos = LCURLY; RCURLY {
+    let pos = Sloth_common.Position.t_of_lexing_position pos in
+    HashMap ([], pos)
+  }
   (* Allow single line literal without trailing comma *)
-  | LCURLY; k = expr4; COLON; v = expr1; RCURLY { HashMap [(k, v)] }
-  | LCURLY; p = hash_literal_pair; RCURLY { HashMap p }
+  | pos = LCURLY; k = expr4; COLON; v = expr1; RCURLY {
+    let pos = Sloth_common.Position.t_of_lexing_position pos in
+    HashMap [(k, v)]
+  }
+  | pos = LCURLY; p = hash_literal_pair; RCURLY {
+    let pos = Sloth_common.Position.t_of_lexing_position pos in
+    HashMap p
+  }
   ;
 
 hash_literal_pair:
@@ -207,7 +227,10 @@ hash_literal_pair:
 
 (* Could be expr or stmt for assignment *)
 subscript:
-  | e = expr3; LBRACKET; sub = expr1 ; RBRACKET { Subscript (e, sub) }
+  | e = expr3; pos = LBRACKET; sub = expr1 ; RBRACKET {
+    let pos = Sloth_common.Position.t_of_lexing_position pos in
+    Subscript (e, sub, pos)
+  }
   ;
 
 conditional_continuation:

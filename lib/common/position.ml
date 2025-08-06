@@ -11,4 +11,5 @@ let t_of_lexing_position (p : Lexing.position) : t =
     pos_cnum = p.pos_cnum;
   }
 
-let string_of_t _ = Printf.sprintf "[TODO] implement Sloth_common.Position.string_of_t"
+let string_of_t t' =
+  Printf.sprintf "%s:%d:%d" t'.pos_fname t'.pos_lnum t'.pos_cnum

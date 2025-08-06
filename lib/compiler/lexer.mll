@@ -122,7 +122,7 @@ and read_string buf pos =
     | NotInterpolating -> STRING_FULL (Buffer.contents buf, pos)
     | Interpolating -> (
       state := NotInterpolating;
-      STRING_END (Buffer.contents buf)
+      STRING_END (Buffer.contents buf, pos)
     )
   }
   | "${" {
