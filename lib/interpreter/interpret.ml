@@ -79,7 +79,7 @@ and interpret_stmt (ctx : Context.t) stmt =
         (* TODO pipe through a real position *)
         let cmp_val =
           interpret_expr ctx cmp
-          |> Runtime.bool_of_val (Sloth_common.Position.dummy ())
+          |> Runtime.bool_of_val Sloth_common.Position.dummy
         in
         if not cmp_val then last_val
         else
@@ -170,7 +170,7 @@ and interpret_expr ctx expr =
   | Binary (op, lhs, rhs, _) -> (
       match op with
       | Add ->
-          let dummy = Sloth_common.Position.dummy () in
+          let dummy = Sloth_common.Position.dummy in
           let left_val = Runtime.num_of_val dummy (interpret_expr ctx lhs) in
           let right_val = Runtime.num_of_val dummy (interpret_expr ctx rhs) in
           Runtime.Num (left_val +. right_val))

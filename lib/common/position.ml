@@ -12,7 +12,7 @@ let t_of_lexing_position (p : Lexing.position) : t =
 
 let sexp_of_t _ = Sexp.Atom "[POS]"
 
-let rec t_of_sexp _ = dummy ()
-and dummy () = t_of_lexing_position Lexing.dummy_pos
+let rec t_of_sexp _ = dummy
+and dummy = t_of_lexing_position Lexing.dummy_pos
 
 let string_of_t t' = Printf.sprintf "%d:%d" t'.pos_lnum t'.pos_cnum
