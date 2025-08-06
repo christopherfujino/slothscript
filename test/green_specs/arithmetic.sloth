@@ -13,7 +13,8 @@ print(value);
     (MethodInvoc
       (receiver
         (Num
-          2))
+          2
+          [POS]))
       (target
         +)
       (args
@@ -22,31 +23,46 @@ print(value);
             (MethodInvoc
               (receiver
                 (Num
-                  3))
+                  3
+                  [POS]))
               (target
                 *)
               (args
                 ((MethodInvoc
                   (receiver
                     (Num
-                      4))
+                      4
+                      [POS]))
                   (target
                     /)
                   (args
                     ((Num
-                      5))))))))
+                      5
+                      [POS])))
+                  (pos
+                    [POS]))))
+              (pos
+                [POS])))
           (target
             -)
           (args
             ((Num
-              6)))))))))
+              6
+              [POS])))
+          (pos
+            [POS]))))
+      (pos
+        [POS]))))
   (StmtDecl
     (ExprStmt
       (FuncInvoc
         (IdRef
-          print)
+          print
+          [POS])
         ((IdRef
-          value))))))
+          value
+          [POS]))
+        [POS]))))
 
 ### Stdout
 -1.5999999999999996

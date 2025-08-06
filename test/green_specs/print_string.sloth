@@ -9,10 +9,14 @@ print("Hello");
   (ExprStmt
     (FuncInvoc
       (IdRef
-        print)
+        print
+        [POS])
       ((String
         ((FullString
-          Hello))))))))
+          Hello
+          [POS]))
+        [POS]))
+      [POS]))))
 
 ### Stdout
 Hello

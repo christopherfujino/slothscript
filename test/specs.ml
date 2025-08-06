@@ -13,7 +13,7 @@ let red =
   [
     make_spec "vars & funcs share namespace" ~program:"let x=1;func x(){};"
       ~ast:
-        "((StmtDecl(LetStmt x(Num 1)))(FuncDecl(name \
+        "((StmtDecl(LetStmt x(Num 1 [POS])))(FuncDecl(name \
          x)(parameters())(block())))"
       ~failure:Runtime_error;
     (* Although this works in JS, Python, and Perl, this seems like a mistake *)

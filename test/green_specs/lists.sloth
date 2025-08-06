@@ -21,70 +21,99 @@ print(l);
   (block
     ((ExprStmt
       (Num
-        2)))))
+        2
+        [POS])))))
   (StmtDecl
     (LetStmt
       l
       (List
         ((Num
-          2)
+          2
+          [POS])
           (Num
-            3)
+            3
+            [POS])
           (Num
-            5)
+            5
+            [POS])
           (Num
-            7)
+            7
+            [POS])
           (Num
-            11)
+            11
+            [POS])
           (Num
-            13)))))
+            13
+            [POS]))
+        [POS])))
   (StmtDecl
     (ExprStmt
       (FuncInvoc
         (IdRef
-          print)
+          print
+          [POS])
         ((Subscript
           (IdRef
-            l)
+            l
+            [POS])
           (FuncInvoc
             (IdRef
-              getTwo)
-            ()))))))
+              getTwo
+              [POS])
+            ()
+            [POS])
+          [POS]))
+        [POS])))
   (StmtDecl
     (ExprStmt
       (FuncInvoc
         (IdRef
-          print)
+          print
+          [POS])
         ((Subscript
           (IdRef
-            l)
+            l
+            [POS])
           (MethodInvoc
             (receiver
               (Num
-                2))
+                2
+                [POS]))
             (target
               +)
             (args
               ((Num
-                3)))))))))
+                3
+                [POS])))
+            (pos
+              [POS]))
+          [POS]))
+        [POS])))
   (StmtDecl
     (SubAssignStmt
       (subscript
         (Subscript
           (IdRef
-            l)
+            l
+            [POS])
           (Num
-            1)))
+            1
+            [POS])
+          [POS]))
       (value
         (Num
-          2.5))))
+          2.5
+          [POS]))))
   (StmtDecl
     (ExprStmt
       (FuncInvoc
         (IdRef
-          print)
+          print
+          [POS])
         ((IdRef
-          l))))))
+          l
+          [POS]))
+        [POS]))))
 
 ### Stdout
 5

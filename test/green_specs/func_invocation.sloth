@@ -19,21 +19,29 @@ m()
     ((ExprStmt
       (FuncInvoc
         (IdRef
-          print)
+          print
+          [POS])
         ((Num
-          1))))
+          1
+          [POS]))
+        [POS]))
       (ExprStmt
         (FuncInvoc
           (IdRef
-            print)
+            print
+            [POS])
           ((Num
-            2)))))))
+            2
+            [POS]))
+          [POS])))))
   (StmtDecl
     (ExprStmt
       (FuncInvoc
         (IdRef
-          m)
-        ()))))
+          m
+          [POS])
+        ()
+        [POS]))))
 
 ### Stdout
 1

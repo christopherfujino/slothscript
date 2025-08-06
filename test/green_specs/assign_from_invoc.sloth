@@ -18,21 +18,27 @@ print(n);
   (block
     ((ExprStmt
       (Num
-        1)))))
+        1
+        [POS])))))
   (StmtDecl
     (LetStmt
       n
       (FuncInvoc
         (IdRef
-          fn)
-        ())))
+          fn
+          [POS])
+        ()
+        [POS])))
   (StmtDecl
     (ExprStmt
       (FuncInvoc
         (IdRef
-          print)
+          print
+          [POS])
         ((IdRef
-          n))))))
+          n
+          [POS]))
+        [POS]))))
 
 ### Stdout
 1

@@ -11,17 +11,25 @@ if false {print("Unreachable");};
       (IfCont
         (conditional
           (Bool
-            false))
+            false
+            [POS]))
         (block
           ((ExprStmt
             (FuncInvoc
               (IdRef
-                print)
+                print
+                [POS])
               ((String
                 ((FullString
-                  Unreachable))))))))
+                  Unreachable
+                  [POS]))
+                [POS]))
+              [POS]))))
         (continuation
-          ()))))))
+          ())
+        (pos
+          [POS]))
+      [POS]))))
 
 ### Stdout
 

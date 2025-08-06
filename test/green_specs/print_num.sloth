@@ -9,9 +9,12 @@ print(11);
   (ExprStmt
     (FuncInvoc
       (IdRef
-        print)
+        print
+        [POS])
       ((Num
-        11))))))
+        11
+        [POS]))
+      [POS]))))
 
 ### Stdout
 11

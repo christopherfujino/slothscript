@@ -10,12 +10,16 @@ addition
     (MethodInvoc
       (receiver
         (Num
-          1))
+          1
+          [POS]))
       (target
         +)
       (args
         ((Num
-          1)))))))
+          1
+          [POS])))
+      (pos
+        [POS])))))
 
 ### Stdout
 

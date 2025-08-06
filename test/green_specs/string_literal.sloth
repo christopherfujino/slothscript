@@ -9,7 +9,9 @@ string literal
   (ExprStmt
     (String
       ((FullString
-        Hello))))))
+        Hello
+        [POS]))
+      [POS]))))
 
 ### Stdout
 

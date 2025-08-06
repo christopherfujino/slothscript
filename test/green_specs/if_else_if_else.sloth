@@ -11,37 +11,57 @@ if false {print("unreachable");} else if false {print("unreachable");} else {pri
       (IfCont
         (conditional
           (Bool
-            false))
+            false
+            [POS]))
         (block
           ((ExprStmt
             (FuncInvoc
               (IdRef
-                print)
+                print
+                [POS])
               ((String
                 ((FullString
-                  unreachable))))))))
+                  unreachable
+                  [POS]))
+                [POS]))
+              [POS]))))
         (continuation
           ((IfCont
             (conditional
               (Bool
-                false))
+                false
+                [POS]))
             (block
               ((ExprStmt
                 (FuncInvoc
                   (IdRef
-                    print)
+                    print
+                    [POS])
                   ((String
                     ((FullString
-                      unreachable))))))))
+                      unreachable
+                      [POS]))
+                    [POS]))
+                  [POS]))))
             (continuation
               ((ElseCont
                 ((ExprStmt
                   (FuncInvoc
                     (IdRef
-                      print)
+                      print
+                      [POS])
                     ((String
                       ((FullString
-                        finally))))))))))))))))))
+                        finally
+                        [POS]))
+                      [POS]))
+                    [POS])))
+                [POS])))
+            (pos
+              [POS]))))
+        (pos
+          [POS]))
+      [POS]))))
 
 ### Stdout
 finally

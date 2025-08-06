@@ -17,7 +17,8 @@ print(fib(20))
   (name
     fib)
   (parameters
-    (n))
+    ((n
+      [POS])))
   (block
     ((ExprStmt
       (IfExpr
@@ -26,16 +27,21 @@ print(fib(20))
             (MethodInvoc
               (receiver
                 (IdRef
-                  n))
+                  n
+                  [POS]))
               (target
                 <=)
               (args
                 ((Num
-                  1)))))
+                  1
+                  [POS])))
+              (pos
+                [POS])))
           (block
             ((ExprStmt
               (IdRef
-                n))))
+                n
+                [POS]))))
           (continuation
             ((ElseCont
               ((ExprStmt
@@ -43,41 +49,64 @@ print(fib(20))
                   (receiver
                     (FuncInvoc
                       (IdRef
-                        fib)
+                        fib
+                        [POS])
                       ((MethodInvoc
                         (receiver
                           (IdRef
-                            n))
+                            n
+                            [POS]))
                         (target
                           -)
                         (args
                           ((Num
-                            1)))))))
+                            1
+                            [POS])))
+                        (pos
+                          [POS])))
+                      [POS]))
                   (target
                     +)
                   (args
                     ((FuncInvoc
                       (IdRef
-                        fib)
+                        fib
+                        [POS])
                       ((MethodInvoc
                         (receiver
                           (IdRef
-                            n))
+                            n
+                            [POS]))
                         (target
                           -)
                         (args
                           ((Num
-                            2))))))))))))))))))))
+                            2
+                            [POS])))
+                        (pos
+                          [POS])))
+                      [POS])))
+                  (pos
+                    [POS]))))
+              [POS])))
+          (pos
+            [POS]))
+        [POS])))))
   (StmtDecl
     (ExprStmt
       (FuncInvoc
         (IdRef
-          print)
+          print
+          [POS])
         ((FuncInvoc
           (IdRef
-            fib)
+            fib
+            [POS])
           ((Num
-            20))))))))
+            20
+            [POS]))
+          [POS]))
+        [POS]))))
 
 ### Stdout
 6765

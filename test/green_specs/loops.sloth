@@ -12,33 +12,45 @@ for let i = 1; i <= 10; i = i + 1 {
     (LetStmt
       i
       (Num
-        1))
+        1
+        [POS]))
     (MethodInvoc
       (receiver
         (IdRef
-          i))
+          i
+          [POS]))
       (target
         <=)
       (args
         ((Num
-          10))))
+          10
+          [POS])))
+      (pos
+        [POS]))
     (AssignStmt
       i
       (MethodInvoc
         (receiver
           (IdRef
-            i))
+            i
+            [POS]))
         (target
           +)
         (args
           ((Num
-            1)))))
+            1
+            [POS])))
+        (pos
+          [POS])))
     ((ExprStmt
       (FuncInvoc
         (IdRef
-          print)
+          print
+          [POS])
         ((IdRef
-          i))))))))
+          i
+          [POS]))
+        [POS]))))))
 
 ### Stdout
 1

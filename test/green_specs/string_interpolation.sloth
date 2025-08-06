@@ -23,68 +23,93 @@ print("${one}, ${two}, ${three}.");
   (block
     ((ExprStmt
       (Num
-        42)))))
+        42
+        [POS])))))
   (StmtDecl
     (LetStmt
       one
       (Num
-        1)))
+        1
+        [POS])))
   (StmtDecl
     (LetStmt
       two
       (Num
-        2)))
+        2
+        [POS])))
   (StmtDecl
     (LetStmt
       three
       (Num
-        3)))
+        3
+        [POS])))
   (StmtDecl
     (ExprStmt
       (FuncInvoc
         (IdRef
-          print)
+          print
+          [POS])
         ((String
           ((FullString
-            "} This should be a vanilla string literal")))))))
+            "} This should be a vanilla string literal"
+            [POS]))
+          [POS]))
+        [POS])))
   (StmtDecl
     (ExprStmt
       (FuncInvoc
         (IdRef
-          print)
+          print
+          [POS])
         ((String
           ((StartStringInterp
-            "The answer is: ")
+            "The answer is: "
+            [POS])
             (ExpressionStringInterp
               (FuncInvoc
                 (IdRef
-                  f)
-                ()))
+                  f
+                  [POS])
+                ()
+                [POS]))
             (EndStringInterp
-              .)))))))
+              .
+              [POS]))
+          [POS]))
+        [POS])))
   (StmtDecl
     (ExprStmt
       (FuncInvoc
         (IdRef
-          print)
+          print
+          [POS])
         ((String
           ((StartStringInterp
-            "")
+            ""
+            [POS])
             (ExpressionStringInterp
               (IdRef
-                one))
+                one
+                [POS]))
             (MiddleStringInterp
-              ", ")
+              ", "
+              [POS])
             (ExpressionStringInterp
               (IdRef
-                two))
+                two
+                [POS]))
             (MiddleStringInterp
-              ", ")
+              ", "
+              [POS])
             (ExpressionStringInterp
               (IdRef
-                three))
+                three
+                [POS]))
             (EndStringInterp
-              .))))))))
+              .
+              [POS]))
+          [POS]))
+        [POS]))))
 
 ### Stdout
 } This should be a vanilla string literal
