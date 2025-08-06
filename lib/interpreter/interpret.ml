@@ -73,10 +73,7 @@ and interpret_stmt (ctx : Context.t) stmt =
       let ctx'', _ = interpret_stmt ctx' init in
 
       let rec interpret_for_loop ctx cmp inc bl last_val =
-        let cmp_val =
-          interpret_expr ctx cmp
-          |> Runtime.bool_of_val pos
-        in
+        let cmp_val = interpret_expr ctx cmp |> Runtime.bool_of_val pos in
         if not cmp_val then last_val
         else
           let cur_val = interpret_block ctx bl in
@@ -224,7 +221,8 @@ and interpret_expr ctx expr =
                      (* Note this is interpreted with the enclosing env *)
                      let v = interpret_expr ctx arg_expr in
                      (* This must not throw *)
-                     Identifiers.bind ~pos:Sloth_common.Position.dummy identifiers2 param_name v)
+                     Identifiers.bind ~pos:Sloth_common.Position.dummy
+                       identifiers2 param_name v)
                with
               | Ok () -> ()
               | Unequal_lengths ->

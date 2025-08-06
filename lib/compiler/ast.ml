@@ -19,8 +19,11 @@ and decl = FuncDecl of func_stmt_t | StmtDecl of stmt
 and stmt =
   | LetStmt of string * expr * Sloth_common.Position.t
   | AssignStmt of string * expr * Sloth_common.Position.t
-  | SubAssignStmt of { subscript : expr; value : expr; pos : Sloth_common.Position.t }
-
+  | SubAssignStmt of {
+      subscript : expr;
+      value : expr;
+      pos : Sloth_common.Position.t;
+    }
   (* No position *)
   | ExprStmt of expr
   | ForLoop of stmt * expr * stmt * stmt list * Sloth_common.Position.t
