@@ -14,15 +14,20 @@ and decl =
       name : string;
       parameters : (string * Sloth_common.Position.t) list;
       block : stmt list;
+      pos : Sloth_common.Position.t;
     }
   | StmtDecl of stmt
 
 and stmt =
-  | LetStmt of string * expr
-  | AssignStmt of string * expr
-  | SubAssignStmt of { subscript : expr; value : expr }
+  | LetStmt of string * expr * Sloth_common.Position.t
+  | AssignStmt of string * expr * Sloth_common.Position.t
+  | SubAssignStmt of {
+      subscript : expr;
+      value : expr;
+      pos : Sloth_common.Position.t;
+    }
   | ExprStmt of expr
-  | ForLoop of stmt * expr * stmt * stmt list
+  | ForLoop of stmt * expr * stmt * stmt list * Sloth_common.Position.t
 [@@deriving sexp]
 
 and expr =
@@ -84,7 +89,7 @@ let rec optimize_prog env prog =
 
 and optimize_decl env decl : Environment.t * decl =
   match decl with
-  | Ast.FuncDecl { name; parameters; block } ->
+  | Ast.FuncDecl { name; parameters; block; pos } ->
       let parameters2 = List.rev parameters in
       (* Bind name to the env, both for recursion and return value *)
       let env2 = Environment.bind env name in
@@ -95,7 +100,7 @@ and optimize_decl env decl : Environment.t * decl =
             Environment.bind env param)
       in
       let block2 = optimize_block env4 block in
-      (env2, FuncDecl { name; parameters = parameters2; block = block2 })
+      (env2, FuncDecl { name; parameters = parameters2; block = block2; pos })
   | Ast.StmtDecl s ->
       let env2, stmt = optimize_stmt env s in
       (env2, StmtDecl stmt)
@@ -103,26 +108,26 @@ and optimize_decl env decl : Environment.t * decl =
 and optimize_stmt env stmts : Environment.t * stmt =
   let open Ast in
   match stmts with
-  | LetStmt (name, expr) ->
+  | LetStmt (name, expr, pos) ->
       let e = optimize_expr env expr in
       let env2 = Environment.bind env name in
-      (env2, LetStmt (name, e))
-  | AssignStmt (name, expr) ->
+      (env2, LetStmt (name, e, pos))
+  | AssignStmt (name, expr, pos) ->
       let e = optimize_expr env expr in
-      (env, AssignStmt (name, e))
-  | SubAssignStmt { subscript; value } ->
+      (env, AssignStmt (name, e, pos))
+  | SubAssignStmt { subscript; value; pos } ->
       let subscript = optimize_expr env subscript in
       let value = optimize_expr env value in
-      (env, SubAssignStmt { subscript; value })
+      (env, SubAssignStmt { subscript; value; pos })
   | ExprStmt expr ->
       let e = optimize_expr env expr in
       (env, ExprStmt e)
-  | ForLoop (init, comp, inc, block) ->
+  | ForLoop (init, comp, inc, block, pos) ->
       let env2, init' = optimize_stmt env init in
       let comp' = optimize_expr env2 comp in
       let env3, inc' = optimize_stmt env2 inc in
       let block' = optimize_block env3 block in
-      (env, ForLoop (init', comp', inc', block'))
+      (env, ForLoop (init', comp', inc', block', pos))
 
 (** You must push a new frame to the env first. *)
 and optimize_block env rev_stmts =

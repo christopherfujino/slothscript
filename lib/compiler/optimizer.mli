@@ -5,16 +5,17 @@ type decl = private
       name : string;
       parameters : (string * Sloth_common.Position.t) list;
       block : stmt list;
+      pos: Sloth_common.Position.t;
     }
   | StmtDecl of stmt
 [@@deriving sexp]
 
-and stmt = private
-  | LetStmt of string * expr
-  | AssignStmt of string * expr
-  | SubAssignStmt of { subscript : expr; value : expr }
+and stmt =
+  | LetStmt of string * expr * Sloth_common.Position.t
+  | AssignStmt of string * expr * Sloth_common.Position.t
+  | SubAssignStmt of { subscript : expr; value : expr; pos: Sloth_common.Position.t }
   | ExprStmt of expr
-  | ForLoop of stmt * expr * stmt * stmt list
+  | ForLoop of stmt * expr * stmt * stmt list * Sloth_common.Position.t
 [@@deriving sexp]
 
 and expr = private

@@ -74,12 +74,14 @@ declarations:
 
 decl:
   | FUNC; i = ID; LPAREN; RPAREN; b = block; SEMICOLON {
-    let i, _ = i in
-    FuncDecl {name = i; parameters = []; block = b;}
+    let i, pos = i in
+    let pos = Sloth_common.Position.t_of_lexing_position pos in
+    FuncDecl {name = i; parameters = []; block = b; pos}
   }
   | FUNC; i = ID; LPAREN; p = parameter_list ; RPAREN; b = block; SEMICOLON {
-    let i, _ = i in
-    FuncDecl {name = i; parameters = p; block = b;} }
+    let i, pos = i in
+    let pos = Sloth_common.Position.t_of_lexing_position pos in
+    FuncDecl {name = i; parameters = p; block = b; pos} }
   | s = stmt { StmtDecl s }
   ;
 
@@ -90,8 +92,9 @@ stmts:
 
 stmt:
   | s = stmt_sans_semicolon; SEMICOLON { s }
-  | FOR; st = stmt; comp = expr1; SEMICOLON; inc = stmt_sans_semicolon; bl = block; SEMICOLON {
-    ForLoop (st, comp, inc, bl)
+  | pos = FOR; st = stmt; comp = expr1; SEMICOLON; inc = stmt_sans_semicolon; bl = block; SEMICOLON {
+    let pos = Sloth_common.Position.t_of_lexing_position pos in
+    ForLoop (st, comp, inc, bl, pos)
   }
   ;
 
@@ -99,13 +102,18 @@ stmt:
 stmt_sans_semicolon:
   | e1 = expr1 { ExprStmt e1 }
   | LET; id = ID; EQUALS; e1 = expr1 {
-    let (id, _) = id in
-    LetStmt (id, e1) }
+    let (id, pos) = id in
+    let pos = Sloth_common.Position.t_of_lexing_position pos in
+    LetStmt (id, e1, pos)
+  }
   | id = ID; EQUALS; e1 = expr1 {
-    (* TODO use position *)
-    let (id, _) = id in
-    AssignStmt (id, e1) }
-  | subscript = subscript; EQUALS; rhs = expr1 { SubAssignStmt {subscript; value=rhs } }
+    let (id, pos) = id in
+    let pos = Sloth_common.Position.t_of_lexing_position pos in
+    AssignStmt (id, e1, pos) }
+  | subscript = subscript; pos = EQUALS; rhs = expr1 {
+    let pos = Sloth_common.Position.t_of_lexing_position pos in
+    SubAssignStmt {subscript; value=rhs; pos }
+  }
   ;
 
 (* Conditionals *)

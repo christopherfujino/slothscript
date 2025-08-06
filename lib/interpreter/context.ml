@@ -8,7 +8,7 @@ let make_ctx m =
   let module M = (val m : Sloth_stdlib.StdlibSig) in
   let identifiers = Identifiers.create () in
   let () =
-    Identifiers.bind identifiers "print"
+    Identifiers.bind ~pos:Sloth_common.Position.dummy identifiers "print"
       (Runtime.Func
          (Native
             {

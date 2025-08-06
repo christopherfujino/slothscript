@@ -6,8 +6,8 @@ val push_empty : 'a t -> 'a t
 val get : pos:Sloth_common.Position.t -> 'a t -> string -> 'a
 (** Will throw if the identifier cannot be found in the stack. *)
 
-val bind : 'a t -> string -> 'a -> unit
+val bind : pos:Sloth_common.Position.t -> 'a t -> string -> 'a -> unit
 (** Will throw if the identifier already exists on the head of the stack. *)
 
-val reassign : 'a t -> string -> 'a -> unit
+val reassign : pos:Sloth_common.Position.t -> 'a t -> string -> 'a -> unit
 val debug : 'a t -> ('a -> string) -> unit

@@ -4,6 +4,7 @@ type func_stmt_t = {
   name : string;
   parameters : (string * Sloth_common.Position.t) list;
   block : stmt list;
+  pos : Sloth_common.Position.t;
 }
 
 and func_expr_t = {
@@ -16,11 +17,13 @@ and prog = stmt list [@@deriving sexp]
 and decl = FuncDecl of func_stmt_t | StmtDecl of stmt
 
 and stmt =
-  | LetStmt of string * expr
-  | AssignStmt of string * expr
-  | SubAssignStmt of { subscript : expr; value : expr }
+  | LetStmt of string * expr * Sloth_common.Position.t
+  | AssignStmt of string * expr * Sloth_common.Position.t
+  | SubAssignStmt of { subscript : expr; value : expr; pos : Sloth_common.Position.t }
+
+  (* No position *)
   | ExprStmt of expr
-  | ForLoop of stmt * expr * stmt * stmt list
+  | ForLoop of stmt * expr * stmt * stmt list * Sloth_common.Position.t
 [@@deriving sexp]
 
 and expr =

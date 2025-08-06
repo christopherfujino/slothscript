@@ -1,13 +1,12 @@
 open Core
 open Common
 
-let check_arity desired_count actual_list name =
+let check_arity ~pos desired_count actual_list name =
   let actual_count = List.length actual_list in
   if not (desired_count = actual_count) then
-    raise
-      (Common.Failure
-         (Printf.sprintf "The function %s expected %d arguments but received %d"
-            name desired_count actual_count))
+    failure pos
+      (Printf.sprintf "The function %s expected %d arguments but received %d"
+         name desired_count actual_count)
 
 let rec interpret_prog ctx prog =
   match prog with
@@ -21,7 +20,7 @@ let rec interpret_prog ctx prog =
 and interpret_decl (ctx : Context.t) decl =
   let open Compiler.Optimizer in
   match decl with
-  | FuncDecl { name; parameters; block } ->
+  | FuncDecl { name; parameters; block; pos } ->
       let parameters = List.map parameters ~f:(fun (name, _) -> name) in
       let f =
         Runtime.Func
@@ -33,22 +32,22 @@ and interpret_decl (ctx : Context.t) decl =
                identifiers = ctx.identifiers;
              })
       in
-      Identifiers.bind ctx.identifiers name f;
+      Identifiers.bind ~pos ctx.identifiers name f;
       (ctx, f)
   | StmtDecl s -> interpret_stmt ctx s
 
 and interpret_stmt (ctx : Context.t) stmt =
   let open Compiler.Optimizer in
   match stmt with
-  | LetStmt (id, e) ->
+  | LetStmt (id, e, pos) ->
       let v = interpret_expr ctx e in
-      Identifiers.bind ctx.identifiers id v;
+      Identifiers.bind ~pos ctx.identifiers id v;
       (ctx, v)
-  | AssignStmt (id, e) ->
+  | AssignStmt (id, e, pos) ->
       let v = interpret_expr ctx e in
-      Identifiers.reassign ctx.identifiers id v;
+      Identifiers.reassign ~pos ctx.identifiers id v;
       (ctx, v)
-  | SubAssignStmt { subscript; value } -> (
+  | SubAssignStmt { subscript; value; _ } -> (
       match subscript with
       | Subscript (receiver, subscript, pos) -> (
           let receiver' = interpret_expr ctx receiver in
@@ -63,23 +62,20 @@ and interpret_stmt (ctx : Context.t) stmt =
               Array.set elements i value';
               (ctx, receiver')
           | _ ->
-              raise
-                (Common.Failure
-                   (Printf.sprintf
-                      "Assigning via subscript to %s not implemented"
-                      (Runtime.to_s receiver'))))
+              failure pos
+                (Printf.sprintf "Assigning via subscript to %s not implemented"
+                   (Runtime.to_s receiver')))
       | _ -> failwith "TODO")
   | ExprStmt expr -> (ctx, interpret_expr ctx expr)
-  | ForLoop (init, cmp, inc, bl) ->
+  | ForLoop (init, cmp, inc, bl, pos) ->
       let identifiers = Identifiers.push_empty ctx.identifiers in
       let ctx' = { ctx with identifiers } in
       let ctx'', _ = interpret_stmt ctx' init in
 
       let rec interpret_for_loop ctx cmp inc bl last_val =
-        (* TODO pipe through a real position *)
         let cmp_val =
           interpret_expr ctx cmp
-          |> Runtime.bool_of_val Sloth_common.Position.dummy
+          |> Runtime.bool_of_val pos
         in
         if not cmp_val then last_val
         else
@@ -184,31 +180,31 @@ and interpret_expr ctx expr =
           (* Does it matter this is O(n)? *)
           match target with
           | "+" ->
-              check_arity 1 args "Num.+";
+              check_arity ~pos 1 args "Num.+";
               let arg = List.hd_exn args in
               let arg_val = interpret_expr ctx arg in
               let arg_f = Runtime.num_of_val pos arg_val in
               Num (f +. arg_f)
           | "-" ->
-              check_arity 1 args "Num.-";
+              check_arity ~pos 1 args "Num.-";
               let arg = List.hd_exn args in
               let arg_val = interpret_expr ctx arg in
               let arg_f = Runtime.num_of_val pos arg_val in
               Num (f -. arg_f)
           | "*" ->
-              check_arity 1 args "Num.*";
+              check_arity ~pos 1 args "Num.*";
               let arg = List.hd_exn args in
               let arg_val = interpret_expr ctx arg in
               let arg_f = Runtime.num_of_val pos arg_val in
               Num (f *. arg_f)
           | "/" ->
-              check_arity 1 args "Num./";
+              check_arity ~pos 1 args "Num./";
               let arg = List.hd_exn args in
               let arg_val = interpret_expr ctx arg in
               let arg_f = Runtime.num_of_val pos arg_val in
               Num (f /. arg_f)
           | "<=" ->
-              check_arity 1 args "Num.<=";
+              check_arity ~pos 1 args "Num.<=";
               let arg = List.hd_exn args in
               let arg_val = interpret_expr ctx arg in
               let arg_f = Runtime.num_of_val pos arg_val in
@@ -227,7 +223,8 @@ and interpret_expr ctx expr =
                  List.iter2 parameters args ~f:(fun param_name arg_expr ->
                      (* Note this is interpreted with the enclosing env *)
                      let v = interpret_expr ctx arg_expr in
-                     Identifiers.bind identifiers2 param_name v)
+                     (* This must not throw *)
+                     Identifiers.bind ~pos:Sloth_common.Position.dummy identifiers2 param_name v)
                with
               | Ok () -> ()
               | Unequal_lengths ->
