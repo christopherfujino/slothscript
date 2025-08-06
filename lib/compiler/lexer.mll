@@ -104,7 +104,7 @@ rule read last_token =
   | '[' { let token = LBRACKET lexbuf.lex_curr_p in last_token := Some token; token}
   | ']' { let token = RBRACKET lexbuf.lex_curr_p in last_token := Some token; token}
   (* Lexing.lexeme means return the string that matched the pattern *)
-  | id { let token = ID (Lexing.lexeme lexbuf) in last_token := Some token; token }
+  | id { let token = ID (Lexing.lexeme lexbuf, lexbuf.lex_curr_p) in last_token := Some token; token }
   | num { let token = NUM (float_of_string (Lexing.lexeme lexbuf), lexbuf.lex_curr_p) in last_token := Some token; token }
   | _ { syntax_error (SyntaxError (Lexing.lexeme lexbuf, lexbuf.lex_curr_p))}
   (* Here `eof` is a special regex built into ocamllex *)

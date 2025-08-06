@@ -2,11 +2,11 @@ open Core
 
 type func_stmt_t = {
   name : string;
-  parameters : string list;
+  parameters : (string * Sloth_common.Position.t) list;
   block : stmt list;
 }
 
-and func_expr_t = { parameters : string list; block : stmt list; pos : Sloth_common.Position.t }
+and func_expr_t = { parameters : (string * Sloth_common.Position.t) list; block : stmt list; pos : Sloth_common.Position.t }
 and prog = stmt list [@@deriving sexp]
 and decl = FuncDecl of func_stmt_t | StmtDecl of stmt
 

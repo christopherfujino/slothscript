@@ -10,7 +10,7 @@ let failure msg pos =
 type prog = decl list
 
 and decl =
-  | FuncDecl of { name : string; parameters : string list; block : stmt list }
+  | FuncDecl of { name : string; parameters : (string * Sloth_common.Position.t) list; block : stmt list }
   | StmtDecl of stmt
 
 and stmt =
@@ -40,7 +40,7 @@ and expr =
       pos : Sloth_common.Position.t;
     }
   | FuncExpr of {
-      parameters : string list;
+      parameters : (string * Sloth_common.Position.t) list;
       block : stmt list;
       pos : Sloth_common.Position.t;
     }
@@ -89,6 +89,7 @@ and optimize_decl env decl : Environment.t * decl =
       let env3 = Environment.push_empty env2 in
       let env4 =
         List.fold_left parameters2 ~init:env3 ~f:(fun env param ->
+            let param, _ = param in
             Environment.bind env param)
       in
       let block2 = optimize_block env4 block in
@@ -169,13 +170,14 @@ and optimize_expr (env : Environment.t) (e : Ast.expr) : expr =
       match name_opt with
       | None ->
           let msg = Printf.sprintf "Undeclared identifier %s" name in
-          raise (Failure msg)
+          failure msg pos
       | Some _ -> IdRef (name, pos))
   | FuncExpr { parameters; block; pos } ->
       let parameters2 = List.rev parameters in
       let env2 = Environment.push_empty env in
       let env3 =
         List.fold_left parameters2 ~init:env2 ~f:(fun env param ->
+            let param, _ = param in
             Environment.bind env param)
       in
       let block2 = optimize_block env3 block in
@@ -213,7 +215,7 @@ and optimize_continuation env c =
       let continuation =
         Option.map continuation ~f:(optimize_continuation env)
       in
-      IfCont { conditional; block; continuation }
+      IfCont { conditional; block; continuation; pos }
   | Ast.ElseCont (stmts, pos) ->
       let env2 = Environment.push_empty env in
       let optimized_stmts = optimize_block env2 stmts in

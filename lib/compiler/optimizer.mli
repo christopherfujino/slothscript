@@ -1,7 +1,7 @@
 exception Failure of string
 
 type decl = private
-  | FuncDecl of { name : string; parameters : string list; block : stmt list }
+  | FuncDecl of { name : string; parameters : (string * Sloth_common.Position.t) list; block : stmt list }
   | StmtDecl of stmt
 [@@deriving sexp]
 
@@ -15,25 +15,34 @@ and stmt = private
 
 and expr = private
   | Num of float * Sloth_common.Position.t
-  | Bool of bool
-  | Null
-  | String of string_parts list
-  | List of expr list
-  | HashMap of (expr * expr) list
-  | Subscript of expr * expr
-  | Binary of operator * expr * expr
-  | IdRef of string
-  | FuncInvoc of expr * expr list
-  | MethodInvoc of { receiver : expr; target : string; args : expr list }
-  | FuncExpr of { parameters : string list; block : stmt list }
-  | IfExpr of cond_cont
+  | Bool of bool * Sloth_common.Position.t
+  | Null of Sloth_common.Position.t
+  | String of string_parts list * Sloth_common.Position.t
+  | List of expr list * Sloth_common.Position.t
+  | HashMap of (expr * expr) list * Sloth_common.Position.t
+  | Subscript of expr * expr * Sloth_common.Position.t
+  | Binary of operator * expr * expr * Sloth_common.Position.t
+  | IdRef of string * Sloth_common.Position.t
+  | FuncInvoc of expr * expr list * Sloth_common.Position.t
+  | MethodInvoc of {
+      receiver : expr;
+      target : string;
+      args : expr list;
+      pos : Sloth_common.Position.t;
+    }
+  | FuncExpr of {
+      parameters : (string * Sloth_common.Position.t) list;
+      block : stmt list;
+      pos : Sloth_common.Position.t;
+    }
+  | IfExpr of cond_cont * Sloth_common.Position.t
 [@@deriving sexp]
 
 and string_parts =
-  | FullString of string
-  | StartStringInterp of string
-  | MiddleStringInterp of string
-  | EndStringInterp of string
+  | FullString of string * Sloth_common.Position.t
+  | StartStringInterp of string * Sloth_common.Position.t
+  | MiddleStringInterp of string * Sloth_common.Position.t
+  | EndStringInterp of string * Sloth_common.Position.t
   | ExpressionStringInterp of expr
 [@@deriving sexp]
 
@@ -42,8 +51,9 @@ and cond_cont = private
       conditional : expr;
       block : stmt list;
       continuation : cond_cont option;
+      pos : Sloth_common.Position.t;
     }
-  | ElseCont of stmt list
+  | ElseCont of stmt list * Sloth_common.Position.t
 [@@deriving sexp]
 
 and operator = private Add [@@deriving sexp]

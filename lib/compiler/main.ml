@@ -1,8 +1,6 @@
 open Core
 
-type lex_filter_state =
-  | False
-  | True of Lexing.position
+type lex_filter_state = False | True of Lexing.position
 
 (* insert semicolon before EOF *)
 let make_lex_filter () =
@@ -14,21 +12,21 @@ let make_lex_filter () =
     let open Parser in
     match !should_spit_eof with
     | True pos -> EOF pos
-    | False ->
-      let token = Lexer.read r buf in
-      match token with
-      | EOF pos -> (
-          match !last_token with
-          | None -> EOF
-          | Some last_token -> (
-              match last_token with
-              | SEMICOLON -> EOF
-              | _ ->
-                  should_spit_eof := True pos;
-                  SEMICOLON pos))
-      | _ ->
-          last_token := Some token;
-          token
+    | False -> (
+        let token = Lexer.read r buf in
+        match token with
+        | EOF pos -> (
+            match !last_token with
+            | None -> EOF pos
+            | Some last_token -> (
+                match last_token with
+                | SEMICOLON _ -> EOF pos
+                | _ ->
+                    should_spit_eof := True pos;
+                    SEMICOLON pos))
+        | _ ->
+            last_token := Some token;
+            token)
 
 let parse env line =
   let lex_filter = make_lex_filter () in
