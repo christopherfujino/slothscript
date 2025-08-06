@@ -17,4 +17,4 @@ let rec t_of_sexp _ = dummy ()
 and dummy () = t_of_lexing_position Lexing.dummy_pos
 
 let string_of_t t' =
-  Printf.sprintf "%s:%d:%d" t'.pos_fname t'.pos_lnum t'.pos_cnum
+  Printf.sprintf "%d:%d" t'.pos_lnum t'.pos_cnum
