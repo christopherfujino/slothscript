@@ -91,7 +91,9 @@ print(fib(20))
               [POS])))
           (pos
             [POS]))
-        [POS])))))
+        [POS]))))
+  (pos
+    [POS]))
   (StmtDecl
     (ExprStmt
       (FuncInvoc

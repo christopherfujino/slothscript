@@ -25,7 +25,8 @@ print(counter())
       x
       (Num
         0
-        [POS]))
+        [POS])
+      [POS])
       (ExprStmt
         (FuncExpr
           (parameters
@@ -45,13 +46,16 @@ print(counter())
                     1
                     [POS])))
                 (pos
-                  [POS])))
+                  [POS]))
+              [POS])
               (ExprStmt
                 (IdRef
                   x
                   [POS]))))
           (pos
-            [POS]))))))
+            [POS])))))
+  (pos
+    [POS]))
   (StmtDecl
     (LetStmt
       counter
@@ -60,7 +64,8 @@ print(counter())
           makeCounter
           [POS])
         ()
-        [POS])))
+        [POS])
+      [POS]))
   (StmtDecl
     (ExprStmt
       (FuncInvoc

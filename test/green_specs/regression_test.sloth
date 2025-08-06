@@ -21,7 +21,8 @@ if false {} else {let x = 1; print(x);};
               x
               (Num
                 1
-                [POS]))
+                [POS])
+              [POS])
               (ExprStmt
                 (FuncInvoc
                   (IdRef

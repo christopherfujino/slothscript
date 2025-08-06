@@ -16,7 +16,8 @@ print(v);
     b
     (Bool
       false
-      [POS])))
+      [POS])
+    [POS]))
   (StmtDecl
     (LetStmt
       v
@@ -40,7 +41,8 @@ print(v);
               [POS])))
           (pos
             [POS]))
-        [POS])))
+        [POS])
+      [POS]))
   (StmtDecl
     (ExprStmt
       (FuncInvoc

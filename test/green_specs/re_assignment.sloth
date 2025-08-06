@@ -10,13 +10,15 @@ let x = 0;x = 1;print(x);
     x
     (Num
       0
-      [POS])))
+      [POS])
+    [POS]))
   (StmtDecl
     (AssignStmt
       x
       (Num
         1
-        [POS])))
+        [POS])
+      [POS]))
   (StmtDecl
     (ExprStmt
       (FuncInvoc

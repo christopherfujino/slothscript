@@ -37,7 +37,8 @@ h = {"on a": "single line"}
               bar
               [POS]))
             [POS])))
-      [POS])))
+      [POS])
+    [POS]))
   (StmtDecl
     (SubAssignStmt
       (subscript
@@ -54,7 +55,9 @@ h = {"on a": "single line"}
           ((FullString
             true
             [POS]))
-          [POS]))))
+          [POS]))
+      (pos
+        [POS])))
   (StmtDecl
     (SubAssignStmt
       (subscript
@@ -69,7 +72,9 @@ h = {"on a": "single line"}
       (value
         (Num
           2
-          [POS]))))
+          [POS]))
+      (pos
+        [POS])))
   (StmtDecl
     (ExprStmt
       (FuncInvoc
@@ -131,7 +136,8 @@ h = {"on a": "single line"}
               "single line"
               [POS]))
             [POS])))
-        [POS]))))
+        [POS])
+      [POS])))
 
 ### Stdout
 2

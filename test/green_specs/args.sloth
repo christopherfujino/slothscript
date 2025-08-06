@@ -36,7 +36,9 @@ f(1, 2)
           ((IdRef
             y
             [POS]))
-          [POS])))))
+          [POS]))))
+  (pos
+    [POS]))
   (StmtDecl
     (ExprStmt
       (FuncInvoc

@@ -22,7 +22,8 @@ print(x)
           1
           [POS])))
       (pos
-        [POS]))))
+        [POS]))
+    [POS]))
   (StmtDecl
     (ExprStmt
       (FuncInvoc

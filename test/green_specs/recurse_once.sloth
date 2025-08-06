@@ -38,7 +38,9 @@ func rec(b) {if b {b;} else {rec(true);};};print(rec(false));
               [POS])))
           (pos
             [POS]))
-        [POS])))))
+        [POS]))))
+  (pos
+    [POS]))
   (StmtDecl
     (ExprStmt
       (FuncInvoc

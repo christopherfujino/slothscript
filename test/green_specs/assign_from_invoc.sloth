@@ -19,7 +19,9 @@ print(n);
     ((ExprStmt
       (Num
         1
-        [POS])))))
+        [POS]))))
+  (pos
+    [POS]))
   (StmtDecl
     (LetStmt
       n
@@ -28,7 +30,8 @@ print(n);
           fn
           [POS])
         ()
-        [POS])))
+        [POS])
+      [POS]))
   (StmtDecl
     (ExprStmt
       (FuncInvoc

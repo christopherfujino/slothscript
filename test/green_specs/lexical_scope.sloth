@@ -10,7 +10,8 @@ let x=1;func f() {print(x);};func g() {let x=2;f();};g();
     x
     (Num
       1
-      [POS])))
+      [POS])
+    [POS]))
   (FuncDecl
     (name
       f)
@@ -25,7 +26,9 @@ let x=1;func f() {print(x);};func g() {let x=2;f();};g();
           ((IdRef
             x
             [POS]))
-          [POS])))))
+          [POS]))))
+    (pos
+      [POS]))
   (FuncDecl
     (name
       g)
@@ -36,14 +39,17 @@ let x=1;func f() {print(x);};func g() {let x=2;f();};g();
         x
         (Num
           2
-          [POS]))
+          [POS])
+        [POS])
         (ExprStmt
           (FuncInvoc
             (IdRef
               f
               [POS])
             ()
-            [POS])))))
+            [POS]))))
+    (pos
+      [POS]))
   (StmtDecl
     (ExprStmt
       (FuncInvoc

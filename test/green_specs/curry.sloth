@@ -33,7 +33,9 @@ func a(x) {func(y) {x+y;};};print(a(1)(2));
               (pos
                 [POS])))))
         (pos
-          [POS]))))))
+          [POS])))))
+  (pos
+    [POS]))
   (StmtDecl
     (ExprStmt
       (FuncInvoc

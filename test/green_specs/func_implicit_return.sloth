@@ -24,7 +24,9 @@ print(m());
       (ExprStmt
         (Num
           3
-          [POS])))))
+          [POS]))))
+  (pos
+    [POS]))
   (StmtDecl
     (ExprStmt
       (FuncInvoc

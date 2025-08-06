@@ -20,7 +20,8 @@ let x = 1 + 1;
           1
           [POS])))
       (pos
-        [POS])))))
+        [POS]))
+    [POS])))
 
 ### Stdout
 

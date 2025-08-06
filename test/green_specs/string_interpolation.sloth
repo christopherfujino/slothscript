@@ -24,25 +24,30 @@ print("${one}, ${two}, ${three}.");
     ((ExprStmt
       (Num
         42
-        [POS])))))
+        [POS]))))
+  (pos
+    [POS]))
   (StmtDecl
     (LetStmt
       one
       (Num
         1
-        [POS])))
+        [POS])
+      [POS]))
   (StmtDecl
     (LetStmt
       two
       (Num
         2
-        [POS])))
+        [POS])
+      [POS]))
   (StmtDecl
     (LetStmt
       three
       (Num
         3
-        [POS])))
+        [POS])
+      [POS]))
   (StmtDecl
     (ExprStmt
       (FuncInvoc

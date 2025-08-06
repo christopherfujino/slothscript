@@ -21,7 +21,8 @@ rosetta program
             private
             (IdRef
               arg
-              [POS]))
+              [POS])
+            [POS])
             (ExprStmt
               (FuncInvoc
                 (IdRef
