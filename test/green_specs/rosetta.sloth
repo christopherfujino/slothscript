@@ -14,21 +14,32 @@ rosetta program
     (FuncInvoc
       (FuncExpr
         (parameters
-          (arg))
+          ((arg
+            [POS])))
         (block
           ((LetStmt
             private
             (IdRef
-              arg))
+              arg
+              [POS])
+            [POS])
             (ExprStmt
               (FuncInvoc
                 (IdRef
-                  print)
+                  print
+                  [POS])
                 ((IdRef
-                  private)))))))
+                  private
+                  [POS]))
+                [POS]))))
+        (pos
+          [POS]))
       ((String
         ((FullString
-          message))))))))
+          message
+          [POS]))
+        [POS]))
+      [POS]))))
 
 ### Stdout
 message

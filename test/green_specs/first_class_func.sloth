@@ -24,7 +24,9 @@ print(counter())
     ((LetStmt
       x
       (Num
-        0))
+        0
+        [POS])
+      [POS])
       (ExprStmt
         (FuncExpr
           (parameters
@@ -35,40 +37,61 @@ print(counter())
               (MethodInvoc
                 (receiver
                   (IdRef
-                    x))
+                    x
+                    [POS]))
                 (target
                   +)
                 (args
                   ((Num
-                    1)))))
+                    1
+                    [POS])))
+                (pos
+                  [POS]))
+              [POS])
               (ExprStmt
                 (IdRef
-                  x)))))))))
+                  x
+                  [POS]))))
+          (pos
+            [POS])))))
+  (pos
+    [POS]))
   (StmtDecl
     (LetStmt
       counter
       (FuncInvoc
         (IdRef
-          makeCounter)
-        ())))
+          makeCounter
+          [POS])
+        ()
+        [POS])
+      [POS]))
   (StmtDecl
     (ExprStmt
       (FuncInvoc
         (IdRef
-          print)
+          print
+          [POS])
         ((FuncInvoc
           (IdRef
-            counter)
-          ())))))
+            counter
+            [POS])
+          ()
+          [POS]))
+        [POS])))
   (StmtDecl
     (ExprStmt
       (FuncInvoc
         (IdRef
-          print)
+          print
+          [POS])
         ((FuncInvoc
           (IdRef
-            counter)
-          ()))))))
+            counter
+            [POS])
+          ()
+          [POS]))
+        [POS]))))
 
 ### Stdout
 1

@@ -56,7 +56,7 @@ let make_test spec =
 
   (* Interpreter *)
   let module Lib = Interpreter.Sloth_stdlib.Make_test () in
-  let ctx = Interpreter.Context.make_ctx (module Lib) in
+  let ctx = Interpreter.Context.make_ctx (module Lib) spec.program in
   let _ = Interpreter.Interpret.interpret_prog ctx prog in
   let forward_buffer = List.rev !Lib.stdout_buffer in
   let catted_output_opt =
@@ -80,7 +80,7 @@ let make_failing_test spec =
 
     (* Interpreter *)
     let module Lib = Interpreter.Sloth_stdlib.Make_test () in
-    let ctx = Interpreter.Context.make_ctx (module Lib) in
+    let ctx = Interpreter.Context.make_ctx (module Lib) spec.program in
     let _ = Interpreter.Interpret.interpret_prog ctx prog in
     let cb =
      fun acc cur ->
@@ -96,14 +96,16 @@ let make_failing_test spec =
     in
     assert_failure msg
   with
-  | Compiler.Lexer.SyntaxError err -> (
+  | Compiler.Lexer.SyntaxError (err, pos) -> (
       match spec.failure with
       | Some expectation -> (
           match expectation with
           | Scanner_error -> ()
           | _ ->
+              let open Sloth_common.Position in
               Printf.sprintf
-                "Expected %s but got Compiler.Lexer.SyntaxError(%s)"
+                "[%s] Expected %s but got Compiler.Lexer.SyntaxError(%s)"
+                (t_of_lexing_position pos |> string_of_t)
                 (string_of_failure expectation)
                 err
               |> failwith)

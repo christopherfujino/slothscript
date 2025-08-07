@@ -11,17 +11,25 @@ if true {print("True");};
       (IfCont
         (conditional
           (Bool
-            true))
+            true
+            [POS]))
         (block
           ((ExprStmt
             (FuncInvoc
               (IdRef
-                print)
+                print
+                [POS])
               ((String
                 ((FullString
-                  True))))))))
+                  True
+                  [POS]))
+                [POS]))
+              [POS]))))
         (continuation
-          ()))))))
+          ())
+        (pos
+          [POS]))
+      [POS]))))
 
 ### Stdout
 True

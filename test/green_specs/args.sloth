@@ -14,30 +14,44 @@ f(1, 2)
   (name
     f)
   (parameters
-    (x
-      y))
+    ((x
+      [POS])
+      (y
+        [POS])))
   (block
     ((ExprStmt
       (FuncInvoc
         (IdRef
-          print)
+          print
+          [POS])
         ((IdRef
-          x))))
+          x
+          [POS]))
+        [POS]))
       (ExprStmt
         (FuncInvoc
           (IdRef
-            print)
+            print
+            [POS])
           ((IdRef
-            y)))))))
+            y
+            [POS]))
+          [POS]))))
+  (pos
+    [POS]))
   (StmtDecl
     (ExprStmt
       (FuncInvoc
         (IdRef
-          f)
+          f
+          [POS])
         ((Num
-          1)
+          1
+          [POS])
           (Num
-            2))))))
+            2
+            [POS]))
+        [POS]))))
 
 ### Stdout
 1

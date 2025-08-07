@@ -15,7 +15,9 @@ print(v);
   (LetStmt
     b
     (Bool
-      false)))
+      false
+      [POS])
+    [POS]))
   (StmtDecl
     (LetStmt
       v
@@ -23,23 +25,34 @@ print(v);
         (IfCont
           (conditional
             (IdRef
-              b))
+              b
+              [POS]))
           (block
             ((ExprStmt
               (Num
-                1))))
+                1
+                [POS]))))
           (continuation
             ((ElseCont
               ((ExprStmt
                 (Num
-                  2))))))))))
+                  2
+                  [POS])))
+              [POS])))
+          (pos
+            [POS]))
+        [POS])
+      [POS]))
   (StmtDecl
     (ExprStmt
       (FuncInvoc
         (IdRef
-          print)
+          print
+          [POS])
         ((IdRef
-          v))))))
+          v
+          [POS]))
+        [POS]))))
 
 ### Stdout
 2

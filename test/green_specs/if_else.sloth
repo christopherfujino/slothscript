@@ -11,23 +11,35 @@ if false {print(true);} else {print("else");};
       (IfCont
         (conditional
           (Bool
-            false))
+            false
+            [POS]))
         (block
           ((ExprStmt
             (FuncInvoc
               (IdRef
-                print)
+                print
+                [POS])
               ((Bool
-                true))))))
+                true
+                [POS]))
+              [POS]))))
         (continuation
           ((ElseCont
             ((ExprStmt
               (FuncInvoc
                 (IdRef
-                  print)
+                  print
+                  [POS])
                 ((String
                   ((FullString
-                    else)))))))))))))))
+                    else
+                    [POS]))
+                  [POS]))
+                [POS])))
+            [POS])))
+        (pos
+          [POS]))
+      [POS]))))
 
 ### Stdout
 else

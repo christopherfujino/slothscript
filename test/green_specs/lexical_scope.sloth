@@ -9,7 +9,9 @@ let x=1;func f() {print(x);};func g() {let x=2;f();};g();
   (LetStmt
     x
     (Num
-      1)))
+      1
+      [POS])
+    [POS]))
   (FuncDecl
     (name
       f)
@@ -19,9 +21,14 @@ let x=1;func f() {print(x);};func g() {let x=2;f();};g();
       ((ExprStmt
         (FuncInvoc
           (IdRef
-            print)
+            print
+            [POS])
           ((IdRef
-            x)))))))
+            x
+            [POS]))
+          [POS]))))
+    (pos
+      [POS]))
   (FuncDecl
     (name
       g)
@@ -31,18 +38,26 @@ let x=1;func f() {print(x);};func g() {let x=2;f();};g();
       ((LetStmt
         x
         (Num
-          2))
+          2
+          [POS])
+        [POS])
         (ExprStmt
           (FuncInvoc
             (IdRef
-              f)
-            ())))))
+              f
+              [POS])
+            ()
+            [POS]))))
+    (pos
+      [POS]))
   (StmtDecl
     (ExprStmt
       (FuncInvoc
         (IdRef
-          g)
-        ()))))
+          g
+          [POS])
+        ()
+        [POS]))))
 
 ### Stdout
 1

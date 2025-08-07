@@ -11,7 +11,9 @@ func m() {};
   (parameters
     ())
   (block
-    ())))
+    ())
+  (pos
+    [POS])))
 
 ### Stdout
 

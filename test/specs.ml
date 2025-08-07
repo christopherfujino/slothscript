@@ -13,8 +13,8 @@ let red =
   [
     make_spec "vars & funcs share namespace" ~program:"let x=1;func x(){};"
       ~ast:
-        "((StmtDecl(LetStmt x(Num 1)))(FuncDecl(name \
-         x)(parameters())(block())))"
+        "((StmtDecl(LetStmt x(Num 1 [POS])[POS]))(FuncDecl(name \
+         x)(parameters())(block())(pos [POS])))"
       ~failure:Runtime_error;
     (* Although this works in JS, Python, and Perl, this seems like a mistake *)
     (* Go does not allow it. *)

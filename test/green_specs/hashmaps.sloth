@@ -22,79 +22,122 @@ h = {"on a": "single line"}
     h
     (HashMap
       (((Num
-        3)
+        3
+        [POS])
         (Num
-          4))
+          4
+          [POS]))
         ((String
           ((FullString
-            foo)))
+            foo
+            [POS]))
+          [POS])
           (String
             ((FullString
-              bar))))))))
+              bar
+              [POS]))
+            [POS])))
+      [POS])
+    [POS]))
   (StmtDecl
     (SubAssignStmt
       (subscript
         (Subscript
           (IdRef
-            h)
+            h
+            [POS])
           (Bool
-            true)))
+            true
+            [POS])
+          [POS]))
       (value
         (String
           ((FullString
-            true))))))
+            true
+            [POS]))
+          [POS]))
+      (pos
+        [POS])))
   (StmtDecl
     (SubAssignStmt
       (subscript
         (Subscript
           (IdRef
-            h)
+            h
+            [POS])
           (Num
-            1)))
+            1
+            [POS])
+          [POS]))
       (value
         (Num
-          2))))
+          2
+          [POS]))
+      (pos
+        [POS])))
   (StmtDecl
     (ExprStmt
       (FuncInvoc
         (IdRef
-          print)
+          print
+          [POS])
         ((Subscript
           (IdRef
-            h)
+            h
+            [POS])
           (Num
-            1))))))
+            1
+            [POS])
+          [POS]))
+        [POS])))
   (StmtDecl
     (ExprStmt
       (FuncInvoc
         (IdRef
-          print)
+          print
+          [POS])
         ((Subscript
           (IdRef
-            h)
+            h
+            [POS])
           (Bool
-            true))))))
+            true
+            [POS])
+          [POS]))
+        [POS])))
   (StmtDecl
     (ExprStmt
       (FuncInvoc
         (IdRef
-          print)
+          print
+          [POS])
         ((Subscript
           (IdRef
-            h)
+            h
+            [POS])
           (String
             ((FullString
-              foo))))))))
+              foo
+              [POS]))
+            [POS])
+          [POS]))
+        [POS])))
   (StmtDecl
     (AssignStmt
       h
       (HashMap
         (((String
           ((FullString
-            "on a")))
+            "on a"
+            [POS]))
+          [POS])
           (String
             ((FullString
-              "single line")))))))))
+              "single line"
+              [POS]))
+            [POS])))
+        [POS])
+      [POS])))
 
 ### Stdout
 2

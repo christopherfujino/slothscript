@@ -13,10 +13,10 @@ let push_empty t' =
 let bind env id v =
   let maybe_val = Hashtbl.find env.values id in
   match maybe_val with
-  | Some _ ->
-      let msg = Printf.sprintf "cannot rebind name %s" id in
-      raise (Common.Failure msg)
-  | None -> Hashtbl.add_exn ~key:id ~data:v env.values
+  | Some _ -> None
+  | None ->
+      Hashtbl.add_exn ~key:id ~data:v env.values;
+      Some ()
 
 let rec get_opt env id =
   match Hashtbl.find env.values id with
@@ -26,10 +26,8 @@ let rec get_opt env id =
       | Some prev -> (get_opt [@tailcall]) prev id)
   | Some v -> Some v
 
-let get env id =
-  match get_opt env id with
-  | Some v -> v
-  | None ->
+let get env id = match get_opt env id with Some v -> Some v | None -> None
+(*
       let buf = Buffer.create 4 in
       Buffer.add_string buf (Printf.sprintf "No variable defined named %s\n" id);
       let rec walk_env env =
@@ -45,21 +43,19 @@ let get env id =
       in
       walk_env env;
       let msg = Buffer.contents buf in
-      raise (Common.Failure msg)
+      failure pos msg
+      *)
 
 let rec reassign env id v =
   match Hashtbl.find env.values id with
   (* We don't care about the previous value, we just want to replace it *)
-  | Some _ -> Hashtbl.change env.values id ~f:(fun _ -> Some v)
+  | Some _ ->
+      Hashtbl.change env.values id ~f:(fun _ -> Some v);
+      Some ()
   | None -> (
       match env.previous with
       | Some prev -> (reassign [@tailcall]) prev id v
-      | None ->
-          Printf.sprintf
-            "No previous variable named %s; did you intend to declare a new \
-             variable?"
-            id
-          |> failwith)
+      | None -> None)
 
 let rec debug_rec indent t' to_s =
   let keys = Hashtbl.keys t'.values in

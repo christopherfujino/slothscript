@@ -3,47 +3,44 @@
 (* header *)
 %{
   open Ast
+  open Sloth_common.Position
 %}
 
 (* Declarations *)
 (* In OCaml, `float` is a 64-bit IEEE float *)
-%token <float> NUM
-%token <string> ID
-%token <string> STRING_FULL
-%token <string> STRING_START
-%token <string> STRING_MIDDLE
-%token <string> STRING_END
-%token TRUE
-%token FALSE
-%token NULL
-%token PLUS
-%token MINUS
-%token PRODUCT
-%token DIVIDE
-%token LET
-%token FOR
-%token EQUALS
-%token EOF
-%token COLON
-%token SEMICOLON
-%token FUNC
-%token LCURLY
-%token RCURLY
-%token LPAREN
-%token RPAREN
-%token LBRACKET
-%token RBRACKET
-%token COMMA
-%token IF
-%token ELSE
-%token LEQ
-%token LESS
-(*
-%token DOT
-%token TIMES
-%token IN
-%token THEN
-  *)
+%token <float * Lexing.position> NUM
+%token <string * Lexing.position> ID
+%token <string * Lexing.position> STRING_FULL
+%token <string * Lexing.position> STRING_START
+%token <string * Lexing.position> STRING_MIDDLE
+%token <string * Lexing.position> STRING_END
+%token <Lexing.position> TRUE
+%token <Lexing.position> FALSE
+%token <Lexing.position> NULL
+%token <Lexing.position> LET
+%token <Lexing.position> FUNC
+%token <Lexing.position> IF
+%token <Lexing.position> ELSE
+%token <Lexing.position> FOR
+%token <Lexing.position> PLUS
+%token <Lexing.position> MINUS
+%token <Lexing.position> EQUALS
+%token <Lexing.position> PRODUCT
+%token <Lexing.position> DIVIDE
+%token <Lexing.position> SEMICOLON
+
+%token <Lexing.position> COLON
+%token <Lexing.position> LCURLY
+%token <Lexing.position> RCURLY
+%token <Lexing.position> LPAREN
+%token <Lexing.position> RPAREN
+%token <Lexing.position> LBRACKET
+%token <Lexing.position> RBRACKET
+%token <Lexing.position> COMMA
+%token <Lexing.position> LEQ
+%token <Lexing.position> LESS
+
+%token <Lexing.position> EOF
 
 (* Disambiguate precedence and associativity *)
 (* These are optional, and could have been done exclusively with production
@@ -76,8 +73,15 @@ declarations:
   ;
 
 decl:
-  | FUNC; i = ID; LPAREN; RPAREN; b = block; SEMICOLON { FuncDecl {name = i; parameters = []; block = b;} }
-  | FUNC; i = ID; LPAREN; p = parameter_list ; RPAREN; b = block; SEMICOLON { FuncDecl {name = i; parameters = p; block = b;} }
+  | FUNC; i = ID; LPAREN; RPAREN; b = block; SEMICOLON {
+    let i, pos = i in
+    let pos = Sloth_common.Position.t_of_lexing_position pos in
+    FuncDecl {name = i; parameters = []; block = b; pos}
+  }
+  | FUNC; i = ID; LPAREN; p = parameter_list ; RPAREN; b = block; SEMICOLON {
+    let i, pos = i in
+    let pos = Sloth_common.Position.t_of_lexing_position pos in
+    FuncDecl {name = i; parameters = p; block = b; pos} }
   | s = stmt { StmtDecl s }
   ;
 
@@ -88,61 +92,94 @@ stmts:
 
 stmt:
   | s = stmt_sans_semicolon; SEMICOLON { s }
-  | FOR; st = stmt; comp = expr1; SEMICOLON; inc = stmt_sans_semicolon; bl = block; SEMICOLON {
-    ForLoop (st, comp, inc, bl)
+  | pos = FOR; st = stmt; comp = expr1; SEMICOLON; inc = stmt_sans_semicolon; bl = block; SEMICOLON {
+    let pos = Sloth_common.Position.t_of_lexing_position pos in
+    ForLoop (st, comp, inc, bl, pos)
   }
   ;
 
 (* Used in for loops *)
 stmt_sans_semicolon:
   | e1 = expr1 { ExprStmt e1 }
-  | LET; id = ID; EQUALS; e1 = expr1 { LetStmt (id, e1) }
-  | id = ID; EQUALS; e1 = expr1 { AssignStmt (id, e1) }
-  | subscript = subscript; EQUALS; rhs = expr1 { SubAssignStmt {subscript; value=rhs } }
+  | LET; id = ID; EQUALS; e1 = expr1 {
+    let (id, pos) = id in
+    let pos = Sloth_common.Position.t_of_lexing_position pos in
+    LetStmt (id, e1, pos)
+  }
+  | id = ID; EQUALS; e1 = expr1 {
+    let (id, pos) = id in
+    let pos = Sloth_common.Position.t_of_lexing_position pos in
+    AssignStmt (id, e1, pos) }
+  | subscript = subscript; pos = EQUALS; rhs = expr1 {
+    let pos = Sloth_common.Position.t_of_lexing_position pos in
+    SubAssignStmt {subscript; value=rhs; pos }
+  }
   ;
 
 (* Conditionals *)
 expr1:
-  | IF; e1 = expr2; b = block; cont = conditional_continuation {
+  | pos = IF; e1 = expr2; b = block; cont = conditional_continuation {
+    let pos = Sloth_common.Position.t_of_lexing_position pos in
     IfExpr (
-      IfCont {
+      IfCont ({
         conditional = e1;
         block = b;
         continuation = Some cont;
-      }
-    )
+        pos;
+      }), pos)
   }
-  | IF; e1 = expr2; b = block { IfExpr (IfCont { conditional = e1; block = b; continuation = None } ) }
+  | pos = IF; e1 = expr2; b = block {
+    let pos = Sloth_common.Position.t_of_lexing_position pos in
+    IfExpr (IfCont { conditional = e1; block = b; continuation = None; pos}, pos)
+  }
   | e = expr2 { e }
 
 (* closure literals and infix funcs *)
 expr2:
-  | FUNC; LPAREN; RPAREN; b = block { FuncExpr {parameters = []; block = b;} }
-  | FUNC; LPAREN; p = parameter_list; RPAREN; b = block { FuncExpr {parameters = p; block = b;} }
-  | e1 = expr2; PLUS; e2 = expr2 {
-    MethodInvoc { receiver=e1; target="+"; args=[e2] }
+  | pos = FUNC; LPAREN; RPAREN; b = block {
+    let pos = Sloth_common.Position.t_of_lexing_position pos in
+    FuncExpr {parameters = []; block = b; pos}
   }
-  | e1 = expr2; LESS; e2 = expr2 {
-    MethodInvoc { receiver=e1; target="<"; args=[e2] }
+  | pos = FUNC; LPAREN; p = parameter_list; RPAREN; b = block {
+    let pos = Sloth_common.Position.t_of_lexing_position pos in
+    FuncExpr {parameters = p; block = b; pos}
   }
-  | e1 = expr2; LEQ; e2 = expr2 {
-    MethodInvoc { receiver=e1; target="<="; args=[e2] }
+  | e1 = expr2; pos = PLUS; e2 = expr2 {
+    let pos = Sloth_common.Position.t_of_lexing_position pos in
+    MethodInvoc { receiver=e1; target="+"; args=[e2]; pos}
   }
-  | e1 = expr2; MINUS; e2 = expr2 {
-    MethodInvoc { receiver=e1; target="-"; args=[e2] }
+  | e1 = expr2; pos = LESS; e2 = expr2 {
+    let pos = Sloth_common.Position.t_of_lexing_position pos in
+    MethodInvoc { receiver=e1; target="<"; args=[e2]; pos}
   }
-  | e1 = expr2; PRODUCT; e2 = expr2 {
-    MethodInvoc { receiver=e1; target="*"; args=[e2] }
+  | e1 = expr2; pos = LEQ; e2 = expr2 {
+    let pos = Sloth_common.Position.t_of_lexing_position pos in
+    MethodInvoc { receiver=e1; target="<="; args=[e2]; pos}
   }
-  | e1 = expr2; DIVIDE; e2 = expr2 {
-    MethodInvoc { receiver=e1; target="/"; args=[e2] }
+  | e1 = expr2; pos = MINUS; e2 = expr2 {
+    let pos = Sloth_common.Position.t_of_lexing_position pos in
+    MethodInvoc { receiver=e1; target="-"; args=[e2]; pos}
+  }
+  | e1 = expr2; pos = PRODUCT; e2 = expr2 {
+    let pos = Sloth_common.Position.t_of_lexing_position pos in
+    MethodInvoc { receiver=e1; target="*"; args=[e2]; pos}
+  }
+  | e1 = expr2; pos = DIVIDE; e2 = expr2 {
+    let pos = Sloth_common.Position.t_of_lexing_position pos in
+    MethodInvoc { receiver=e1; target="/"; args=[e2]; pos}
   }
   | e = expr3 { e }
 
 (* function invocation *)
 expr3:
-  | e = expr3; LPAREN; a = expr_list; RPAREN { FuncInvoc (e, a) }
-  | e = expr3; LPAREN; RPAREN { FuncInvoc (e, []) }
+  | e = expr3; pos = LPAREN; a = expr_list; RPAREN {
+    let pos = Sloth_common.Position.t_of_lexing_position pos in
+    FuncInvoc (e, a, pos)
+  }
+  | e = expr3; pos = LPAREN; RPAREN {
+    let pos = Sloth_common.Position.t_of_lexing_position pos in
+    FuncInvoc (e, [], pos)
+  }
   | s = subscript { s }
   | e = expr4 { e }
   ;
@@ -151,49 +188,94 @@ expr3:
 (* Primary - literals or grouping *)
 expr4:
   | l = list_literals { l }
-  | f = NUM { Num f }
-  | TRUE { Bool true }
-  | FALSE { Bool false }
-  | NULL { Null }
+  | f = NUM { let f, pos = f in Num (f, t_of_lexing_position pos) }
+  | pos = TRUE {
+    let pos = Sloth_common.Position.t_of_lexing_position pos in
+    Bool (true, pos)
+  }
+  | pos = FALSE {
+    let pos = Sloth_common.Position.t_of_lexing_position pos in
+    Bool (false, pos)
+  }
+  | pos = NULL {
+    let pos = t_of_lexing_position pos in
+    Null pos
+  }
   (* TODO implement the rest of the string parts *)
   | ss = STRING_START; e = expr1; se = STRING_END {
-    let end_part = EndStringInterp (e, se) in
-    String (StartStringInterp (ss, end_part))
+    let (se, se_pos) = se in
+    let se_pos = t_of_lexing_position se_pos in
+    let end_part = EndStringInterp (e, se, se_pos) in
+    let (ss, ss_pos) = ss in
+    let ss_pos = t_of_lexing_position ss_pos in
+    String (StartStringInterp (ss, end_part, ss_pos), ss_pos)
   }
   | ss = STRING_START; cont = string_middle; e = expr1; se = STRING_END {
-    let end_part = EndStringInterp (e, se) in
+    let (string_end_s, string_end_pos) = se in
+    let string_end_pos = t_of_lexing_position string_end_pos in
+    let end_part = EndStringInterp (e, string_end_s, string_end_pos) in
     (* We are iterating from back to front... *)
     let cont2_opt = List.fold_left (fun acc cur -> (
-      let (e, s) = cur in
+      let (e, s, pos) = cur in
+      let pos = t_of_lexing_position pos in
       match acc with
-      | None -> Some (MiddleStringInterp (e, s, end_part))
-      | Some prev -> Some (MiddleStringInterp (e, s, prev))
+      | None -> Some (MiddleStringInterp (e, s, end_part, pos))
+      | Some prev -> Some (MiddleStringInterp (e, s, prev, pos))
     )) None cont in
-    String (StartStringInterp (ss, Option.get cont2_opt))
+    let (ss, ss_pos) = ss in
+    let ss_pos = t_of_lexing_position ss_pos in
+    String (StartStringInterp (ss, Option.get cont2_opt, ss_pos), ss_pos)
   }
-  | s = STRING_FULL { String (FullString s) }
-  | i = ID { IdRef i }
+  | s = STRING_FULL {
+    let (s, pos) = s in
+    let pos = Sloth_common.Position.t_of_lexing_position pos in
+    String (FullString (s, pos), pos)
+  }
+  | i = ID {
+    let (i, pos) = i in
+    let pos = Sloth_common.Position.t_of_lexing_position pos in
+    IdRef (i, pos)
+  }
   | LPAREN; e = expr1; RPAREN { e }
   | h = hash_literals { h }
   ;
 
 (* Returns reversed list *)
 string_middle:
-  | e = expr1 ; s = STRING_MIDDLE { [(e, s)] }
+  | e = expr1 ; s = STRING_MIDDLE {
+    let (s, pos) = s in
+    [(e, s, pos)]
+  }
   | cont = string_middle; e = expr1; s = STRING_MIDDLE {
-    (e, s) :: cont
+    let (s, pos) = s in
+    (e, s, pos) :: cont
   }
 
 list_literals:
-  | LBRACKET; RBRACKET { List [] }
-  | LBRACKET; l = expr_list ; RBRACKET { List l }
+  | pos = LBRACKET; RBRACKET {
+    let pos = Sloth_common.Position.t_of_lexing_position pos in
+    List ([], pos)
+  }
+  | pos = LBRACKET; l = expr_list ; RBRACKET {
+    let pos = Sloth_common.Position.t_of_lexing_position pos in
+    List (l, pos)
+  }
   ;
 
 hash_literals:
-  | LCURLY; RCURLY { HashMap [] }
+  | pos = LCURLY; RCURLY {
+    let pos = Sloth_common.Position.t_of_lexing_position pos in
+    HashMap ([], pos)
+  }
   (* Allow single line literal without trailing comma *)
-  | LCURLY; k = expr4; COLON; v = expr1; RCURLY { HashMap [(k, v)] }
-  | LCURLY; p = hash_literal_pair; RCURLY { HashMap p }
+  | pos = LCURLY; k = expr4; COLON; v = expr1; RCURLY {
+    let pos = Sloth_common.Position.t_of_lexing_position pos in
+    HashMap ([(k, v)], pos)
+  }
+  | pos = LCURLY; p = hash_literal_pair; RCURLY {
+    let pos = Sloth_common.Position.t_of_lexing_position pos in
+    HashMap (p, pos)
+  }
   ;
 
 hash_literal_pair:
@@ -205,28 +287,39 @@ hash_literal_pair:
 
 (* Could be expr or stmt for assignment *)
 subscript:
-  | e = expr3; LBRACKET; sub = expr1 ; RBRACKET { Subscript (e, sub) }
+  | e = expr3; pos = LBRACKET; sub = expr1 ; RBRACKET {
+    let pos = Sloth_common.Position.t_of_lexing_position pos in
+    Subscript (e, sub, pos)
+  }
   ;
 
 conditional_continuation:
-  | e = elif; ELSE; b = block {
-      let else_cont = ElseCont b in
+  | e = elif; pos = ELSE; b = block {
+      let pos = Sloth_common.Position.t_of_lexing_position pos in
+      let else_cont = ElseCont (b, pos) in
       match e with
-      | IfCont {conditional; block; continuation=_} -> IfCont { conditional; block; continuation=(Some else_cont) }
+      | IfCont {conditional; block; continuation=_; pos} -> IfCont { conditional; block; continuation=(Some else_cont); pos }
       | _ -> failwith "Unreachable"
   }
   | e = elif { e }
-  | ELSE; b = block { ElseCont b }
+  | pos = ELSE; b = block {
+      let pos = Sloth_common.Position.t_of_lexing_position pos in
+      ElseCont (b, pos)
+  }
   ;
 
 elif:
-  | prev = elif; ELSE; IF; conditional = expr2; block = block {
-    let cur = IfCont {conditional; block; continuation=None} in
+  | prev = elif; pos = ELSE; IF; conditional = expr2; block = block {
+    let pos = Sloth_common.Position.t_of_lexing_position pos in
+    let cur = IfCont {conditional; block; continuation=None; pos} in
     match prev with
-    | IfCont {conditional; block; continuation=_} -> IfCont {conditional; block; continuation=(Some cur)}
+    | IfCont {conditional; block; continuation=_; pos} -> IfCont {conditional; block; continuation=(Some cur); pos}
     | _ -> failwith "Unreachable"
   }
-  | ELSE; IF; conditional = expr2; block = block { IfCont {conditional; block; continuation=None } }
+  | pos = ELSE; IF; conditional = expr2; block = block {
+    let pos = Sloth_common.Position.t_of_lexing_position pos in
+    IfCont {conditional; block; continuation=None; pos}
+  }
 
 block:
   | LCURLY; RCURLY { [] }
@@ -241,5 +334,15 @@ expr_list:
 parameter_list:
   (* TODO: make parameters different from just strings, to support type
      annotations *)
-  | i = ID { [i] }
-  | tl = parameter_list; COMMA; hd = ID { hd :: tl }
+  | i = ID {
+    let (i, pos) = i in
+    let i : string = i in
+    let pos : Sloth_common.Position.t = Sloth_common.Position.t_of_lexing_position pos in
+    let tuple = (i, pos) in
+    [tuple]
+  }
+  | tl = parameter_list; COMMA; hd = ID {
+    let (i, pos) = hd in
+    let pos = Sloth_common.Position.t_of_lexing_position pos in
+    (i, pos) :: tl
+  }

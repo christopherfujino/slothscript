@@ -15,22 +15,31 @@ print(m());
   (block
     ((ExprStmt
       (Num
-        1))
+        1
+        [POS]))
       (ExprStmt
         (Num
-          2))
+          2
+          [POS]))
       (ExprStmt
         (Num
-          3)))))
+          3
+          [POS]))))
+  (pos
+    [POS]))
   (StmtDecl
     (ExprStmt
       (FuncInvoc
         (IdRef
-          print)
+          print
+          [POS])
         ((FuncInvoc
           (IdRef
-            m)
-          ()))))))
+            m
+            [POS])
+          ()
+          [POS]))
+        [POS]))))
 
 ### Stdout
 3

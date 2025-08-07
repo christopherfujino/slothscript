@@ -9,36 +9,53 @@ func a(x) {func(y) {x+y;};};print(a(1)(2));
   (name
     a)
   (parameters
-    (x))
+    ((x
+      [POS])))
   (block
     ((ExprStmt
       (FuncExpr
         (parameters
-          (y))
+          ((y
+            [POS])))
         (block
           ((ExprStmt
             (MethodInvoc
               (receiver
                 (IdRef
-                  x))
+                  x
+                  [POS]))
               (target
                 +)
               (args
                 ((IdRef
-                  y))))))))))))
+                  y
+                  [POS])))
+              (pos
+                [POS])))))
+        (pos
+          [POS])))))
+  (pos
+    [POS]))
   (StmtDecl
     (ExprStmt
       (FuncInvoc
         (IdRef
-          print)
+          print
+          [POS])
         ((FuncInvoc
           (FuncInvoc
             (IdRef
-              a)
+              a
+              [POS])
             ((Num
-              1)))
+              1
+              [POS]))
+            [POS])
           ((Num
-            2))))))))
+            2
+            [POS]))
+          [POS]))
+        [POS]))))
 
 ### Stdout
 3

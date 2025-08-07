@@ -9,7 +9,9 @@ let x = 0;func f() {print(x);};x = 1;f();
   (LetStmt
     x
     (Num
-      0)))
+      0
+      [POS])
+    [POS]))
   (FuncDecl
     (name
       f)
@@ -19,20 +21,29 @@ let x = 0;func f() {print(x);};x = 1;f();
       ((ExprStmt
         (FuncInvoc
           (IdRef
-            print)
+            print
+            [POS])
           ((IdRef
-            x)))))))
+            x
+            [POS]))
+          [POS]))))
+    (pos
+      [POS]))
   (StmtDecl
     (AssignStmt
       x
       (Num
-        1)))
+        1
+        [POS])
+      [POS]))
   (StmtDecl
     (ExprStmt
       (FuncInvoc
         (IdRef
-          f)
-        ()))))
+          f
+          [POS])
+        ()
+        [POS]))))
 
 ### Stdout
 1

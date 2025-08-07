@@ -1,29 +1,32 @@
 open Core
 
+type lex_filter_state = False | True of Lexing.position
+
 (* insert semicolon before EOF *)
 let make_lex_filter () =
   let r = ref None in
   let last_token = ref None in
-  let should_spit_eof = ref false in
+  let should_spit_eof = ref False in
   (* insert semicolon before EOF *)
   fun buf ->
     let open Parser in
-    if !should_spit_eof then EOF
-    else
-      let token = Lexer.read r buf in
-      match token with
-      | EOF -> (
-          match !last_token with
-          | None -> EOF
-          | Some last_token -> (
-              match last_token with
-              | SEMICOLON -> EOF
-              | _ ->
-                  should_spit_eof := true;
-                  SEMICOLON))
-      | _ ->
-          last_token := Some token;
-          token
+    match !should_spit_eof with
+    | True pos -> EOF pos
+    | False -> (
+        let token = Lexer.read r buf in
+        match token with
+        | EOF pos -> (
+            match !last_token with
+            | None -> EOF pos
+            | Some last_token -> (
+                match last_token with
+                | SEMICOLON _ -> EOF pos
+                | _ ->
+                    should_spit_eof := True pos;
+                    SEMICOLON pos))
+        | _ ->
+            last_token := Some token;
+            token)
 
 let parse env line =
   let lex_filter = make_lex_filter () in
@@ -38,50 +41,52 @@ let parse env line =
   in
   Optimizer.optimize_prog env decls
 
+(* TODO figure out how to derive this *)
 let to_s token =
   let open Parser in
   match token with
-  | COLON -> "COLON"
-  | SEMICOLON -> "SEMICOLON"
-  | TRUE -> "TRUE"
-  | RPAREN -> "RPAREN"
-  | RCURLY -> "RCURLY"
-  | RBRACKET -> "RBRACKET"
-  | PRODUCT -> "PRODUCT"
-  | PLUS -> "PLUS"
-  | NULL -> "NULL"
-  | MINUS -> "MINUS"
-  | LPAREN -> "LPAREN"
-  | LET -> "LET"
-  | LESS -> "LESS"
-  | LEQ -> "LEQ"
-  | LCURLY -> "LCURLY"
-  | LBRACKET -> "LBRACKET"
-  | IF -> "IF"
-  | FUNC -> "FUNC"
-  | FOR -> "FOR"
-  | FALSE -> "FALSE"
-  | EQUALS -> "EQUALS"
-  | EOF -> "EOF"
-  | ELSE -> "ELSE"
-  | DIVIDE -> "DIVIDE"
-  | COMMA -> "COMMA"
-  | STRING_START s -> Printf.sprintf "STRING_START(%s)" s
-  | STRING_MIDDLE s -> Printf.sprintf "STRING_MIDDLE(%s)" s
-  | STRING_FULL s -> Printf.sprintf "STRING_FULL(%s)" s
-  | STRING_END s -> Printf.sprintf "STRING_END(%s)" s
-  | NUM n -> Printf.sprintf "NUM(%f)" n
-  | ID s -> Printf.sprintf "ID(%s)" s
+  | COLON _ -> "COLON"
+  | SEMICOLON _ -> "SEMICOLON"
+  | TRUE _ -> "TRUE"
+  | RPAREN _ -> "RPAREN"
+  | RCURLY _ -> "RCURLY"
+  | RBRACKET _ -> "RBRACKET"
+  | PRODUCT _ -> "PRODUCT"
+  | PLUS _ -> "PLUS"
+  | NULL _ -> "NULL"
+  | MINUS _ -> "MINUS"
+  | LPAREN _ -> "LPAREN"
+  | LET _ -> "LET"
+  | LESS _ -> "LESS"
+  | LEQ _ -> "LEQ"
+  | LCURLY _ -> "LCURLY"
+  | LBRACKET _ -> "LBRACKET"
+  | IF _ -> "IF"
+  | FUNC _ -> "FUNC"
+  | FOR _ -> "FOR"
+  | FALSE _ -> "FALSE"
+  | EQUALS _ -> "EQUALS"
+  | EOF _ -> "EOF"
+  | ELSE _ -> "ELSE"
+  | DIVIDE _ -> "DIVIDE"
+  | COMMA _ -> "COMMA"
+  | STRING_START (s, _) -> Printf.sprintf "STRING_START(%s)" s
+  | STRING_MIDDLE (s, _) -> Printf.sprintf "STRING_MIDDLE(%s)" s
+  | STRING_FULL (s, _) -> Printf.sprintf "STRING_FULL(%s)" s
+  | STRING_END (s, _) -> Printf.sprintf "STRING_END(%s)" s
+  | NUM (n, _) -> Printf.sprintf "NUM(%f)" n
+  | ID (s, _) -> Printf.sprintf "ID(%s)" s
 
 let debug buf prev =
   let lex_filter = make_lex_filter () in
   let rec inner buf idx r prev =
     let cur = lex_filter buf in
-    if phys_equal cur Parser.EOF then (
-      let prev = List.rev prev in
-      print_endline "[Start]";
-      List.iter prev ~f:(fun t -> to_s t |> print_endline);
-      ())
-    else (inner [@tailcall]) buf (idx + 1) r (cur :: prev)
+    match cur with
+    | Parser.EOF _ ->
+        let prev = List.rev prev in
+        print_endline "[Start]";
+        List.iter prev ~f:(fun t -> to_s t |> print_endline);
+        ()
+    | _ -> (inner [@tailcall]) buf (idx + 1) r (cur :: prev)
   in
   inner buf 0 (ref None) prev

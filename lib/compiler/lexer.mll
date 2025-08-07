@@ -2,7 +2,10 @@
 {
 open Parser
 
-exception SyntaxError of string
+exception SyntaxError of string * Lexing.position
+
+(* TODO pretty print *)
+let syntax_error e = raise e
 
 type globalLexerState =
   | NotInterpolating
@@ -36,99 +39,101 @@ rule read last_token =
       Inspired by: https://go101.org/article/line-break-rules.html
     *)
     let asi () =
-      last_token := Some SEMICOLON; SEMICOLON in
+      let token = SEMICOLON lexbuf.lex_curr_p in
+      last_token := Some token;
+      token in
     match !last_token with
     | None -> (read [@tailcall]) last_token lexbuf
     | Some t -> (match t with
         | ID _ -> asi ()
-        | RPAREN -> asi ()
-        | RCURLY -> asi ()
-        | RBRACKET -> asi ()
+        | RPAREN _ -> asi ()
+        | RCURLY _ -> asi ()
+        | RBRACKET _ -> asi ()
         | NUM _ -> asi ()
         | STRING_FULL _ -> asi ()
         | STRING_END _ -> asi ()
         | _ -> (read [@tailcall]) last_token lexbuf
     )
   }
-  | "true" { last_token := Some TRUE; Option.get !last_token }
-  | "false" { last_token := Some FALSE; Option.get !last_token }
-  | "null" { last_token := Some NULL; Option.get !last_token }
-  | "let" { last_token := Some LET; Option.get !last_token }
-  | "func" { last_token := Some FUNC; FUNC }
-  | "if" { last_token := Some IF; Option.get !last_token }
-  | "else" { last_token := Some ELSE; Option.get !last_token }
-  | "for" { last_token := Some FOR; Option.get !last_token }
-  | '+' { last_token := Some PLUS; Option.get !last_token }
-  | '=' { last_token := Some EQUALS; Option.get !last_token }
-  | '*' { last_token := Some PRODUCT; Option.get !last_token }
-  | '/' { last_token := Some DIVIDE; Option.get !last_token }
+  | "true" { let token = TRUE lexbuf.lex_curr_p in last_token := Some token; token }
+  | "false" { let token = FALSE lexbuf.lex_curr_p in last_token := Some token; token }
+  | "null" { let token = NULL lexbuf.lex_curr_p in last_token := Some token; token }
+  | "let" { let token = LET lexbuf.lex_curr_p in last_token := Some token; token }
+  | "func" { let token = FUNC lexbuf.lex_curr_p in last_token := Some token; token }
+  | "if" { let token = IF lexbuf.lex_curr_p in last_token := Some token; token }
+  | "else" { let token = ELSE lexbuf.lex_curr_p in last_token := Some token; token }
+  | "for" { let token = FOR lexbuf.lex_curr_p in last_token := Some token; token }
+  | '+' { let token = PLUS lexbuf.lex_curr_p in last_token := Some token; token }
+  | '-' { let token = MINUS lexbuf.lex_curr_p in last_token := Some token; token }
+  | '=' { let token = EQUALS lexbuf.lex_curr_p in last_token := Some token; token }
+  | '*' { let token = PRODUCT lexbuf.lex_curr_p in last_token := Some token; token }
+  | '/' { let token = DIVIDE lexbuf.lex_curr_p in last_token := Some token; token }
   | ';' {
     let parse_semicolon () =
-      last_token := Some SEMICOLON;
-      SEMICOLON
+      let token = SEMICOLON lexbuf.lex_curr_p in
+      last_token := Some token;
+      token
     in
     match !last_token with
-    | None -> parse_semicolon ()
+    | None -> (* TODO should we ignore leading semicolon? *) parse_semicolon ()
     | Some t -> (match t with
         (* Allow no-op repeat semicolons *)
-        | SEMICOLON -> (read [@tailcall]) last_token lexbuf
+        | SEMICOLON _ -> (read [@tailcall]) last_token lexbuf
         | _ -> parse_semicolon ()
     )
   }
-  | ':' { last_token := Some COLON; Option.get !last_token }
+  | ':' { let token = COLON lexbuf.lex_curr_p in last_token := Some token; token }
   | '"' {
-    last_token := Some (read_string (Buffer.create string_buffer_size) lexbuf);
-    Option.get !last_token
+    let token = read_string (Buffer.create string_buffer_size) lexbuf.lex_curr_p lexbuf in
+    last_token := Some token;
+    token
   }
-  | '{' { last_token := Some LCURLY; Option.get !last_token }
+  | '{' { let token = LCURLY lexbuf.lex_curr_p in last_token := Some token; token}
   | '}' {
-    last_token := (match !state with
-    | NotInterpolating -> Some RCURLY
-    | Interpolating -> Some (read_string (Buffer.create string_buffer_size) lexbuf));
-    Option.get !last_token
+    let token = (match !state with
+    | NotInterpolating -> RCURLY lexbuf.lex_curr_p
+    | Interpolating -> (read_string (Buffer.create string_buffer_size) lexbuf.lex_curr_p lexbuf)) in
+    last_token := Some token;
+    token
   }
-  | '(' { last_token := Some LPAREN; Option.get !last_token }
-  | ')' { last_token := Some RPAREN; Option.get !last_token }
-  | ',' { last_token := Some COMMA; Option.get !last_token }
-  | '<' { last_token := Some LESS; Option.get !last_token }
-  | "<=" { last_token := Some LEQ; Option.get !last_token }
-  | '-' { last_token := Some MINUS; Option.get !last_token }
-  | '[' { last_token := Some LBRACKET; Option.get !last_token }
-  | ']' { last_token := Some RBRACKET; Option.get !last_token }
-  (*
-  | '.' { DOT }
-  *)
+  | '(' { let token = LPAREN lexbuf.lex_curr_p in last_token := Some token; token}
+  | ')' { let token = RPAREN lexbuf.lex_curr_p in last_token := Some token; token}
+  | ',' { let token = COMMA lexbuf.lex_curr_p in last_token := Some token; token}
+  | '<' { let token = LESS lexbuf.lex_curr_p in last_token := Some token; token}
+  | "<=" { let token = LEQ lexbuf.lex_curr_p in last_token := Some token; token}
+  | '[' { let token = LBRACKET lexbuf.lex_curr_p in last_token := Some token; token}
+  | ']' { let token = RBRACKET lexbuf.lex_curr_p in last_token := Some token; token}
   (* Lexing.lexeme means return the string that matched the pattern *)
-  | id { last_token := Some (ID (Lexing.lexeme lexbuf)); Option.get !last_token }
-  | num { last_token := Some (NUM (float_of_string (Lexing.lexeme lexbuf))); Option.get !last_token }
-  | _ { raise (SyntaxError (Lexing.lexeme lexbuf))}
+  | id { let token = ID (Lexing.lexeme lexbuf, lexbuf.lex_curr_p) in last_token := Some token; token }
+  | num { let token = NUM (float_of_string (Lexing.lexeme lexbuf), lexbuf.lex_curr_p) in last_token := Some token; token }
+  | _ { syntax_error (SyntaxError (Lexing.lexeme lexbuf, lexbuf.lex_curr_p))}
   (* Here `eof` is a special regex built into ocamllex *)
   | eof {
     (* Note: if needed, a semicolon will be inserted later in filtering
        between lexing & parsing *)
-    EOF
+    EOF lexbuf.lex_curr_p
   }
 
-and read_string buf =
+and read_string buf pos =
   (* TODO implement escapes *)
   parse
   | '"' {
     match !state with
-    | NotInterpolating -> STRING_FULL (Buffer.contents buf)
+    | NotInterpolating -> STRING_FULL (Buffer.contents buf, pos)
     | Interpolating -> (
       state := NotInterpolating;
-      STRING_END (Buffer.contents buf)
+      STRING_END (Buffer.contents buf, pos)
     )
   }
   | "${" {
     match !state with
     | NotInterpolating -> (
       state := Interpolating;
-      STRING_START (Buffer.contents buf)
+      STRING_START (Buffer.contents buf, pos)
     )
-    | Interpolating -> STRING_MIDDLE (Buffer.contents buf)
+    | Interpolating -> STRING_MIDDLE (Buffer.contents buf, pos)
   }
   | [^ '"' '$']+ {
     let chunk = (Lexing.lexeme lexbuf) in
     Buffer.add_string buf chunk;
-      (read_string[@tailcall]) buf lexbuf }
+      (read_string[@tailcall]) buf pos lexbuf }
