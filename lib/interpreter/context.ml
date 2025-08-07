@@ -2,13 +2,14 @@
 type t = {
   l : (module Sloth_stdlib.StdlibSig);
   identifiers : Runtime.t Identifiers.t;
+  src : string;
 }
 
-let make_ctx m =
+let make_ctx m src =
   let module M = (val m : Sloth_stdlib.StdlibSig) in
   let identifiers = Identifiers.create () in
-  let () =
-    Identifiers.bind ~pos:Sloth_common.Position.dummy identifiers "print"
+  let unit_opt =
+    Identifiers.bind identifiers "print"
       (Runtime.Func
          (Native
             {
@@ -24,4 +25,6 @@ let make_ctx m =
               identifiers;
             }))
   in
-  { l = m; identifiers }
+  let open Core in
+  Option.value_exn unit_opt;
+  { l = m; identifiers; src }

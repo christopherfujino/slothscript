@@ -1,10 +1,16 @@
 open Core
 open Common
 
-let check_arity ~pos desired_count actual_list name =
+let failure ~ctx pos msg =
+  let pos_s = Sloth_common.Position.string_of_t pos in
+  let open Context in
+  let msg = Printf.sprintf "[%s] %s\n\n%s" pos_s msg (Sloth_common.Position.summarize pos ctx.src) in
+  raise (Failure msg)
+
+let check_arity ~pos ~ctx desired_count actual_list name =
   let actual_count = List.length actual_list in
   if not (desired_count = actual_count) then
-    failure pos
+    failure ~ctx pos
       (Printf.sprintf "The function %s expected %d arguments but received %d"
          name desired_count actual_count)
 
@@ -32,7 +38,11 @@ and interpret_decl (ctx : Context.t) decl =
                identifiers = ctx.identifiers;
              })
       in
-      Identifiers.bind ~pos ctx.identifiers name f;
+      (match Identifiers.bind ctx.identifiers name f with
+      | Some () -> ()
+      | None ->
+          Printf.sprintf "A function named %s has already been declared" name
+          |> failure ~ctx pos);
       (ctx, f)
   | StmtDecl s -> interpret_stmt ctx s
 
@@ -41,13 +51,26 @@ and interpret_stmt (ctx : Context.t) stmt =
   match stmt with
   | LetStmt (id, e, pos) ->
       let v = interpret_expr ctx e in
-      Identifiers.bind ~pos ctx.identifiers id v;
+      (match Identifiers.bind ctx.identifiers id v with
+      | Some () -> ()
+      | None ->
+          Printf.sprintf
+            "The name %s has already been declared in this scope; did you mean \
+             to assign to it?"
+            id
+          |> failure ~ctx pos);
       (ctx, v)
   | AssignStmt (id, e, pos) ->
       let v = interpret_expr ctx e in
-      Identifiers.reassign ~pos ctx.identifiers id v;
+      (match Identifiers.reassign ctx.identifiers id v with
+      | Some () -> ()
+      | None ->
+          Printf.sprintf
+            "The name %s has not been declared yet; did you mean to declare it?"
+            id
+          |> failure ~ctx pos);
       (ctx, v)
-  | SubAssignStmt { subscript; value; _ } -> (
+  | SubAssignStmt { subscript; value; pos } -> (
       match subscript with
       | Subscript (receiver, subscript, pos) -> (
           let receiver' = interpret_expr ctx receiver in
@@ -57,15 +80,22 @@ and interpret_stmt (ctx : Context.t) stmt =
           | HashMap tbl ->
               Stdlib.Hashtbl.add tbl subscript' value';
               (ctx, value')
-          | List elements ->
-              let i = Runtime.int_of_val pos subscript' in
-              Array.set elements i value';
-              (ctx, receiver')
+          | List elements -> (
+              match Runtime.int_of_val subscript' with
+              | Some i ->
+                  Array.set elements i value';
+                  (ctx, receiver')
+              | None ->
+                  Printf.sprintf
+                    "Lists can only be subscripted with Numbers, but you used \
+                     %s"
+                    (Runtime.to_s subscript')
+                  |> failure ~ctx pos)
           | _ ->
-              failure pos
-                (Printf.sprintf "Assigning via subscript to %s not implemented"
-                   (Runtime.to_s receiver')))
-      | _ -> failwith "TODO")
+              Printf.sprintf "Assigning via subscript to %s not implemented"
+                (Runtime.to_s receiver')
+              |> failure ~ctx pos)
+      | _ -> Printf.sprintf "Unreachable?! %s" __LOC__ |> failure ~ctx pos)
   | ExprStmt expr -> (ctx, interpret_expr ctx expr)
   | ForLoop (init, cmp, inc, bl, pos) ->
       let identifiers = Identifiers.push_empty ctx.identifiers in
@@ -73,12 +103,20 @@ and interpret_stmt (ctx : Context.t) stmt =
       let ctx'', _ = interpret_stmt ctx' init in
 
       let rec interpret_for_loop ctx cmp inc bl last_val =
-        let cmp_val = interpret_expr ctx cmp |> Runtime.bool_of_val pos in
-        if not cmp_val then last_val
-        else
-          let cur_val = interpret_block ctx bl in
-          let ctx, _ = interpret_stmt ctx inc in
-          (interpret_for_loop [@tailcall]) ctx cmp inc bl cur_val
+        let cmp_val = interpret_expr ctx cmp in
+        match cmp_val |> Runtime.bool_of_val with
+        | Some cmp_val ->
+            if not cmp_val then last_val
+            else
+              let cur_val = interpret_block ctx bl in
+              let ctx, _ = interpret_stmt ctx inc in
+              (interpret_for_loop [@tailcall]) ctx cmp inc bl cur_val
+        | None ->
+            Printf.sprintf
+              "The comparison of a for loop must be a Boolean value, but you \
+               used %s"
+              (Runtime.to_s cmp_val)
+            |> failure ~ctx pos
       in
       (ctx, interpret_for_loop ctx'' cmp inc bl Runtime.Null)
 
@@ -86,16 +124,22 @@ and interpret_cond ctx cond =
   match cond with
   | Compiler.Optimizer.IfCont { conditional; block; continuation; pos } -> (
       let condition = interpret_expr ctx conditional in
-      let condition_b = Runtime.bool_of_val pos condition in
-      if condition_b then
-        let ctx =
-          { ctx with identifiers = Identifiers.push_empty ctx.identifiers }
-        in
-        interpret_block ctx block
-      else
-        match continuation with
-        | None -> Runtime.Null
-        | Some cond -> (interpret_cond [@tailcall]) ctx cond)
+      match Runtime.bool_of_val condition with
+      | Some condition_b -> (
+          if condition_b then
+            let ctx =
+              { ctx with identifiers = Identifiers.push_empty ctx.identifiers }
+            in
+            interpret_block ctx block
+          else
+            match continuation with
+            | None -> Runtime.Null
+            | Some cond -> (interpret_cond [@tailcall]) ctx cond)
+      | None ->
+          Printf.sprintf
+            "If-expressions must have a boolean expression, but you used %s"
+            (Runtime.to_s condition)
+          |> failure ~ctx pos)
   | Compiler.Optimizer.ElseCont (stmts, _) ->
       let ctx =
         { ctx with identifiers = Identifiers.push_empty ctx.identifiers }
@@ -145,69 +189,76 @@ and interpret_expr ctx expr =
                 let i = Stdlib.int_of_float idx in
                 Array.get elements i
               else
-                failure pos
-                  (Printf.sprintf
-                     "Lists can only be subscripted by integers, you used %s"
-                     (Runtime.to_s subscript'))
+                Printf.sprintf
+                  "Lists can only be subscripted by integers, you used %s"
+                  (Runtime.to_s subscript')
+                |> failure ~ctx pos
           | _ ->
-              failure pos
+              failure ~ctx pos
                 (Runtime.to_s subscript'
                 |> Printf.sprintf
-                     "Lists can only be subscripted by nums, you used %s"))
+                     "Lists can only be subscripted by Numbers, you used %s"))
       | Runtime.HashMap tbl -> Stdlib.Hashtbl.find tbl subscript'
       | _ ->
-          raise
-            (Common.Failure
-               (Printf.sprintf "Cannot subscript the value %s"
-                  (Runtime.to_s receiver'))))
-  | IdRef (i, pos) -> Identifiers.get ~pos ctx.identifiers i
+          Printf.sprintf "Cannot subscript the value %s"
+            (Runtime.to_s receiver')
+          |> failure ~ctx pos)
+  | IdRef (i, pos) -> (
+      match Identifiers.get ctx.identifiers i with
+      | Some v -> v
+      | None ->
+          Printf.sprintf "The name %s has not been declared in this scope" i
+          |> failure ~ctx pos)
   | MethodInvoc { receiver; target; args; pos } -> (
       let rt_receiver = interpret_expr ctx receiver in
       let not_implemented receiver =
-        let msg =
-          Printf.sprintf "The type %s does not implement the method %s" receiver
-            target
-        in
-        failure pos msg
+        Printf.sprintf "The type %s does not implement the method %s" receiver
+          target
+        |> failure ~ctx pos
       in
       match rt_receiver with
-      | Null -> failure pos "NPE!"
+      | Null -> failure ~ctx pos "NPE!"
       | String _ -> not_implemented "String"
       | Num f -> (
           (* Does it matter this is O(n)? *)
           match target with
-          | "+" ->
-              check_arity ~pos 1 args "Num.+";
+          | "+" -> (
+              check_arity ~ctx ~pos 1 args "Num.+";
               let arg = List.hd_exn args in
               let arg_val = interpret_expr ctx arg in
-              let arg_f = Runtime.num_of_val pos arg_val in
-              Num (f +. arg_f)
-          | "-" ->
-              check_arity ~pos 1 args "Num.-";
+              match Runtime.num_of_val arg_val with
+              | Some arg_f -> Num (f +. arg_f)
+              | None -> failure ~ctx pos "TODO")
+          | "-" -> (
+              check_arity ~ctx ~pos 1 args "Num.-";
               let arg = List.hd_exn args in
               let arg_val = interpret_expr ctx arg in
-              let arg_f = Runtime.num_of_val pos arg_val in
-              Num (f -. arg_f)
-          | "*" ->
-              check_arity ~pos 1 args "Num.*";
+              match Runtime.num_of_val arg_val with
+              | Some arg_f -> Num (f -. arg_f)
+              | None -> failure ~ctx pos "TODO")
+          | "*" -> (
+              check_arity ~ctx ~pos 1 args "Num.*";
               let arg = List.hd_exn args in
               let arg_val = interpret_expr ctx arg in
-              let arg_f = Runtime.num_of_val pos arg_val in
-              Num (f *. arg_f)
-          | "/" ->
-              check_arity ~pos 1 args "Num./";
+              match Runtime.num_of_val arg_val with
+              | Some arg_f -> Num (f *. arg_f)
+              | None -> failure ~ctx pos "TODO")
+          | "/" -> (
+              check_arity ~ctx ~pos 1 args "Num./";
               let arg = List.hd_exn args in
               let arg_val = interpret_expr ctx arg in
-              let arg_f = Runtime.num_of_val pos arg_val in
-              Num (f /. arg_f)
-          | "<=" ->
-              check_arity ~pos 1 args "Num.<=";
+              match Runtime.num_of_val arg_val with
+              | Some arg_f -> Num (f /. arg_f)
+              | None -> failure ~ctx pos "TODO")
+          | "<=" -> (
+              check_arity ~ctx ~pos 1 args "Num.<=";
               let arg = List.hd_exn args in
               let arg_val = interpret_expr ctx arg in
-              let arg_f = Runtime.num_of_val pos arg_val in
-              Bool (Float.( <= ) f arg_f)
+              match Runtime.num_of_val arg_val with
+              | Some arg_f -> Bool (Float.( <= ) f arg_f)
+              | None -> failure ~ctx pos "TODO")
           | _ -> not_implemented "Num")
-      | _ -> failwith "TODO")
+      | _ -> failure ~ctx pos "TODO")
   | FuncInvoc (receiver, args, pos) -> (
       let receiver' = interpret_expr ctx receiver in
       match receiver' with
@@ -220,15 +271,15 @@ and interpret_expr ctx expr =
                  List.iter2 parameters args ~f:(fun param_name arg_expr ->
                      (* Note this is interpreted with the enclosing env *)
                      let v = interpret_expr ctx arg_expr in
+                     Identifiers.bind identifiers2 param_name v
                      (* This must not throw *)
-                     Identifiers.bind ~pos:Sloth_common.Position.dummy
-                       identifiers2 param_name v)
+                     |> Option.value_exn)
                with
               | Ok () -> ()
               | Unequal_lengths ->
                   Printf.sprintf
                     "Mismatched number of params and args in call to function"
-                  |> failure pos);
+                  |> failure ~ctx pos);
               let temp_ctx = { ctx with identifiers = identifiers2 } in
               let rec traverse_stmts ctx stmts =
                 match stmts with

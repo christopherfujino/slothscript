@@ -10,6 +10,9 @@ let t_of_lexing_position (p : Lexing.position) : t =
     pos_cnum = p.pos_cnum;
   }
 
+  (* t' src *)
+let summarize _ _ = "TODO"
+
 let sexp_of_t _ = Sexp.Atom "[POS]"
 
 let rec t_of_sexp _ = dummy
