@@ -1,7 +1,6 @@
 let wrap_interpret ctx prog =
   let open Interpreter in
-  try
-    Interpret.interpret_prog ctx prog
+  try Interpret.interpret_prog ctx prog
   with Common.Failure msg ->
     Printf.fprintf stderr "Runtime Exception\n%s\n" msg;
     exit 1
