@@ -49,7 +49,9 @@ let get env id = match get_opt env id with Some v -> Some v | None -> None
 let rec reassign env id v =
   match Hashtbl.find env.values id with
   (* We don't care about the previous value, we just want to replace it *)
-  | Some _ -> Hashtbl.change env.values id ~f:(fun _ -> Some v); Some ()
+  | Some _ ->
+      Hashtbl.change env.values id ~f:(fun _ -> Some v);
+      Some ()
   | None -> (
       match env.previous with
       | Some prev -> (reassign [@tailcall]) prev id v
