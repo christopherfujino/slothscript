@@ -11,7 +11,6 @@
 - [ ] README.md
 - [ ] Security policy
 - [ ] Language versioning
-- [ ] Store locs in runtime values
 - [ ] Stack traces; depends on storing locs in runtime values
 - [ ] Pattern matching
 - [ ] Formatter
@@ -36,3 +35,4 @@
 - [x] Implement all arithmetic operators
 - [x] Automatic semicolon insertion
 - [x] HashMap literals
+- [x] Store locs in runtime values
