@@ -15,13 +15,13 @@ let red =
       ~ast:
         "((StmtDecl(LetStmt x(Num 1 [POS])[POS]))(FuncDecl(name \
          x)(parameters())(block())(pos [POS])))"
-      ~failure:Runtime_error;
+      ~failure:Optimizer_error;
     (* Although this works in JS, Python, and Perl, this seems like a mistake *)
     (* Go does not allow it. *)
     make_spec "closures cannot capture future vars"
       ~program:"func closure() {print(x);};let x = 1;closure();"
       ~ast:
-        "zzz((FuncStmt(name closure)(parameters())(block((ExprStmt(FuncInvoc \
+        "((FuncStmt(name closure)(parameters())(block((ExprStmt(FuncInvoc \
          print((IdRef x)))))))(LetStmt x(Num 1))(ExprStmt(FuncInvoc \
          closure())))"
       ~failure:Optimizer_error;

@@ -15,7 +15,7 @@ func f() {
 print("The answer is: ${f()}.")|} in
 
         let env =
-          Compiler.Environment.create () |> Compiler.Stdlib_stubs.populate
+          Compiler.Environment.create src |> Compiler.Stdlib_stubs.populate
         in
         let _, ast = Compiler.Main.parse env src in
         let ast_str = Compiler.Optimizer.prog_to_str ast in

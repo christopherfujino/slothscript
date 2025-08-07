@@ -12,8 +12,6 @@ type globalLexerState =
   | Interpolating
 
 let string_buffer_size = 33
-
-let state = ref NotInterpolating
 }
 
 (* identifiers *)
@@ -23,11 +21,11 @@ let letter = ['a'-'z' 'A'-'Z']
 let id = ['a'-'z' 'A'-'Z' '_'] ['a'-'z' 'A'-'Z' '0'-'9' '_']*
 
 (* rule and parse are keywords *)
-rule read last_token =
+rule private_read last_token state =
   parse
   (* means if `white` matches, call the read rule again and return its
      results--i.e. skip this match *)
-  | white { (read [@tailcall]) last_token lexbuf }
+  | white { (private_read [@tailcall]) last_token state lexbuf }
   | '\n' {
     (* https://ohama.github.io/ocaml/ocamllex-tutorial/actions/position/ *)
     lexbuf.lex_curr_p <- { lexbuf.lex_curr_p with
@@ -43,7 +41,7 @@ rule read last_token =
       last_token := Some token;
       token in
     match !last_token with
-    | None -> (read [@tailcall]) last_token lexbuf
+    | None -> (private_read [@tailcall]) last_token state lexbuf
     | Some t -> (match t with
         | ID _ -> asi ()
         | RPAREN _ -> asi ()
@@ -52,7 +50,7 @@ rule read last_token =
         | NUM _ -> asi ()
         | STRING_FULL _ -> asi ()
         | STRING_END _ -> asi ()
-        | _ -> (read [@tailcall]) last_token lexbuf
+        | _ -> (private_read [@tailcall]) last_token state lexbuf
     )
   }
   | "true" { let token = TRUE lexbuf.lex_curr_p in last_token := Some token; token }
@@ -78,13 +76,13 @@ rule read last_token =
     | None -> (* TODO should we ignore leading semicolon? *) parse_semicolon ()
     | Some t -> (match t with
         (* Allow no-op repeat semicolons *)
-        | SEMICOLON _ -> (read [@tailcall]) last_token lexbuf
+        | SEMICOLON _ -> (private_read [@tailcall]) last_token state lexbuf
         | _ -> parse_semicolon ()
     )
   }
   | ':' { let token = COLON lexbuf.lex_curr_p in last_token := Some token; token }
   | '"' {
-    let token = read_string (Buffer.create string_buffer_size) lexbuf.lex_curr_p lexbuf in
+    let token = read_string (Buffer.create string_buffer_size) lexbuf.lex_curr_p state lexbuf in
     last_token := Some token;
     token
   }
@@ -92,7 +90,7 @@ rule read last_token =
   | '}' {
     let token = (match !state with
     | NotInterpolating -> RCURLY lexbuf.lex_curr_p
-    | Interpolating -> (read_string (Buffer.create string_buffer_size) lexbuf.lex_curr_p lexbuf)) in
+    | Interpolating -> (read_string (Buffer.create string_buffer_size) lexbuf.lex_curr_p state lexbuf)) in
     last_token := Some token;
     token
   }
@@ -114,7 +112,7 @@ rule read last_token =
     EOF lexbuf.lex_curr_p
   }
 
-and read_string buf pos =
+and read_string buf pos state =
   (* TODO implement escapes *)
   parse
   | '"' {
@@ -136,4 +134,41 @@ and read_string buf pos =
   | [^ '"' '$']+ {
     let chunk = (Lexing.lexeme lexbuf) in
     Buffer.add_string buf chunk;
-      (read_string[@tailcall]) buf pos lexbuf }
+      (read_string[@tailcall]) buf pos state lexbuf }
+
+(* Footer *)
+{
+  type lex_filter_state = False | True of Lexing.position
+
+  (* insert semicolon before EOF *)
+  let make_lex_filter () =
+    let r = ref None in
+    let last_token = ref None in
+    let state = ref NotInterpolating in
+    let should_spit_eof = ref False in
+    (* insert semicolon before EOF *)
+    fun buf ->
+      let open Parser in
+      match !should_spit_eof with
+      | True pos -> EOF pos
+      | False -> (
+          let token = private_read r state buf in
+          match token with
+          | EOF pos -> (
+              match !last_token with
+              | None -> EOF pos
+              | Some last_token -> (
+                  match last_token with
+                  | SEMICOLON _ -> EOF pos
+                  | _ ->
+                      should_spit_eof := True pos;
+                      SEMICOLON pos))
+          | _ ->
+              last_token := Some token;
+              token)
+
+  let bootstrap input =
+    let filter = make_lex_filter () in
+    let lexbuf = Lexing.from_string input in
+    (filter, lexbuf)
+}

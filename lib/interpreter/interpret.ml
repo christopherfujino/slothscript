@@ -5,7 +5,7 @@ let failure ~ctx pos msg =
   let pos_s = Sloth_common.Position.string_of_t pos in
   let open Context in
   let msg =
-    Printf.sprintf "%s\n\n[%s] %s"
+    Printf.sprintf "%s\n\n[%s] Runtime error: %s"
       (Sloth_common.Position.summarize pos ctx.src)
       pos_s msg
   in

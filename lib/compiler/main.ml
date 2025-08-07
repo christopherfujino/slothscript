@@ -1,11 +1,11 @@
 open Core
 
-type lex_filter_state = False | True of Lexing.position
-
+(*
 (* insert semicolon before EOF *)
 let make_lex_filter () =
   let r = ref None in
   let last_token = ref None in
+  let state = ref Lexer.NotInterpolating in
   let should_spit_eof = ref False in
   (* insert semicolon before EOF *)
   fun buf ->
@@ -13,7 +13,7 @@ let make_lex_filter () =
     match !should_spit_eof with
     | True pos -> EOF pos
     | False -> (
-        let token = Lexer.read r buf in
+        let token = Lexer.read r state buf in
         match token with
         | EOF pos -> (
             match !last_token with
@@ -27,13 +27,11 @@ let make_lex_filter () =
         | _ ->
             last_token := Some token;
             token)
-
+*)
 let parse env line =
-  let lex_filter = make_lex_filter () in
+  let filter, lexbuf = Lexer.bootstrap line in
   let decls =
-    try
-      let lexbuf = Lexing.from_string line in
-      Parser.prog lex_filter lexbuf
+    try Parser.prog filter lexbuf
     with Parser.Error i ->
       let msg = Printf.sprintf "Parser error (%d)" i in
       (* TODO Interpolate lexer position *)
@@ -78,7 +76,7 @@ let to_s token =
   | ID (s, _) -> Printf.sprintf "ID(%s)" s
 
 let debug buf prev =
-  let lex_filter = make_lex_filter () in
+  let lex_filter = Lexer.make_lex_filter () in
   let rec inner buf idx r prev =
     let cur = lex_filter buf in
     match cur with

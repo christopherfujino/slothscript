@@ -49,7 +49,7 @@ let make_test spec =
     in
     assert_failure msg);
   (* Parser *)
-  let env = Compiler.Environment.create () |> Stdlib_stubs.populate in
+  let env = Compiler.Environment.create spec.program |> Stdlib_stubs.populate in
   let _, prog = Main.parse env spec.program in
   assert_equal ~pp_diff ~printer spec.ast
     (Optimizer.prog_to_str prog |> Printer.sexp_formatter);
@@ -74,7 +74,9 @@ let make_failing_test spec =
   spec.name >:: fun _ ->
   (* Parser *)
   try
-    let env = Compiler.Environment.create () |> Stdlib_stubs.populate in
+    let env =
+      Compiler.Environment.create spec.program |> Stdlib_stubs.populate
+    in
     let _, prog = Main.parse env spec.program in
     assert_equal ~pp_diff ~printer spec.ast (Optimizer.prog_to_str prog);
 
@@ -123,8 +125,9 @@ let make_failing_test spec =
           match expectation with
           | Optimizer_error -> ()
           | _ ->
-              Printf.sprintf
-                "Got an Optimizer.Failure but expected something else: %s" msg
+              Printf.sprintf "Got an Optimizer.Failure but expected a %s:\n\n%s"
+                (string_of_failure expectation)
+                msg
               |> assert_failure))
   | Interpreter.Common.Failure msg -> (
       match spec.failure with

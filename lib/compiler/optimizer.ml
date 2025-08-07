@@ -2,7 +2,8 @@ open Core
 
 exception Failure of string
 
-let failure msg pos =
+(* TODO add src *)
+let failure ~pos msg =
   let pos_msg = Sloth_common.Position.string_of_t pos in
   let msg2 = Printf.sprintf "[%s] Optimizer error: %s" pos_msg msg in
   raise (Failure msg2)
@@ -75,9 +76,6 @@ and operator = Add [@@deriving sexp]
 
 let rec optimize_prog env prog =
   let prog2 = List.rev prog in
-  (* TODO lift this so it can be shared across calls in the REPL
-  let env = Environment.create () |> Stdlib_stubs.populate in
-  *)
   let f =
    fun acc decl ->
     let env1, already_opt_decls = acc in
@@ -92,12 +90,23 @@ and optimize_decl env decl : Environment.t * decl =
   | Ast.FuncDecl { name; parameters; block; pos } ->
       let parameters2 = List.rev parameters in
       (* Bind name to the env, both for recursion and return value *)
-      let env2 = Environment.bind env name in
+      let env2 =
+        match Environment.bind env name with
+        | None ->
+            Printf.sprintf "The name %s has already been declared" name
+            |> failure ~pos
+        | Some e -> e
+      in
       let env3 = Environment.push_empty env2 in
       let env4 =
         List.fold_left parameters2 ~init:env3 ~f:(fun env param ->
             let param, _ = param in
-            Environment.bind env param)
+            match Environment.bind env param with
+            | None ->
+                Printf.sprintf
+                  "The name %s has already been declared in this scope" param
+                |> failure ~pos
+            | Some e -> e)
       in
       let block2 = optimize_block env4 block in
       (env2, FuncDecl { name; parameters = parameters2; block = block2; pos })
@@ -109,10 +118,16 @@ and optimize_stmt env stmts : Environment.t * stmt =
   let open Ast in
   match stmts with
   | LetStmt (name, expr, pos) ->
+      (* TODO verify *)
       let e = optimize_expr env expr in
-      let env2 = Environment.bind env name in
+      let env2 =
+        match Environment.bind env name with
+        | None -> failwith "TODO"
+        | Some e -> e
+      in
       (env2, LetStmt (name, e, pos))
   | AssignStmt (name, expr, pos) ->
+      (* TODO verify *)
       let e = optimize_expr env expr in
       (env, AssignStmt (name, e, pos))
   | SubAssignStmt { subscript; value; pos } ->
@@ -171,15 +186,19 @@ and optimize_expr (env : Environment.t) (e : Ast.expr) : expr =
       match name_opt with
       | None ->
           let msg = Printf.sprintf "Undeclared identifier %s" name in
-          failure msg pos
+          failure ~pos msg
       | Some _ -> IdRef (name, pos))
   | FuncExpr { parameters; block; pos } ->
       let parameters2 = List.rev parameters in
       let env2 = Environment.push_empty env in
       let env3 =
         List.fold_left parameters2 ~init:env2 ~f:(fun env param ->
-            let param, _ = param in
-            Environment.bind env param)
+            let param, pos = param in
+            match Environment.bind env param with
+            | None ->
+                Printf.sprintf "Duplicate parameter named %s" param
+                |> failure ~pos
+            | Some e -> e)
       in
       let block2 = optimize_block env3 block in
       FuncExpr { parameters = parameters2; block = block2; pos }

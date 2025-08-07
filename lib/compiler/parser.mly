@@ -327,7 +327,6 @@ block:
 
 (* arg-list or list literal *)
 expr_list:
-  (* TODO: support actual args *)
   | e = expr1 { [e] }
   | tl = expr_list; COMMA; e = expr1 { e :: tl }
 

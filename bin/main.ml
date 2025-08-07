@@ -3,12 +3,12 @@ open Interpreter
 let wrap_interpret ctx prog =
   try Interpret.interpret_prog ctx prog
   with Common.Failure msg ->
-    Printf.fprintf stderr "Runtime Exception\n%s\n" msg;
+    Printf.fprintf stderr "%s\n" msg;
     exit 1
 
 let repl () =
   let ctx = Context.make_ctx (module Sloth_stdlib.Prod) "" in
-  let env = Compiler.Environment.create () |> Compiler.Stdlib_stubs.populate in
+  let env = Compiler.Environment.create "" |> Compiler.Stdlib_stubs.populate in
   let rec repl_inner ctx env =
     (* %! means flush *)
     Printf.printf "> %!";
@@ -18,6 +18,7 @@ let repl () =
         Printf.printf "\n";
         exit 0
     in
+    let env = Compiler.Environment.{ env with src = line } in
     let ctx = Context.{ ctx with src = line } in
     let env, prog = Compiler.Main.parse env line in
     let ctx, v = wrap_interpret ctx prog in
@@ -27,7 +28,6 @@ let repl () =
   repl_inner ctx env
 
 let interpreter () =
-  let env = Compiler.Environment.create () |> Compiler.Stdlib_stubs.populate in
   let rec read_all buf =
     let cur_line_opt = try Some (read_line ()) with End_of_file -> None in
     match cur_line_opt with
@@ -38,6 +38,9 @@ let interpreter () =
         (read_all [@tailcall]) buf
   in
   let program = read_all (Buffer.create 256) in
+  let env =
+    Compiler.Environment.create program |> Compiler.Stdlib_stubs.populate
+  in
   let ctx = Context.make_ctx (module Sloth_stdlib.Prod) program in
   let _, ir = Compiler.Main.parse env program in
   let _, _ = wrap_interpret ctx ir in
