@@ -4,7 +4,11 @@ open Common
 let failure ~ctx pos msg =
   let pos_s = Sloth_common.Position.string_of_t pos in
   let open Context in
-  let msg = Printf.sprintf "[%s] %s\n\n%s" pos_s msg (Sloth_common.Position.summarize pos ctx.src) in
+  let msg =
+    Printf.sprintf "%s\n\n[%s] %s"
+      (Sloth_common.Position.summarize pos ctx.src)
+      pos_s msg
+  in
   raise (Failure msg)
 
 let check_arity ~pos ~ctx desired_count actual_list name =
@@ -223,41 +227,66 @@ and interpret_expr ctx expr =
           (* Does it matter this is O(n)? *)
           match target with
           | "+" -> (
-              check_arity ~ctx ~pos 1 args "Num.+";
+              check_arity ~ctx ~pos 1 args "Number.+";
               let arg = List.hd_exn args in
               let arg_val = interpret_expr ctx arg in
               match Runtime.num_of_val arg_val with
               | Some arg_f -> Num (f +. arg_f)
-              | None -> failure ~ctx pos "TODO")
+              | None ->
+                  Printf.sprintf
+                    "The \"+\" method expects a Number argument, but it \
+                     instead received \"%s\""
+                    (Runtime.to_s arg_val)
+                  |> failure ~ctx pos)
           | "-" -> (
-              check_arity ~ctx ~pos 1 args "Num.-";
+              check_arity ~ctx ~pos 1 args "Number.-";
               let arg = List.hd_exn args in
               let arg_val = interpret_expr ctx arg in
               match Runtime.num_of_val arg_val with
               | Some arg_f -> Num (f -. arg_f)
-              | None -> failure ~ctx pos "TODO")
+              | None ->
+                  Printf.sprintf
+                    "The \"-\" method expects a Number argument, but it \
+                     instead received \"%s\""
+                    (Runtime.to_s arg_val)
+                  |> failure ~ctx pos)
           | "*" -> (
-              check_arity ~ctx ~pos 1 args "Num.*";
+              check_arity ~ctx ~pos 1 args "Number.*";
               let arg = List.hd_exn args in
               let arg_val = interpret_expr ctx arg in
               match Runtime.num_of_val arg_val with
               | Some arg_f -> Num (f *. arg_f)
-              | None -> failure ~ctx pos "TODO")
+              | None ->
+                  Printf.sprintf
+                    "The \"*\" method expects a Number argument, but it \
+                     instead received \"%s\""
+                    (Runtime.to_s arg_val)
+                  |> failure ~ctx pos)
           | "/" -> (
-              check_arity ~ctx ~pos 1 args "Num./";
+              check_arity ~ctx ~pos 1 args "Number./";
               let arg = List.hd_exn args in
               let arg_val = interpret_expr ctx arg in
               match Runtime.num_of_val arg_val with
               | Some arg_f -> Num (f /. arg_f)
-              | None -> failure ~ctx pos "TODO")
+              | None ->
+                  Printf.sprintf
+                    "The \"/\" method expects a Number argument, but it \
+                     instead received \"%s\""
+                    (Runtime.to_s arg_val)
+                  |> failure ~ctx pos)
           | "<=" -> (
-              check_arity ~ctx ~pos 1 args "Num.<=";
+              check_arity ~ctx ~pos 1 args "Number.<=";
               let arg = List.hd_exn args in
               let arg_val = interpret_expr ctx arg in
               match Runtime.num_of_val arg_val with
               | Some arg_f -> Bool (Float.( <= ) f arg_f)
-              | None -> failure ~ctx pos "TODO")
-          | _ -> not_implemented "Num")
+              | None ->
+                  Printf.sprintf
+                    "The \"<=\" method expects a Number argument, but it \
+                     instead received \"%s\""
+                    (Runtime.to_s arg_val)
+                  |> failure ~ctx pos)
+          | _ -> not_implemented "Number")
       | _ -> failure ~ctx pos "TODO")
   | FuncInvoc (receiver, args, pos) -> (
       let receiver' = interpret_expr ctx receiver in
