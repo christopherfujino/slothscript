@@ -10,13 +10,6 @@ let failure ~ctx pos msg =
   in
   raise (Failure msg)
 
-let check_arity ~pos ~ctx desired_count actual_list name =
-  let actual_count = List.length actual_list in
-  if not (desired_count = actual_count) then
-    failure ~ctx pos
-      (Printf.sprintf "The function %s expected %d arguments but received %d"
-         name desired_count actual_count)
-
 let rec interpret_prog ctx prog =
   match prog with
   | [] -> (ctx, Runtime.Null)
@@ -214,79 +207,18 @@ and interpret_expr ctx expr =
           |> failure ~ctx pos)
   | MethodInvoc { receiver; target; args; pos } -> (
       let rt_receiver = interpret_expr ctx receiver in
+      let args = List.map args ~f:(interpret_expr ctx) in
+      let res = Runtime.invoke_method rt_receiver target args in
+      match res with Ok v -> v | Error msg -> failure ~ctx pos msg
+      (*
       let not_implemented receiver =
         Printf.sprintf "The type %s does not implement the method %s" receiver
           target
         |> failure ~ctx pos
       in
       match rt_receiver with
-      | Null -> failure ~ctx pos "NPE!"
-      | String _ -> not_implemented "String"
-      | Num f -> (
-          (* Does it matter this is O(n)? *)
-          match target with
-          | "+" -> (
-              check_arity ~ctx ~pos 1 args "Number.+";
-              let arg = List.hd_exn args in
-              let arg_val = interpret_expr ctx arg in
-              match Runtime.num_of_val arg_val with
-              | Some arg_f -> Num (f +. arg_f)
-              | None ->
-                  Printf.sprintf
-                    "The \"+\" method expects a Number argument, but it \
-                     instead received \"%s\""
-                    (Runtime.to_s arg_val)
-                  |> failure ~ctx pos)
-          | "-" -> (
-              check_arity ~ctx ~pos 1 args "Number.-";
-              let arg = List.hd_exn args in
-              let arg_val = interpret_expr ctx arg in
-              match Runtime.num_of_val arg_val with
-              | Some arg_f -> Num (f -. arg_f)
-              | None ->
-                  Printf.sprintf
-                    "The \"-\" method expects a Number argument, but it \
-                     instead received \"%s\""
-                    (Runtime.to_s arg_val)
-                  |> failure ~ctx pos)
-          | "*" -> (
-              check_arity ~ctx ~pos 1 args "Number.*";
-              let arg = List.hd_exn args in
-              let arg_val = interpret_expr ctx arg in
-              match Runtime.num_of_val arg_val with
-              | Some arg_f -> Num (f *. arg_f)
-              | None ->
-                  Printf.sprintf
-                    "The \"*\" method expects a Number argument, but it \
-                     instead received \"%s\""
-                    (Runtime.to_s arg_val)
-                  |> failure ~ctx pos)
-          | "/" -> (
-              check_arity ~ctx ~pos 1 args "Number./";
-              let arg = List.hd_exn args in
-              let arg_val = interpret_expr ctx arg in
-              match Runtime.num_of_val arg_val with
-              | Some arg_f -> Num (f /. arg_f)
-              | None ->
-                  Printf.sprintf
-                    "The \"/\" method expects a Number argument, but it \
-                     instead received \"%s\""
-                    (Runtime.to_s arg_val)
-                  |> failure ~ctx pos)
-          | "<=" -> (
-              check_arity ~ctx ~pos 1 args "Number.<=";
-              let arg = List.hd_exn args in
-              let arg_val = interpret_expr ctx arg in
-              match Runtime.num_of_val arg_val with
-              | Some arg_f -> Bool (Float.( <= ) f arg_f)
-              | None ->
-                  Printf.sprintf
-                    "The \"<=\" method expects a Number argument, but it \
-                     instead received \"%s\""
-                    (Runtime.to_s arg_val)
-                  |> failure ~ctx pos)
-          | _ -> not_implemented "Number")
-      | _ -> failure ~ctx pos "TODO")
+      *)
+      )
   | FuncInvoc (receiver, args, pos) -> (
       let receiver' = interpret_expr ctx receiver in
       match receiver' with

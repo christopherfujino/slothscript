@@ -1,12 +1,21 @@
 open Core
 
+module Lib = struct
+  module Number = struct
+    type t = float
+  end
+
+  module String = struct
+    type t = string
+  end
+end
+
 type t =
   | String of string
   | Bool of bool
   | Num of float
   | List of t Array.t
   | HashMap of (t, t) Stdlib.Hashtbl.t
-  (* TODO hashmap *)
   | Null
   | Func of function_t
 
@@ -55,3 +64,94 @@ let int_of_val v =
          if Float.is_integer f then Some (Int.of_float f) else None)
 
 let bool_of_val b = match b with Bool b' -> Some b' | _ -> None
+
+let invoke_method receiver method_name args =
+  let not_implemented receiver =
+    Error
+      (Printf.sprintf "The type %s does not implement the method %s" receiver
+         method_name)
+  in
+  let check_arity desired_count actual_list name =
+    let actual_count = List.length actual_list in
+    if not (desired_count = actual_count) then
+      Some
+        (Error
+           (Printf.sprintf
+              "The function %s expected %d arguments but received %d" name
+              desired_count actual_count))
+    else None
+  in
+
+  match receiver with
+  | Null -> Error "NPE!"
+  | String _ -> not_implemented "String"
+  | Num f -> (
+      (* Does it matter this is O(n)? *)
+      match method_name with
+      | "+" -> (
+          match check_arity 1 args "Number.+" with
+          | Some e -> e
+          | None -> (
+              let arg = List.hd_exn args in
+              match num_of_val arg with
+              | Some arg_f -> Ok (Num (f +. arg_f))
+              | None ->
+                  Error
+                    (Printf.sprintf
+                       "The \"+\" method expects a Number argument, but it \
+                        instead received \"%s\""
+                       (to_s arg))))
+      | "-" -> (
+          match check_arity 1 args "Number.-" with
+          | Some e -> e
+          | None -> (
+              let arg = List.hd_exn args in
+              match num_of_val arg with
+              | Some arg_f -> Ok (Num (f -. arg_f))
+              | None ->
+                  Error
+                    (Printf.sprintf
+                       "The \"-\" method expects a Number argument, but it \
+                        instead received \"%s\""
+                       (to_s arg))))
+      | "*" -> (
+          match check_arity 1 args "Number.*" with
+          | Some e -> e
+          | None -> (
+              let arg = List.hd_exn args in
+              match num_of_val arg with
+              | Some arg_f -> Ok (Num (f *. arg_f))
+              | None ->
+                  Error
+                    (Printf.sprintf
+                       "The \"*\" method expects a Number argument, but it \
+                        instead match received \"%s\""
+                       (to_s arg))))
+      | "/" -> (
+          match check_arity 1 args "Number./" with
+          | Some e -> e
+          | None -> (
+              let arg = List.hd_exn args in
+              match num_of_val arg with
+              | Some arg_f -> Ok (Num (f /. arg_f))
+              | None ->
+                  Error
+                    (Printf.sprintf
+                       "The \"/\" method expects a Number argument, but it \
+                        instead received \"%s\""
+                       (to_s arg))))
+      | "<=" -> (
+          match check_arity 1 args "Number.<=" with
+          | Some e -> e
+          | None -> (
+              let arg = List.hd_exn args in
+              match num_of_val arg with
+              | Some arg_f -> Ok (Bool (Float.( <= ) f arg_f))
+              | None ->
+                  Error
+                    (Printf.sprintf
+                       "The \"<=\" method expects a Number argument, but it \
+                        instead received \"%s\""
+                       (to_s arg))))
+      | _ -> not_implemented "Number")
+  | _ -> Error "TODO"
