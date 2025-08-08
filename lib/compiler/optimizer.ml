@@ -2,10 +2,13 @@ open Core
 
 exception Failure of string
 
-(* TODO add src *)
-let failure ~pos msg =
+let failure ~env ~pos msg =
   let pos_msg = Sloth_common.Position.string_of_t pos in
-  let msg2 = Printf.sprintf "[%s] Optimizer error: %s" pos_msg msg in
+  let msg2 =
+    Printf.sprintf "%s\n\n[%s] Optimizer error: %s"
+      (Sloth_common.Position.summarize pos Environment.(env.src))
+      pos_msg msg
+  in
   raise (Failure msg2)
 
 type prog = decl list
@@ -94,7 +97,7 @@ and optimize_decl env decl : Environment.t * decl =
         match Environment.bind env name with
         | None ->
             Printf.sprintf "The name %s has already been declared" name
-            |> failure ~pos
+            |> failure ~env ~pos
         | Some e -> e
       in
       let env3 = Environment.push_empty env2 in
@@ -105,7 +108,7 @@ and optimize_decl env decl : Environment.t * decl =
             | None ->
                 Printf.sprintf
                   "The name %s has already been declared in this scope" param
-                |> failure ~pos
+                |> failure ~env ~pos
             | Some e -> e)
       in
       let block2 = optimize_block env4 block in
@@ -122,7 +125,10 @@ and optimize_stmt env stmts : Environment.t * stmt =
       let e = optimize_expr env expr in
       let env2 =
         match Environment.bind env name with
-        | None -> failwith "TODO"
+        | None ->
+            Printf.sprintf "The name %s has already been declared in this scope"
+              name
+            |> failure ~env ~pos
         | Some e -> e
       in
       (env2, LetStmt (name, e, pos))
@@ -186,7 +192,7 @@ and optimize_expr (env : Environment.t) (e : Ast.expr) : expr =
       match name_opt with
       | None ->
           let msg = Printf.sprintf "Undeclared identifier %s" name in
-          failure ~pos msg
+          failure ~env ~pos msg
       | Some _ -> IdRef (name, pos))
   | FuncExpr { parameters; block; pos } ->
       let parameters2 = List.rev parameters in
@@ -197,7 +203,7 @@ and optimize_expr (env : Environment.t) (e : Ast.expr) : expr =
             match Environment.bind env param with
             | None ->
                 Printf.sprintf "Duplicate parameter named %s" param
-                |> failure ~pos
+                |> failure ~env ~pos
             | Some e -> e)
       in
       let block2 = optimize_block env3 block in

@@ -6,6 +6,12 @@ let wrap_interpret ctx prog =
     Printf.fprintf stderr "%s\n" msg;
     exit 1
 
+let wrap_parse env line =
+  try Compiler.Main.parse env line
+  with Compiler.Optimizer.Failure msg ->
+    Printf.fprintf stderr "%s\n" msg;
+    exit 1
+
 let repl () =
   let ctx = Context.make_ctx (module Sloth_stdlib.Prod) "" in
   let env = Compiler.Environment.create "" |> Compiler.Stdlib_stubs.populate in
@@ -20,7 +26,7 @@ let repl () =
     in
     let env = Compiler.Environment.{ env with src = line } in
     let ctx = Context.{ ctx with src = line } in
-    let env, prog = Compiler.Main.parse env line in
+    let env, prog = wrap_parse env line in
     let ctx, v = wrap_interpret ctx prog in
     Runtime.to_s v |> print_endline;
     (repl_inner [@tailcall]) ctx env
@@ -42,7 +48,7 @@ let interpreter () =
     Compiler.Environment.create program |> Compiler.Stdlib_stubs.populate
   in
   let ctx = Context.make_ctx (module Sloth_stdlib.Prod) program in
-  let _, ir = Compiler.Main.parse env program in
+  let _, ir = wrap_parse env program in
   let _, _ = wrap_interpret ctx ir in
   ()
 
