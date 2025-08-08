@@ -1,15 +1,5 @@
 open Core
 
-module Lib = struct
-  module Number = struct
-    type t = float
-  end
-
-  module String = struct
-    type t = string
-  end
-end
-
 type t =
   | String of string
   | Bool of bool
