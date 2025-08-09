@@ -49,7 +49,9 @@ let make_test spec =
     in
     assert_failure msg);
   (* Parser *)
-  let env = Compiler.Environment.create spec.program |> Stdlib_stubs.populate in
+  let env =
+    Compiler.Environment.create spec.program |> Compiler.Environment.populate
+  in
   let _, prog = Main.parse env spec.program in
   assert_equal ~pp_diff ~printer spec.ast
     (Optimizer.prog_to_str prog |> Printer.sexp_formatter);
@@ -75,7 +77,7 @@ let make_failing_test spec =
   (* Parser *)
   try
     let env =
-      Compiler.Environment.create spec.program |> Stdlib_stubs.populate
+      Compiler.Environment.create spec.program |> Compiler.Environment.populate
     in
     let _, prog = Main.parse env spec.program in
     assert_equal ~pp_diff ~printer spec.ast (Optimizer.prog_to_str prog);

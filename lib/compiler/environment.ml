@@ -21,3 +21,10 @@ and find env name =
       match env.previous with
       | Some e -> (find [@tailrec]) e name
       | None -> None)
+
+let populate env =
+  let open Sloth_common.Stdlib_interface in
+  let l = globals in
+  List.fold_left ~init:env
+    ~f:(fun acc (name, _) -> bind acc name |> Option.value_exn)
+    l

@@ -14,7 +14,7 @@ let wrap_parse env line =
 
 let repl () =
   let ctx = Context.make_ctx (module Sloth_stdlib.Prod) "" in
-  let env = Compiler.Environment.create "" |> Compiler.Stdlib_stubs.populate in
+  let env = Compiler.Environment.create "" |> Compiler.Environment.populate in
   let rec repl_inner ctx env =
     (* %! means flush *)
     Printf.printf "> %!";
