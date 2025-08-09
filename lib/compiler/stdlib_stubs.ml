@@ -1,7 +1,8 @@
 open Core
 
 let populate (env : Environment.t) =
-  let l = Sloth_common.Stdlib_interface.globals in
+  let open Sloth_common.Stdlib_interface in
+  let l = globals in
   List.fold_left ~init:env
-    ~f:(fun acc cur -> Environment.bind acc cur.name |> Option.value_exn)
+    ~f:(fun acc (name, _) -> Environment.bind acc name |> Option.value_exn)
     l

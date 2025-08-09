@@ -1,25 +1,12 @@
 (*
-open Core
-*)
-
 type func_interface = { name : string; arity : int (* Including receiver! *) }
 
+type string_map = t Hashtbl.Make(String).t
+and class_interface = { field : t list; methods : string_map }
+*)
 type t =
   | String
-  | Bool
-  | Num
-  | List
-  | HashMap
-  | Null
+  (*| Bool | Num | List | HashMap | Null *)
   | Func
 
-let methods = function
-  | String -> []
-  | Bool -> []
-  | Num -> []
-  | List -> []
-  | HashMap -> []
-  | Null -> []
-  | Func -> []
-
-let globals = [ { name = "print"; arity = 1 } ]
+let globals = [ ("print", Func); ("$cwd", String) ]

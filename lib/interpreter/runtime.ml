@@ -22,12 +22,7 @@ and function_t =
       identifiers : t Identifiers.t;
     }
 
-(* Polymorphic locally abstract type:
-  https://ocaml.org/manual/5.3/locallyabstract.html
-
-  Generically: let $FUNC_NAME : type $CONSTR_NAME . $TYPE_EXPR = $EXPR
-  *)
-let rec to_s : type a. a t -> string = function
+let rec to_s = function
   | String s -> s
   | Num f ->
       if Float.is_integer f then Int.of_float f |> Int.to_string
@@ -51,21 +46,16 @@ let rec to_s : type a. a t -> string = function
       ^ "}"
   | Func _ -> "func(TODO)"
 
-let num_of_val : type a. a t -> float option =
- fun v -> match v with Num f -> Some f | _ -> None
+let num_of_val = function Num f -> Some f | _ -> None
 
 let int_of_val v =
   num_of_val v
   |> Option.bind ~f:(fun f ->
          if Float.is_integer f then Some (Int.of_float f) else None)
 
-let bool_of_val : type a. a t -> bool option =
- fun b -> match b with Bool b' -> Some b' | _ -> None
+let bool_of_val = function Bool b' -> Some b' | _ -> None
 
-(* t -> string -> t list -> (t, string) Result.t *)
-let invoke_method : type a b.
-    a t -> string -> 'c t list -> (b t, string) Result.t =
- fun receiver method_name args ->
+let invoke_method receiver method_name args =
   let not_implemented receiver =
     Error
       (Printf.sprintf "The type %s does not implement the method %s" receiver
