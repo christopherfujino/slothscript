@@ -22,7 +22,12 @@ and function_t =
       identifiers : t Identifiers.t;
     }
 
-let rec to_s = function
+(* Polymorphic locally abstract type:
+  https://ocaml.org/manual/5.3/locallyabstract.html
+
+  Generically: let $FUNC_NAME : type $CONSTR_NAME . $TYPE_EXPR = $EXPR
+  *)
+let rec to_s : type a. a t -> string = function
   | String s -> s
   | Num f ->
       if Float.is_integer f then Int.of_float f |> Int.to_string
@@ -46,16 +51,21 @@ let rec to_s = function
       ^ "}"
   | Func _ -> "func(TODO)"
 
-let num_of_val v = match v with Num f -> Some f | _ -> None
+let num_of_val : type a. a t -> float option =
+ fun v -> match v with Num f -> Some f | _ -> None
 
 let int_of_val v =
   num_of_val v
   |> Option.bind ~f:(fun f ->
          if Float.is_integer f then Some (Int.of_float f) else None)
 
-let bool_of_val b = match b with Bool b' -> Some b' | _ -> None
+let bool_of_val : type a. a t -> bool option =
+ fun b -> match b with Bool b' -> Some b' | _ -> None
 
-let invoke_method receiver method_name args =
+(* t -> string -> t list -> (t, string) Result.t *)
+let invoke_method : type a b.
+    a t -> string -> 'c t list -> (b t, string) Result.t =
+ fun receiver method_name args ->
   let not_implemented receiver =
     Error
       (Printf.sprintf "The type %s does not implement the method %s" receiver
@@ -136,7 +146,9 @@ let invoke_method receiver method_name args =
           | None -> (
               let arg = List.hd_exn args in
               match num_of_val arg with
-              | Some arg_f -> Ok (Bool (Float.( <= ) f arg_f))
+              | Some arg_f ->
+                  let b = Bool (Float.( <= ) f arg_f) in
+                  Ok b
               | None ->
                   Error
                     (Printf.sprintf

@@ -6,6 +6,7 @@ type t = { previous : t option; values : string list; src : string }
 let push_empty env = { env with previous = Some env; values = [] }
 let create src = { previous = None; values = []; src }
 
+(* TODO pass a position here *)
 let rec bind env name =
   (* Check the current stack frame if it already exists *)
   match List.find env.values ~f:(String.equal name) with
