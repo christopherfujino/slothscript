@@ -45,7 +45,7 @@ let interpreter () =
   in
   let program = read_all (Buffer.create 256) in
   let env =
-    Compiler.Environment.create program |> Compiler.Stdlib_stubs.populate
+    Compiler.Environment.create program |> Compiler.Environment.populate
   in
   let ctx = Context.make_ctx (module Sloth_stdlib.Prod) program in
   let _, ir = wrap_parse env program in
