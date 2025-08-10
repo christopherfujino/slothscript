@@ -13,6 +13,6 @@ let globals =
     ("$cwd", Value);
     ("Number", Class {
       properties = [];
-      methods = ["+"; "-"; "/"; "*"; "<="];
+      methods = ["+"; "-"; "/"; "*"; "<="; ">="];
     });
   ]

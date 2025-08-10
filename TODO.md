@@ -1,9 +1,10 @@
 ## TODO
+- [ ] Do blocks
+- [ ] Context variables, with statements
 - [ ] For-in loops?
 - [ ] comments
 - [ ] assertions
 - [ ] Nicer lambdas
-- [ ] Do blocks
 - [ ] Structs/Methods
 - [ ] List mutation methods
 - [ ] Modules
