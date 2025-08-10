@@ -21,6 +21,7 @@ and decl =
       pos : Sloth_common.Position.t;
     }
   | StmtDecl of stmt
+[@@deriving sexp]
 
 and stmt =
   | LetStmt of string * expr * Sloth_common.Position.t
@@ -74,8 +75,6 @@ and cond_cont =
       pos : Sloth_common.Position.t;
     }
   | ElseCont of stmt list * Sloth_common.Position.t
-
-and operator = Add [@@deriving sexp]
 
 let rec optimize_prog env prog =
   let prog2 = List.rev prog in

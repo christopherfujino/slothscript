@@ -74,7 +74,7 @@ and interpret_stmt (ctx : Context.t) stmt =
           let value' = interpret_expr ctx value in
           match receiver' with
           | HashMap tbl ->
-              Stdlib.Hashtbl.add tbl subscript' value';
+              Stdlib.Hashtbl.replace tbl subscript' value';
               (ctx, value')
           | List elements -> (
               match Runtime.int_of_val subscript' with

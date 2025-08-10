@@ -64,7 +64,5 @@ and cond_cont = private
   | ElseCont of stmt list * Sloth_common.Position.t
 [@@deriving sexp]
 
-and operator = private Add [@@deriving sexp]
-
 val optimize_prog : Environment.t -> Ast.decl list -> Environment.t * decl list
 val prog_to_str : decl list -> string

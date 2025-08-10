@@ -1,3 +1,5 @@
+open Core
+
 type t =
   | String of string
   | Bool of bool

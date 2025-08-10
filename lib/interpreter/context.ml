@@ -1,9 +1,13 @@
 open Core
 
-(* Context *)
+type class_t = {
+  methods : Runtime.function_t list
+}
+
 type t = {
   l : (module Sloth_stdlib.StdlibSig);
   identifiers : Runtime.t Identifiers.t;
+  classes : (string, class_t) Hashtbl.t;
   src : string;
 }
 
@@ -27,7 +31,7 @@ let make_ctx m src =
     in
     Option.value_exn unit_opt
   in
-
+  let classes = Hashtbl.create (module String) in
   let identifiers = Identifiers.create () in
   List.iter Sloth_common.Stdlib_interface.globals ~f:(fun name ->
       match name with
@@ -43,4 +47,4 @@ let make_ctx m src =
       | _ ->
           Printf.sprintf "TODO: You have not yet implemented %s" name
           |> failwith);
-  { l = m; identifiers; src }
+  { l = m; identifiers; src; classes }
