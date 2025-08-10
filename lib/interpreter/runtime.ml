@@ -22,7 +22,7 @@ and function_t =
       identifiers : t Identifiers.t;
     }
 
-type class_t = { methods : function_t list }
+type class_t = { methods : (string, function_t) Hashtbl.t}
 type class_lookup = (string, class_t) Hashtbl.t
 
 let to_class_name = function

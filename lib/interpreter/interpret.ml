@@ -205,13 +205,21 @@ and interpret_expr ctx expr =
       | None ->
           Printf.sprintf "The name %s has not been declared in this scope" i
           |> failure ~ctx pos)
-  | MethodInvoc { receiver; target; args; pos } ->
+  | MethodInvoc { receiver; target; args; pos } -> (
       let rt_receiver = interpret_expr ctx receiver in
       let args = List.map args ~f:(interpret_expr ctx) in
-      let _ =
+      let klass =
         Hashtbl.find_exn ctx.classes (Runtime.to_class_name rt_receiver)
       in
-      failwith "TODO"
+      match Hashtbl.find klass.methods target with
+      | None ->
+          Printf.sprintf "Undefined field named %s" target |> failure ~ctx pos
+      | Some func -> (
+          match func with
+          | User _ -> failwith "Unreachable"
+          | Native { cb; _ } ->
+              let args = rt_receiver :: args in
+              cb args)
       (*
       let not_implemented receiver =
         Printf.sprintf "The type %s does not implement the method %s" receiver
@@ -220,6 +228,7 @@ and interpret_expr ctx expr =
       in
       match rt_receiver with
       *)
+      )
   | FuncInvoc (receiver, args, pos) -> (
       let receiver' = interpret_expr ctx receiver in
       match receiver' with
@@ -254,8 +263,7 @@ and interpret_expr ctx expr =
               let _, v = traverse_stmts temp_ctx block in
               v
           | Native { cb; parameters = _; identifiers = _ } ->
-              let vals = List.map args ~f:(interpret_expr ctx) in
-              cb vals)
+              List.map args ~f:(interpret_expr ctx) |> cb)
       | _ ->
           Printf.sprintf "Tried to invoke %s, but it is not a function"
             (Runtime.to_s receiver')

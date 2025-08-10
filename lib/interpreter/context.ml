@@ -29,19 +29,27 @@ let make_ctx m src =
   in
   let classes = Hashtbl.create (module String) in
   let identifiers = Identifiers.create () in
-  List.iter Sloth_common.Stdlib_interface.globals ~f:(fun (name, _) ->
-      match name with
-      | "print" ->
-          make_func "print" 1 identifiers (fun args ->
-              let arg = List.hd_exn args in
-              Runtime.to_s arg |> M.print_s;
-              M.print_s "\n";
-              Runtime.Null)
-      | "$cwd" ->
-          Identifiers.bind identifiers "$cwd" (Runtime.String "TODO")
-          |> Option.value_exn
-      | "Number" -> failwith "TODO"
-      | _ ->
-          Printf.sprintf "TODO: You have not yet implemented %s" name
-          |> failwith);
+  List.iter Sloth_common.Stdlib_interface.globals ~f:(fun (name, variant) ->
+      match variant with
+      | Value -> (
+          match name with
+          | "print" ->
+              make_func "print" 1 identifiers (fun args ->
+                  let arg = List.hd_exn args in
+                  Runtime.to_s arg |> M.print_s;
+                  M.print_s "\n";
+                  Runtime.Null)
+          | "$cwd" ->
+              Identifiers.bind identifiers "$cwd" (Runtime.String "TODO")
+              |> Option.value_exn
+          | _ ->
+              Printf.sprintf "TODO: You have not yet implemented %s" name
+              |> failwith)
+      | Class { properties; methods } -> (
+          match name with
+          | "Number" ->
+              List.iter properties ~f:(fun _ -> failwith "TODO properties");
+              List.iter methods ~f:(fun _ -> failwith "TODO methods");
+              failwith "TODO"
+          | _ -> failwith "TODO"));
   { l = m; identifiers; src; classes }
