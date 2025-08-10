@@ -73,32 +73,30 @@ let make_ctx m src =
           | "Number" -> (
               List.iter properties ~f:(fun _ -> failwith "TODO properties");
               List.iter methods ~f:(fun meth ->
-                  let ( let* ) = Result.( >>= ) in
+                  let process_infix_num_methods args cb =
+                    let lhs =
+                      List.nth_exn args 0 |> Runtime.num_of_val
+                      |> Option.value_exn
+                    in
+                    let rhs_t = List.nth_exn args 1 in
+                    match Runtime.num_of_val rhs_t with
+                    | None ->
+                        Error
+                          (Printf.sprintf
+                             "Expected right-hand side to be a Number, but got \
+                              %s"
+                          @@ Runtime.to_s rhs_t)
+                    | Some rhs -> Ok (cb lhs rhs)
+                  in
                   match meth with
                   | "+" ->
                       make_method "+" 2 cl.methods (fun args ->
-                          let* lhs =
-                            match List.nth_exn args 0 |> Runtime.num_of_val with
-                            | None -> Error (Printf.sprintf "Oops")
-                            | Some n -> Ok n
-                          in
-                          let* rhs =
-                            match List.nth_exn args 1 |> Runtime.num_of_val with
-                            | None -> Error (Printf.sprintf "Oops")
-                            | Some n -> Ok n
-                          in
-                          Ok (Runtime.Num (lhs +. rhs)))
+                          process_infix_num_methods args (fun lhs rhs ->
+                              Runtime.Num (lhs +. rhs)))
                   | "<=" ->
                       make_method "<=" 2 cl.methods (fun args ->
-                          let lhs =
-                            List.nth_exn args 0 |> Runtime.num_of_val
-                            |> Option.value_exn
-                          in
-                          let rhs =
-                            List.nth_exn args 1 |> Runtime.num_of_val
-                            |> Option.value_exn
-                          in
-                          Ok (Runtime.Bool (Float.( <=. ) lhs rhs)))
+                          process_infix_num_methods args (fun lhs rhs ->
+                              Runtime.Bool Float.(lhs <=. rhs)))
                   | _ ->
                       failwith
                         (Printf.sprintf
