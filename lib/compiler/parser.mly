@@ -25,6 +25,7 @@
 %token <Lexing.position> PLUS
 %token <Lexing.position> MINUS
 %token <Lexing.position> EQUALS
+%token <Lexing.position> DOUBLE_EQUALS
 %token <Lexing.position> PRODUCT
 %token <Lexing.position> DIVIDE
 %token <Lexing.position> SEMICOLON
@@ -38,6 +39,7 @@
 %token <Lexing.position> RBRACKET
 %token <Lexing.position> COMMA
 %token <Lexing.position> LEQ
+%token <Lexing.position> GEQ
 %token <Lexing.position> LESS
 
 %token <Lexing.position> EOF
@@ -50,6 +52,7 @@
 %left PRODUCT
 %left DIVIDE
 %left LEQ
+%left GEQ
 %left LESS
 (*
 %nonassoc ELSE
@@ -134,7 +137,7 @@ expr1:
   }
   | e = expr2 { e }
 
-(* closure literals and infix funcs *)
+(* operators *, /, % *)
 expr2:
   | pos = FUNC; LPAREN; RPAREN; b = block {
     let pos = Sloth_common.Position.t_of_lexing_position pos in
@@ -152,9 +155,17 @@ expr2:
     let pos = Sloth_common.Position.t_of_lexing_position pos in
     MethodInvoc { receiver=e1; target="<"; args=[e2]; pos}
   }
+  | e1 = expr2; pos = DOUBLE_EQUALS; e2 = expr2 {
+    let pos = Sloth_common.Position.t_of_lexing_position pos in
+    MethodInvoc { receiver=e1; target="=="; args=[e2]; pos}
+  }
   | e1 = expr2; pos = LEQ; e2 = expr2 {
     let pos = Sloth_common.Position.t_of_lexing_position pos in
     MethodInvoc { receiver=e1; target="<="; args=[e2]; pos}
+  }
+  | e1 = expr2; pos = GEQ; e2 = expr2 {
+    let pos = Sloth_common.Position.t_of_lexing_position pos in
+    MethodInvoc { receiver=e1; target=">="; args=[e2]; pos}
   }
   | e1 = expr2; pos = MINUS; e2 = expr2 {
     let pos = Sloth_common.Position.t_of_lexing_position pos in

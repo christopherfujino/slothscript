@@ -32,7 +32,7 @@ let make_ctx m src =
              identifiers;
            })
   in
-  let make_func name arity identifiers cb =
+  let make_func name ?arity identifiers cb =
     Identifiers.bind identifiers name
       (Runtime.Func
          (Native
@@ -41,12 +41,15 @@ let make_ctx m src =
               cb =
                 (fun args ->
                   let arg_len = List.length args in
-                  if not (Int.equal arg_len arity) then
+                  if
+                    Option.is_some arity
+                    && not (Int.equal arg_len (Option.value_exn arity))
+                  then
                     Error
                       (Printf.sprintf
                          "You passed %d arguments but %d were expected" arg_len
-                         arity)
-                  else Ok (cb args));
+                         (Option.value_exn arity))
+                  else cb args);
               identifiers;
             }))
     |> Option.value_exn
@@ -56,11 +59,38 @@ let make_ctx m src =
       | Value -> (
           match name with
           | "print" ->
-              make_func "print" 1 identifiers (fun args ->
+              make_func "print" ~arity:1 identifiers (fun args ->
                   let arg = List.hd_exn args in
                   Runtime.to_s arg |> M.print_s;
                   M.print_s "\n";
-                  Runtime.Null)
+                  Ok Runtime.Null)
+          | "assert" ->
+              make_func "assert" identifiers (fun args ->
+                  let arg = List.hd_exn args in
+                  let second_arg = List.nth args 1 in
+                  (match second_arg with
+                  | Some msg -> (
+                      match Runtime.string_of_val msg with
+                      | Some msg ->
+                          Ok (Printf.sprintf "Assertion failed: %s" msg)
+                      | None ->
+                          Error
+                            (Printf.sprintf
+                               "The second argument to assert() must be a \
+                                String, got %s"
+                            @@ Runtime.to_s msg))
+                  | None -> Ok "Assertion failed")
+                  |> Result.bind ~f:(fun err_msg ->
+                         match Runtime.bool_of_val arg with
+                         | Some condition ->
+                             if condition then Ok (Runtime.Bool true)
+                             else Error err_msg
+                         | None ->
+                             Error
+                               (Printf.sprintf
+                                  "The first argument to assert() must be a \
+                                   Bool value, got %s"
+                               @@ Runtime.to_s arg)))
           | "$cwd" ->
               Identifiers.bind identifiers "$cwd" (Runtime.String "TODO")
               |> Option.value_exn

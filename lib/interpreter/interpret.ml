@@ -220,14 +220,6 @@ and interpret_expr ctx expr =
           | Native { cb; _ } -> (
               let args = rt_receiver :: args in
               match cb args with Ok v -> v | Error msg -> failure ~ctx pos msg))
-      (*
-      let not_implemented receiver =
-        Printf.sprintf "The type %s does not implement the method %s" receiver
-          target
-        |> failure ~ctx pos
-      in
-      match rt_receiver with
-      *)
       )
   | FuncInvoc (receiver, args, pos) -> (
       let receiver' = interpret_expr ctx receiver in

@@ -10,7 +10,8 @@ type t = Value | Class of { properties : string list; methods : string list }
 let globals =
   [
     ("print", Value);
+    ("assert", Value);
     ("$cwd", Value);
     ( "Number",
-      Class { properties = []; methods = [ "+"; "-"; "/"; "*"; "<="; ">=" ] } );
+      Class { properties = []; methods = [ "+"; "-"; "/"; "*"; "=="; "<="; ">=" ] } );
   ]

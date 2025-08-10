@@ -60,6 +60,7 @@ let rec to_s = function
   | Func _ -> "func(TODO)"
 
 let num_of_val = function Num f -> Some f | _ -> None
+let string_of_val = function String s -> Some s | _ -> None
 
 let int_of_val v =
   num_of_val v

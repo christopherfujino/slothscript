@@ -3,7 +3,6 @@
 - [ ] Context variables, with statements
 - [ ] For-in loops?
 - [ ] comments
-- [ ] assertions
 - [ ] Nicer lambdas
 - [ ] Structs/Methods
 - [ ] List mutation methods
@@ -37,3 +36,4 @@
 - [x] Automatic semicolon insertion
 - [x] HashMap literals
 - [x] Store locs in runtime values
+- [x] Assertions
