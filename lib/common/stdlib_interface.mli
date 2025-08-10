@@ -1,3 +1,1 @@
-type t
-
-val globals : (string * t) list
+val globals : string list
