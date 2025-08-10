@@ -93,6 +93,18 @@ let make_ctx m src =
                       make_method "+" 2 cl.methods (fun args ->
                           process_infix_num_methods args (fun lhs rhs ->
                               Runtime.Num (lhs +. rhs)))
+                  | "-" ->
+                      make_method "-" 2 cl.methods (fun args ->
+                          process_infix_num_methods args (fun lhs rhs ->
+                              Runtime.Num (lhs -. rhs)))
+                  | "/" ->
+                      make_method "/" 2 cl.methods (fun args ->
+                          process_infix_num_methods args (fun lhs rhs ->
+                              Runtime.Num (lhs /. rhs)))
+                  | "*" ->
+                      make_method "*" 2 cl.methods (fun args ->
+                          process_infix_num_methods args (fun lhs rhs ->
+                              Runtime.Num (lhs *. rhs)))
                   | "<=" ->
                       make_method "<=" 2 cl.methods (fun args ->
                           process_infix_num_methods args (fun lhs rhs ->

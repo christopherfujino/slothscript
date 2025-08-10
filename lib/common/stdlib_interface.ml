@@ -11,5 +11,8 @@ let globals =
   [
     ("print", Value);
     ("$cwd", Value);
-    ("Number", Class { properties = []; methods = ["+"; "<="] });
+    ("Number", Class {
+      properties = [];
+      methods = ["+"; "-"; "/"; "*"; "<="];
+    });
   ]
