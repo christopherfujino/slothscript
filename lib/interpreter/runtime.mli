@@ -13,7 +13,7 @@ type t =
 and function_t =
   | Native of {
       parameters : string list;
-      cb : t list -> t;
+      cb : t list -> (t, string) Result.t;
       identifiers : t Identifiers.t;
     }
   | User of {

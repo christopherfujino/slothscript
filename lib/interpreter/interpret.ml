@@ -217,9 +217,9 @@ and interpret_expr ctx expr =
       | Some func -> (
           match func with
           | User _ -> failwith "Unreachable"
-          | Native { cb; _ } ->
+          | Native { cb; _ } -> (
               let args = rt_receiver :: args in
-              cb args)
+              match cb args with Ok v -> v | Error msg -> failure ~ctx pos msg))
       (*
       let not_implemented receiver =
         Printf.sprintf "The type %s does not implement the method %s" receiver
@@ -262,8 +262,13 @@ and interpret_expr ctx expr =
               (* discard context *)
               let _, v = traverse_stmts temp_ctx block in
               v
-          | Native { cb; parameters = _; identifiers = _ } ->
-              List.map args ~f:(interpret_expr ctx) |> cb)
+          | Native { cb; parameters = _; identifiers = _ } -> (
+              let arg_vals =
+                List.map args ~f:(fun arg -> interpret_expr ctx arg)
+              in
+              match cb arg_vals with
+              | Ok v -> v
+              | Error msg -> failure ~ctx pos msg))
       | _ ->
           Printf.sprintf "Tried to invoke %s, but it is not a function"
             (Runtime.to_s receiver')

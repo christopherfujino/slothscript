@@ -11,9 +11,10 @@ type t =
 
 (* TODO add positions for error messages *)
 and function_t =
+  (* TODO this prob doesn't need params or identifiers *)
   | Native of {
       parameters : string list;
-      cb : t list -> t;
+      cb : t list -> (t, string) Result.t;
       identifiers : t Identifiers.t;
     }
   | User of {
