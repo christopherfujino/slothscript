@@ -22,8 +22,18 @@ and function_t =
       identifiers : t Identifiers.t;
     }
 
+type class_t = {
+  methods : function_t list
+}
+
+type class_lookup = (string, class_t) Hashtbl.t
+
 val to_s : t -> string
 val num_of_val : t -> float option
 val int_of_val : t -> int option
 val bool_of_val : t -> bool option
-val invoke_method : t -> string -> t list -> (t, string) Result.t
+
+val to_class_name : t -> string
+(*
+val invoke_method : class_lookup -> t -> string -> t list -> (t, string) Result.t
+*)

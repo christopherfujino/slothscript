@@ -22,6 +22,18 @@ and function_t =
       identifiers : t Identifiers.t;
     }
 
+type class_t = { methods : function_t list }
+type class_lookup = (string, class_t) Hashtbl.t
+
+let to_class_name = function
+  | String _ -> "String"
+  | Num _ -> "Number"
+  | List _ -> "List"
+  | Null -> "Null"
+  | Bool _ -> "Bool"
+  | HashMap _ -> "HashMap"
+  | Func _ -> "Function"
+
 let rec to_s = function
   | String s -> s
   | Num f ->
@@ -55,7 +67,8 @@ let int_of_val v =
 
 let bool_of_val = function Bool b' -> Some b' | _ -> None
 
-let invoke_method receiver method_name args =
+(*
+let invoke_method lookup receiver method_name args =
   let not_implemented receiver =
     Error
       (Printf.sprintf "The type %s does not implement the method %s" receiver
@@ -76,6 +89,11 @@ let invoke_method receiver method_name args =
   | Null -> Error "NPE!"
   | String _ -> not_implemented "String"
   | Num f -> (
+    let klass = Hashtbl.find lookup "Number" |> Option.value_exn in
+    List.iter klass.methods ~f:(function
+      | User _ -> failwith "Unreachable"
+      | Native {parameters; cb; identifiers} -> )
+in
       (* Does it matter this is O(n)? *)
       match method_name with
       | "+" -> (
@@ -147,3 +165,4 @@ let invoke_method receiver method_name args =
                        (to_s arg))))
       | _ -> not_implemented "Number")
   | _ -> Error "TODO"
+  *)

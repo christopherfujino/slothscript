@@ -1,1 +1,0 @@
-val globals : string list

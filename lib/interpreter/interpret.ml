@@ -205,11 +205,13 @@ and interpret_expr ctx expr =
       | None ->
           Printf.sprintf "The name %s has not been declared in this scope" i
           |> failure ~ctx pos)
-  | MethodInvoc { receiver; target; args; pos } -> (
+  | MethodInvoc { receiver; target; args; pos } ->
       let rt_receiver = interpret_expr ctx receiver in
       let args = List.map args ~f:(interpret_expr ctx) in
-      let res = Runtime.invoke_method rt_receiver target args in
-      match res with Ok v -> v | Error msg -> failure ~ctx pos msg
+      let _ =
+        Hashtbl.find_exn ctx.classes (Runtime.to_class_name rt_receiver)
+      in
+      failwith "TODO"
       (*
       let not_implemented receiver =
         Printf.sprintf "The type %s does not implement the method %s" receiver
@@ -218,7 +220,6 @@ and interpret_expr ctx expr =
       in
       match rt_receiver with
       *)
-      )
   | FuncInvoc (receiver, args, pos) -> (
       let receiver' = interpret_expr ctx receiver in
       match receiver' with

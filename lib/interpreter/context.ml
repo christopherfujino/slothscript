@@ -1,13 +1,9 @@
 open Core
 
-type class_t = {
-  methods : Runtime.function_t list
-}
-
 type t = {
   l : (module Sloth_stdlib.StdlibSig);
   identifiers : Runtime.t Identifiers.t;
-  classes : (string, class_t) Hashtbl.t;
+  classes : Runtime.class_lookup;
   src : string;
 }
 
@@ -33,7 +29,7 @@ let make_ctx m src =
   in
   let classes = Hashtbl.create (module String) in
   let identifiers = Identifiers.create () in
-  List.iter Sloth_common.Stdlib_interface.globals ~f:(fun name ->
+  List.iter Sloth_common.Stdlib_interface.globals ~f:(fun (name, _) ->
       match name with
       | "print" ->
           make_func "print" 1 identifiers (fun args ->
@@ -44,6 +40,7 @@ let make_ctx m src =
       | "$cwd" ->
           Identifiers.bind identifiers "$cwd" (Runtime.String "TODO")
           |> Option.value_exn
+      | "Number" -> failwith "TODO"
       | _ ->
           Printf.sprintf "TODO: You have not yet implemented %s" name
           |> failwith);
