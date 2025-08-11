@@ -16,6 +16,7 @@ for let i = 0; i < 1; i = i + 1 {
   assert(!(first == second))
   assert(first != second)
   assert(!(first != first))
+
   assert(first != null)
 }
 
@@ -200,6 +201,20 @@ assert(null == null)
                 true)
               (operator
                 Bang)))
+            [POS]))
+        (ExprStmt
+          (FuncInvoc
+            (IdRef
+              assert
+              [POS])
+            ((Equality
+              (IdRef
+                first
+                [POS])
+              (Null
+                [POS])
+              false
+              [POS]))
             [POS])))
       [POS]))
   (StmtDecl

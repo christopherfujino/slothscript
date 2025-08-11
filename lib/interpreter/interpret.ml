@@ -311,7 +311,12 @@ and interpret_block ctx stmts =
 and is_equal ctx is_equality lhs rhs =
   let lh_s = Runtime.to_class_name lhs in
   let rh_s = Runtime.to_class_name rhs in
-  if not @@ String.equal lh_s rh_s then false
+  let same_class = String.equal lh_s rh_s in
+  (* if ==, then return false; if !=, then return true *)
+  if not same_class then not is_equality
+  else if
+    not @@ String.equal lh_s rh_s
+  then false
   else
     match lhs with
     | String lh_s -> (
