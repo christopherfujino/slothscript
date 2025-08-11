@@ -21,6 +21,7 @@
 %token <Lexing.position> FUNC
 %token <Lexing.position> IF
 %token <Lexing.position> ELSE
+%token <Lexing.position> IN
 %token <Lexing.position> FOR
 %token <Lexing.position> PLUS
 %token <Lexing.position> MINUS
@@ -100,6 +101,11 @@ stmt:
   | pos = FOR; st = stmt; comp = expr1; SEMICOLON; inc = stmt_sans_semicolon; bl = block; SEMICOLON {
     let pos = Sloth_common.Position.t_of_lexing_position pos in
     ForLoop (st, comp, inc, bl, pos)
+  }
+  | pos = FOR; i = ID; IN; iteratee = expr1; block = block SEMICOLON {
+    let (iterator_name, _) = i in
+    let pos = Sloth_common.Position.t_of_lexing_position pos in
+    ForInLoop {iterator_name; iteratee; block; pos}
   }
   ;
 

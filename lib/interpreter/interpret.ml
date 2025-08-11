@@ -124,6 +124,29 @@ and interpret_stmt (ctx : Context.t) stmt =
             |> failure ~ctx pos
       in
       (ctx, interpret_for_loop ctx'' cmp inc bl Runtime.Null)
+  | ForInLoop { iterator_name; iteratee; block; pos } ->
+      let ctx =
+        { ctx with identifiers = Identifiers.push_empty ctx.identifiers }
+      in
+      let iteratee = interpret_expr ctx iteratee in
+      let iteratee_array =
+        match iteratee with
+        | List l -> l
+        | _ ->
+            Printf.sprintf "Cannot iterate over a %s"
+              (Runtime.to_class_name iteratee)
+            |> failure ~ctx pos
+      in
+      let return_value =
+        Array.fold iteratee_array ~init:Runtime.Null ~f:(fun _ element ->
+            let ctx =
+              { ctx with identifiers = Identifiers.push_empty ctx.identifiers }
+            in
+            Identifiers.bind ctx.identifiers iterator_name element
+            |> Option.value_exn;
+            interpret_block ctx block)
+      in
+      (ctx, return_value)
 
 and interpret_cond ctx cond =
   match cond with

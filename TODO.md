@@ -1,14 +1,12 @@
 ## TODO
 - [ ] Class prototypes
 - [ ] Class static methods
+- [ ] Context variables, with statements
 - [ ] Do blocks
 - [ ] break, continue keywords
 - [ ] Stack traces; depends on storing locs in runtime values
-- [ ] Context variables, with statements
-- [ ] For-in loops?
 - [ ] Nicer lambdas
 - [ ] List mutation methods
-- [ ] Modules
 - [ ] Standard Library
 - [ ] README.md
 - [ ] Security policy
@@ -41,3 +39,4 @@
 - [x] Assertions
 - [x] Classes
 - [x] Comments
+- [x] For-in loops

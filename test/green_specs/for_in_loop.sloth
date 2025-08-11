@@ -1,0 +1,70 @@
+### Name
+for-in loop
+
+### Program
+let l = ["Rubber Soul", "Revolver", "Sgt. Pepper's Lonely Hearts Club Band"]
+
+for album in l {
+  print("${album} was a great album.")
+}
+
+### Ast
+((StmtDecl
+  (LetStmt
+    l
+    (List
+      ((String
+        ((FullString
+          "Rubber Soul"
+          [POS]))
+        [POS])
+        (String
+          ((FullString
+            Revolver
+            [POS]))
+          [POS])
+        (String
+          ((FullString
+            "Sgt. Pepper's Lonely Hearts Club Band"
+            [POS]))
+          [POS]))
+      [POS])
+    [POS]))
+  (StmtDecl
+    (ForInLoop
+      (iterator_name
+        album)
+      (iteratee
+        (IdRef
+          l
+          [POS]))
+      (block
+        ((ExprStmt
+          (FuncInvoc
+            (IdRef
+              print
+              [POS])
+            ((String
+              ((StartStringInterp
+                ""
+                [POS])
+                (ExpressionStringInterp
+                  (IdRef
+                    album
+                    [POS]))
+                (EndStringInterp
+                  " was a great album."
+                  [POS]))
+              [POS]))
+            [POS]))))
+      (pos
+        [POS]))))
+
+### Stdout
+Rubber Soul was a great album.
+Revolver was a great album.
+Sgt. Pepper's Lonely Hearts Club Band was a great album.
+
+### Failure
+
+

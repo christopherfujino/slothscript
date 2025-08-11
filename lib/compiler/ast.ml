@@ -27,6 +27,12 @@ and stmt =
   (* No position *)
   | ExprStmt of expr
   | ForLoop of stmt * expr * stmt * stmt list * Sloth_common.Position.t
+  | ForInLoop of {
+      iterator_name : string;
+      iteratee : expr;
+      block : stmt list;
+      pos : Sloth_common.Position.t;
+    }
 [@@deriving sexp]
 
 and expr =

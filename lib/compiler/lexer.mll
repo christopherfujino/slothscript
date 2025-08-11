@@ -60,6 +60,7 @@ rule private_read last_token state =
   | "func" { let token = FUNC lexbuf.lex_curr_p in last_token := Some token; token }
   | "if" { let token = IF lexbuf.lex_curr_p in last_token := Some token; token }
   | "else" { let token = ELSE lexbuf.lex_curr_p in last_token := Some token; token }
+  | "in" { let token = IN lexbuf.lex_curr_p in last_token := Some token; token }
   | "for" { let token = FOR lexbuf.lex_curr_p in last_token := Some token; token }
   | '+' { let token = PLUS lexbuf.lex_curr_p in last_token := Some token; token }
   | '-' { let token = MINUS lexbuf.lex_curr_p in last_token := Some token; token }

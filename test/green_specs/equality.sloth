@@ -10,10 +10,10 @@ let matrix = [
   [{"key": "value"}, {"key": "value2"}, "HashMap"],
 ]
 
-for let i = 0; i < 5; i = i + 1 {
-  let first = matrix[i][0]
-  let second = matrix[i][1]
-  let name = matrix[i][2]
+for arr in matrix {
+  let first = arr[0]
+  let second = arr[1]
+  let name = arr[2]
 
   assert(first == first, name)
   assert(!(first == second), name)
@@ -128,196 +128,154 @@ assert(!(null != null))
       [POS])
     [POS]))
   (StmtDecl
-    (ForLoop
-      (LetStmt
-        i
-        (Num
-          0
-          [POS])
-        [POS])
-      (MethodInvoc
-        (receiver
-          (IdRef
-            i
-            [POS]))
-        (target
-          <)
-        (args
-          ((Num
-            5
-            [POS])))
-        (pos
+    (ForInLoop
+      (iterator_name
+        arr)
+      (iteratee
+        (IdRef
+          matrix
           [POS]))
-      (AssignStmt
-        i
-        (MethodInvoc
-          (receiver
+      (block
+        ((LetStmt
+          first
+          (Subscript
             (IdRef
-              i
+              arr
+              [POS])
+            (Num
+              0
+              [POS])
+            [POS])
+          [POS])
+          (LetStmt
+            second
+            (Subscript
+              (IdRef
+                arr
+                [POS])
+              (Num
+                1
+                [POS])
+              [POS])
+            [POS])
+          (LetStmt
+            name
+            (Subscript
+              (IdRef
+                arr
+                [POS])
+              (Num
+                2
+                [POS])
+              [POS])
+            [POS])
+          (ExprStmt
+            (FuncInvoc
+              (IdRef
+                assert
+                [POS])
+              ((Equality
+                (IdRef
+                  first
+                  [POS])
+                (IdRef
+                  first
+                  [POS])
+                true
+                [POS])
+                (IdRef
+                  name
+                  [POS]))
               [POS]))
-          (target
-            +)
-          (args
-            ((Num
-              1
-              [POS])))
-          (pos
-            [POS]))
-        [POS])
-      ((LetStmt
-        first
-        (Subscript
-          (Subscript
-            (IdRef
-              matrix
-              [POS])
-            (IdRef
-              i
-              [POS])
-            [POS])
-          (Num
-            0
-            [POS])
-          [POS])
-        [POS])
-        (LetStmt
-          second
-          (Subscript
-            (Subscript
+          (ExprStmt
+            (FuncInvoc
               (IdRef
-                matrix
+                assert
                 [POS])
-              (IdRef
-                i
-                [POS])
-              [POS])
-            (Num
-              1
-              [POS])
-            [POS])
-          [POS])
-        (LetStmt
-          name
-          (Subscript
-            (Subscript
-              (IdRef
-                matrix
-                [POS])
-              (IdRef
-                i
-                [POS])
-              [POS])
-            (Num
-              2
-              [POS])
-            [POS])
-          [POS])
-        (ExprStmt
-          (FuncInvoc
-            (IdRef
-              assert
-              [POS])
-            ((Equality
-              (IdRef
-                first
-                [POS])
-              (IdRef
-                first
-                [POS])
-              true
-              [POS])
-              (IdRef
-                name
-                [POS]))
-            [POS]))
-        (ExprStmt
-          (FuncInvoc
-            (IdRef
-              assert
-              [POS])
-            ((UnaryExpr
-              (target
-                (Equality
-                  (IdRef
-                    first
-                    [POS])
-                  (IdRef
-                    second
-                    [POS])
-                  true
+              ((UnaryExpr
+                (target
+                  (Equality
+                    (IdRef
+                      first
+                      [POS])
+                    (IdRef
+                      second
+                      [POS])
+                    true
+                    [POS]))
+                (pos
+                  [POS])
+                (is_prefix
+                  true)
+                (operator
+                  Bang))
+                (IdRef
+                  name
                   [POS]))
-              (pos
+              [POS]))
+          (ExprStmt
+            (FuncInvoc
+              (IdRef
+                assert
                 [POS])
-              (is_prefix
-                true)
-              (operator
-                Bang))
-              (IdRef
-                name
-                [POS]))
-            [POS]))
-        (ExprStmt
-          (FuncInvoc
-            (IdRef
-              assert
-              [POS])
-            ((Equality
-              (IdRef
-                first
+              ((Equality
+                (IdRef
+                  first
+                  [POS])
+                (IdRef
+                  second
+                  [POS])
+                false
                 [POS])
-              (IdRef
-                second
-                [POS])
-              false
-              [POS])
-              (IdRef
-                name
-                [POS]))
-            [POS]))
-        (ExprStmt
-          (FuncInvoc
-            (IdRef
-              assert
-              [POS])
-            ((UnaryExpr
-              (target
-                (Equality
-                  (IdRef
-                    first
-                    [POS])
-                  (IdRef
-                    first
-                    [POS])
-                  false
+                (IdRef
+                  name
                   [POS]))
-              (pos
-                [POS])
-              (is_prefix
-                true)
-              (operator
-                Bang))
+              [POS]))
+          (ExprStmt
+            (FuncInvoc
               (IdRef
-                name
-                [POS]))
-            [POS]))
-        (ExprStmt
-          (FuncInvoc
-            (IdRef
-              assert
-              [POS])
-            ((Equality
-              (IdRef
-                first
+                assert
                 [POS])
-              (Null
-                [POS])
-              false
-              [POS])
+              ((UnaryExpr
+                (target
+                  (Equality
+                    (IdRef
+                      first
+                      [POS])
+                    (IdRef
+                      first
+                      [POS])
+                    false
+                    [POS]))
+                (pos
+                  [POS])
+                (is_prefix
+                  true)
+                (operator
+                  Bang))
+                (IdRef
+                  name
+                  [POS]))
+              [POS]))
+          (ExprStmt
+            (FuncInvoc
               (IdRef
-                name
-                [POS]))
-            [POS])))
-      [POS]))
+                assert
+                [POS])
+              ((Equality
+                (IdRef
+                  first
+                  [POS])
+                (Null
+                  [POS])
+                false
+                [POS])
+                (IdRef
+                  name
+                  [POS]))
+              [POS]))))
+      (pos
+        [POS])))
   (StmtDecl
     (ExprStmt
       (FuncInvoc

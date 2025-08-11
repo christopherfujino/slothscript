@@ -33,6 +33,12 @@ and stmt =
     }
   | ExprStmt of expr
   | ForLoop of stmt * expr * stmt * stmt list * Sloth_common.Position.t
+  | ForInLoop of {
+      iterator_name : string;
+      iteratee : expr;
+      block : stmt list;
+      pos : Sloth_common.Position.t;
+    }
 [@@deriving sexp]
 
 and expr =
@@ -155,6 +161,14 @@ and optimize_stmt env stmts : Environment.t * stmt =
       let env3, inc' = optimize_stmt env2 inc in
       let block' = optimize_block env3 block in
       (env, ForLoop (init', comp', inc', block', pos))
+  | ForInLoop { iterator_name; iteratee; block; pos } ->
+      let inner_env = Environment.push_empty env in
+      let inner_env =
+        Environment.bind inner_env iterator_name |> Option.value_exn
+      in
+      let iteratee = optimize_expr env iteratee in
+      let block = optimize_block inner_env block in
+      (env, ForInLoop { iterator_name; iteratee; block; pos })
 
 (** You must push a new frame to the env first. *)
 and optimize_block env rev_stmts =
