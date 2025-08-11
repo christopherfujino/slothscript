@@ -46,14 +46,14 @@
 
 (* Disambiguate precedence and associativity *)
 (* These are optional, and could have been done exclusively with production
-   rules. *)
+   rules--however, they help resolve conflicts.
 
-(*
-%left MINUS PLUS
-%left PRODUCT DIVIDE
+   These are ordered, from high to low precedence.
+   *)
 
 %left DOUBLE_EQUALS GEQ LEQ LESS
-*)
+%left MINUS PLUS
+%left PRODUCT DIVIDE
 
 (* Declare the starting point for parsing (root of AST) *)
 %start <Ast.decl list> prog
@@ -132,53 +132,48 @@ expr1:
   }
   | e = expr2 { e }
 
-(* Operators ==, !=, <, <=, >, >= *)
+(* Operators *)
 expr2:
-  | e1 = expr2; pos = DOUBLE_EQUALS; e2 = expr3 {
+  (* TODO add !=, > *)
+  | e1 = expr2; pos = DOUBLE_EQUALS; e2 = expr2 {
     let pos = Sloth_common.Position.t_of_lexing_position pos in
     Equality (e1, e2, true, pos)
   }
-  | e1 = expr2; pos = LESS; e2 = expr3 {
+  | e1 = expr2; pos = LESS; e2 = expr2 {
     let pos = Sloth_common.Position.t_of_lexing_position pos in
     MethodInvoc { receiver=e1; target="<"; args=[e2]; pos}
   }
-  | e1 = expr2; pos = LEQ; e2 = expr3 {
+  | e1 = expr2; pos = LEQ; e2 = expr2 {
     let pos = Sloth_common.Position.t_of_lexing_position pos in
     MethodInvoc { receiver=e1; target="<="; args=[e2]; pos}
   }
-  | e1 = expr2; pos = GEQ; e2 = expr3 {
+  | e1 = expr2; pos = GEQ; e2 = expr2 {
     let pos = Sloth_common.Position.t_of_lexing_position pos in
     MethodInvoc { receiver=e1; target=">="; args=[e2]; pos}
   }
-  (* TODO add more precedences *)
-  | e = expr3 { e }
 
-
-(* operators +, -, | *)
-expr3:
-  | e1 = expr3; pos = PLUS; e2 = expr4 {
+  (* TODO add | *)
+  | e1 = expr2; pos = PLUS; e2 = expr2 {
     let pos = Sloth_common.Position.t_of_lexing_position pos in
     MethodInvoc { receiver=e1; target="+"; args=[e2]; pos}
   }
-  | e1 = expr3; pos = MINUS; e2 = expr4 {
+  | e1 = expr2; pos = MINUS; e2 = expr2 {
     let pos = Sloth_common.Position.t_of_lexing_position pos in
     MethodInvoc { receiver=e1; target="-"; args=[e2]; pos}
   }
-  (* TODO PIPE *)
-  | e = expr4 { e }
 
-(* operators *, /, % *)
-expr4:
-  | e1 = expr4; pos = PRODUCT; e2 = expr7 {
+  (* operators *, /; TODO add % *)
+  | e1 = expr2; pos = PRODUCT; e2 = expr2 {
     let pos = Sloth_common.Position.t_of_lexing_position pos in
     MethodInvoc { receiver=e1; target="*"; args=[e2]; pos}
   }
-  | e1 = expr4; pos = DIVIDE; e2 = expr7 {
+  | e1 = expr2; pos = DIVIDE; e2 = expr2 {
     let pos = Sloth_common.Position.t_of_lexing_position pos in
     MethodInvoc { receiver=e1; target="/"; args=[e2]; pos}
   }
-  (* TODO add modulo *)
+ 
   | e = expr7 { e }
+
 
 (* function invocation *)
 expr7:
@@ -286,7 +281,7 @@ hash_literals:
     HashMap ([], pos)
   }
   (* Allow single line literal without trailing comma *)
-  | pos = LCURLY; k = expr4; COLON; v = expr1; RCURLY {
+  | pos = LCURLY; k = expr1; COLON; v = expr1; RCURLY {
     let pos = Sloth_common.Position.t_of_lexing_position pos in
     HashMap ([(k, v)], pos)
   }
@@ -299,13 +294,13 @@ hash_literals:
 hash_literal_pair:
   (* Are other types of expressions allowed for keys? *)
   (* Note: trailing commas required because of ASI *)
-  | k = expr4; COLON; v = expr1; COMMA { [(k, v)] }
-  | p = hash_literal_pair; k = expr4; COLON; v = expr1; COMMA { (k, v) :: p }
+  | k = expr1; COLON; v = expr1; COMMA { [(k, v)] }
+  | p = hash_literal_pair; k = expr1; COLON; v = expr1; COMMA { (k, v) :: p }
   ;
 
 (* Could be expr or stmt for assignment *)
 subscript:
-  | e = expr3; pos = LBRACKET; sub = expr1 ; RBRACKET {
+  | e = expr7; pos = LBRACKET; sub = expr1 ; RBRACKET {
     let pos = Sloth_common.Position.t_of_lexing_position pos in
     Subscript (e, sub, pos)
   }
