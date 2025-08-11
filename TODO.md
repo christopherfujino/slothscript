@@ -4,7 +4,6 @@
 - [ ] For-in loops?
 - [ ] comments
 - [ ] Nicer lambdas
-- [ ] Structs/Methods
 - [ ] List mutation methods
 - [ ] Modules
 - [ ] Standard Library
@@ -15,6 +14,7 @@
 - [ ] Pattern matching
 - [ ] Formatter
 - [ ] Early return from functions?
+- [ ] Method syntax for hash maps
 
 ## Done
 - [x] Lexical scoping
@@ -37,3 +37,4 @@
 - [x] HashMap literals
 - [x] Store locs in runtime values
 - [x] Assertions
+- [ ] Classes
