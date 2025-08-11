@@ -42,6 +42,7 @@
 %token <Lexing.position> LEQ
 %token <Lexing.position> GEQ
 %token <Lexing.position> LESS
+%token <Lexing.position> GREATER
 %token <Lexing.position> BANG
 
 %token <Lexing.position> EOF
@@ -53,7 +54,7 @@
    These are ordered, from high to low precedence.
    *)
 
-%left NOT_EQUALS DOUBLE_EQUALS GEQ LEQ LESS
+%left NOT_EQUALS DOUBLE_EQUALS GEQ LEQ LESS GREATER
 %left MINUS PLUS
 %left PRODUCT DIVIDE
 %right BANG
@@ -137,7 +138,7 @@ expr1:
 
 (* Operators *)
 expr2:
-  (* TODO add > *)
+  (* Highest *)
   | e1 = expr2; pos = DOUBLE_EQUALS; e2 = expr2 {
     let pos = Sloth_common.Position.t_of_lexing_position pos in
     Equality (e1, e2, true, pos)
@@ -149,6 +150,10 @@ expr2:
   | e1 = expr2; pos = LESS; e2 = expr2 {
     let pos = Sloth_common.Position.t_of_lexing_position pos in
     MethodInvoc { receiver=e1; target="<"; args=[e2]; pos}
+  }
+  | e1 = expr2; pos = GREATER; e2 = expr2 {
+    let pos = Sloth_common.Position.t_of_lexing_position pos in
+    MethodInvoc { receiver=e1; target=">"; args=[e2]; pos}
   }
   | e1 = expr2; pos = LEQ; e2 = expr2 {
     let pos = Sloth_common.Position.t_of_lexing_position pos in
@@ -213,7 +218,7 @@ expr8:
     let pos = Sloth_common.Position.t_of_lexing_position pos in
     FuncExpr {parameters = p; block = b; pos}
   }
-  | l = list_literals { l }
+  | l = list_literal { l }
   | f = NUM { let f, pos = f in Num (f, t_of_lexing_position pos) }
   | pos = TRUE {
     let pos = Sloth_common.Position.t_of_lexing_position pos in
@@ -277,10 +282,15 @@ string_middle:
     (e, s, pos) :: cont
   }
 
-list_literals:
+list_literal:
   | pos = LBRACKET; RBRACKET {
     let pos = Sloth_common.Position.t_of_lexing_position pos in
     List ([], pos)
+  }
+  (* expr_list will never end in COMMA *)
+  | pos = LBRACKET; l = expr_list ; COMMA; RBRACKET {
+    let pos = Sloth_common.Position.t_of_lexing_position pos in
+    List (l, pos)
   }
   | pos = LBRACKET; l = expr_list ; RBRACKET {
     let pos = Sloth_common.Position.t_of_lexing_position pos in

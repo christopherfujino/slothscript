@@ -99,6 +99,7 @@ rule private_read last_token state =
   | ')' { let token = RPAREN lexbuf.lex_curr_p in last_token := Some token; token}
   | ',' { let token = COMMA lexbuf.lex_curr_p in last_token := Some token; token}
   | '<' { let token = LESS lexbuf.lex_curr_p in last_token := Some token; token}
+  | '>' { let token = GREATER lexbuf.lex_curr_p in last_token := Some token; token}
   | "<=" { let token = LEQ lexbuf.lex_curr_p in last_token := Some token; token}
   | ">=" { let token = GEQ lexbuf.lex_curr_p in last_token := Some token; token}
   | "==" { let token = DOUBLE_EQUALS lexbuf.lex_curr_p in last_token := Some token; token }

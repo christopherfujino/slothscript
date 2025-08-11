@@ -206,7 +206,6 @@ and interpret_expr ctx expr =
           Printf.sprintf "The name %s has not been declared in this scope" i
           |> failure ~ctx pos)
   | Equality (lhs, rhs, is_equality, _) ->
-      print_endline "AAA";
       let lhs = interpret_expr ctx lhs in
       let rhs = interpret_expr ctx rhs in
 
