@@ -31,6 +31,7 @@ and expr = private
   | HashMap of (expr * expr) list * Sloth_common.Position.t
   | Subscript of expr * expr * Sloth_common.Position.t
   | IdRef of string * Sloth_common.Position.t
+  | Equality of expr * expr * bool * Sloth_common.Position.t
   | FuncInvoc of expr * expr list * Sloth_common.Position.t
   | MethodInvoc of {
       receiver : expr;

@@ -51,6 +51,7 @@
 %left MINUS
 %left PRODUCT
 %left DIVIDE
+%left DOUBLE_EQUALS
 %left LEQ
 %left GEQ
 %left LESS
@@ -139,38 +140,6 @@ expr1:
 
 (* operators *, /, % *)
 expr2:
-  | pos = FUNC; LPAREN; RPAREN; b = block {
-    let pos = Sloth_common.Position.t_of_lexing_position pos in
-    FuncExpr {parameters = []; block = b; pos}
-  }
-  | pos = FUNC; LPAREN; p = parameter_list; RPAREN; b = block {
-    let pos = Sloth_common.Position.t_of_lexing_position pos in
-    FuncExpr {parameters = p; block = b; pos}
-  }
-  | e1 = expr2; pos = PLUS; e2 = expr2 {
-    let pos = Sloth_common.Position.t_of_lexing_position pos in
-    MethodInvoc { receiver=e1; target="+"; args=[e2]; pos}
-  }
-  | e1 = expr2; pos = LESS; e2 = expr2 {
-    let pos = Sloth_common.Position.t_of_lexing_position pos in
-    MethodInvoc { receiver=e1; target="<"; args=[e2]; pos}
-  }
-  | e1 = expr2; pos = DOUBLE_EQUALS; e2 = expr2 {
-    let pos = Sloth_common.Position.t_of_lexing_position pos in
-    MethodInvoc { receiver=e1; target="=="; args=[e2]; pos}
-  }
-  | e1 = expr2; pos = LEQ; e2 = expr2 {
-    let pos = Sloth_common.Position.t_of_lexing_position pos in
-    MethodInvoc { receiver=e1; target="<="; args=[e2]; pos}
-  }
-  | e1 = expr2; pos = GEQ; e2 = expr2 {
-    let pos = Sloth_common.Position.t_of_lexing_position pos in
-    MethodInvoc { receiver=e1; target=">="; args=[e2]; pos}
-  }
-  | e1 = expr2; pos = MINUS; e2 = expr2 {
-    let pos = Sloth_common.Position.t_of_lexing_position pos in
-    MethodInvoc { receiver=e1; target="-"; args=[e2]; pos}
-  }
   | e1 = expr2; pos = PRODUCT; e2 = expr2 {
     let pos = Sloth_common.Position.t_of_lexing_position pos in
     MethodInvoc { receiver=e1; target="*"; args=[e2]; pos}
@@ -181,23 +150,65 @@ expr2:
   }
   | e = expr3 { e }
 
-(* function invocation *)
+(* operators +, -, | *)
 expr3:
-  | e = expr3; pos = LPAREN; a = expr_list; RPAREN {
+  | e1 = expr3; pos = PLUS; e2 = expr3 {
+    let pos = Sloth_common.Position.t_of_lexing_position pos in
+    MethodInvoc { receiver=e1; target="+"; args=[e2]; pos}
+  }
+  | e1 = expr3; pos = MINUS; e2 = expr3 {
+    let pos = Sloth_common.Position.t_of_lexing_position pos in
+    MethodInvoc { receiver=e1; target="-"; args=[e2]; pos}
+  }
+  (* TODO PIPE *)
+  | e = expr4 { e }
+
+(* Operators ==, !=, <, <=, >, >= *)
+expr4:
+  | e1 = expr3; pos = DOUBLE_EQUALS; e2 = expr3 {
+    let pos = Sloth_common.Position.t_of_lexing_position pos in
+    Equality (e1, e2, true, pos)
+  }
+  | e1 = expr3; pos = LESS; e2 = expr3 {
+    let pos = Sloth_common.Position.t_of_lexing_position pos in
+    MethodInvoc { receiver=e1; target="<"; args=[e2]; pos}
+  }
+  | e1 = expr3; pos = LEQ; e2 = expr3 {
+    let pos = Sloth_common.Position.t_of_lexing_position pos in
+    MethodInvoc { receiver=e1; target="<="; args=[e2]; pos}
+  }
+  | e1 = expr3; pos = GEQ; e2 = expr3 {
+    let pos = Sloth_common.Position.t_of_lexing_position pos in
+    MethodInvoc { receiver=e1; target=">="; args=[e2]; pos}
+  }
+  (* TODO add more precedences *)
+  | e = expr7 { e }
+
+(* function invocation *)
+expr7:
+  | e = expr7; pos = LPAREN; a = expr_list; RPAREN {
     let pos = Sloth_common.Position.t_of_lexing_position pos in
     FuncInvoc (e, a, pos)
   }
-  | e = expr3; pos = LPAREN; RPAREN {
+  | e = expr7; pos = LPAREN; RPAREN {
     let pos = Sloth_common.Position.t_of_lexing_position pos in
     FuncInvoc (e, [], pos)
   }
   | s = subscript { s }
-  | e = expr4 { e }
+  | e = expr8 { e }
   ;
 
 
 (* Primary - literals or grouping *)
-expr4:
+expr8:
+  | pos = FUNC; LPAREN; RPAREN; b = block {
+    let pos = Sloth_common.Position.t_of_lexing_position pos in
+    FuncExpr {parameters = []; block = b; pos}
+  }
+  | pos = FUNC; LPAREN; p = parameter_list; RPAREN; b = block {
+    let pos = Sloth_common.Position.t_of_lexing_position pos in
+    FuncExpr {parameters = p; block = b; pos}
+  }
   | l = list_literals { l }
   | f = NUM { let f, pos = f in Num (f, t_of_lexing_position pos) }
   | pos = TRUE {

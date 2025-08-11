@@ -44,6 +44,7 @@ and expr =
   | HashMap of (expr * expr) list * Sloth_common.Position.t
   | Subscript of expr * expr * Sloth_common.Position.t
   | IdRef of string * Sloth_common.Position.t
+  | Equality of expr * expr * bool * Sloth_common.Position.t
   | FuncInvoc of expr * expr list * Sloth_common.Position.t
   | MethodInvoc of {
       receiver : expr;
@@ -182,6 +183,10 @@ and optimize_expr (env : Environment.t) (e : Ast.expr) : expr =
       let receiver' = optimize_expr env receiver in
       let sub' = optimize_expr env sub in
       Subscript (receiver', sub', pos)
+  | Equality (lhs, rhs, is_equal, pos) ->
+      let lhs = optimize_expr env lhs in
+      let rhs = optimize_expr env rhs in
+      Equality (lhs, rhs, is_equal, pos)
   | FuncInvoc (receiver, args, pos) ->
       let rev_args = List.rev args in
       let rev_mapped_args = List.map rev_args ~f:(optimize_expr env) in

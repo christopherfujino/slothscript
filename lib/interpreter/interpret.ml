@@ -205,6 +205,11 @@ and interpret_expr ctx expr =
       | None ->
           Printf.sprintf "The name %s has not been declared in this scope" i
           |> failure ~ctx pos)
+  | Equality (lhs, rhs, is_equality, _) ->
+      let lhs = interpret_expr ctx lhs in
+      let rhs = interpret_expr ctx rhs in
+
+      Runtime.Bool (is_equal ctx is_equality lhs rhs)
   | MethodInvoc { receiver; target; args; pos } -> (
       let rt_receiver = interpret_expr ctx receiver in
       let args = List.map args ~f:(interpret_expr ctx) in
@@ -285,3 +290,25 @@ and interpret_block ctx stmts =
   (* discard context *)
   let _, v = traverse_stmts ctx stmts in
   v
+
+and is_equal ctx is_equality lhs rhs =
+  let lh_s = Runtime.to_s lhs in
+  let rh_s = Runtime.to_s rhs in
+  if not @@ String.equal lh_s rh_s then false
+  else
+    match lhs with
+    | String lh_s -> (
+        let rh_s = Runtime.string_of_val rhs |> Option.value_exn in
+        match is_equality with
+        | true -> String.equal lh_s rh_s
+        | false -> not @@ String.equal lh_s rh_s)
+    | Bool lhs -> (
+        let rhs = Runtime.bool_of_val rhs |> Option.value_exn in
+        match is_equality with
+        | true -> Bool.(lhs = rhs)
+        | false -> Bool.((not lhs) = rhs))
+    | List lhs ->
+        let rhs = Runtime.list_of_val rhs |> Option.value_exn in
+
+        Array.equal (is_equal ctx is_equality) lhs rhs
+    | _ -> failwith "TODO"

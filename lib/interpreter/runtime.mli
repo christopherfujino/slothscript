@@ -30,7 +30,6 @@ val num_of_val : t -> float option
 val string_of_val : t -> string option
 val int_of_val : t -> int option
 val bool_of_val : t -> bool option
+val list_of_val : t -> t Array.t option
+
 val to_class_name : t -> string
-(*
-val invoke_method : class_lookup -> t -> string -> t list -> (t, string) Result.t
-*)
