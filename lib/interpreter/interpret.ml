@@ -349,15 +349,24 @@ and is_equal ctx is_equality lhs rhs =
         else
           let is_deep_equal = Array.equal (is_equal ctx true) lhs rhs in
           Bool.(is_deep_equal = is_equality)
-    | HashMap _ ->
-        failwith "TODO"
-        (*
+    | HashMap lhs ->
         let rhs = Runtime.hashmap_of_val rhs |> Option.value_exn in
         let left_len = Stdlib.Hashtbl.length lhs in
         let right_len = Stdlib.Hashtbl.length rhs in
-         (is_equal ctx is_equality) lhs rhs
-         *)
-    | Null -> ( match rhs with Null -> true | _ -> false)
+        if (not is_equality) && not (phys_equal left_len right_len) then true
+        else
+          let is_deep_equal =
+            Stdlib.Hashtbl.fold
+              (fun key left_value equal_so_far ->
+                if not equal_so_far then false
+                else
+                  match Stdlib.Hashtbl.find_opt rhs key with
+                  | None -> false
+                  | Some right_value -> is_equal ctx true left_value right_value)
+              lhs true
+          in
+          Bool.(is_deep_equal = is_equality)
+    | Null -> ( match rhs with Null -> is_equality | _ -> not is_equality)
     | _ ->
         Printf.sprintf "is_equal the type %s is not implemented" lh_s
         |> failwith

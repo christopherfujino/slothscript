@@ -7,7 +7,7 @@ let matrix = [
   ["string", "a different string", "String"],
   [true, false, "Bool"],
   [[1], [1, 2], "List"],
-  [{"key": "value"}, {"key": "value"}, "HashMap"],
+  [{"key": "value"}, {"key": "value2"}, "HashMap"],
 ]
 
 for let i = 0; i < 5; i = i + 1 {
@@ -24,6 +24,7 @@ for let i = 0; i < 5; i = i + 1 {
 }
 
 assert(null == null)
+assert(!(null != null))
 
 ### Ast
 ((StmtDecl
@@ -114,7 +115,7 @@ assert(null == null)
                 [POS])
                 (String
                   ((FullString
-                    value
+                    value2
                     [POS]))
                   [POS])))
               [POS])
@@ -330,6 +331,28 @@ assert(null == null)
             [POS])
           true
           [POS]))
+        [POS])))
+  (StmtDecl
+    (ExprStmt
+      (FuncInvoc
+        (IdRef
+          assert
+          [POS])
+        ((UnaryExpr
+          (target
+            (Equality
+              (Null
+                [POS])
+              (Null
+                [POS])
+              false
+              [POS]))
+          (pos
+            [POS])
+          (is_prefix
+            true)
+          (operator
+            Bang)))
         [POS]))))
 
 ### Stdout
