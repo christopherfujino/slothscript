@@ -13,5 +13,9 @@ let globals =
     ("assert", Value);
     ("$cwd", Value);
     ( "Number",
-      Class { properties = []; methods = [ "+"; "-"; "/"; "*"; "<"; ">"; "<="; ">=" ] } );
+      Class
+        {
+          properties = [];
+          methods = [ "+"; "-"; "/"; "*"; "<"; ">"; "<="; ">=" ];
+        } );
   ]
