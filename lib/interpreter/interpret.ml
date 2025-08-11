@@ -333,4 +333,5 @@ and is_equal ctx is_equality lhs rhs =
         let rhs = Runtime.list_of_val rhs |> Option.value_exn in
 
         Array.equal (is_equal ctx is_equality) lhs rhs
+    | Null -> ( match rhs with Null -> true | _ -> false)
     | _ -> failwith "TODO in is_equal"
