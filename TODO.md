@@ -1,5 +1,8 @@
 ## TODO
+- [ ] Class prototypes
+- [ ] Class static methods
 - [ ] Do blocks
+- [ ] Stack traces; depends on storing locs in runtime values
 - [ ] Context variables, with statements
 - [ ] For-in loops?
 - [ ] comments
@@ -10,7 +13,6 @@
 - [ ] README.md
 - [ ] Security policy
 - [ ] Language versioning
-- [ ] Stack traces; depends on storing locs in runtime values
 - [ ] Pattern matching
 - [ ] Formatter
 - [ ] Early return from functions?
@@ -37,4 +39,4 @@
 - [x] HashMap literals
 - [x] Store locs in runtime values
 - [x] Assertions
-- [ ] Classes
+- [x] Classes
