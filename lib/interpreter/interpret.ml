@@ -104,7 +104,16 @@ and interpret_stmt (ctx : Context.t) stmt =
         | Some cmp_val ->
             if not cmp_val then last_val
             else
-              let cur_val = interpret_block ctx bl in
+              (* Each iteration should have its own scope *)
+              let inner_ctx =
+                Context.
+                  {
+                    ctx with
+                    identifiers = Identifiers.push_empty ctx.identifiers;
+                  }
+              in
+
+              let cur_val = interpret_block inner_ctx bl in
               let ctx, _ = interpret_stmt ctx inc in
               (interpret_for_loop [@tailcall]) ctx cmp inc bl cur_val
         | None ->
@@ -314,9 +323,7 @@ and is_equal ctx is_equality lhs rhs =
   let same_class = String.equal lh_s rh_s in
   (* if ==, then return false; if !=, then return true *)
   if not same_class then not is_equality
-  else if
-    not @@ String.equal lh_s rh_s
-  then false
+  else if not @@ String.equal lh_s rh_s then false
   else
     match lhs with
     | String lh_s -> (
