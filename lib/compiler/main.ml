@@ -79,6 +79,7 @@ let to_s token =
   | STRING_END (s, _) -> Printf.sprintf "STRING_END(%s)" s
   | NUM (n, _) -> Printf.sprintf "NUM(%f)" n
   | ID (s, _) -> Printf.sprintf "ID(%s)" s
+  | COMMENT _ -> failwith "Unreachable"
 
 let debug buf prev =
   let lex_filter = Lexer.make_lex_filter () in

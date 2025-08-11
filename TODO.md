@@ -2,10 +2,10 @@
 - [ ] Class prototypes
 - [ ] Class static methods
 - [ ] Do blocks
+- [ ] break, continue keywords
 - [ ] Stack traces; depends on storing locs in runtime values
 - [ ] Context variables, with statements
 - [ ] For-in loops?
-- [ ] comments
 - [ ] Nicer lambdas
 - [ ] List mutation methods
 - [ ] Modules
@@ -40,3 +40,4 @@
 - [x] Store locs in runtime values
 - [x] Assertions
 - [x] Classes
+- [x] Comments

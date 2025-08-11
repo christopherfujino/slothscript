@@ -82,6 +82,7 @@ rule private_read last_token state =
     )
   }
   | ':' { let token = COLON lexbuf.lex_curr_p in last_token := Some token; token }
+  | '#' { read_comment lexbuf.lex_curr_p lexbuf }
   | '"' {
     let token = read_string (Buffer.create string_buffer_size) lexbuf.lex_curr_p state lexbuf in
     last_token := Some token;
@@ -115,6 +116,23 @@ rule private_read last_token state =
     (* Note: if needed, a semicolon will be inserted later in filtering
        between lexing & parsing *)
     EOF lexbuf.lex_curr_p
+  }
+
+and read_comment pos =
+  parse
+  | '\n' {
+    lexbuf.lex_curr_p <- { lexbuf.lex_curr_p with
+      pos_lnum = lexbuf.lex_curr_p.pos_lnum + 1;
+      pos_bol = lexbuf.lex_curr_p.pos_cnum;
+    };
+
+    COMMENT (pos, None)
+  }
+  | eof {
+    COMMENT (pos, Some lexbuf.lex_curr_p)
+  }
+  | [^ '\n']+ {
+    (read_comment[@tailcall]) pos lexbuf
   }
 
 and read_string buf pos state =
@@ -152,7 +170,7 @@ and read_string buf pos state =
     let state = ref NotInterpolating in
     let should_spit_eof = ref False in
     (* insert semicolon before EOF *)
-    fun buf ->
+    let rec filter = fun buf ->
       let open Parser in
       match !should_spit_eof with
       | True pos -> EOF pos
@@ -168,9 +186,13 @@ and read_string buf pos state =
                   | _ ->
                       should_spit_eof := True pos;
                       SEMICOLON pos))
+          (* TODO do we need to unpack the optional EOF pos? *)
+          | COMMENT _ -> (filter[@tailcall]) buf
           | _ ->
               last_token := Some token;
               token)
+    in
+    filter
 
   let bootstrap input =
     let filter = make_lex_filter () in

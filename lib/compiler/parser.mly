@@ -45,6 +45,9 @@
 %token <Lexing.position> GREATER
 %token <Lexing.position> BANG
 
+(* These will be stripped out by the Lexer; optional position is of EOF *)
+%token <Lexing.position * Lexing.position option> COMMENT
+
 %token <Lexing.position> EOF
 
 (* Disambiguate precedence and associativity *)

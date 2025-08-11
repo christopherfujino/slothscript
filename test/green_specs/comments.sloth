@@ -1,0 +1,51 @@
+### Name
+comments
+
+### Program
+# Multi-line
+# Comment
+
+# Documenting declaration
+func f() {}
+
+# Documenting declaration/statement
+let x = 1 +
+# Documenting expression
+1;
+
+# Trailing comment
+
+### Ast
+((FuncDecl
+  (name
+    f)
+  (parameters
+    ())
+  (block
+    ())
+  (pos
+    [POS]))
+  (StmtDecl
+    (LetStmt
+      x
+      (MethodInvoc
+        (receiver
+          (Num
+            1
+            [POS]))
+        (target
+          +)
+        (args
+          ((Num
+            1
+            [POS])))
+        (pos
+          [POS]))
+      [POS])))
+
+### Stdout
+
+
+### Failure
+
+
