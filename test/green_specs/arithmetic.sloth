@@ -12,45 +12,45 @@ print(value);
     value
     (MethodInvoc
       (receiver
-        (Num
-          2
-          [POS]))
-      (target
-        +)
-      (args
-        ((MethodInvoc
+        (MethodInvoc
           (receiver
-            (MethodInvoc
+            (Num
+              2
+              [POS]))
+          (target
+            +)
+          (args
+            ((MethodInvoc
               (receiver
-                (Num
-                  3
-                  [POS]))
-              (target
-                *)
-              (args
-                ((MethodInvoc
+                (MethodInvoc
                   (receiver
                     (Num
-                      4
+                      3
                       [POS]))
                   (target
-                    /)
+                    *)
                   (args
                     ((Num
-                      5
+                      4
                       [POS])))
                   (pos
-                    [POS]))))
+                    [POS])))
+              (target
+                /)
+              (args
+                ((Num
+                  5
+                  [POS])))
               (pos
-                [POS])))
-          (target
-            -)
-          (args
-            ((Num
-              6
-              [POS])))
+                [POS]))))
           (pos
-            [POS]))))
+            [POS])))
+      (target
+        -)
+      (args
+        ((Num
+          6
+          [POS])))
       (pos
         [POS]))
     [POS]))

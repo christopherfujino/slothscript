@@ -11,29 +11,25 @@ assert(1 + 1 == 2);
       (IdRef
         assert
         [POS])
-      ((MethodInvoc
-        (receiver
-          (Num
-            1
+      ((Equality
+        (MethodInvoc
+          (receiver
+            (Num
+              1
+              [POS]))
+          (target
+            +)
+          (args
+            ((Num
+              1
+              [POS])))
+          (pos
             [POS]))
-        (target
-          +)
-        (args
-          ((MethodInvoc
-            (receiver
-              (Num
-                1
-                [POS]))
-            (target
-              ==)
-            (args
-              ((Num
-                2
-                [POS])))
-            (pos
-              [POS]))))
-        (pos
-          [POS])))
+        (Num
+          2
+          [POS])
+        true
+        [POS]))
       [POS]))))
 
 ### Stdout

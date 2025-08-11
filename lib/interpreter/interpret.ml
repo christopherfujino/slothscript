@@ -302,6 +302,11 @@ and is_equal ctx is_equality lhs rhs =
         match is_equality with
         | true -> String.equal lh_s rh_s
         | false -> not @@ String.equal lh_s rh_s)
+    | Num lhs -> (
+        let rhs = Runtime.num_of_val rhs |> Option.value_exn in
+        match is_equality with
+        | true -> Float.equal lhs rhs
+        | false -> not @@ Float.equal lhs rhs)
     | Bool lhs -> (
         let rhs = Runtime.bool_of_val rhs |> Option.value_exn in
         match is_equality with
@@ -311,4 +316,4 @@ and is_equal ctx is_equality lhs rhs =
         let rhs = Runtime.list_of_val rhs |> Option.value_exn in
 
         Array.equal (is_equal ctx is_equality) lhs rhs
-    | _ -> failwith "TODO"
+    | _ -> failwith "TODO in is_equal"

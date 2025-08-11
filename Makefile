@@ -66,4 +66,3 @@ docs:
 .PHONY: clean
 clean:
 	dune clean
-	rm -f README.md

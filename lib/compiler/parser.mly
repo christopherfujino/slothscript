@@ -47,18 +47,12 @@
 (* Disambiguate precedence and associativity *)
 (* These are optional, and could have been done exclusively with production
    rules. *)
-%left PLUS
-%left MINUS
-%left PRODUCT
-%left DIVIDE
-%left DOUBLE_EQUALS
-%left LEQ
-%left GEQ
-%left LESS
+
 (*
-%nonassoc ELSE
-%nonassoc IN
-%left TIMES
+%left MINUS PLUS
+%left PRODUCT DIVIDE
+
+%left DOUBLE_EQUALS GEQ LEQ LESS
 *)
 
 (* Declare the starting point for parsing (root of AST) *)
@@ -138,50 +132,52 @@ expr1:
   }
   | e = expr2 { e }
 
-(* operators *, /, % *)
+(* Operators ==, !=, <, <=, >, >= *)
 expr2:
-  | e1 = expr2; pos = PRODUCT; e2 = expr2 {
+  | e1 = expr2; pos = DOUBLE_EQUALS; e2 = expr3 {
     let pos = Sloth_common.Position.t_of_lexing_position pos in
-    MethodInvoc { receiver=e1; target="*"; args=[e2]; pos}
+    Equality (e1, e2, true, pos)
   }
-  | e1 = expr2; pos = DIVIDE; e2 = expr2 {
+  | e1 = expr2; pos = LESS; e2 = expr3 {
     let pos = Sloth_common.Position.t_of_lexing_position pos in
-    MethodInvoc { receiver=e1; target="/"; args=[e2]; pos}
+    MethodInvoc { receiver=e1; target="<"; args=[e2]; pos}
   }
+  | e1 = expr2; pos = LEQ; e2 = expr3 {
+    let pos = Sloth_common.Position.t_of_lexing_position pos in
+    MethodInvoc { receiver=e1; target="<="; args=[e2]; pos}
+  }
+  | e1 = expr2; pos = GEQ; e2 = expr3 {
+    let pos = Sloth_common.Position.t_of_lexing_position pos in
+    MethodInvoc { receiver=e1; target=">="; args=[e2]; pos}
+  }
+  (* TODO add more precedences *)
   | e = expr3 { e }
+
 
 (* operators +, -, | *)
 expr3:
-  | e1 = expr3; pos = PLUS; e2 = expr3 {
+  | e1 = expr3; pos = PLUS; e2 = expr4 {
     let pos = Sloth_common.Position.t_of_lexing_position pos in
     MethodInvoc { receiver=e1; target="+"; args=[e2]; pos}
   }
-  | e1 = expr3; pos = MINUS; e2 = expr3 {
+  | e1 = expr3; pos = MINUS; e2 = expr4 {
     let pos = Sloth_common.Position.t_of_lexing_position pos in
     MethodInvoc { receiver=e1; target="-"; args=[e2]; pos}
   }
   (* TODO PIPE *)
   | e = expr4 { e }
 
-(* Operators ==, !=, <, <=, >, >= *)
+(* operators *, /, % *)
 expr4:
-  | e1 = expr3; pos = DOUBLE_EQUALS; e2 = expr3 {
+  | e1 = expr4; pos = PRODUCT; e2 = expr7 {
     let pos = Sloth_common.Position.t_of_lexing_position pos in
-    Equality (e1, e2, true, pos)
+    MethodInvoc { receiver=e1; target="*"; args=[e2]; pos}
   }
-  | e1 = expr3; pos = LESS; e2 = expr3 {
+  | e1 = expr4; pos = DIVIDE; e2 = expr7 {
     let pos = Sloth_common.Position.t_of_lexing_position pos in
-    MethodInvoc { receiver=e1; target="<"; args=[e2]; pos}
+    MethodInvoc { receiver=e1; target="/"; args=[e2]; pos}
   }
-  | e1 = expr3; pos = LEQ; e2 = expr3 {
-    let pos = Sloth_common.Position.t_of_lexing_position pos in
-    MethodInvoc { receiver=e1; target="<="; args=[e2]; pos}
-  }
-  | e1 = expr3; pos = GEQ; e2 = expr3 {
-    let pos = Sloth_common.Position.t_of_lexing_position pos in
-    MethodInvoc { receiver=e1; target=">="; args=[e2]; pos}
-  }
-  (* TODO add more precedences *)
+  (* TODO add modulo *)
   | e = expr7 { e }
 
 (* function invocation *)
