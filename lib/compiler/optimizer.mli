@@ -45,6 +45,12 @@ and expr = private
       pos : Sloth_common.Position.t;
     }
   | IfExpr of cond_cont * Sloth_common.Position.t
+  | UnaryExpr of {
+      target : expr;
+      pos : Sloth_common.Position.t;
+      is_prefix : bool;
+      operator : Ast.operator;
+    }
 [@@deriving sexp]
 
 and string_parts =

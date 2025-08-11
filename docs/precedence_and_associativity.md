@@ -12,6 +12,7 @@ From high to low precedence (left-associative):
 
 ### C
 
+`!` (right associative)
 `*`, `/`, `%`
 `+`, `-`
 `<`, `<=`, `>`, `>=`

@@ -43,6 +43,7 @@ let parse env line =
 let to_s token =
   let open Parser in
   match token with
+  | BANG _ -> "BANG"
   | COLON _ -> "COLON"
   | SEMICOLON _ -> "SEMICOLON"
   | TRUE _ -> "TRUE"

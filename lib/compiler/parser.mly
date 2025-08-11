@@ -41,6 +41,7 @@
 %token <Lexing.position> LEQ
 %token <Lexing.position> GEQ
 %token <Lexing.position> LESS
+%token <Lexing.position> BANG
 
 %token <Lexing.position> EOF
 
@@ -54,6 +55,7 @@
 %left DOUBLE_EQUALS GEQ LEQ LESS
 %left MINUS PLUS
 %left PRODUCT DIVIDE
+%right BANG
 
 (* Declare the starting point for parsing (root of AST) *)
 %start <Ast.decl list> prog
@@ -170,6 +172,12 @@ expr2:
   | e1 = expr2; pos = DIVIDE; e2 = expr2 {
     let pos = Sloth_common.Position.t_of_lexing_position pos in
     MethodInvoc { receiver=e1; target="/"; args=[e2]; pos}
+  }
+
+  (* ! *)
+  | pos = BANG; e = expr2 {
+    let pos = Sloth_common.Position.t_of_lexing_position pos in
+    UnaryExpr { target=e; is_prefix=true; operator=Bang; pos}
   }
  
   | e = expr7 { e }
@@ -358,3 +366,7 @@ parameter_list:
     let pos = Sloth_common.Position.t_of_lexing_position pos in
     (i, pos) :: tl
   }
+
+%%
+
+(* Footer *)

@@ -274,6 +274,23 @@ and interpret_expr ctx expr =
       let parameters = List.map parameters ~f:(fun (name, _) -> name) in
       Func (User { parameters; block; identifiers = ctx.identifiers })
   | IfExpr (cond, _) -> interpret_cond ctx cond
+  | UnaryExpr { target; pos; is_prefix; operator } -> (
+      let v = interpret_expr ctx target in
+      match is_prefix with
+      | false ->
+          failwith "TODO implement interpreting postfix unary expressions"
+      | true -> (
+          match operator with
+          | Bang -> (
+              let bool_opt = Runtime.bool_of_val v in
+              match bool_opt with
+              | None ->
+                  Runtime.to_s v
+                  |> Printf.sprintf
+                       "The prefix ! operator must be applied to a Bool value, \
+                        but got %s"
+                  |> failure ~ctx pos
+              | Some b -> Runtime.Bool (not b))))
 
 (** You must push an empty env frame on first *)
 and interpret_block ctx stmts =

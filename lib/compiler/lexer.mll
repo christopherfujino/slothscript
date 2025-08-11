@@ -66,6 +66,7 @@ rule private_read last_token state =
   | '=' { let token = EQUALS lexbuf.lex_curr_p in last_token := Some token; token }
   | '*' { let token = PRODUCT lexbuf.lex_curr_p in last_token := Some token; token }
   | '/' { let token = DIVIDE lexbuf.lex_curr_p in last_token := Some token; token }
+  | '!' { let token = BANG lexbuf.lex_curr_p in last_token := Some token; token }
   | ';' {
     let parse_semicolon () =
       let token = SEMICOLON lexbuf.lex_curr_p in

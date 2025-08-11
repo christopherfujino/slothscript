@@ -1,0 +1,55 @@
+### Name
+equality
+
+### Program
+assert(1 == 1)
+assert(!(1 == 2))
+
+### Ast
+((StmtDecl
+  (ExprStmt
+    (FuncInvoc
+      (IdRef
+        assert
+        [POS])
+      ((Equality
+        (Num
+          1
+          [POS])
+        (Num
+          1
+          [POS])
+        true
+        [POS]))
+      [POS])))
+  (StmtDecl
+    (ExprStmt
+      (FuncInvoc
+        (IdRef
+          assert
+          [POS])
+        ((UnaryExpr
+          (target
+            (Equality
+              (Num
+                1
+                [POS])
+              (Num
+                2
+                [POS])
+              true
+              [POS]))
+          (pos
+            [POS])
+          (is_prefix
+            true)
+          (operator
+            Bang)))
+        [POS]))))
+
+### Stdout
+
+
+### Failure
+
+
