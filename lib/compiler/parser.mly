@@ -26,6 +26,7 @@
 %token <Lexing.position> MINUS
 %token <Lexing.position> EQUALS
 %token <Lexing.position> DOUBLE_EQUALS
+%token <Lexing.position> NOT_EQUALS
 %token <Lexing.position> PRODUCT
 %token <Lexing.position> DIVIDE
 %token <Lexing.position> SEMICOLON
@@ -52,7 +53,7 @@
    These are ordered, from high to low precedence.
    *)
 
-%left DOUBLE_EQUALS GEQ LEQ LESS
+%left NOT_EQUALS DOUBLE_EQUALS GEQ LEQ LESS
 %left MINUS PLUS
 %left PRODUCT DIVIDE
 %right BANG
@@ -136,10 +137,14 @@ expr1:
 
 (* Operators *)
 expr2:
-  (* TODO add !=, > *)
+  (* TODO add > *)
   | e1 = expr2; pos = DOUBLE_EQUALS; e2 = expr2 {
     let pos = Sloth_common.Position.t_of_lexing_position pos in
     Equality (e1, e2, true, pos)
+  }
+  | e1 = expr2; pos = NOT_EQUALS; e2 = expr2 {
+    let pos = Sloth_common.Position.t_of_lexing_position pos in
+    Equality (e1, e2, false, pos)
   }
   | e1 = expr2; pos = LESS; e2 = expr2 {
     let pos = Sloth_common.Position.t_of_lexing_position pos in

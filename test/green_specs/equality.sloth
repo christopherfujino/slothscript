@@ -46,6 +46,22 @@ assert(1 != 2)
             true)
           (operator
             Bang)))
+        [POS])))
+  (StmtDecl
+    (ExprStmt
+      (FuncInvoc
+        (IdRef
+          assert
+          [POS])
+        ((Equality
+          (Num
+            1
+            [POS])
+          (Num
+            2
+            [POS])
+          false
+          [POS]))
         [POS]))))
 
 ### Stdout

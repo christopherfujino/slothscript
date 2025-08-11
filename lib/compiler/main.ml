@@ -58,6 +58,7 @@ let to_s token =
   | LET _ -> "LET"
   | LESS _ -> "LESS"
   | DOUBLE_EQUALS _ -> "DOUBLE_EQUALS"
+  | NOT_EQUALS _ -> "NOT_EQUALS"
   | LEQ _ -> "LEQ"
   | GEQ _ -> "GEQ"
   | LCURLY _ -> "LCURLY"

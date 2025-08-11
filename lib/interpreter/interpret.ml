@@ -206,6 +206,7 @@ and interpret_expr ctx expr =
           Printf.sprintf "The name %s has not been declared in this scope" i
           |> failure ~ctx pos)
   | Equality (lhs, rhs, is_equality, _) ->
+      print_endline "AAA";
       let lhs = interpret_expr ctx lhs in
       let rhs = interpret_expr ctx rhs in
 
@@ -309,8 +310,8 @@ and interpret_block ctx stmts =
   v
 
 and is_equal ctx is_equality lhs rhs =
-  let lh_s = Runtime.to_s lhs in
-  let rh_s = Runtime.to_s rhs in
+  let lh_s = Runtime.to_class_name lhs in
+  let rh_s = Runtime.to_class_name rhs in
   if not @@ String.equal lh_s rh_s then false
   else
     match lhs with
