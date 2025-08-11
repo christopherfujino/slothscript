@@ -3,23 +3,24 @@ equality
 
 ### Program
 let matrix = [
-  [1, 2],
-  ["string", "a different string"],
-  [true, false],
-  [[1], [2]],
-  [{"key": "value"}, {"key": "value"}],
+  [1, 2, "Number"],
+  ["string", "a different string", "String"],
+  [true, false, "Bool"],
+  [[1], [1, 2], "List"],
+  [{"key": "value"}, {"key": "value"}, "HashMap"],
 ]
 
-for let i = 0; i < 2; i = i + 1 {
-  let first = (matrix[i])[0]
-  let second = (matrix[i])[1]
+for let i = 0; i < 5; i = i + 1 {
+  let first = matrix[i][0]
+  let second = matrix[i][1]
+  let name = matrix[i][2]
 
-  assert(first == first)
-  assert(!(first == second))
-  assert(first != second)
-  assert(!(first != first))
+  assert(first == first, name)
+  assert(!(first == second), name)
+  assert(first != second, name)
+  assert(!(first != first), name)
 
-  assert(first != null)
+  assert(first != null, name)
 }
 
 assert(null == null)
@@ -35,6 +36,11 @@ assert(null == null)
           [POS])
           (Num
             2
+            [POS])
+          (String
+            ((FullString
+              Number
+              [POS]))
             [POS]))
         [POS])
         (List
@@ -47,6 +53,11 @@ assert(null == null)
               ((FullString
                 "a different string"
                 [POS]))
+              [POS])
+            (String
+              ((FullString
+                String
+                [POS]))
               [POS]))
           [POS])
         (List
@@ -55,6 +66,11 @@ assert(null == null)
             [POS])
             (Bool
               false
+              [POS])
+            (String
+              ((FullString
+                Bool
+                [POS]))
               [POS]))
           [POS])
         (List
@@ -65,7 +81,15 @@ assert(null == null)
             [POS])
             (List
               ((Num
-                2
+                1
+                [POS])
+                (Num
+                  2
+                  [POS]))
+              [POS])
+            (String
+              ((FullString
+                List
                 [POS]))
               [POS]))
           [POS])
@@ -93,6 +117,11 @@ assert(null == null)
                     value
                     [POS]))
                   [POS])))
+              [POS])
+            (String
+              ((FullString
+                HashMap
+                [POS]))
               [POS]))
           [POS]))
       [POS])
@@ -114,7 +143,7 @@ assert(null == null)
           <)
         (args
           ((Num
-            2
+            5
             [POS])))
         (pos
           [POS]))
@@ -166,6 +195,22 @@ assert(null == null)
               [POS])
             [POS])
           [POS])
+        (LetStmt
+          name
+          (Subscript
+            (Subscript
+              (IdRef
+                matrix
+                [POS])
+              (IdRef
+                i
+                [POS])
+              [POS])
+            (Num
+              2
+              [POS])
+            [POS])
+          [POS])
         (ExprStmt
           (FuncInvoc
             (IdRef
@@ -179,7 +224,10 @@ assert(null == null)
                 first
                 [POS])
               true
-              [POS]))
+              [POS])
+              (IdRef
+                name
+                [POS]))
             [POS]))
         (ExprStmt
           (FuncInvoc
@@ -202,7 +250,10 @@ assert(null == null)
               (is_prefix
                 true)
               (operator
-                Bang)))
+                Bang))
+              (IdRef
+                name
+                [POS]))
             [POS]))
         (ExprStmt
           (FuncInvoc
@@ -217,7 +268,10 @@ assert(null == null)
                 second
                 [POS])
               false
-              [POS]))
+              [POS])
+              (IdRef
+                name
+                [POS]))
             [POS]))
         (ExprStmt
           (FuncInvoc
@@ -240,7 +294,10 @@ assert(null == null)
               (is_prefix
                 true)
               (operator
-                Bang)))
+                Bang))
+              (IdRef
+                name
+                [POS]))
             [POS]))
         (ExprStmt
           (FuncInvoc
@@ -254,7 +311,10 @@ assert(null == null)
               (Null
                 [POS])
               false
-              [POS]))
+              [POS])
+              (IdRef
+                name
+                [POS]))
             [POS])))
       [POS]))
   (StmtDecl

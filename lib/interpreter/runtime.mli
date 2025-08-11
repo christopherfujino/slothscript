@@ -31,5 +31,6 @@ val string_of_val : t -> string option
 val int_of_val : t -> int option
 val bool_of_val : t -> bool option
 val list_of_val : t -> t Array.t option
+val hashmap_of_val : t -> (t, t) Stdlib.Hashtbl.t option
 
 val to_class_name : t -> string

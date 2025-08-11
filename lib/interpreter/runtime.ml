@@ -69,3 +69,4 @@ let int_of_val v =
 
 let bool_of_val = function Bool b' -> Some b' | _ -> None
 let list_of_val = function List l -> Some l | _ -> None
+let hashmap_of_val = function HashMap h -> Some h | _ -> None
