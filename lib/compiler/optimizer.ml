@@ -21,6 +21,7 @@ and decl =
       pos : Sloth_common.Position.t;
     }
   | StmtDecl of stmt
+[@@deriving sexp]
 
 and stmt =
   | LetStmt of string * expr * Sloth_common.Position.t
@@ -43,6 +44,7 @@ and expr =
   | HashMap of (expr * expr) list * Sloth_common.Position.t
   | Subscript of expr * expr * Sloth_common.Position.t
   | IdRef of string * Sloth_common.Position.t
+  | Equality of expr * expr * bool * Sloth_common.Position.t
   | FuncInvoc of expr * expr list * Sloth_common.Position.t
   | MethodInvoc of {
       receiver : expr;
@@ -56,6 +58,12 @@ and expr =
       pos : Sloth_common.Position.t;
     }
   | IfExpr of cond_cont * Sloth_common.Position.t
+  | UnaryExpr of {
+      target : expr;
+      pos : Sloth_common.Position.t;
+      is_prefix : bool;
+      operator : Ast.operator;
+    }
 [@@deriving sexp]
 
 and string_parts =
@@ -74,8 +82,6 @@ and cond_cont =
       pos : Sloth_common.Position.t;
     }
   | ElseCont of stmt list * Sloth_common.Position.t
-
-and operator = Add [@@deriving sexp]
 
 let rec optimize_prog env prog =
   let prog2 = List.rev prog in
@@ -183,6 +189,10 @@ and optimize_expr (env : Environment.t) (e : Ast.expr) : expr =
       let receiver' = optimize_expr env receiver in
       let sub' = optimize_expr env sub in
       Subscript (receiver', sub', pos)
+  | Equality (lhs, rhs, is_equal, pos) ->
+      let lhs = optimize_expr env lhs in
+      let rhs = optimize_expr env rhs in
+      Equality (lhs, rhs, is_equal, pos)
   | FuncInvoc (receiver, args, pos) ->
       let rev_args = List.rev args in
       let rev_mapped_args = List.map rev_args ~f:(optimize_expr env) in
@@ -209,6 +219,9 @@ and optimize_expr (env : Environment.t) (e : Ast.expr) : expr =
       let block2 = optimize_block env3 block in
       FuncExpr { parameters = parameters2; block = block2; pos }
   | IfExpr (cond_cont, pos) -> IfExpr (optimize_continuation env cond_cont, pos)
+  | UnaryExpr { target; is_prefix; operator; pos } ->
+      let target = optimize_expr env target in
+      UnaryExpr { target; is_prefix; operator; pos }
   | MethodInvoc { target; receiver; args; pos } ->
       let optim_receiver = optimize_expr env receiver in
       let optim_args = List.rev args |> List.map ~f:(optimize_expr env) in

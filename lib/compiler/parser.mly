@@ -25,6 +25,8 @@
 %token <Lexing.position> PLUS
 %token <Lexing.position> MINUS
 %token <Lexing.position> EQUALS
+%token <Lexing.position> DOUBLE_EQUALS
+%token <Lexing.position> NOT_EQUALS
 %token <Lexing.position> PRODUCT
 %token <Lexing.position> DIVIDE
 %token <Lexing.position> SEMICOLON
@@ -38,24 +40,24 @@
 %token <Lexing.position> RBRACKET
 %token <Lexing.position> COMMA
 %token <Lexing.position> LEQ
+%token <Lexing.position> GEQ
 %token <Lexing.position> LESS
+%token <Lexing.position> GREATER
+%token <Lexing.position> BANG
 
 %token <Lexing.position> EOF
 
 (* Disambiguate precedence and associativity *)
 (* These are optional, and could have been done exclusively with production
-   rules. *)
-%left PLUS
-%left MINUS
-%left PRODUCT
-%left DIVIDE
-%left LEQ
-%left LESS
-(*
-%nonassoc ELSE
-%nonassoc IN
-%left TIMES
-*)
+   rules--however, they help resolve conflicts.
+
+   These are ordered, from high to low precedence.
+   *)
+
+%left NOT_EQUALS DOUBLE_EQUALS GEQ LEQ LESS GREATER
+%left MINUS PLUS
+%left PRODUCT DIVIDE
+%right BANG
 
 (* Declare the starting point for parsing (root of AST) *)
 %start <Ast.decl list> prog
@@ -134,32 +136,45 @@ expr1:
   }
   | e = expr2 { e }
 
-(* closure literals and infix funcs *)
+(* Operators *)
 expr2:
-  | pos = FUNC; LPAREN; RPAREN; b = block {
+  (* Highest *)
+  | e1 = expr2; pos = DOUBLE_EQUALS; e2 = expr2 {
     let pos = Sloth_common.Position.t_of_lexing_position pos in
-    FuncExpr {parameters = []; block = b; pos}
+    Equality (e1, e2, true, pos)
   }
-  | pos = FUNC; LPAREN; p = parameter_list; RPAREN; b = block {
+  | e1 = expr2; pos = NOT_EQUALS; e2 = expr2 {
     let pos = Sloth_common.Position.t_of_lexing_position pos in
-    FuncExpr {parameters = p; block = b; pos}
-  }
-  | e1 = expr2; pos = PLUS; e2 = expr2 {
-    let pos = Sloth_common.Position.t_of_lexing_position pos in
-    MethodInvoc { receiver=e1; target="+"; args=[e2]; pos}
+    Equality (e1, e2, false, pos)
   }
   | e1 = expr2; pos = LESS; e2 = expr2 {
     let pos = Sloth_common.Position.t_of_lexing_position pos in
     MethodInvoc { receiver=e1; target="<"; args=[e2]; pos}
   }
+  | e1 = expr2; pos = GREATER; e2 = expr2 {
+    let pos = Sloth_common.Position.t_of_lexing_position pos in
+    MethodInvoc { receiver=e1; target=">"; args=[e2]; pos}
+  }
   | e1 = expr2; pos = LEQ; e2 = expr2 {
     let pos = Sloth_common.Position.t_of_lexing_position pos in
     MethodInvoc { receiver=e1; target="<="; args=[e2]; pos}
+  }
+  | e1 = expr2; pos = GEQ; e2 = expr2 {
+    let pos = Sloth_common.Position.t_of_lexing_position pos in
+    MethodInvoc { receiver=e1; target=">="; args=[e2]; pos}
+  }
+
+  (* TODO add | *)
+  | e1 = expr2; pos = PLUS; e2 = expr2 {
+    let pos = Sloth_common.Position.t_of_lexing_position pos in
+    MethodInvoc { receiver=e1; target="+"; args=[e2]; pos}
   }
   | e1 = expr2; pos = MINUS; e2 = expr2 {
     let pos = Sloth_common.Position.t_of_lexing_position pos in
     MethodInvoc { receiver=e1; target="-"; args=[e2]; pos}
   }
+
+  (* operators *, /; TODO add % *)
   | e1 = expr2; pos = PRODUCT; e2 = expr2 {
     let pos = Sloth_common.Position.t_of_lexing_position pos in
     MethodInvoc { receiver=e1; target="*"; args=[e2]; pos}
@@ -168,26 +183,42 @@ expr2:
     let pos = Sloth_common.Position.t_of_lexing_position pos in
     MethodInvoc { receiver=e1; target="/"; args=[e2]; pos}
   }
-  | e = expr3 { e }
+
+  (* ! *)
+  | pos = BANG; e = expr2 {
+    let pos = Sloth_common.Position.t_of_lexing_position pos in
+    UnaryExpr { target=e; is_prefix=true; operator=Bang; pos}
+  }
+ 
+  | e = expr7 { e }
+
 
 (* function invocation *)
-expr3:
-  | e = expr3; pos = LPAREN; a = expr_list; RPAREN {
+expr7:
+  | e = expr7; pos = LPAREN; a = expr_list; RPAREN {
     let pos = Sloth_common.Position.t_of_lexing_position pos in
     FuncInvoc (e, a, pos)
   }
-  | e = expr3; pos = LPAREN; RPAREN {
+  | e = expr7; pos = LPAREN; RPAREN {
     let pos = Sloth_common.Position.t_of_lexing_position pos in
     FuncInvoc (e, [], pos)
   }
   | s = subscript { s }
-  | e = expr4 { e }
+  | e = expr8 { e }
   ;
 
 
 (* Primary - literals or grouping *)
-expr4:
-  | l = list_literals { l }
+expr8:
+  | pos = FUNC; LPAREN; RPAREN; b = block {
+    let pos = Sloth_common.Position.t_of_lexing_position pos in
+    FuncExpr {parameters = []; block = b; pos}
+  }
+  | pos = FUNC; LPAREN; p = parameter_list; RPAREN; b = block {
+    let pos = Sloth_common.Position.t_of_lexing_position pos in
+    FuncExpr {parameters = p; block = b; pos}
+  }
+  | l = list_literal { l }
   | f = NUM { let f, pos = f in Num (f, t_of_lexing_position pos) }
   | pos = TRUE {
     let pos = Sloth_common.Position.t_of_lexing_position pos in
@@ -251,10 +282,15 @@ string_middle:
     (e, s, pos) :: cont
   }
 
-list_literals:
+list_literal:
   | pos = LBRACKET; RBRACKET {
     let pos = Sloth_common.Position.t_of_lexing_position pos in
     List ([], pos)
+  }
+  (* expr_list will never end in COMMA *)
+  | pos = LBRACKET; l = expr_list ; COMMA; RBRACKET {
+    let pos = Sloth_common.Position.t_of_lexing_position pos in
+    List (l, pos)
   }
   | pos = LBRACKET; l = expr_list ; RBRACKET {
     let pos = Sloth_common.Position.t_of_lexing_position pos in
@@ -268,7 +304,7 @@ hash_literals:
     HashMap ([], pos)
   }
   (* Allow single line literal without trailing comma *)
-  | pos = LCURLY; k = expr4; COLON; v = expr1; RCURLY {
+  | pos = LCURLY; k = expr1; COLON; v = expr1; RCURLY {
     let pos = Sloth_common.Position.t_of_lexing_position pos in
     HashMap ([(k, v)], pos)
   }
@@ -281,13 +317,13 @@ hash_literals:
 hash_literal_pair:
   (* Are other types of expressions allowed for keys? *)
   (* Note: trailing commas required because of ASI *)
-  | k = expr4; COLON; v = expr1; COMMA { [(k, v)] }
-  | p = hash_literal_pair; k = expr4; COLON; v = expr1; COMMA { (k, v) :: p }
+  | k = expr1; COLON; v = expr1; COMMA { [(k, v)] }
+  | p = hash_literal_pair; k = expr1; COLON; v = expr1; COMMA { (k, v) :: p }
   ;
 
 (* Could be expr or stmt for assignment *)
 subscript:
-  | e = expr3; pos = LBRACKET; sub = expr1 ; RBRACKET {
+  | e = expr7; pos = LBRACKET; sub = expr1 ; RBRACKET {
     let pos = Sloth_common.Position.t_of_lexing_position pos in
     Subscript (e, sub, pos)
   }
@@ -345,3 +381,7 @@ parameter_list:
     let pos = Sloth_common.Position.t_of_lexing_position pos in
     (i, pos) :: tl
   }
+
+%%
+
+(* Footer *)

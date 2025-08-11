@@ -13,7 +13,7 @@ let f spec_dir i arg =
       try
         let _, prog =
           (Compiler.Environment.create spec.program
-          |> Compiler.Stdlib_stubs.populate |> Compiler.Main.parse)
+          |> Compiler.Environment.populate |> Compiler.Main.parse)
           @@ spec.program
         in
         Ok prog

@@ -1,0 +1,1067 @@
+menhir --list-errors lib/compiler/parser.mly
+prog: STRING_MIDDLE
+##
+## Ends in an error in state: 0.
+##
+## prog' -> . prog [ # ]
+##
+## The known suffix of the stack is as follows:
+##
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: STRING_START STRING_MIDDLE
+##
+## Ends in an error in state: 2.
+##
+## expr8 -> STRING_START . expr1 STRING_END [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RCURLY RBRACKET PRODUCT PLUS NOT_EQUALS MINUS LPAREN LESS LEQ LCURLY LBRACKET GEQ DOUBLE_EQUALS DIVIDE COMMA COLON ]
+## expr8 -> STRING_START . string_middle expr1 STRING_END [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RCURLY RBRACKET PRODUCT PLUS NOT_EQUALS MINUS LPAREN LESS LEQ LCURLY LBRACKET GEQ DOUBLE_EQUALS DIVIDE COMMA COLON ]
+##
+## The known suffix of the stack is as follows:
+## STRING_START
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: LPAREN STRING_MIDDLE
+##
+## Ends in an error in state: 6.
+##
+## expr8 -> LPAREN . expr1 RPAREN [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RCURLY RBRACKET PRODUCT PLUS NOT_EQUALS MINUS LPAREN LESS LEQ LCURLY LBRACKET GEQ DOUBLE_EQUALS DIVIDE COMMA COLON ]
+##
+## The known suffix of the stack is as follows:
+## LPAREN
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: LCURLY STRING_MIDDLE
+##
+## Ends in an error in state: 7.
+##
+## hash_literals -> LCURLY . RCURLY [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RCURLY RBRACKET PRODUCT PLUS NOT_EQUALS MINUS LPAREN LESS LEQ LCURLY LBRACKET GEQ DOUBLE_EQUALS DIVIDE COMMA COLON ]
+## hash_literals -> LCURLY . expr1 COLON expr1 RCURLY [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RCURLY RBRACKET PRODUCT PLUS NOT_EQUALS MINUS LPAREN LESS LEQ LCURLY LBRACKET GEQ DOUBLE_EQUALS DIVIDE COMMA COLON ]
+## hash_literals -> LCURLY . hash_literal_pair RCURLY [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RCURLY RBRACKET PRODUCT PLUS NOT_EQUALS MINUS LPAREN LESS LEQ LCURLY LBRACKET GEQ DOUBLE_EQUALS DIVIDE COMMA COLON ]
+##
+## The known suffix of the stack is as follows:
+## LCURLY
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: LBRACKET STRING_MIDDLE
+##
+## Ends in an error in state: 9.
+##
+## list_literals -> LBRACKET . RBRACKET [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RCURLY RBRACKET PRODUCT PLUS NOT_EQUALS MINUS LPAREN LESS LEQ LCURLY LBRACKET GEQ DOUBLE_EQUALS DIVIDE COMMA COLON ]
+## list_literals -> LBRACKET . expr_list RBRACKET [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RCURLY RBRACKET PRODUCT PLUS NOT_EQUALS MINUS LPAREN LESS LEQ LCURLY LBRACKET GEQ DOUBLE_EQUALS DIVIDE COMMA COLON ]
+##
+## The known suffix of the stack is as follows:
+## LBRACKET
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: IF STRING_MIDDLE
+##
+## Ends in an error in state: 11.
+##
+## expr1 -> IF . expr2 block conditional_continuation [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RCURLY RBRACKET LCURLY COMMA COLON ]
+## expr1 -> IF . expr2 block [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RCURLY RBRACKET LCURLY COMMA COLON ]
+##
+## The known suffix of the stack is as follows:
+## IF
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: BANG FUNC TRUE
+##
+## Ends in an error in state: 13.
+##
+## expr8 -> FUNC . LPAREN RPAREN block [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RCURLY RBRACKET PRODUCT PLUS NOT_EQUALS MINUS LPAREN LESS LEQ LCURLY LBRACKET GEQ DOUBLE_EQUALS DIVIDE COMMA COLON ]
+## expr8 -> FUNC . LPAREN parameter_list RPAREN block [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RCURLY RBRACKET PRODUCT PLUS NOT_EQUALS MINUS LPAREN LESS LEQ LCURLY LBRACKET GEQ DOUBLE_EQUALS DIVIDE COMMA COLON ]
+##
+## The known suffix of the stack is as follows:
+## FUNC
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: FUNC LPAREN TRUE
+##
+## Ends in an error in state: 14.
+##
+## expr8 -> FUNC LPAREN . RPAREN block [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RCURLY RBRACKET PRODUCT PLUS NOT_EQUALS MINUS LPAREN LESS LEQ LCURLY LBRACKET GEQ DOUBLE_EQUALS DIVIDE COMMA COLON ]
+## expr8 -> FUNC LPAREN . parameter_list RPAREN block [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RCURLY RBRACKET PRODUCT PLUS NOT_EQUALS MINUS LPAREN LESS LEQ LCURLY LBRACKET GEQ DOUBLE_EQUALS DIVIDE COMMA COLON ]
+##
+## The known suffix of the stack is as follows:
+## FUNC LPAREN
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: FUNC LPAREN RPAREN TRUE
+##
+## Ends in an error in state: 15.
+##
+## expr8 -> FUNC LPAREN RPAREN . block [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RCURLY RBRACKET PRODUCT PLUS NOT_EQUALS MINUS LPAREN LESS LEQ LCURLY LBRACKET GEQ DOUBLE_EQUALS DIVIDE COMMA COLON ]
+##
+## The known suffix of the stack is as follows:
+## FUNC LPAREN RPAREN
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: IF FALSE LCURLY STRING_MIDDLE
+##
+## Ends in an error in state: 16.
+##
+## block -> LCURLY . RCURLY [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RCURLY RBRACKET PRODUCT PLUS NOT_EQUALS MINUS LPAREN LESS LEQ LCURLY LBRACKET GEQ ELSE DOUBLE_EQUALS DIVIDE COMMA COLON ]
+## block -> LCURLY . stmts RCURLY [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RCURLY RBRACKET PRODUCT PLUS NOT_EQUALS MINUS LPAREN LESS LEQ LCURLY LBRACKET GEQ ELSE DOUBLE_EQUALS DIVIDE COMMA COLON ]
+##
+## The known suffix of the stack is as follows:
+## LCURLY
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: LET TRUE
+##
+## Ends in an error in state: 18.
+##
+## stmt_sans_semicolon -> LET . ID EQUALS expr1 [ SEMICOLON LCURLY ]
+##
+## The known suffix of the stack is as follows:
+## LET
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: LET ID TRUE
+##
+## Ends in an error in state: 19.
+##
+## stmt_sans_semicolon -> LET ID . EQUALS expr1 [ SEMICOLON LCURLY ]
+##
+## The known suffix of the stack is as follows:
+## LET ID
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: LET ID EQUALS STRING_MIDDLE
+##
+## Ends in an error in state: 20.
+##
+## stmt_sans_semicolon -> LET ID EQUALS . expr1 [ SEMICOLON LCURLY ]
+##
+## The known suffix of the stack is as follows:
+## LET ID EQUALS
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: BANG STRING_MIDDLE
+##
+## Ends in an error in state: 22.
+##
+## expr2 -> BANG . expr2 [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RCURLY RBRACKET PRODUCT PLUS NOT_EQUALS MINUS LESS LEQ LCURLY GEQ DOUBLE_EQUALS DIVIDE COMMA COLON ]
+##
+## The known suffix of the stack is as follows:
+## BANG
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: FALSE TRUE
+##
+## Ends in an error in state: 27.
+##
+## expr2 -> expr7 . [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RCURLY RBRACKET PRODUCT PLUS NOT_EQUALS MINUS LESS LEQ LCURLY GEQ DOUBLE_EQUALS DIVIDE COMMA COLON ]
+## expr7 -> expr7 . LPAREN expr_list RPAREN [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RCURLY RBRACKET PRODUCT PLUS NOT_EQUALS MINUS LPAREN LESS LEQ LCURLY LBRACKET GEQ DOUBLE_EQUALS DIVIDE COMMA COLON ]
+## expr7 -> expr7 . LPAREN RPAREN [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RCURLY RBRACKET PRODUCT PLUS NOT_EQUALS MINUS LPAREN LESS LEQ LCURLY LBRACKET GEQ DOUBLE_EQUALS DIVIDE COMMA COLON ]
+## subscript -> expr7 . LBRACKET expr1 RBRACKET [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RCURLY RBRACKET PRODUCT PLUS NOT_EQUALS MINUS LPAREN LESS LEQ LCURLY LBRACKET GEQ EQUALS DOUBLE_EQUALS DIVIDE COMMA COLON ]
+##
+## The known suffix of the stack is as follows:
+## expr7
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: ID LPAREN STRING_MIDDLE
+##
+## Ends in an error in state: 28.
+##
+## expr7 -> expr7 LPAREN . expr_list RPAREN [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RCURLY RBRACKET PRODUCT PLUS NOT_EQUALS MINUS LPAREN LESS LEQ LCURLY LBRACKET GEQ DOUBLE_EQUALS DIVIDE COMMA COLON ]
+## expr7 -> expr7 LPAREN . RPAREN [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RCURLY RBRACKET PRODUCT PLUS NOT_EQUALS MINUS LPAREN LESS LEQ LCURLY LBRACKET GEQ DOUBLE_EQUALS DIVIDE COMMA COLON ]
+##
+## The known suffix of the stack is as follows:
+## expr7 LPAREN
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: ID LPAREN FALSE STRING_MIDDLE
+##
+## Ends in an error in state: 30.
+##
+## expr7 -> expr7 LPAREN expr_list . RPAREN [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RCURLY RBRACKET PRODUCT PLUS NOT_EQUALS MINUS LPAREN LESS LEQ LCURLY LBRACKET GEQ DOUBLE_EQUALS DIVIDE COMMA COLON ]
+## expr_list -> expr_list . COMMA expr1 [ RPAREN COMMA ]
+##
+## The known suffix of the stack is as follows:
+## expr7 LPAREN expr_list
+##
+## WARNING: This example involves spurious reductions.
+## This implies that, although the LR(1) items shown above provide an
+## accurate view of the past (what has been recognized so far), they
+## may provide an INCOMPLETE view of the future (what was expected next).
+## In state 27, spurious reduction of production expr2 -> expr7
+## In state 33, spurious reduction of production expr1 -> expr2
+## In state 53, spurious reduction of production expr_list -> expr1
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: LBRACKET FALSE COMMA STRING_MIDDLE
+##
+## Ends in an error in state: 32.
+##
+## expr_list -> expr_list COMMA . expr1 [ RPAREN RBRACKET COMMA ]
+##
+## The known suffix of the stack is as follows:
+## expr_list COMMA
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: ID PRODUCT STRING_MIDDLE
+##
+## Ends in an error in state: 34.
+##
+## expr2 -> expr2 PRODUCT . expr2 [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RCURLY RBRACKET PRODUCT PLUS NOT_EQUALS MINUS LESS LEQ LCURLY GEQ DOUBLE_EQUALS DIVIDE COMMA COLON ]
+##
+## The known suffix of the stack is as follows:
+## expr2 PRODUCT
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: ID PLUS STRING_MIDDLE
+##
+## Ends in an error in state: 36.
+##
+## expr2 -> expr2 PLUS . expr2 [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RCURLY RBRACKET PRODUCT PLUS NOT_EQUALS MINUS LESS LEQ LCURLY GEQ DOUBLE_EQUALS DIVIDE COMMA COLON ]
+##
+## The known suffix of the stack is as follows:
+## expr2 PLUS
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: ID DIVIDE STRING_MIDDLE
+##
+## Ends in an error in state: 38.
+##
+## expr2 -> expr2 DIVIDE . expr2 [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RCURLY RBRACKET PRODUCT PLUS NOT_EQUALS MINUS LESS LEQ LCURLY GEQ DOUBLE_EQUALS DIVIDE COMMA COLON ]
+##
+## The known suffix of the stack is as follows:
+## expr2 DIVIDE
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: ID NOT_EQUALS STRING_MIDDLE
+##
+## Ends in an error in state: 40.
+##
+## expr2 -> expr2 NOT_EQUALS . expr2 [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RCURLY RBRACKET PRODUCT PLUS NOT_EQUALS MINUS LESS LEQ LCURLY GEQ DOUBLE_EQUALS DIVIDE COMMA COLON ]
+##
+## The known suffix of the stack is as follows:
+## expr2 NOT_EQUALS
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: ID MINUS STRING_MIDDLE
+##
+## Ends in an error in state: 42.
+##
+## expr2 -> expr2 MINUS . expr2 [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RCURLY RBRACKET PRODUCT PLUS NOT_EQUALS MINUS LESS LEQ LCURLY GEQ DOUBLE_EQUALS DIVIDE COMMA COLON ]
+##
+## The known suffix of the stack is as follows:
+## expr2 MINUS
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: ID LESS STRING_MIDDLE
+##
+## Ends in an error in state: 44.
+##
+## expr2 -> expr2 LESS . expr2 [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RCURLY RBRACKET PRODUCT PLUS NOT_EQUALS MINUS LESS LEQ LCURLY GEQ DOUBLE_EQUALS DIVIDE COMMA COLON ]
+##
+## The known suffix of the stack is as follows:
+## expr2 LESS
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: ID LEQ STRING_MIDDLE
+##
+## Ends in an error in state: 46.
+##
+## expr2 -> expr2 LEQ . expr2 [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RCURLY RBRACKET PRODUCT PLUS NOT_EQUALS MINUS LESS LEQ LCURLY GEQ DOUBLE_EQUALS DIVIDE COMMA COLON ]
+##
+## The known suffix of the stack is as follows:
+## expr2 LEQ
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: ID GEQ STRING_MIDDLE
+##
+## Ends in an error in state: 48.
+##
+## expr2 -> expr2 GEQ . expr2 [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RCURLY RBRACKET PRODUCT PLUS NOT_EQUALS MINUS LESS LEQ LCURLY GEQ DOUBLE_EQUALS DIVIDE COMMA COLON ]
+##
+## The known suffix of the stack is as follows:
+## expr2 GEQ
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: ID DOUBLE_EQUALS STRING_MIDDLE
+##
+## Ends in an error in state: 50.
+##
+## expr2 -> expr2 DOUBLE_EQUALS . expr2 [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RCURLY RBRACKET PRODUCT PLUS NOT_EQUALS MINUS LESS LEQ LCURLY GEQ DOUBLE_EQUALS DIVIDE COMMA COLON ]
+##
+## The known suffix of the stack is as follows:
+## expr2 DOUBLE_EQUALS
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: ID LBRACKET STRING_MIDDLE
+##
+## Ends in an error in state: 54.
+##
+## subscript -> expr7 LBRACKET . expr1 RBRACKET [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RCURLY RBRACKET PRODUCT PLUS NOT_EQUALS MINUS LPAREN LESS LEQ LCURLY LBRACKET GEQ EQUALS DOUBLE_EQUALS DIVIDE COMMA COLON ]
+##
+## The known suffix of the stack is as follows:
+## expr7 LBRACKET
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: ID LBRACKET FALSE STRING_MIDDLE
+##
+## Ends in an error in state: 55.
+##
+## subscript -> expr7 LBRACKET expr1 . RBRACKET [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RCURLY RBRACKET PRODUCT PLUS NOT_EQUALS MINUS LPAREN LESS LEQ LCURLY LBRACKET GEQ EQUALS DOUBLE_EQUALS DIVIDE COMMA COLON ]
+##
+## The known suffix of the stack is as follows:
+## expr7 LBRACKET expr1
+##
+## WARNING: This example involves spurious reductions.
+## This implies that, although the LR(1) items shown above provide an
+## accurate view of the past (what has been recognized so far), they
+## may provide an INCOMPLETE view of the future (what was expected next).
+## In state 27, spurious reduction of production expr2 -> expr7
+## In state 33, spurious reduction of production expr1 -> expr2
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: ID TRUE
+##
+## Ends in an error in state: 59.
+##
+## expr8 -> ID . [ SEMICOLON PRODUCT PLUS NOT_EQUALS MINUS LPAREN LESS LEQ LCURLY LBRACKET GEQ DOUBLE_EQUALS DIVIDE ]
+## stmt_sans_semicolon -> ID . EQUALS expr1 [ SEMICOLON LCURLY ]
+##
+## The known suffix of the stack is as follows:
+## ID
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: ID EQUALS STRING_MIDDLE
+##
+## Ends in an error in state: 60.
+##
+## stmt_sans_semicolon -> ID EQUALS . expr1 [ SEMICOLON LCURLY ]
+##
+## The known suffix of the stack is as follows:
+## ID EQUALS
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: FOR STRING_MIDDLE
+##
+## Ends in an error in state: 62.
+##
+## stmt -> FOR . stmt expr1 SEMICOLON stmt_sans_semicolon block SEMICOLON [ TRUE STRING_START STRING_FULL RCURLY NUM NULL LPAREN LET LCURLY LBRACKET IF ID FUNC FOR FALSE EOF BANG ]
+##
+## The known suffix of the stack is as follows:
+## FOR
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: ID LBRACKET FALSE RBRACKET TRUE
+##
+## Ends in an error in state: 63.
+##
+## expr7 -> subscript . [ SEMICOLON PRODUCT PLUS NOT_EQUALS MINUS LPAREN LESS LEQ LCURLY LBRACKET GEQ DOUBLE_EQUALS DIVIDE ]
+## stmt_sans_semicolon -> subscript . EQUALS expr1 [ SEMICOLON LCURLY ]
+##
+## The known suffix of the stack is as follows:
+## subscript
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: ID LBRACKET FALSE RBRACKET EQUALS STRING_MIDDLE
+##
+## Ends in an error in state: 64.
+##
+## stmt_sans_semicolon -> subscript EQUALS . expr1 [ SEMICOLON LCURLY ]
+##
+## The known suffix of the stack is as follows:
+## subscript EQUALS
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: FALSE STRING_MIDDLE
+##
+## Ends in an error in state: 66.
+##
+## stmt -> stmt_sans_semicolon . SEMICOLON [ TRUE STRING_START STRING_FULL RCURLY NUM NULL LPAREN LET LCURLY LBRACKET IF ID FUNC FOR FALSE EOF BANG ]
+##
+## The known suffix of the stack is as follows:
+## stmt_sans_semicolon
+##
+## WARNING: This example involves spurious reductions.
+## This implies that, although the LR(1) items shown above provide an
+## accurate view of the past (what has been recognized so far), they
+## may provide an INCOMPLETE view of the future (what was expected next).
+## In state 27, spurious reduction of production expr2 -> expr7
+## In state 33, spurious reduction of production expr1 -> expr2
+## In state 74, spurious reduction of production stmt_sans_semicolon -> expr1
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: FOR ID SEMICOLON STRING_MIDDLE
+##
+## Ends in an error in state: 68.
+##
+## stmt -> FOR stmt . expr1 SEMICOLON stmt_sans_semicolon block SEMICOLON [ TRUE STRING_START STRING_FULL RCURLY NUM NULL LPAREN LET LCURLY LBRACKET IF ID FUNC FOR FALSE EOF BANG ]
+##
+## The known suffix of the stack is as follows:
+## FOR stmt
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: FOR ID SEMICOLON FALSE STRING_MIDDLE
+##
+## Ends in an error in state: 69.
+##
+## stmt -> FOR stmt expr1 . SEMICOLON stmt_sans_semicolon block SEMICOLON [ TRUE STRING_START STRING_FULL RCURLY NUM NULL LPAREN LET LCURLY LBRACKET IF ID FUNC FOR FALSE EOF BANG ]
+##
+## The known suffix of the stack is as follows:
+## FOR stmt expr1
+##
+## WARNING: This example involves spurious reductions.
+## This implies that, although the LR(1) items shown above provide an
+## accurate view of the past (what has been recognized so far), they
+## may provide an INCOMPLETE view of the future (what was expected next).
+## In state 27, spurious reduction of production expr2 -> expr7
+## In state 33, spurious reduction of production expr1 -> expr2
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: FOR ID SEMICOLON FALSE SEMICOLON STRING_MIDDLE
+##
+## Ends in an error in state: 70.
+##
+## stmt -> FOR stmt expr1 SEMICOLON . stmt_sans_semicolon block SEMICOLON [ TRUE STRING_START STRING_FULL RCURLY NUM NULL LPAREN LET LCURLY LBRACKET IF ID FUNC FOR FALSE EOF BANG ]
+##
+## The known suffix of the stack is as follows:
+## FOR stmt expr1 SEMICOLON
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: FOR ID SEMICOLON FALSE SEMICOLON FALSE STRING_MIDDLE
+##
+## Ends in an error in state: 71.
+##
+## stmt -> FOR stmt expr1 SEMICOLON stmt_sans_semicolon . block SEMICOLON [ TRUE STRING_START STRING_FULL RCURLY NUM NULL LPAREN LET LCURLY LBRACKET IF ID FUNC FOR FALSE EOF BANG ]
+##
+## The known suffix of the stack is as follows:
+## FOR stmt expr1 SEMICOLON stmt_sans_semicolon
+##
+## WARNING: This example involves spurious reductions.
+## This implies that, although the LR(1) items shown above provide an
+## accurate view of the past (what has been recognized so far), they
+## may provide an INCOMPLETE view of the future (what was expected next).
+## In state 27, spurious reduction of production expr2 -> expr7
+## In state 33, spurious reduction of production expr1 -> expr2
+## In state 74, spurious reduction of production stmt_sans_semicolon -> expr1
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: FOR ID SEMICOLON FALSE SEMICOLON ID LCURLY RCURLY TRUE
+##
+## Ends in an error in state: 72.
+##
+## stmt -> FOR stmt expr1 SEMICOLON stmt_sans_semicolon block . SEMICOLON [ TRUE STRING_START STRING_FULL RCURLY NUM NULL LPAREN LET LCURLY LBRACKET IF ID FUNC FOR FALSE EOF BANG ]
+##
+## The known suffix of the stack is as follows:
+## FOR stmt expr1 SEMICOLON stmt_sans_semicolon block
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: IF FALSE LCURLY ID SEMICOLON STRING_MIDDLE
+##
+## Ends in an error in state: 75.
+##
+## block -> LCURLY stmts . RCURLY [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RCURLY RBRACKET PRODUCT PLUS NOT_EQUALS MINUS LPAREN LESS LEQ LCURLY LBRACKET GEQ ELSE DOUBLE_EQUALS DIVIDE COMMA COLON ]
+## stmts -> stmts . stmt [ TRUE STRING_START STRING_FULL RCURLY NUM NULL LPAREN LET LCURLY LBRACKET IF ID FUNC FOR FALSE BANG ]
+##
+## The known suffix of the stack is as follows:
+## LCURLY stmts
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: FUNC LPAREN ID TRUE
+##
+## Ends in an error in state: 81.
+##
+## expr8 -> FUNC LPAREN parameter_list . RPAREN block [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RCURLY RBRACKET PRODUCT PLUS NOT_EQUALS MINUS LPAREN LESS LEQ LCURLY LBRACKET GEQ DOUBLE_EQUALS DIVIDE COMMA COLON ]
+## parameter_list -> parameter_list . COMMA ID [ RPAREN COMMA ]
+##
+## The known suffix of the stack is as follows:
+## FUNC LPAREN parameter_list
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: FUNC LPAREN ID RPAREN TRUE
+##
+## Ends in an error in state: 82.
+##
+## expr8 -> FUNC LPAREN parameter_list RPAREN . block [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RCURLY RBRACKET PRODUCT PLUS NOT_EQUALS MINUS LPAREN LESS LEQ LCURLY LBRACKET GEQ DOUBLE_EQUALS DIVIDE COMMA COLON ]
+##
+## The known suffix of the stack is as follows:
+## FUNC LPAREN parameter_list RPAREN
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: FUNC LPAREN ID COMMA TRUE
+##
+## Ends in an error in state: 84.
+##
+## parameter_list -> parameter_list COMMA . ID [ RPAREN COMMA ]
+##
+## The known suffix of the stack is as follows:
+## parameter_list COMMA
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: IF FALSE STRING_MIDDLE
+##
+## Ends in an error in state: 86.
+##
+## expr1 -> IF expr2 . block conditional_continuation [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RCURLY RBRACKET LCURLY COMMA COLON ]
+## expr1 -> IF expr2 . block [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RCURLY RBRACKET LCURLY COMMA COLON ]
+## expr2 -> expr2 . DOUBLE_EQUALS expr2 [ PRODUCT PLUS NOT_EQUALS MINUS LESS LEQ LCURLY GEQ DOUBLE_EQUALS DIVIDE ]
+## expr2 -> expr2 . NOT_EQUALS expr2 [ PRODUCT PLUS NOT_EQUALS MINUS LESS LEQ LCURLY GEQ DOUBLE_EQUALS DIVIDE ]
+## expr2 -> expr2 . LESS expr2 [ PRODUCT PLUS NOT_EQUALS MINUS LESS LEQ LCURLY GEQ DOUBLE_EQUALS DIVIDE ]
+## expr2 -> expr2 . LEQ expr2 [ PRODUCT PLUS NOT_EQUALS MINUS LESS LEQ LCURLY GEQ DOUBLE_EQUALS DIVIDE ]
+## expr2 -> expr2 . GEQ expr2 [ PRODUCT PLUS NOT_EQUALS MINUS LESS LEQ LCURLY GEQ DOUBLE_EQUALS DIVIDE ]
+## expr2 -> expr2 . PLUS expr2 [ PRODUCT PLUS NOT_EQUALS MINUS LESS LEQ LCURLY GEQ DOUBLE_EQUALS DIVIDE ]
+## expr2 -> expr2 . MINUS expr2 [ PRODUCT PLUS NOT_EQUALS MINUS LESS LEQ LCURLY GEQ DOUBLE_EQUALS DIVIDE ]
+## expr2 -> expr2 . PRODUCT expr2 [ PRODUCT PLUS NOT_EQUALS MINUS LESS LEQ LCURLY GEQ DOUBLE_EQUALS DIVIDE ]
+## expr2 -> expr2 . DIVIDE expr2 [ PRODUCT PLUS NOT_EQUALS MINUS LESS LEQ LCURLY GEQ DOUBLE_EQUALS DIVIDE ]
+##
+## The known suffix of the stack is as follows:
+## IF expr2
+##
+## WARNING: This example involves spurious reductions.
+## This implies that, although the LR(1) items shown above provide an
+## accurate view of the past (what has been recognized so far), they
+## may provide an INCOMPLETE view of the future (what was expected next).
+## In state 27, spurious reduction of production expr2 -> expr7
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: IF FALSE LCURLY RCURLY TRUE
+##
+## Ends in an error in state: 87.
+##
+## expr1 -> IF expr2 block . conditional_continuation [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RCURLY RBRACKET LCURLY COMMA COLON ]
+## expr1 -> IF expr2 block . [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RCURLY RBRACKET LCURLY COMMA COLON ]
+##
+## The known suffix of the stack is as follows:
+## IF expr2 block
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: IF FALSE LCURLY RCURLY ELSE TRUE
+##
+## Ends in an error in state: 88.
+##
+## conditional_continuation -> ELSE . block [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RCURLY RBRACKET LCURLY COMMA COLON ]
+## elif -> ELSE . IF expr2 block [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RCURLY RBRACKET LCURLY ELSE COMMA COLON ]
+##
+## The known suffix of the stack is as follows:
+## ELSE
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: IF FALSE LCURLY RCURLY ELSE IF STRING_MIDDLE
+##
+## Ends in an error in state: 89.
+##
+## elif -> ELSE IF . expr2 block [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RCURLY RBRACKET LCURLY ELSE COMMA COLON ]
+##
+## The known suffix of the stack is as follows:
+## ELSE IF
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: IF FALSE LCURLY RCURLY ELSE IF FALSE STRING_MIDDLE
+##
+## Ends in an error in state: 90.
+##
+## elif -> ELSE IF expr2 . block [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RCURLY RBRACKET LCURLY ELSE COMMA COLON ]
+## expr2 -> expr2 . DOUBLE_EQUALS expr2 [ PRODUCT PLUS NOT_EQUALS MINUS LESS LEQ LCURLY GEQ DOUBLE_EQUALS DIVIDE ]
+## expr2 -> expr2 . NOT_EQUALS expr2 [ PRODUCT PLUS NOT_EQUALS MINUS LESS LEQ LCURLY GEQ DOUBLE_EQUALS DIVIDE ]
+## expr2 -> expr2 . LESS expr2 [ PRODUCT PLUS NOT_EQUALS MINUS LESS LEQ LCURLY GEQ DOUBLE_EQUALS DIVIDE ]
+## expr2 -> expr2 . LEQ expr2 [ PRODUCT PLUS NOT_EQUALS MINUS LESS LEQ LCURLY GEQ DOUBLE_EQUALS DIVIDE ]
+## expr2 -> expr2 . GEQ expr2 [ PRODUCT PLUS NOT_EQUALS MINUS LESS LEQ LCURLY GEQ DOUBLE_EQUALS DIVIDE ]
+## expr2 -> expr2 . PLUS expr2 [ PRODUCT PLUS NOT_EQUALS MINUS LESS LEQ LCURLY GEQ DOUBLE_EQUALS DIVIDE ]
+## expr2 -> expr2 . MINUS expr2 [ PRODUCT PLUS NOT_EQUALS MINUS LESS LEQ LCURLY GEQ DOUBLE_EQUALS DIVIDE ]
+## expr2 -> expr2 . PRODUCT expr2 [ PRODUCT PLUS NOT_EQUALS MINUS LESS LEQ LCURLY GEQ DOUBLE_EQUALS DIVIDE ]
+## expr2 -> expr2 . DIVIDE expr2 [ PRODUCT PLUS NOT_EQUALS MINUS LESS LEQ LCURLY GEQ DOUBLE_EQUALS DIVIDE ]
+##
+## The known suffix of the stack is as follows:
+## ELSE IF expr2
+##
+## WARNING: This example involves spurious reductions.
+## This implies that, although the LR(1) items shown above provide an
+## accurate view of the past (what has been recognized so far), they
+## may provide an INCOMPLETE view of the future (what was expected next).
+## In state 27, spurious reduction of production expr2 -> expr7
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: IF FALSE LCURLY RCURLY ELSE IF FALSE LCURLY RCURLY TRUE
+##
+## Ends in an error in state: 93.
+##
+## conditional_continuation -> elif . ELSE block [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RCURLY RBRACKET LCURLY COMMA COLON ]
+## conditional_continuation -> elif . [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RCURLY RBRACKET LCURLY COMMA COLON ]
+## elif -> elif . ELSE IF expr2 block [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RCURLY RBRACKET LCURLY ELSE COMMA COLON ]
+##
+## The known suffix of the stack is as follows:
+## elif
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: IF FALSE LCURLY RCURLY ELSE IF FALSE LCURLY RCURLY ELSE TRUE
+##
+## Ends in an error in state: 94.
+##
+## conditional_continuation -> elif ELSE . block [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RCURLY RBRACKET LCURLY COMMA COLON ]
+## elif -> elif ELSE . IF expr2 block [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RCURLY RBRACKET LCURLY ELSE COMMA COLON ]
+##
+## The known suffix of the stack is as follows:
+## elif ELSE
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: IF FALSE LCURLY RCURLY ELSE IF FALSE LCURLY RCURLY ELSE IF STRING_MIDDLE
+##
+## Ends in an error in state: 95.
+##
+## elif -> elif ELSE IF . expr2 block [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RCURLY RBRACKET LCURLY ELSE COMMA COLON ]
+##
+## The known suffix of the stack is as follows:
+## elif ELSE IF
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: IF FALSE LCURLY RCURLY ELSE IF FALSE LCURLY RCURLY ELSE IF FALSE STRING_MIDDLE
+##
+## Ends in an error in state: 96.
+##
+## elif -> elif ELSE IF expr2 . block [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RCURLY RBRACKET LCURLY ELSE COMMA COLON ]
+## expr2 -> expr2 . DOUBLE_EQUALS expr2 [ PRODUCT PLUS NOT_EQUALS MINUS LESS LEQ LCURLY GEQ DOUBLE_EQUALS DIVIDE ]
+## expr2 -> expr2 . NOT_EQUALS expr2 [ PRODUCT PLUS NOT_EQUALS MINUS LESS LEQ LCURLY GEQ DOUBLE_EQUALS DIVIDE ]
+## expr2 -> expr2 . LESS expr2 [ PRODUCT PLUS NOT_EQUALS MINUS LESS LEQ LCURLY GEQ DOUBLE_EQUALS DIVIDE ]
+## expr2 -> expr2 . LEQ expr2 [ PRODUCT PLUS NOT_EQUALS MINUS LESS LEQ LCURLY GEQ DOUBLE_EQUALS DIVIDE ]
+## expr2 -> expr2 . GEQ expr2 [ PRODUCT PLUS NOT_EQUALS MINUS LESS LEQ LCURLY GEQ DOUBLE_EQUALS DIVIDE ]
+## expr2 -> expr2 . PLUS expr2 [ PRODUCT PLUS NOT_EQUALS MINUS LESS LEQ LCURLY GEQ DOUBLE_EQUALS DIVIDE ]
+## expr2 -> expr2 . MINUS expr2 [ PRODUCT PLUS NOT_EQUALS MINUS LESS LEQ LCURLY GEQ DOUBLE_EQUALS DIVIDE ]
+## expr2 -> expr2 . PRODUCT expr2 [ PRODUCT PLUS NOT_EQUALS MINUS LESS LEQ LCURLY GEQ DOUBLE_EQUALS DIVIDE ]
+## expr2 -> expr2 . DIVIDE expr2 [ PRODUCT PLUS NOT_EQUALS MINUS LESS LEQ LCURLY GEQ DOUBLE_EQUALS DIVIDE ]
+##
+## The known suffix of the stack is as follows:
+## elif ELSE IF expr2
+##
+## WARNING: This example involves spurious reductions.
+## This implies that, although the LR(1) items shown above provide an
+## accurate view of the past (what has been recognized so far), they
+## may provide an INCOMPLETE view of the future (what was expected next).
+## In state 27, spurious reduction of production expr2 -> expr7
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: LBRACKET FALSE STRING_MIDDLE
+##
+## Ends in an error in state: 100.
+##
+## expr_list -> expr_list . COMMA expr1 [ RBRACKET COMMA ]
+## list_literals -> LBRACKET expr_list . RBRACKET [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RCURLY RBRACKET PRODUCT PLUS NOT_EQUALS MINUS LPAREN LESS LEQ LCURLY LBRACKET GEQ DOUBLE_EQUALS DIVIDE COMMA COLON ]
+##
+## The known suffix of the stack is as follows:
+## LBRACKET expr_list
+##
+## WARNING: This example involves spurious reductions.
+## This implies that, although the LR(1) items shown above provide an
+## accurate view of the past (what has been recognized so far), they
+## may provide an INCOMPLETE view of the future (what was expected next).
+## In state 27, spurious reduction of production expr2 -> expr7
+## In state 33, spurious reduction of production expr1 -> expr2
+## In state 53, spurious reduction of production expr_list -> expr1
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: LCURLY FALSE COLON FALSE COMMA STRING_MIDDLE
+##
+## Ends in an error in state: 102.
+##
+## hash_literal_pair -> hash_literal_pair . expr1 COLON expr1 COMMA [ TRUE STRING_START STRING_FULL RCURLY NUM NULL LPAREN LCURLY LBRACKET IF ID FUNC FALSE BANG ]
+## hash_literals -> LCURLY hash_literal_pair . RCURLY [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RCURLY RBRACKET PRODUCT PLUS NOT_EQUALS MINUS LPAREN LESS LEQ LCURLY LBRACKET GEQ DOUBLE_EQUALS DIVIDE COMMA COLON ]
+##
+## The known suffix of the stack is as follows:
+## LCURLY hash_literal_pair
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: LCURLY FALSE COLON FALSE COMMA FALSE STRING_MIDDLE
+##
+## Ends in an error in state: 104.
+##
+## hash_literal_pair -> hash_literal_pair expr1 . COLON expr1 COMMA [ TRUE STRING_START STRING_FULL RCURLY NUM NULL LPAREN LCURLY LBRACKET IF ID FUNC FALSE BANG ]
+##
+## The known suffix of the stack is as follows:
+## hash_literal_pair expr1
+##
+## WARNING: This example involves spurious reductions.
+## This implies that, although the LR(1) items shown above provide an
+## accurate view of the past (what has been recognized so far), they
+## may provide an INCOMPLETE view of the future (what was expected next).
+## In state 27, spurious reduction of production expr2 -> expr7
+## In state 33, spurious reduction of production expr1 -> expr2
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: LCURLY FALSE COLON FALSE COMMA FALSE COLON STRING_MIDDLE
+##
+## Ends in an error in state: 105.
+##
+## hash_literal_pair -> hash_literal_pair expr1 COLON . expr1 COMMA [ TRUE STRING_START STRING_FULL RCURLY NUM NULL LPAREN LCURLY LBRACKET IF ID FUNC FALSE BANG ]
+##
+## The known suffix of the stack is as follows:
+## hash_literal_pair expr1 COLON
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: LCURLY FALSE COLON FALSE COMMA FALSE COLON FALSE STRING_MIDDLE
+##
+## Ends in an error in state: 106.
+##
+## hash_literal_pair -> hash_literal_pair expr1 COLON expr1 . COMMA [ TRUE STRING_START STRING_FULL RCURLY NUM NULL LPAREN LCURLY LBRACKET IF ID FUNC FALSE BANG ]
+##
+## The known suffix of the stack is as follows:
+## hash_literal_pair expr1 COLON expr1
+##
+## WARNING: This example involves spurious reductions.
+## This implies that, although the LR(1) items shown above provide an
+## accurate view of the past (what has been recognized so far), they
+## may provide an INCOMPLETE view of the future (what was expected next).
+## In state 27, spurious reduction of production expr2 -> expr7
+## In state 33, spurious reduction of production expr1 -> expr2
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: LCURLY FALSE STRING_MIDDLE
+##
+## Ends in an error in state: 108.
+##
+## hash_literal_pair -> expr1 . COLON expr1 COMMA [ TRUE STRING_START STRING_FULL RCURLY NUM NULL LPAREN LCURLY LBRACKET IF ID FUNC FALSE BANG ]
+## hash_literals -> LCURLY expr1 . COLON expr1 RCURLY [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RCURLY RBRACKET PRODUCT PLUS NOT_EQUALS MINUS LPAREN LESS LEQ LCURLY LBRACKET GEQ DOUBLE_EQUALS DIVIDE COMMA COLON ]
+##
+## The known suffix of the stack is as follows:
+## LCURLY expr1
+##
+## WARNING: This example involves spurious reductions.
+## This implies that, although the LR(1) items shown above provide an
+## accurate view of the past (what has been recognized so far), they
+## may provide an INCOMPLETE view of the future (what was expected next).
+## In state 27, spurious reduction of production expr2 -> expr7
+## In state 33, spurious reduction of production expr1 -> expr2
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: LCURLY FALSE COLON STRING_MIDDLE
+##
+## Ends in an error in state: 109.
+##
+## hash_literal_pair -> expr1 COLON . expr1 COMMA [ TRUE STRING_START STRING_FULL RCURLY NUM NULL LPAREN LCURLY LBRACKET IF ID FUNC FALSE BANG ]
+## hash_literals -> LCURLY expr1 COLON . expr1 RCURLY [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RCURLY RBRACKET PRODUCT PLUS NOT_EQUALS MINUS LPAREN LESS LEQ LCURLY LBRACKET GEQ DOUBLE_EQUALS DIVIDE COMMA COLON ]
+##
+## The known suffix of the stack is as follows:
+## LCURLY expr1 COLON
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: LCURLY FALSE COLON FALSE STRING_MIDDLE
+##
+## Ends in an error in state: 110.
+##
+## hash_literal_pair -> expr1 COLON expr1 . COMMA [ TRUE STRING_START STRING_FULL RCURLY NUM NULL LPAREN LCURLY LBRACKET IF ID FUNC FALSE BANG ]
+## hash_literals -> LCURLY expr1 COLON expr1 . RCURLY [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RCURLY RBRACKET PRODUCT PLUS NOT_EQUALS MINUS LPAREN LESS LEQ LCURLY LBRACKET GEQ DOUBLE_EQUALS DIVIDE COMMA COLON ]
+##
+## The known suffix of the stack is as follows:
+## LCURLY expr1 COLON expr1
+##
+## WARNING: This example involves spurious reductions.
+## This implies that, although the LR(1) items shown above provide an
+## accurate view of the past (what has been recognized so far), they
+## may provide an INCOMPLETE view of the future (what was expected next).
+## In state 27, spurious reduction of production expr2 -> expr7
+## In state 33, spurious reduction of production expr1 -> expr2
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: LPAREN FALSE STRING_MIDDLE
+##
+## Ends in an error in state: 113.
+##
+## expr8 -> LPAREN expr1 . RPAREN [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RCURLY RBRACKET PRODUCT PLUS NOT_EQUALS MINUS LPAREN LESS LEQ LCURLY LBRACKET GEQ DOUBLE_EQUALS DIVIDE COMMA COLON ]
+##
+## The known suffix of the stack is as follows:
+## LPAREN expr1
+##
+## WARNING: This example involves spurious reductions.
+## This implies that, although the LR(1) items shown above provide an
+## accurate view of the past (what has been recognized so far), they
+## may provide an INCOMPLETE view of the future (what was expected next).
+## In state 27, spurious reduction of production expr2 -> expr7
+## In state 33, spurious reduction of production expr1 -> expr2
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: STRING_START FALSE STRING_MIDDLE STRING_MIDDLE
+##
+## Ends in an error in state: 115.
+##
+## expr8 -> STRING_START string_middle . expr1 STRING_END [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RCURLY RBRACKET PRODUCT PLUS NOT_EQUALS MINUS LPAREN LESS LEQ LCURLY LBRACKET GEQ DOUBLE_EQUALS DIVIDE COMMA COLON ]
+## string_middle -> string_middle . expr1 STRING_MIDDLE [ TRUE STRING_START STRING_FULL NUM NULL LPAREN LCURLY LBRACKET IF ID FUNC FALSE BANG ]
+##
+## The known suffix of the stack is as follows:
+## STRING_START string_middle
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: STRING_START FALSE STRING_MIDDLE FALSE RPAREN
+##
+## Ends in an error in state: 116.
+##
+## expr8 -> STRING_START string_middle expr1 . STRING_END [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RCURLY RBRACKET PRODUCT PLUS NOT_EQUALS MINUS LPAREN LESS LEQ LCURLY LBRACKET GEQ DOUBLE_EQUALS DIVIDE COMMA COLON ]
+## string_middle -> string_middle expr1 . STRING_MIDDLE [ TRUE STRING_START STRING_FULL NUM NULL LPAREN LCURLY LBRACKET IF ID FUNC FALSE BANG ]
+##
+## The known suffix of the stack is as follows:
+## STRING_START string_middle expr1
+##
+## WARNING: This example involves spurious reductions.
+## This implies that, although the LR(1) items shown above provide an
+## accurate view of the past (what has been recognized so far), they
+## may provide an INCOMPLETE view of the future (what was expected next).
+## In state 27, spurious reduction of production expr2 -> expr7
+## In state 33, spurious reduction of production expr1 -> expr2
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: STRING_START FALSE RPAREN
+##
+## Ends in an error in state: 119.
+##
+## expr8 -> STRING_START expr1 . STRING_END [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RCURLY RBRACKET PRODUCT PLUS NOT_EQUALS MINUS LPAREN LESS LEQ LCURLY LBRACKET GEQ DOUBLE_EQUALS DIVIDE COMMA COLON ]
+## string_middle -> expr1 . STRING_MIDDLE [ TRUE STRING_START STRING_FULL NUM NULL LPAREN LCURLY LBRACKET IF ID FUNC FALSE BANG ]
+##
+## The known suffix of the stack is as follows:
+## STRING_START expr1
+##
+## WARNING: This example involves spurious reductions.
+## This implies that, although the LR(1) items shown above provide an
+## accurate view of the past (what has been recognized so far), they
+## may provide an INCOMPLETE view of the future (what was expected next).
+## In state 27, spurious reduction of production expr2 -> expr7
+## In state 33, spurious reduction of production expr1 -> expr2
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: FUNC TRUE
+##
+## Ends in an error in state: 122.
+##
+## decl -> FUNC . ID LPAREN RPAREN block SEMICOLON [ TRUE STRING_START STRING_FULL NUM NULL LPAREN LET LCURLY LBRACKET IF ID FUNC FOR FALSE EOF BANG ]
+## decl -> FUNC . ID LPAREN parameter_list RPAREN block SEMICOLON [ TRUE STRING_START STRING_FULL NUM NULL LPAREN LET LCURLY LBRACKET IF ID FUNC FOR FALSE EOF BANG ]
+## expr8 -> FUNC . LPAREN RPAREN block [ SEMICOLON PRODUCT PLUS NOT_EQUALS MINUS LPAREN LESS LEQ LBRACKET GEQ DOUBLE_EQUALS DIVIDE ]
+## expr8 -> FUNC . LPAREN parameter_list RPAREN block [ SEMICOLON PRODUCT PLUS NOT_EQUALS MINUS LPAREN LESS LEQ LBRACKET GEQ DOUBLE_EQUALS DIVIDE ]
+##
+## The known suffix of the stack is as follows:
+## FUNC
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: FUNC ID TRUE
+##
+## Ends in an error in state: 123.
+##
+## decl -> FUNC ID . LPAREN RPAREN block SEMICOLON [ TRUE STRING_START STRING_FULL NUM NULL LPAREN LET LCURLY LBRACKET IF ID FUNC FOR FALSE EOF BANG ]
+## decl -> FUNC ID . LPAREN parameter_list RPAREN block SEMICOLON [ TRUE STRING_START STRING_FULL NUM NULL LPAREN LET LCURLY LBRACKET IF ID FUNC FOR FALSE EOF BANG ]
+##
+## The known suffix of the stack is as follows:
+## FUNC ID
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: FUNC ID LPAREN TRUE
+##
+## Ends in an error in state: 124.
+##
+## decl -> FUNC ID LPAREN . RPAREN block SEMICOLON [ TRUE STRING_START STRING_FULL NUM NULL LPAREN LET LCURLY LBRACKET IF ID FUNC FOR FALSE EOF BANG ]
+## decl -> FUNC ID LPAREN . parameter_list RPAREN block SEMICOLON [ TRUE STRING_START STRING_FULL NUM NULL LPAREN LET LCURLY LBRACKET IF ID FUNC FOR FALSE EOF BANG ]
+##
+## The known suffix of the stack is as follows:
+## FUNC ID LPAREN
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: FUNC ID LPAREN RPAREN TRUE
+##
+## Ends in an error in state: 125.
+##
+## decl -> FUNC ID LPAREN RPAREN . block SEMICOLON [ TRUE STRING_START STRING_FULL NUM NULL LPAREN LET LCURLY LBRACKET IF ID FUNC FOR FALSE EOF BANG ]
+##
+## The known suffix of the stack is as follows:
+## FUNC ID LPAREN RPAREN
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: FUNC ID LPAREN RPAREN LCURLY RCURLY TRUE
+##
+## Ends in an error in state: 126.
+##
+## decl -> FUNC ID LPAREN RPAREN block . SEMICOLON [ TRUE STRING_START STRING_FULL NUM NULL LPAREN LET LCURLY LBRACKET IF ID FUNC FOR FALSE EOF BANG ]
+##
+## The known suffix of the stack is as follows:
+## FUNC ID LPAREN RPAREN block
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: FUNC ID LPAREN ID TRUE
+##
+## Ends in an error in state: 128.
+##
+## decl -> FUNC ID LPAREN parameter_list . RPAREN block SEMICOLON [ TRUE STRING_START STRING_FULL NUM NULL LPAREN LET LCURLY LBRACKET IF ID FUNC FOR FALSE EOF BANG ]
+## parameter_list -> parameter_list . COMMA ID [ RPAREN COMMA ]
+##
+## The known suffix of the stack is as follows:
+## FUNC ID LPAREN parameter_list
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: FUNC ID LPAREN ID RPAREN TRUE
+##
+## Ends in an error in state: 129.
+##
+## decl -> FUNC ID LPAREN parameter_list RPAREN . block SEMICOLON [ TRUE STRING_START STRING_FULL NUM NULL LPAREN LET LCURLY LBRACKET IF ID FUNC FOR FALSE EOF BANG ]
+##
+## The known suffix of the stack is as follows:
+## FUNC ID LPAREN parameter_list RPAREN
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: FUNC ID LPAREN ID RPAREN LCURLY RCURLY TRUE
+##
+## Ends in an error in state: 130.
+##
+## decl -> FUNC ID LPAREN parameter_list RPAREN block . SEMICOLON [ TRUE STRING_START STRING_FULL NUM NULL LPAREN LET LCURLY LBRACKET IF ID FUNC FOR FALSE EOF BANG ]
+##
+## The known suffix of the stack is as follows:
+## FUNC ID LPAREN parameter_list RPAREN block
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+prog: ID SEMICOLON STRING_MIDDLE
+##
+## Ends in an error in state: 135.
+##
+## declarations -> declarations . decl [ TRUE STRING_START STRING_FULL NUM NULL LPAREN LET LCURLY LBRACKET IF ID FUNC FOR FALSE EOF BANG ]
+## prog -> declarations . EOF [ # ]
+##
+## The known suffix of the stack is as follows:
+## declarations
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+

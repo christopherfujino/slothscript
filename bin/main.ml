@@ -14,7 +14,7 @@ let wrap_parse env line =
 
 let repl () =
   let ctx = Context.make_ctx (module Sloth_stdlib.Prod) "" in
-  let env = Compiler.Environment.create "" |> Compiler.Stdlib_stubs.populate in
+  let env = Compiler.Environment.create "" |> Compiler.Environment.populate in
   let rec repl_inner ctx env =
     (* %! means flush *)
     Printf.printf "> %!";
@@ -45,7 +45,7 @@ let interpreter () =
   in
   let program = read_all (Buffer.create 256) in
   let env =
-    Compiler.Environment.create program |> Compiler.Stdlib_stubs.populate
+    Compiler.Environment.create program |> Compiler.Environment.populate
   in
   let ctx = Context.make_ctx (module Sloth_stdlib.Prod) program in
   let _, ir = wrap_parse env program in

@@ -5,8 +5,3 @@
  (name main)
  ; deps, depends on sloth_script from //lib/dune
  (libraries sloth_script))
-
-(executable
- (public_name ocaml_stdlib)
- (name ocaml_stdlib)
- (libraries sloth_script))

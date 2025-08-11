@@ -66,6 +66,7 @@ rule private_read last_token state =
   | '=' { let token = EQUALS lexbuf.lex_curr_p in last_token := Some token; token }
   | '*' { let token = PRODUCT lexbuf.lex_curr_p in last_token := Some token; token }
   | '/' { let token = DIVIDE lexbuf.lex_curr_p in last_token := Some token; token }
+  | '!' { let token = BANG lexbuf.lex_curr_p in last_token := Some token; token }
   | ';' {
     let parse_semicolon () =
       let token = SEMICOLON lexbuf.lex_curr_p in
@@ -98,7 +99,11 @@ rule private_read last_token state =
   | ')' { let token = RPAREN lexbuf.lex_curr_p in last_token := Some token; token}
   | ',' { let token = COMMA lexbuf.lex_curr_p in last_token := Some token; token}
   | '<' { let token = LESS lexbuf.lex_curr_p in last_token := Some token; token}
+  | '>' { let token = GREATER lexbuf.lex_curr_p in last_token := Some token; token}
   | "<=" { let token = LEQ lexbuf.lex_curr_p in last_token := Some token; token}
+  | ">=" { let token = GEQ lexbuf.lex_curr_p in last_token := Some token; token}
+  | "==" { let token = DOUBLE_EQUALS lexbuf.lex_curr_p in last_token := Some token; token }
+  | "!=" { let token = NOT_EQUALS lexbuf.lex_curr_p in last_token := Some token; token }
   | '[' { let token = LBRACKET lexbuf.lex_curr_p in last_token := Some token; token}
   | ']' { let token = RBRACKET lexbuf.lex_curr_p in last_token := Some token; token}
   (* Lexing.lexeme means return the string that matched the pattern *)

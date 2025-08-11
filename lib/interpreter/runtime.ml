@@ -6,15 +6,15 @@ type t =
   | Num of float
   | List of t Array.t
   | HashMap of (t, t) Stdlib.Hashtbl.t
-  (* TODO hashmap *)
   | Null
   | Func of function_t
 
 (* TODO add positions for error messages *)
 and function_t =
+  (* TODO this prob doesn't need params or identifiers *)
   | Native of {
       parameters : string list;
-      cb : t list -> t;
+      cb : t list -> (t, string) Result.t;
       identifiers : t Identifiers.t;
     }
   | User of {
@@ -22,6 +22,18 @@ and function_t =
       block : Compiler.Optimizer.stmt list;
       identifiers : t Identifiers.t;
     }
+
+type class_t = { methods : (string, function_t) Hashtbl.t }
+type class_lookup = (string, class_t) Hashtbl.t
+
+let to_class_name = function
+  | String _ -> "String"
+  | Num _ -> "Number"
+  | List _ -> "List"
+  | Null -> "Null"
+  | Bool _ -> "Bool"
+  | HashMap _ -> "HashMap"
+  | Func _ -> "Function"
 
 let rec to_s = function
   | String s -> s
@@ -47,11 +59,14 @@ let rec to_s = function
       ^ "}"
   | Func _ -> "func(TODO)"
 
-let num_of_val v = match v with Num f -> Some f | _ -> None
+let num_of_val = function Num f -> Some f | _ -> None
+let string_of_val = function String s -> Some s | _ -> None
 
 let int_of_val v =
   num_of_val v
   |> Option.bind ~f:(fun f ->
          if Float.is_integer f then Some (Int.of_float f) else None)
 
-let bool_of_val b = match b with Bool b' -> Some b' | _ -> None
+let bool_of_val = function Bool b' -> Some b' | _ -> None
+let list_of_val = function List l -> Some l | _ -> None
+let hashmap_of_val = function HashMap h -> Some h | _ -> None

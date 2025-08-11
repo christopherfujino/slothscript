@@ -13,10 +13,6 @@ train:
 describe:
 	dune describe
 
-.PHONY: stdlib_test
-stdlib_test:
-	dune exec ocaml_stdlib
-
 .PHONY: repl
 repl:
 	dune exec repl
@@ -70,4 +66,3 @@ docs:
 .PHONY: clean
 clean:
 	dune clean
-	rm -f README.md

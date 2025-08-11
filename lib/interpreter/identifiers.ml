@@ -27,24 +27,6 @@ let rec get_opt env id =
   | Some v -> Some v
 
 let get env id = match get_opt env id with Some v -> Some v | None -> None
-(*
-      let buf = Buffer.create 4 in
-      Buffer.add_string buf (Printf.sprintf "No variable defined named %s\n" id);
-      let rec walk_env env =
-        let keys = Hashtbl.keys env.values in
-        List.iter keys ~f:(fun n ->
-            let msg = Printf.sprintf "%s, " n in
-            Buffer.add_string buf msg);
-        match env.previous with
-        | None -> ()
-        | Some p ->
-            Buffer.add_char buf '\n';
-            walk_env p
-      in
-      walk_env env;
-      let msg = Buffer.contents buf in
-      failure pos msg
-      *)
 
 let rec reassign env id v =
   match Hashtbl.find env.values id with

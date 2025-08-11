@@ -10,13 +10,6 @@ let failure ~ctx pos msg =
   in
   raise (Failure msg)
 
-let check_arity ~pos ~ctx desired_count actual_list name =
-  let actual_count = List.length actual_list in
-  if not (desired_count = actual_count) then
-    failure ~ctx pos
-      (Printf.sprintf "The function %s expected %d arguments but received %d"
-         name desired_count actual_count)
-
 let rec interpret_prog ctx prog =
   match prog with
   | [] -> (ctx, Runtime.Null)
@@ -81,7 +74,7 @@ and interpret_stmt (ctx : Context.t) stmt =
           let value' = interpret_expr ctx value in
           match receiver' with
           | HashMap tbl ->
-              Stdlib.Hashtbl.add tbl subscript' value';
+              Stdlib.Hashtbl.replace tbl subscript' value';
               (ctx, value')
           | List elements -> (
               match Runtime.int_of_val subscript' with
@@ -111,7 +104,16 @@ and interpret_stmt (ctx : Context.t) stmt =
         | Some cmp_val ->
             if not cmp_val then last_val
             else
-              let cur_val = interpret_block ctx bl in
+              (* Each iteration should have its own scope *)
+              let inner_ctx =
+                Context.
+                  {
+                    ctx with
+                    identifiers = Identifiers.push_empty ctx.identifiers;
+                  }
+              in
+
+              let cur_val = interpret_block inner_ctx bl in
               let ctx, _ = interpret_stmt ctx inc in
               (interpret_for_loop [@tailcall]) ctx cmp inc bl cur_val
         | None ->
@@ -212,81 +214,27 @@ and interpret_expr ctx expr =
       | None ->
           Printf.sprintf "The name %s has not been declared in this scope" i
           |> failure ~ctx pos)
+  | Equality (lhs, rhs, is_equality, _) ->
+      let lhs = interpret_expr ctx lhs in
+      let rhs = interpret_expr ctx rhs in
+
+      Runtime.Bool (is_equal ctx is_equality lhs rhs)
   | MethodInvoc { receiver; target; args; pos } -> (
       let rt_receiver = interpret_expr ctx receiver in
-      let not_implemented receiver =
-        Printf.sprintf "The type %s does not implement the method %s" receiver
-          target
-        |> failure ~ctx pos
+      let args = List.map args ~f:(interpret_expr ctx) in
+      let klass =
+        Hashtbl.find_exn ctx.classes (Runtime.to_class_name rt_receiver)
       in
-      match rt_receiver with
-      | Null -> failure ~ctx pos "NPE!"
-      | String _ -> not_implemented "String"
-      | Num f -> (
-          (* Does it matter this is O(n)? *)
-          match target with
-          | "+" -> (
-              check_arity ~ctx ~pos 1 args "Number.+";
-              let arg = List.hd_exn args in
-              let arg_val = interpret_expr ctx arg in
-              match Runtime.num_of_val arg_val with
-              | Some arg_f -> Num (f +. arg_f)
-              | None ->
-                  Printf.sprintf
-                    "The \"+\" method expects a Number argument, but it \
-                     instead received \"%s\""
-                    (Runtime.to_s arg_val)
-                  |> failure ~ctx pos)
-          | "-" -> (
-              check_arity ~ctx ~pos 1 args "Number.-";
-              let arg = List.hd_exn args in
-              let arg_val = interpret_expr ctx arg in
-              match Runtime.num_of_val arg_val with
-              | Some arg_f -> Num (f -. arg_f)
-              | None ->
-                  Printf.sprintf
-                    "The \"-\" method expects a Number argument, but it \
-                     instead received \"%s\""
-                    (Runtime.to_s arg_val)
-                  |> failure ~ctx pos)
-          | "*" -> (
-              check_arity ~ctx ~pos 1 args "Number.*";
-              let arg = List.hd_exn args in
-              let arg_val = interpret_expr ctx arg in
-              match Runtime.num_of_val arg_val with
-              | Some arg_f -> Num (f *. arg_f)
-              | None ->
-                  Printf.sprintf
-                    "The \"*\" method expects a Number argument, but it \
-                     instead received \"%s\""
-                    (Runtime.to_s arg_val)
-                  |> failure ~ctx pos)
-          | "/" -> (
-              check_arity ~ctx ~pos 1 args "Number./";
-              let arg = List.hd_exn args in
-              let arg_val = interpret_expr ctx arg in
-              match Runtime.num_of_val arg_val with
-              | Some arg_f -> Num (f /. arg_f)
-              | None ->
-                  Printf.sprintf
-                    "The \"/\" method expects a Number argument, but it \
-                     instead received \"%s\""
-                    (Runtime.to_s arg_val)
-                  |> failure ~ctx pos)
-          | "<=" -> (
-              check_arity ~ctx ~pos 1 args "Number.<=";
-              let arg = List.hd_exn args in
-              let arg_val = interpret_expr ctx arg in
-              match Runtime.num_of_val arg_val with
-              | Some arg_f -> Bool (Float.( <= ) f arg_f)
-              | None ->
-                  Printf.sprintf
-                    "The \"<=\" method expects a Number argument, but it \
-                     instead received \"%s\""
-                    (Runtime.to_s arg_val)
-                  |> failure ~ctx pos)
-          | _ -> not_implemented "Number")
-      | _ -> failure ~ctx pos "TODO")
+      match Hashtbl.find klass.methods target with
+      | None ->
+          Printf.sprintf "Undefined field named %s" target |> failure ~ctx pos
+      | Some func -> (
+          match func with
+          | User _ -> failwith "Unreachable"
+          | Native { cb; _ } -> (
+              let args = rt_receiver :: args in
+              match cb args with Ok v -> v | Error msg -> failure ~ctx pos msg))
+      )
   | FuncInvoc (receiver, args, pos) -> (
       let receiver' = interpret_expr ctx receiver in
       match receiver' with
@@ -320,9 +268,13 @@ and interpret_expr ctx expr =
               (* discard context *)
               let _, v = traverse_stmts temp_ctx block in
               v
-          | Native { cb; parameters = _; identifiers = _ } ->
-              let vals = List.map args ~f:(interpret_expr ctx) in
-              cb vals)
+          | Native { cb; parameters = _; identifiers = _ } -> (
+              let arg_vals =
+                List.map args ~f:(fun arg -> interpret_expr ctx arg)
+              in
+              match cb arg_vals with
+              | Ok v -> v
+              | Error msg -> failure ~ctx pos msg))
       | _ ->
           Printf.sprintf "Tried to invoke %s, but it is not a function"
             (Runtime.to_s receiver')
@@ -331,6 +283,23 @@ and interpret_expr ctx expr =
       let parameters = List.map parameters ~f:(fun (name, _) -> name) in
       Func (User { parameters; block; identifiers = ctx.identifiers })
   | IfExpr (cond, _) -> interpret_cond ctx cond
+  | UnaryExpr { target; pos; is_prefix; operator } -> (
+      let v = interpret_expr ctx target in
+      match is_prefix with
+      | false ->
+          failwith "TODO implement interpreting postfix unary expressions"
+      | true -> (
+          match operator with
+          | Bang -> (
+              let bool_opt = Runtime.bool_of_val v in
+              match bool_opt with
+              | None ->
+                  Runtime.to_s v
+                  |> Printf.sprintf
+                       "The prefix ! operator must be applied to a Bool value, \
+                        but got %s"
+                  |> failure ~ctx pos
+              | Some b -> Runtime.Bool (not b))))
 
 (** You must push an empty env frame on first *)
 and interpret_block ctx stmts =
@@ -347,3 +316,57 @@ and interpret_block ctx stmts =
   (* discard context *)
   let _, v = traverse_stmts ctx stmts in
   v
+
+and is_equal ctx is_equality lhs rhs =
+  let lh_s = Runtime.to_class_name lhs in
+  let rh_s = Runtime.to_class_name rhs in
+  let same_class = String.equal lh_s rh_s in
+  (* if ==, then return false; if !=, then return true *)
+  if not same_class then not is_equality
+  else if not @@ String.equal lh_s rh_s then false
+  else
+    match lhs with
+    | String lh_s -> (
+        let rh_s = Runtime.string_of_val rhs |> Option.value_exn in
+        match is_equality with
+        | true -> String.equal lh_s rh_s
+        | false -> not @@ String.equal lh_s rh_s)
+    | Num lhs -> (
+        let rhs = Runtime.num_of_val rhs |> Option.value_exn in
+        match is_equality with
+        | true -> Float.equal lhs rhs
+        | false -> not @@ Float.equal lhs rhs)
+    | Bool lhs -> (
+        let rhs = Runtime.bool_of_val rhs |> Option.value_exn in
+        match is_equality with
+        | true -> Bool.(lhs = rhs)
+        | false -> Bool.((not lhs) = rhs))
+    | List lhs ->
+        let rhs = Runtime.list_of_val rhs |> Option.value_exn in
+        let left_len = Array.length lhs in
+        let right_len = Array.length rhs in
+        if (not is_equality) && not (phys_equal left_len right_len) then true
+        else
+          let is_deep_equal = Array.equal (is_equal ctx true) lhs rhs in
+          Bool.(is_deep_equal = is_equality)
+    | HashMap lhs ->
+        let rhs = Runtime.hashmap_of_val rhs |> Option.value_exn in
+        let left_len = Stdlib.Hashtbl.length lhs in
+        let right_len = Stdlib.Hashtbl.length rhs in
+        if (not is_equality) && not (phys_equal left_len right_len) then true
+        else
+          let is_deep_equal =
+            Stdlib.Hashtbl.fold
+              (fun key left_value equal_so_far ->
+                if not equal_so_far then false
+                else
+                  match Stdlib.Hashtbl.find_opt rhs key with
+                  | None -> false
+                  | Some right_value -> is_equal ctx true left_value right_value)
+              lhs true
+          in
+          Bool.(is_deep_equal = is_equality)
+    | Null -> ( match rhs with Null -> is_equality | _ -> not is_equality)
+    | _ ->
+        Printf.sprintf "is_equal the type %s is not implemented" lh_s
+        |> failwith

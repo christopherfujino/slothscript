@@ -2,24 +2,35 @@
 addition
 
 ### Program
-1 + 1;
+assert(1 + 1 == 2);
 
 ### Ast
 ((StmtDecl
   (ExprStmt
-    (MethodInvoc
-      (receiver
+    (FuncInvoc
+      (IdRef
+        assert
+        [POS])
+      ((Equality
+        (MethodInvoc
+          (receiver
+            (Num
+              1
+              [POS]))
+          (target
+            +)
+          (args
+            ((Num
+              1
+              [POS])))
+          (pos
+            [POS]))
         (Num
-          1
-          [POS]))
-      (target
-        +)
-      (args
-        ((Num
-          1
-          [POS])))
-      (pos
-        [POS])))))
+          2
+          [POS])
+        true
+        [POS]))
+      [POS]))))
 
 ### Stdout
 

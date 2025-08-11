@@ -31,6 +31,7 @@ and expr = private
   | HashMap of (expr * expr) list * Sloth_common.Position.t
   | Subscript of expr * expr * Sloth_common.Position.t
   | IdRef of string * Sloth_common.Position.t
+  | Equality of expr * expr * bool * Sloth_common.Position.t
   | FuncInvoc of expr * expr list * Sloth_common.Position.t
   | MethodInvoc of {
       receiver : expr;
@@ -44,6 +45,12 @@ and expr = private
       pos : Sloth_common.Position.t;
     }
   | IfExpr of cond_cont * Sloth_common.Position.t
+  | UnaryExpr of {
+      target : expr;
+      pos : Sloth_common.Position.t;
+      is_prefix : bool;
+      operator : Ast.operator;
+    }
 [@@deriving sexp]
 
 and string_parts =
@@ -63,8 +70,6 @@ and cond_cont = private
     }
   | ElseCont of stmt list * Sloth_common.Position.t
 [@@deriving sexp]
-
-and operator = private Add [@@deriving sexp]
 
 val optimize_prog : Environment.t -> Ast.decl list -> Environment.t * decl list
 val prog_to_str : decl list -> string

@@ -43,6 +43,7 @@ let parse env line =
 let to_s token =
   let open Parser in
   match token with
+  | BANG _ -> "BANG"
   | COLON _ -> "COLON"
   | SEMICOLON _ -> "SEMICOLON"
   | TRUE _ -> "TRUE"
@@ -56,7 +57,11 @@ let to_s token =
   | LPAREN _ -> "LPAREN"
   | LET _ -> "LET"
   | LESS _ -> "LESS"
+  | GREATER _ -> "GREATER"
+  | DOUBLE_EQUALS _ -> "DOUBLE_EQUALS"
+  | NOT_EQUALS _ -> "NOT_EQUALS"
   | LEQ _ -> "LEQ"
+  | GEQ _ -> "GEQ"
   | LCURLY _ -> "LCURLY"
   | LBRACKET _ -> "LBRACKET"
   | IF _ -> "IF"

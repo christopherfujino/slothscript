@@ -1,20 +1,22 @@
 ## TODO
+- [ ] Class prototypes
+- [ ] Class static methods
+- [ ] Do blocks
+- [ ] Stack traces; depends on storing locs in runtime values
+- [ ] Context variables, with statements
 - [ ] For-in loops?
 - [ ] comments
-- [ ] assertions
 - [ ] Nicer lambdas
-- [ ] Do blocks
-- [ ] Structs/Methods
 - [ ] List mutation methods
 - [ ] Modules
 - [ ] Standard Library
 - [ ] README.md
 - [ ] Security policy
 - [ ] Language versioning
-- [ ] Stack traces; depends on storing locs in runtime values
 - [ ] Pattern matching
 - [ ] Formatter
 - [ ] Early return from functions?
+- [ ] Method syntax for hash maps
 
 ## Done
 - [x] Lexical scoping
@@ -36,3 +38,5 @@
 - [x] Automatic semicolon insertion
 - [x] HashMap literals
 - [x] Store locs in runtime values
+- [x] Assertions
+- [x] Classes

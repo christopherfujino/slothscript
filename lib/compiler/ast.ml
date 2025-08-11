@@ -39,6 +39,7 @@ and expr =
   | Subscript of expr * expr * Sloth_common.Position.t
   | IdRef of string * Sloth_common.Position.t
   | FuncInvoc of expr * expr list * Sloth_common.Position.t
+  | Equality of expr * expr * bool * Sloth_common.Position.t
   | MethodInvoc of {
       receiver : expr;
       target : string;
@@ -47,6 +48,12 @@ and expr =
     }
   | FuncExpr of func_expr_t
   | IfExpr of cond_cont * Sloth_common.Position.t
+  | UnaryExpr of {
+      target : expr;
+      pos : Sloth_common.Position.t;
+      is_prefix : bool;
+      operator : operator;
+    }
 [@@deriving sexp]
 
 and string_parts =
@@ -69,7 +76,7 @@ and cond_cont =
     }
   | ElseCont of stmt list * Sloth_common.Position.t
 
-and operator = Add [@@deriving sexp]
+and operator = Bang [@@deriving sexp]
 
 let num_of_expr expr =
   match expr with
