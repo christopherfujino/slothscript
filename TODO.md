@@ -9,6 +9,7 @@
 - [ ] Language versioning
 
 ### v0.2
+- [ ] raw string literals
 - [ ] Optional function parameters
 - [ ] List mutation methods
 - [ ] Stack traces; depends on storing locs in runtime values
@@ -16,9 +17,11 @@
 
 ### v1.0
 - [ ] Formatter
+- [ ] LSP server
 - [ ] Security policy
 
 ### Stretch goals
+- [ ] Unicode strings
 - [ ] Method syntax for hash maps
 - [ ] Pattern matching
 
@@ -50,6 +53,9 @@
 - [x] For-in loops
 - [x] Do blocks
 - [x] README.md
+<<<<<<< HEAD
 - [x] Process class
 - [x] Class static methods
 - [x] Class prototypes
+=======
+>>>>>>> 072f9ad (update TODOs)
