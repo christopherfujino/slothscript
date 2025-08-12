@@ -33,6 +33,7 @@
 %token <Lexing.position> DIVIDE
 %token <Lexing.position> SEMICOLON
 
+%token <Lexing.position> PIPE
 %token <Lexing.position> DOT
 %token <Lexing.position> COLON
 %token <Lexing.position> LCURLY
@@ -61,7 +62,7 @@
    *)
 
 %left NOT_EQUALS DOUBLE_EQUALS GEQ LEQ LESS GREATER
-%left MINUS PLUS
+%left MINUS PLUS PIPE
 %left PRODUCT DIVIDE
 %right BANG
 
@@ -175,7 +176,6 @@ expr2:
     MethodInvoc { receiver=e1; target=">="; args=[e2]; pos}
   }
 
-  (* TODO add | *)
   | e1 = expr2; pos = PLUS; e2 = expr2 {
     let pos = Sloth_common.Position.t_of_lexing_position pos in
     MethodInvoc { receiver=e1; target="+"; args=[e2]; pos}
@@ -183,6 +183,10 @@ expr2:
   | e1 = expr2; pos = MINUS; e2 = expr2 {
     let pos = Sloth_common.Position.t_of_lexing_position pos in
     MethodInvoc { receiver=e1; target="-"; args=[e2]; pos}
+  }
+  | e1 = expr2; pos = PIPE; e2 = expr2 {
+    let pos = Sloth_common.Position.t_of_lexing_position pos in
+    MethodInvoc { receiver=e1; target="|"; args=[e2]; pos}
   }
 
   (* operators *, /; TODO add % *)
@@ -199,6 +203,11 @@ expr2:
   | pos = BANG; e = expr2 {
     let pos = Sloth_common.Position.t_of_lexing_position pos in
     UnaryExpr { target=e; is_prefix=true; operator=Bang; pos}
+  }
+
+  | e = expr2; pos = BANG {
+    let pos = Sloth_common.Position.t_of_lexing_position pos in
+    UnaryExpr { target = e; is_prefix=false; operator=Bang; pos}
   }
  
   | e = expr7 { e }

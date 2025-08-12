@@ -3,3 +3,69 @@ process
 
 ### Program
 ProcGroup.new(["uname"]) | ProcGroup.new(["tr", "x", "s"])!
+
+### Ast
+((StmtDecl
+  (ExprStmt
+    (MethodInvoc
+      (receiver
+        (FuncInvoc
+          (ObjDeref
+            (IdRef
+              ProcGroup
+              [POS])
+            new
+            [POS])
+          ((List
+            ((String
+              ((FullString
+                uname
+                [POS]))
+              [POS]))
+            [POS]))
+          [POS]))
+      (target
+        |)
+      (args
+        ((UnaryExpr
+          (target
+            (FuncInvoc
+              (ObjDeref
+                (IdRef
+                  ProcGroup
+                  [POS])
+                new
+                [POS])
+              ((List
+                ((String
+                  ((FullString
+                    tr
+                    [POS]))
+                  [POS])
+                  (String
+                    ((FullString
+                      x
+                      [POS]))
+                    [POS])
+                  (String
+                    ((FullString
+                      s
+                      [POS]))
+                    [POS]))
+                [POS]))
+              [POS]))
+          (pos
+            [POS])
+          (is_prefix
+            false)
+          (operator
+            Bang))))
+      (pos
+        [POS])))))
+
+### Stdout
+
+
+### Failure
+
+

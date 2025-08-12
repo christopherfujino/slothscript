@@ -17,6 +17,7 @@ let to_s token =
   match token with
   | BANG _ -> "BANG"
   | DOT _ -> "DOT"
+  | PIPE _ -> "PIPE"
   | COLON _ -> "COLON"
   | SEMICOLON _ -> "SEMICOLON"
   | TRUE _ -> "TRUE"

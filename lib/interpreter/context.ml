@@ -98,12 +98,12 @@ let make_ctx m src =
               Printf.sprintf "TODO: You have not yet implemented %s" name
               |> failwith)
       | Class { properties; methods } -> (
-          let cl = Runtime.{ methods = Hashtbl.create (module String) } in
           match name with
           | "Number" -> (
+              let cl = Runtime.{ methods = Hashtbl.create (module String) } in
               List.iter properties ~f:(fun _ -> failwith "TODO properties");
               List.iter methods ~f:(fun meth ->
-                  let process_infix_num_methods args cb =
+                  let process_infix_methods args cb =
                     let lhs =
                       List.nth_exn args 0 |> Runtime.num_of_val
                       |> Option.value_exn
@@ -121,35 +121,35 @@ let make_ctx m src =
                   match meth with
                   | "+" ->
                       make_method "+" 2 cl.methods (fun args ->
-                          process_infix_num_methods args (fun lhs rhs ->
+                          process_infix_methods args (fun lhs rhs ->
                               Runtime.Num (lhs +. rhs)))
                   | "-" ->
                       make_method "-" 2 cl.methods (fun args ->
-                          process_infix_num_methods args (fun lhs rhs ->
+                          process_infix_methods args (fun lhs rhs ->
                               Runtime.Num (lhs -. rhs)))
                   | "/" ->
                       make_method "/" 2 cl.methods (fun args ->
-                          process_infix_num_methods args (fun lhs rhs ->
+                          process_infix_methods args (fun lhs rhs ->
                               Runtime.Num (lhs /. rhs)))
                   | "*" ->
                       make_method "*" 2 cl.methods (fun args ->
-                          process_infix_num_methods args (fun lhs rhs ->
+                          process_infix_methods args (fun lhs rhs ->
                               Runtime.Num (lhs *. rhs)))
                   | "<=" ->
                       make_method "<=" 2 cl.methods (fun args ->
-                          process_infix_num_methods args (fun lhs rhs ->
+                          process_infix_methods args (fun lhs rhs ->
                               Runtime.Bool Float.(lhs <=. rhs)))
                   | ">=" ->
                       make_method ">=" 2 cl.methods (fun args ->
-                          process_infix_num_methods args (fun lhs rhs ->
+                          process_infix_methods args (fun lhs rhs ->
                               Runtime.Bool Float.(lhs >=. rhs)))
                   | ">" ->
                       make_method ">" 2 cl.methods (fun args ->
-                          process_infix_num_methods args (fun lhs rhs ->
+                          process_infix_methods args (fun lhs rhs ->
                               Runtime.Bool Float.(lhs >. rhs)))
                   | "<" ->
                       make_method "<" 2 cl.methods (fun args ->
-                          process_infix_num_methods args (fun lhs rhs ->
+                          process_infix_methods args (fun lhs rhs ->
                               Runtime.Bool Float.(lhs <. rhs)))
                   | _ ->
                       failwith
@@ -160,5 +160,34 @@ let make_ctx m src =
                   Printf.sprintf "Tried to implement the class %s twice" name
                   |> failwith
               | `Ok -> ())
-          | _ -> failwith "TODO"));
+          | "ProcGroup" ->
+              let cl = Runtime.{ methods = Hashtbl.create (module String) } in
+              List.iter properties ~f:(fun _ -> failwith "TODO properties");
+              List.iter methods ~f:(fun meth ->
+                  let process_infix_methods args cb =
+                    let lhs =
+                      List.nth_exn args 0 |> Runtime.num_of_val
+                      |> Option.value_exn
+                    in
+                    let rhs_t = List.nth_exn args 1 in
+                    match Runtime.num_of_val rhs_t with
+                    | None ->
+                        Error
+                          (Printf.sprintf
+                             "Expected right-hand side to be a Number, but got \
+                              %s"
+                          @@ Runtime.to_s rhs_t)
+                    | Some rhs -> Ok (cb lhs rhs)
+                  in
+                  match meth with
+                  | "|" ->
+                      make_method "|" 2 cl.methods (fun args ->
+                          process_infix_methods args (fun _ _ ->
+                              failwith "TODO"))
+                  | _ -> failwith "TODO")
+          | _ ->
+              Printf.sprintf
+                "TODO: class named %s has not been implemented in context.ml"
+                name
+              |> failwith));
   { l = m; identifiers; src; classes }
