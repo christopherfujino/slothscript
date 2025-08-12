@@ -70,6 +70,7 @@ and expr =
       is_prefix : bool;
       operator : Ast.operator;
     }
+  | DoBlock of stmt list * Sloth_common.Position.t
 [@@deriving sexp]
 
 and string_parts =
@@ -240,6 +241,7 @@ and optimize_expr (env : Environment.t) (e : Ast.expr) : expr =
       let optim_receiver = optimize_expr env receiver in
       let optim_args = List.rev args |> List.map ~f:(optimize_expr env) in
       MethodInvoc { target; receiver = optim_receiver; args = optim_args; pos }
+  | DoBlock (block, pos) -> DoBlock (optimize_block env block, pos)
 
 and optimize_string env s pos =
   String

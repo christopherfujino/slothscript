@@ -60,6 +60,7 @@ and expr =
       is_prefix : bool;
       operator : operator;
     }
+  | DoBlock of stmt list * Sloth_common.Position.t
 [@@deriving sexp]
 
 and string_parts =

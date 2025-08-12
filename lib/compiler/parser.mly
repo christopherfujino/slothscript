@@ -22,6 +22,7 @@
 %token <Lexing.position> IF
 %token <Lexing.position> ELSE
 %token <Lexing.position> IN
+%token <Lexing.position> DO
 %token <Lexing.position> FOR
 %token <Lexing.position> PLUS
 %token <Lexing.position> MINUS
@@ -219,6 +220,10 @@ expr7:
 
 (* Primary - literals or grouping *)
 expr8:
+  | pos = DO; block = block {
+    let pos = Sloth_common.Position.t_of_lexing_position pos in
+    DoBlock (block, pos)
+  }
   | pos = FUNC; LPAREN; RPAREN; b = block {
     let pos = Sloth_common.Position.t_of_lexing_position pos in
     FuncExpr {parameters = []; block = b; pos}

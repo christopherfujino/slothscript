@@ -323,6 +323,11 @@ and interpret_expr ctx expr =
                         but got %s"
                   |> failure ~ctx pos
               | Some b -> Runtime.Bool (not b))))
+  | DoBlock (block, _) ->
+      let ctx =
+        { ctx with identifiers = Identifiers.push_empty ctx.identifiers }
+      in
+      interpret_block ctx block
 
 (** You must push an empty env frame on first *)
 and interpret_block ctx stmts =

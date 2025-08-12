@@ -65,6 +65,7 @@ let to_s token =
   | LCURLY _ -> "LCURLY"
   | LBRACKET _ -> "LBRACKET"
   | IN _ -> "IN"
+  | DO _ -> "DO"
   | IF _ -> "IF"
   | FUNC _ -> "FUNC"
   | FOR _ -> "FOR"

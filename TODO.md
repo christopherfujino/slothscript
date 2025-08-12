@@ -2,7 +2,6 @@
 - [ ] Class prototypes
 - [ ] Class static methods
 - [ ] Context variables, with statements
-- [ ] Do blocks
 - [ ] break, continue keywords
 - [ ] Stack traces; depends on storing locs in runtime values
 - [ ] Nicer lambdas
@@ -40,3 +39,4 @@
 - [x] Classes
 - [x] Comments
 - [x] For-in loops
+- [x] Do blocks
