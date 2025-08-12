@@ -1,0 +1,5 @@
+### Name
+process
+
+### Program
+ProcGroup.new(["uname"]) | ProcGroup.new(["tr", "x", "s"])!

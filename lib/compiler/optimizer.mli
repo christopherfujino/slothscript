@@ -58,6 +58,7 @@ and expr = private
       operator : Ast.operator;
     }
   | DoBlock of stmt list * Sloth_common.Position.t
+  | ObjDeref of expr * string * Sloth_common.Position.t
 [@@deriving sexp]
 
 and string_parts =

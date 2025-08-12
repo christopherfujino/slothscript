@@ -328,6 +328,11 @@ and interpret_expr ctx expr =
         { ctx with identifiers = Identifiers.push_empty ctx.identifiers }
       in
       interpret_block ctx block
+  | ObjDeref (receiver, _, _) -> (
+      match interpret_expr ctx receiver with
+      | Prototype { name = _ } ->
+          failwith "TODO implement static fields in classes"
+      | _ -> failwith "TODO")
 
 (** You must push an empty env frame on first *)
 and interpret_block ctx stmts =

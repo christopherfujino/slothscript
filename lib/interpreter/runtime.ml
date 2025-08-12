@@ -1,5 +1,9 @@
 open Core
 
+type prototype = {
+  name : string
+}
+
 type t =
   | String of string
   | Bool of bool
@@ -8,6 +12,7 @@ type t =
   | HashMap of (t, t) Stdlib.Hashtbl.t
   | Null
   | Func of function_t
+  | Prototype of prototype
 
 (* TODO add positions for error messages *)
 and function_t =
@@ -34,6 +39,7 @@ let to_class_name = function
   | Bool _ -> "Bool"
   | HashMap _ -> "HashMap"
   | Func _ -> "Function"
+  | Prototype _ -> "Prototype" 
 
 let rec to_s = function
   | String s -> s
@@ -57,7 +63,8 @@ let rec to_s = function
           Printf.sprintf "%s%s: %s," acc (to_s key) (to_s data))
         tbl "{"
       ^ "}"
-  | Func _ -> "func(TODO)"
+  | Func _ -> "Func(TODO)"
+  | Prototype {name} -> Printf.sprintf "Type(%s)" name
 
 let num_of_val = function Num f -> Some f | _ -> None
 let string_of_val = function String s -> Some s | _ -> None

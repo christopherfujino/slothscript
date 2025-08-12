@@ -85,6 +85,7 @@ rule private_read last_token state =
   }
   | ':' { let token = COLON lexbuf.lex_curr_p in last_token := Some token; token }
   | '#' { read_comment lexbuf.lex_curr_p lexbuf }
+  | '.' { let token = DOT lexbuf.lex_curr_p in last_token := Some token; token }
   | '"' {
     let token = read_string (Buffer.create string_buffer_size) lexbuf.lex_curr_p state lexbuf in
     last_token := Some token;

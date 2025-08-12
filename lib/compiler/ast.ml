@@ -46,6 +46,7 @@ and expr =
   | IdRef of string * Sloth_common.Position.t
   | FuncInvoc of expr * expr list * Sloth_common.Position.t
   | Equality of expr * expr * bool * Sloth_common.Position.t
+  | ObjDeref of expr * string * Sloth_common.Position.t
   | MethodInvoc of {
       receiver : expr;
       target : string;

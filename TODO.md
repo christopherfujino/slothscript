@@ -1,6 +1,6 @@
 ## TODO
 - [ ] Class prototypes
-- [ ] Class static methods
+- [ ] $backtick function
 - [ ] Context variables, with statements
 - [ ] break, continue keywords
 - [ ] Stack traces; depends on storing locs in runtime values
@@ -40,3 +40,5 @@
 - [x] For-in loops
 - [x] Do blocks
 - [x] README.md
+- [ ] Process class
+- [ ] Class static methods

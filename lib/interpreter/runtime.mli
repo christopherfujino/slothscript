@@ -1,5 +1,9 @@
 open Core
 
+type prototype = {
+  name : string
+}
+
 type t =
   | String of string
   | Bool of bool
@@ -8,6 +12,7 @@ type t =
   | HashMap of (t, t) Stdlib.Hashtbl.t
   | Null
   | Func of function_t
+  | Prototype of prototype
 
 (* TODO make this hidden *)
 and function_t =
