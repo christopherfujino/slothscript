@@ -7,7 +7,6 @@
 - [ ] Nicer lambdas
 - [ ] List mutation methods
 - [ ] Standard Library
-- [ ] README.md
 - [ ] Security policy
 - [ ] Language versioning
 - [ ] Pattern matching
@@ -40,3 +39,4 @@
 - [x] Comments
 - [x] For-in loops
 - [x] Do blocks
+- [x] README.md
