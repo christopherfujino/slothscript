@@ -2,7 +2,8 @@
 process
 
 ### Program
-ProcGroup.new(["uname"]) | ProcGroup.new(["tr", "x", "s"])!
+
+let result = Process.new(["uname"]) | Process.new(["tr", "x", "s"])!
 
 ### Ast
 ((StmtDecl

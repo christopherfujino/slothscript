@@ -1,8 +1,7 @@
 open Core
 
-type prototype = {
-  name : string
-}
+type prototype = { name : string }
+type process = { cmd : string list }
 
 type t =
   | String of string
@@ -13,6 +12,8 @@ type t =
   | Null
   | Func of function_t
   | Prototype of prototype
+  | Process of process
+  | FileHandle
 
 (* TODO make this hidden *)
 and function_t =
@@ -37,4 +38,5 @@ val int_of_val : t -> int option
 val bool_of_val : t -> bool option
 val list_of_val : t -> t Array.t option
 val hashmap_of_val : t -> (t, t) Stdlib.Hashtbl.t option
+val process_of_val : ?cb:(unit -> process) -> t -> process
 val to_class_name : t -> string

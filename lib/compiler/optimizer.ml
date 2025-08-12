@@ -6,7 +6,7 @@ let failure ~env ~pos msg =
   let pos_msg = Sloth_common.Position.string_of_t pos in
   let msg2 =
     Printf.sprintf "%s\n\n[%s] Optimizer error: %s"
-      (Sloth_common.Position.summarize pos Environment.(env.src))
+      (Sloth_common.Position.summarize pos (Environment.src env))
       pos_msg msg
   in
   raise (Failure msg2)
@@ -220,6 +220,10 @@ and optimize_expr (env : Environment.t) (e : Ast.expr) : expr =
           let msg = Printf.sprintf "Undeclared identifier %s" name in
           failure ~env ~pos msg
       | Some _ -> IdRef (name, pos))
+  | ProtoRef (name, pos) -> (
+      match Environment.has_proto env name with
+      | true -> failwith "YAY"
+      | false -> failure ~env ~pos @@ Printf.sprintf "Undeclared class %s" name)
   | FuncExpr { parameters; block; pos } ->
       let parameters2 = List.rev parameters in
       let env2 = Environment.push_empty env in

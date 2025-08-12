@@ -1,20 +1,29 @@
-## TODO
-- [ ] Class prototypes
+## Milestones
+
+### v0.1
 - [ ] $backtick function
 - [ ] Context variables, with statements
-- [ ] break, continue keywords
-- [ ] Stack traces; depends on storing locs in runtime values
 - [ ] Nicer lambdas
-- [ ] List mutation methods
 - [ ] Standard Library
-- [ ] Security policy
 - [ ] Language versioning
-- [ ] Pattern matching
+
+### v0.2
+- [ ] Optional function parameters
+- [ ] List mutation methods
+- [ ] Stack traces; depends on storing locs in runtime values
+- [ ] return, break, continue keywords
+
+### v1.0
 - [ ] Formatter
-- [ ] Early return from functions?
+- [ ] Security policy
+
+### Stretch goals
 - [ ] Method syntax for hash maps
+- [ ] Pattern matching
 
 ## Done
+
+### pre-v0.1
 - [x] Lexical scoping
 - [x] Closures
 - [x] Variable re-assignment
@@ -42,3 +51,4 @@
 - [x] README.md
 - [ ] Process class
 - [ ] Class static methods
+- [ ] Class prototypes

@@ -12,7 +12,7 @@ let globals =
     ("print", Value);
     ("assert", Value);
     ("$cwd", Value);
-    ("ProcGroup", Class { properties = []; methods = [] });
+    ("Process", Class { properties = []; methods = [] });
     ( "Number",
       Class
         {

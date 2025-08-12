@@ -160,7 +160,7 @@ let make_ctx m src =
                   Printf.sprintf "Tried to implement the class %s twice" name
                   |> failwith
               | `Ok -> ())
-          | "ProcGroup" ->
+          | "Process" ->
               let cl = Runtime.{ methods = Hashtbl.create (module String) } in
               List.iter properties ~f:(fun _ -> failwith "TODO properties");
               List.iter methods ~f:(fun meth ->
@@ -170,14 +170,14 @@ let make_ctx m src =
                       |> Option.value_exn
                     in
                     let rhs_t = List.nth_exn args 1 in
-                    match Runtime.num_of_val rhs_t with
-                    | None ->
-                        Error
+                    let err_cb () =
                           (Printf.sprintf
                              "Expected right-hand side to be a Number, but got \
                               %s"
-                          @@ Runtime.to_s rhs_t)
-                    | Some rhs -> Ok (cb lhs rhs)
+                          @@ Runtime.to_s rhs_t) |> failwith
+                    in
+                    let rhs = Runtime.process_of_val ~cb:err_cb rhs_t in
+                    Ok (cb lhs rhs)
                   in
                   match meth with
                   | "|" ->

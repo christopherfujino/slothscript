@@ -18,7 +18,10 @@ let string_buffer_size = 33
 let white = [' ' '\t']+
 let num = ('0'|(['1'-'9']['0'-'9']*)) ('.' ['0'-'9']+)?
 let letter = ['a'-'z' 'A'-'Z']
-let id = ['a'-'z' 'A'-'Z' '_'] ['a'-'z' 'A'-'Z' '0'-'9' '_']*
+
+(* IDs cannot start with a capital letter *)
+let id = ['a'-'z' '_'] ['a'-'z' 'A'-'Z' '0'-'9' '_']*
+let prototype = ['A'-'Z'] ['a'-'z' 'A'-'Z' '0'-'9' '_']*
 
 (* rule and parse are keywords *)
 rule private_read last_token state =
@@ -113,6 +116,7 @@ rule private_read last_token state =
   | ']' { let token = RBRACKET lexbuf.lex_curr_p in last_token := Some token; token}
   (* Lexing.lexeme means return the string that matched the pattern *)
   | id { let token = ID (Lexing.lexeme lexbuf, lexbuf.lex_curr_p) in last_token := Some token; token }
+  | prototype { let token = PROTOTYPE (Lexing.lexeme lexbuf, lexbuf.lex_curr_p) in last_token := Some token; token }
   | num { let token = NUM (float_of_string (Lexing.lexeme lexbuf), lexbuf.lex_curr_p) in last_token := Some token; token }
   | _ { syntax_error (SyntaxError (Lexing.lexeme lexbuf, lexbuf.lex_curr_p))}
   (* Here `eof` is a special regex built into ocamllex *)
