@@ -17,6 +17,7 @@ depends: [
   "core_unix" {>= "v0.17.1" & < "v0.18"}
   "ppx_jane" {>= "v0.17" & < "v0.18"}
   "re" {>= "1.12.0"}
+  "readline" {>= "0.2"}
   "odoc" {with-doc}
 ]
 build: [
