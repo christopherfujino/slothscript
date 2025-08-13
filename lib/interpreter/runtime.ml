@@ -1,5 +1,18 @@
 open Core
 
+type prototype = { name : string }
+
+type process = {
+  cmd : string list;
+  mutable stdout : Core_unix.File_descr.t;
+  mutable stderr : Core_unix.File_descr.t;
+  mutable stdin : Core_unix.File_descr.t;
+  mutable pipes_to_collect : Core_unix.File_descr.t list;
+  previous : process option;
+}
+
+type process_result = { code : int }
+
 type t =
   | String of string
   | Bool of bool
@@ -8,6 +21,10 @@ type t =
   | HashMap of (t, t) Stdlib.Hashtbl.t
   | Null
   | Func of function_t
+  | Prototype of prototype
+  | Process of process
+  | ProcessResult of process_result
+  | FileHandle
 
 (* TODO add positions for error messages *)
 and function_t =
@@ -23,7 +40,11 @@ and function_t =
       identifiers : t Identifiers.t;
     }
 
-type class_t = { methods : (string, function_t) Hashtbl.t }
+type class_t = {
+  instance_members : (string, t) Hashtbl.t;
+  static_members : (string, t) Hashtbl.t;
+}
+
 type class_lookup = (string, class_t) Hashtbl.t
 
 let to_class_name = function
@@ -34,8 +55,25 @@ let to_class_name = function
   | Bool _ -> "Bool"
   | HashMap _ -> "HashMap"
   | Func _ -> "Function"
+  | Prototype _ -> "Prototype"
+  | Process _ -> "Process"
+  | ProcessResult _ -> "ProcessResult"
+  | FileHandle -> "FileHandle"
 
-let rec to_s = function
+let rec to_s t' =
+  let stringify_list l =
+    let rec inner is_first acc list =
+      match list with
+      | [] -> acc
+      | hd :: tl ->
+          let acc =
+            if is_first then acc ^ hd else Printf.sprintf "%s, %s" acc hd
+          in
+          (inner [@tailcall]) false acc tl
+    in
+    inner true "" l
+  in
+  match t' with
   | String s -> s
   | Num f ->
       if Float.is_integer f then Int.of_float f |> Int.to_string
@@ -57,7 +95,13 @@ let rec to_s = function
           Printf.sprintf "%s%s: %s," acc (to_s key) (to_s data))
         tbl "{"
       ^ "}"
-  | Func _ -> "func(TODO)"
+  | Func _ -> "Func(TODO)"
+  | Prototype { name } -> Printf.sprintf "Type(%s)" name
+  (* TODO we should list out all in the group *)
+  | Process { cmd; _ } ->
+      Printf.sprintf "Process(cmd=[%s])" @@ stringify_list cmd
+  | ProcessResult { code } -> Printf.sprintf "ProcessResult(code=%d)" code
+  | FileHandle -> "FileHandle(TODO)"
 
 let num_of_val = function Num f -> Some f | _ -> None
 let string_of_val = function String s -> Some s | _ -> None
@@ -70,3 +114,10 @@ let int_of_val v =
 let bool_of_val = function Bool b' -> Some b' | _ -> None
 let list_of_val = function List l -> Some l | _ -> None
 let hashmap_of_val = function HashMap h -> Some h | _ -> None
+
+let process_of_val ?cb = function
+  | Process p -> p
+  | _ -> (
+      match cb with
+      | Some cb -> cb ()
+      | None -> failwith "You should pass a cb to process_of_val")

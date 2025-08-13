@@ -1,21 +1,30 @@
-## TODO
-- [ ] Class prototypes
-- [ ] Class static methods
+## Milestones
+
+### v0.1
+- [ ] Make `Process.new` variadic
+- [ ] $backtick function
 - [ ] Context variables, with statements
-- [ ] break, continue keywords
-- [ ] Stack traces; depends on storing locs in runtime values
 - [ ] Nicer lambdas
-- [ ] List mutation methods
 - [ ] Standard Library
-- [ ] README.md
-- [ ] Security policy
 - [ ] Language versioning
-- [ ] Pattern matching
+
+### v0.2
+- [ ] Optional function parameters
+- [ ] List mutation methods
+- [ ] Stack traces; depends on storing locs in runtime values
+- [ ] return, break, continue keywords
+
+### v1.0
 - [ ] Formatter
-- [ ] Early return from functions?
+- [ ] Security policy
+
+### Stretch goals
 - [ ] Method syntax for hash maps
+- [ ] Pattern matching
 
 ## Done
+
+### pre-v0.1
 - [x] Lexical scoping
 - [x] Closures
 - [x] Variable re-assignment
@@ -40,3 +49,7 @@
 - [x] Comments
 - [x] For-in loops
 - [x] Do blocks
+- [x] README.md
+- [x] Process class
+- [x] Class static methods
+- [x] Class prototypes

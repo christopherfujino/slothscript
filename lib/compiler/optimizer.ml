@@ -6,7 +6,7 @@ let failure ~env ~pos msg =
   let pos_msg = Sloth_common.Position.string_of_t pos in
   let msg2 =
     Printf.sprintf "%s\n\n[%s] Optimizer error: %s"
-      (Sloth_common.Position.summarize pos Environment.(env.src))
+      (Sloth_common.Position.summarize pos (Environment.src env))
       pos_msg msg
   in
   raise (Failure msg2)
@@ -71,6 +71,7 @@ and expr =
       operator : Ast.operator;
     }
   | DoBlock of stmt list * Sloth_common.Position.t
+  | ObjDeref of expr * string * Sloth_common.Position.t
 [@@deriving sexp]
 
 and string_parts =
@@ -219,6 +220,11 @@ and optimize_expr (env : Environment.t) (e : Ast.expr) : expr =
           let msg = Printf.sprintf "Undeclared identifier %s" name in
           failure ~env ~pos msg
       | Some _ -> IdRef (name, pos))
+  | ProtoRef (name, pos) -> (
+      (* Validate this class name is defined by our STDLIB *)
+      match Environment.find env name with
+      | Some _ -> IdRef (name, pos)
+      | None -> failure ~env ~pos @@ Printf.sprintf "Undeclared class %s" name)
   | FuncExpr { parameters; block; pos } ->
       let parameters2 = List.rev parameters in
       let env2 = Environment.push_empty env in
@@ -242,6 +248,9 @@ and optimize_expr (env : Environment.t) (e : Ast.expr) : expr =
       let optim_args = List.rev args |> List.map ~f:(optimize_expr env) in
       MethodInvoc { target; receiver = optim_receiver; args = optim_args; pos }
   | DoBlock (block, pos) -> DoBlock (optimize_block env block, pos)
+  | ObjDeref (receiver, name, pos) ->
+      let receiver = optimize_expr env receiver in
+      ObjDeref (receiver, name, pos)
 
 and optimize_string env s pos =
   String

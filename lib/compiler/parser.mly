@@ -10,6 +10,7 @@
 (* In OCaml, `float` is a 64-bit IEEE float *)
 %token <float * Lexing.position> NUM
 %token <string * Lexing.position> ID
+%token <string * Lexing.position> PROTOTYPE
 %token <string * Lexing.position> STRING_FULL
 %token <string * Lexing.position> STRING_START
 %token <string * Lexing.position> STRING_MIDDLE
@@ -33,6 +34,8 @@
 %token <Lexing.position> DIVIDE
 %token <Lexing.position> SEMICOLON
 
+%token <Lexing.position> PIPE
+%token <Lexing.position> DOT
 %token <Lexing.position> COLON
 %token <Lexing.position> LCURLY
 %token <Lexing.position> RCURLY
@@ -59,10 +62,10 @@
    These are ordered, from high to low precedence.
    *)
 
+%left BANG
 %left NOT_EQUALS DOUBLE_EQUALS GEQ LEQ LESS GREATER
-%left MINUS PLUS
+%left MINUS PLUS PIPE
 %left PRODUCT DIVIDE
-%right BANG
 
 (* Declare the starting point for parsing (root of AST) *)
 %start <Ast.decl list> prog
@@ -174,7 +177,6 @@ expr2:
     MethodInvoc { receiver=e1; target=">="; args=[e2]; pos}
   }
 
-  (* TODO add | *)
   | e1 = expr2; pos = PLUS; e2 = expr2 {
     let pos = Sloth_common.Position.t_of_lexing_position pos in
     MethodInvoc { receiver=e1; target="+"; args=[e2]; pos}
@@ -182,6 +184,10 @@ expr2:
   | e1 = expr2; pos = MINUS; e2 = expr2 {
     let pos = Sloth_common.Position.t_of_lexing_position pos in
     MethodInvoc { receiver=e1; target="-"; args=[e2]; pos}
+  }
+  | e1 = expr2; pos = PIPE; e2 = expr2 {
+    let pos = Sloth_common.Position.t_of_lexing_position pos in
+    MethodInvoc { receiver=e1; target="|"; args=[e2]; pos}
   }
 
   (* operators *, /; TODO add % *)
@@ -199,6 +205,11 @@ expr2:
     let pos = Sloth_common.Position.t_of_lexing_position pos in
     UnaryExpr { target=e; is_prefix=true; operator=Bang; pos}
   }
+
+  | e = expr2; pos = BANG {
+    let pos = Sloth_common.Position.t_of_lexing_position pos in
+    UnaryExpr { target = e; is_prefix=false; operator=Bang; pos}
+  }
  
   | e = expr7 { e }
 
@@ -214,6 +225,11 @@ expr7:
     FuncInvoc (e, [], pos)
   }
   | s = subscript { s }
+  | e = expr8; pos = DOT; meth = ID {
+    let (name, _) = meth in
+    let pos = Sloth_common.Position.t_of_lexing_position pos in
+    ObjDeref (e, name, pos)
+  }
   | e = expr8 { e }
   ;
 
@@ -280,6 +296,11 @@ expr8:
     let (i, pos) = i in
     let pos = Sloth_common.Position.t_of_lexing_position pos in
     IdRef (i, pos)
+  }
+  | i = PROTOTYPE {
+    let (i, pos) = i in
+    let pos = Sloth_common.Position.t_of_lexing_position pos in
+    ProtoRef (i, pos)
   }
   | LPAREN; e = expr1; RPAREN { e }
   | h = hash_literals { h }

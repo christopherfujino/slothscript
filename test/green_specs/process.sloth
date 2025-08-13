@@ -1,0 +1,74 @@
+### Name
+process
+
+### Program
+let result = Process.new(["uname"]) | Process.new(["tr", "x", "s"])!
+#Process.new(["uname", "-a"])!
+
+### Ast
+((StmtDecl
+  (LetStmt
+    result
+    (UnaryExpr
+      (target
+        (MethodInvoc
+          (receiver
+            (FuncInvoc
+              (ObjDeref
+                (IdRef
+                  Process
+                  [POS])
+                new
+                [POS])
+              ((List
+                ((String
+                  ((FullString
+                    uname
+                    [POS]))
+                  [POS]))
+                [POS]))
+              [POS]))
+          (target
+            |)
+          (args
+            ((FuncInvoc
+              (ObjDeref
+                (IdRef
+                  Process
+                  [POS])
+                new
+                [POS])
+              ((List
+                ((String
+                  ((FullString
+                    tr
+                    [POS]))
+                  [POS])
+                  (String
+                    ((FullString
+                      x
+                      [POS]))
+                    [POS])
+                  (String
+                    ((FullString
+                      s
+                      [POS]))
+                    [POS]))
+                [POS]))
+              [POS])))
+          (pos
+            [POS])))
+      (pos
+        [POS])
+      (is_prefix
+        false)
+      (operator
+        Bang))
+    [POS])))
+
+### Stdout
+
+
+### Failure
+
+

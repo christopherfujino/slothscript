@@ -1,21 +1,22 @@
-(*
-type func_interface = { name : string; arity : int (* Including receiver! *) }
+(* TODO move arity here *)
+type class_t = {
+  name : string;
+  methods : string list;
+  static_members : string list;
+}
 
-type string_map = t Hashtbl.Make(String).t
-and class_interface = { field : t list; methods : string_map }
-*)
-
-type t = Value | Class of { properties : string list; methods : string list }
+type t = { ids : string list; protos : class_t list }
 
 let globals =
-  [
-    ("print", Value);
-    ("assert", Value);
-    ("$cwd", Value);
-    ( "Number",
-      Class
+  {
+    ids = [ "print"; "assert"; "$cwd" ];
+    protos =
+      [
+        { name = "Process"; methods = [ "!"; "|" ]; static_members = [ "new" ] };
         {
-          properties = [];
+          name = "Number";
           methods = [ "+"; "-"; "/"; "*"; "<"; ">"; "<="; ">=" ];
-        } );
-  ]
+          static_members = [];
+        };
+      ];
+  }

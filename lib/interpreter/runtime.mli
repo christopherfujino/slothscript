@@ -1,5 +1,18 @@
 open Core
 
+type prototype = { name : string }
+
+type process = {
+  cmd : string list;
+  mutable stdout : Core_unix.File_descr.t;
+  mutable stderr : Core_unix.File_descr.t;
+  mutable stdin : Core_unix.File_descr.t;
+  mutable pipes_to_collect : Core_unix.File_descr.t list;
+  previous : process option;
+}
+
+type process_result = { code : int }
+
 type t =
   | String of string
   | Bool of bool
@@ -8,6 +21,10 @@ type t =
   | HashMap of (t, t) Stdlib.Hashtbl.t
   | Null
   | Func of function_t
+  | Prototype of prototype
+  | Process of process
+  | ProcessResult of process_result
+  | FileHandle
 
 (* TODO make this hidden *)
 and function_t =
@@ -22,7 +39,11 @@ and function_t =
       identifiers : t Identifiers.t;
     }
 
-type class_t = { methods : (string, function_t) Hashtbl.t }
+type class_t = {
+  instance_members : (string, t) Hashtbl.t;
+  static_members : (string, t) Hashtbl.t;
+}
+
 type class_lookup = (string, class_t) Hashtbl.t
 
 val to_s : t -> string
@@ -32,4 +53,5 @@ val int_of_val : t -> int option
 val bool_of_val : t -> bool option
 val list_of_val : t -> t Array.t option
 val hashmap_of_val : t -> (t, t) Stdlib.Hashtbl.t option
+val process_of_val : ?cb:(unit -> process) -> t -> process
 val to_class_name : t -> string

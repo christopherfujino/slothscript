@@ -1,0 +1,45 @@
+class Runtime {
+  static script : File
+}
+
+### Configuration to spawn a pipeline of subprocesses
+class Process {
+  static new(List[String]) -> Process
+  static run(List[String]) -> ProcessResult
+  static start(List[String]) -> ProcessHandle
+
+  infix operator | (Process) -> Process
+
+  unary operator ! -> ProcessResult
+
+  stdout : FileHandle
+  stderr : FileHandle
+  stdin : FileHandle
+}
+
+### A handle to a running process
+class ProcessHandle {
+  wait() -> ProcessResult
+}
+
+class ProcessResult {
+  exitCode : Number
+  stdout : String
+  stderr : String
+}
+
+class File {
+  # Should this be a path instance?
+  path : String
+
+  parent() : Directory
+}
+
+class FileHandle {
+  read() : String
+  write(String) : Null
+}
+
+class Directory {
+  path : String
+}

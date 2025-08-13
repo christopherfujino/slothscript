@@ -242,22 +242,34 @@ and interpret_expr ctx expr =
       let rhs = interpret_expr ctx rhs in
 
       Runtime.Bool (is_equal ctx is_equality lhs rhs)
-  | MethodInvoc { receiver; target; args; pos } -> (
+  | MethodInvoc { receiver; target; args; pos } ->
+      interpret_method ~ctx ~pos receiver args target
+      (*
       let rt_receiver = interpret_expr ctx receiver in
       let args = List.map args ~f:(interpret_expr ctx) in
-      let klass =
-        Hashtbl.find_exn ctx.classes (Runtime.to_class_name rt_receiver)
-      in
-      match Hashtbl.find klass.methods target with
+      let class_name = Runtime.to_class_name rt_receiver in
+      let klass = Hashtbl.find_exn ctx.classes class_name in
+      match Hashtbl.find klass.instance_members target with
       | None ->
-          Printf.sprintf "Undefined field named %s" target |> failure ~ctx pos
+          Printf.sprintf "The class %s does not have a field named %s"
+            class_name target
+          |> failure ~ctx pos
       | Some func -> (
           match func with
-          | User _ -> failwith "Unreachable"
-          | Native { cb; _ } -> (
-              let args = rt_receiver :: args in
-              match cb args with Ok v -> v | Error msg -> failure ~ctx pos msg))
-      )
+          | Func func -> (
+              match func with
+              | User _ ->
+                  Printf.sprintf "Internal error: %s" __LOC__ |> failwith
+              | Native { cb; _ } -> (
+                  let args = rt_receiver :: args in
+                  match cb args with
+                  | Ok v -> v
+                  | Error msg -> failure ~ctx pos msg))
+          | _ ->
+              Printf.sprintf "Internal error: %s\n\n%s"
+                (Runtime.to_class_name func)
+                __LOC__
+              |> failwith)*)
   | FuncInvoc (receiver, args, pos) -> (
       let receiver' = interpret_expr ctx receiver in
       match receiver' with
@@ -307,11 +319,12 @@ and interpret_expr ctx expr =
       Func (User { parameters; block; identifiers = ctx.identifiers })
   | IfExpr (cond, _) -> interpret_cond ctx cond
   | UnaryExpr { target; pos; is_prefix; operator } -> (
-      let v = interpret_expr ctx target in
+      (* TODO deprecate is_prefix when we've removed prefix bang *)
       match is_prefix with
-      | false ->
-          failwith "TODO implement interpreting postfix unary expressions"
+      | false -> (
+          match operator with Bang -> interpret_method ~ctx ~pos target [] "!")
       | true -> (
+          let v = interpret_expr ctx target in
           match operator with
           | Bang -> (
               let bool_opt = Runtime.bool_of_val v in
@@ -328,6 +341,31 @@ and interpret_expr ctx expr =
         { ctx with identifiers = Identifiers.push_empty ctx.identifiers }
       in
       interpret_block ctx block
+  | ObjDeref (receiver, target, pos) -> (
+      let receiver = interpret_expr ctx receiver in
+      let descriptor, class_name, table_thunk =
+        let open Runtime in
+        match receiver with
+        (* Static access has different semantics *)
+        | Prototype { name } -> ("static", name, fun cl -> cl.static_members)
+        | _ ->
+            ( "instance",
+              Runtime.to_class_name receiver,
+              fun cl -> cl.instance_members )
+      in
+      match Hashtbl.find ctx.classes class_name with
+      | None ->
+          Printf.sprintf
+            "Internal error: could not find prototype for the %s class (%s)"
+            class_name __LOC__
+          |> failure ~ctx pos
+      | Some klass -> (
+          match Hashtbl.find (table_thunk klass) target with
+          | None ->
+              Printf.sprintf "The class %s does not have a %s field named %s"
+                class_name descriptor target
+              |> failure ~ctx pos
+          | Some func -> func))
 
 (** You must push an empty env frame on first *)
 and interpret_block ctx stmts =
@@ -344,6 +382,30 @@ and interpret_block ctx stmts =
   (* discard context *)
   let _, v = traverse_stmts ctx stmts in
   v
+
+and interpret_method ~ctx ~pos receiver args method_name =
+  let receiver = interpret_expr ctx receiver in
+  let args = List.map args ~f:(interpret_expr ctx) in
+  let class_name = Runtime.to_class_name receiver in
+  let klass = Hashtbl.find_exn ctx.classes class_name in
+  match Hashtbl.find klass.instance_members method_name with
+  | None ->
+      Printf.sprintf "The class %s does not have an instance field named %s"
+        class_name method_name
+      |> failure ~ctx pos
+  | Some func -> (
+      match func with
+      | Func func -> (
+          match func with
+          | User _ -> Printf.sprintf "Internal error: %s" __LOC__ |> failwith
+          | Native { cb; _ } -> (
+              let args = receiver :: args in
+              match cb args with Ok v -> v | Error msg -> failure ~ctx pos msg))
+      | _ ->
+          Printf.sprintf "Internal error: %s\n\n%s"
+            (Runtime.to_class_name func)
+            __LOC__
+          |> failwith)
 
 and is_equal ctx is_equality lhs rhs =
   let lh_s = Runtime.to_class_name lhs in

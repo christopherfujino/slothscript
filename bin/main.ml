@@ -24,7 +24,7 @@ let repl () =
         Printf.printf "\n";
         exit 0
     in
-    let env = Compiler.Environment.{ env with src = line } in
+    let env = Compiler.Environment.update_src env line in
     let ctx = Context.{ ctx with src = line } in
     let env, prog = wrap_parse env line in
     let ctx, v = wrap_interpret ctx prog in

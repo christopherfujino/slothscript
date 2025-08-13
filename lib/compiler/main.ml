@@ -1,33 +1,5 @@
 open Core
 
-(*
-(* insert semicolon before EOF *)
-let make_lex_filter () =
-  let r = ref None in
-  let last_token = ref None in
-  let state = ref Lexer.NotInterpolating in
-  let should_spit_eof = ref False in
-  (* insert semicolon before EOF *)
-  fun buf ->
-    let open Parser in
-    match !should_spit_eof with
-    | True pos -> EOF pos
-    | False -> (
-        let token = Lexer.read r state buf in
-        match token with
-        | EOF pos -> (
-            match !last_token with
-            | None -> EOF pos
-            | Some last_token -> (
-                match last_token with
-                | SEMICOLON _ -> EOF pos
-                | _ ->
-                    should_spit_eof := True pos;
-                    SEMICOLON pos))
-        | _ ->
-            last_token := Some token;
-            token)
-*)
 let parse env line =
   let filter, lexbuf = Lexer.bootstrap line in
   let decls =
@@ -44,6 +16,8 @@ let to_s token =
   let open Parser in
   match token with
   | BANG _ -> "BANG"
+  | DOT _ -> "DOT"
+  | PIPE _ -> "PIPE"
   | COLON _ -> "COLON"
   | SEMICOLON _ -> "SEMICOLON"
   | TRUE _ -> "TRUE"
@@ -81,6 +55,7 @@ let to_s token =
   | STRING_END (s, _) -> Printf.sprintf "STRING_END(%s)" s
   | NUM (n, _) -> Printf.sprintf "NUM(%f)" n
   | ID (s, _) -> Printf.sprintf "ID(%s)" s
+  | PROTOTYPE (s, _) -> Printf.sprintf "PROTOTYPE(%s)" s
   | COMMENT _ -> failwith "Unreachable"
 
 let debug buf prev =
