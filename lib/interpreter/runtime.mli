@@ -6,6 +6,7 @@ type process = {
   mutable stdout : Core_unix.File_descr.t;
   mutable stderr : Core_unix.File_descr.t;
   mutable stdin : Core_unix.File_descr.t;
+  mutable pipes_to_collect : Core_unix.File_descr.t list;
   previous : process option;
 }
 type process_result = { code : int }

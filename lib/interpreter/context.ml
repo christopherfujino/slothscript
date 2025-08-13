@@ -22,13 +22,13 @@ let exec_proc proc =
     let this_pid =
       match Core_unix.fork () with
       | `In_the_child ->
-          (* TODO apply file descriptors
-            dup2(in_fd, STDIN_FILENO);
-            dup2(out_fd, STDOUT_FILENO);
-           *)
+          Core_unix.dup2 ~src:proc.stdin ~dst:Core_unix.stdin ();
+          Core_unix.dup2 ~src:proc.stdout ~dst:Core_unix.stdout ();
           let _ = Core_unix.exec ~prog ~argv:proc.cmd () in
           failwith "unreachable"
-      | `In_the_parent pid -> pid
+      | `In_the_parent pid ->
+          List.iter proc.pipes_to_collect ~f:(fun pipe -> Core_unix.close pipe);
+          pid
     in
     this_pid :: prev_pids
   in
@@ -214,7 +214,11 @@ let make_ctx m src =
                       process_infix_methods args (fun left right ->
                           let read, write = Core_unix.pipe () in
                           left.stdout <- write;
+                          left.pipes_to_collect <-
+                            write :: left.pipes_to_collect;
                           right.stdin <- read;
+                          right.pipes_to_collect <-
+                            read :: right.pipes_to_collect;
                           let right = { right with previous = Some left } in
                           Runtime.Process right))
               | "!" ->
@@ -277,6 +281,7 @@ let make_ctx m src =
                                     stdout = Core_unix.stdout;
                                     stderr = Core_unix.stderr;
                                     previous = None;
+                                    pipes_to_collect = [];
                                   }
                               in
                               Runtime.Process proc))
