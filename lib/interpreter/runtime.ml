@@ -1,8 +1,8 @@
 open Core
 
-type process = { cmd : string list }
-
 type prototype = { name : string }
+type process = { cmd : string list }
+type process_result = { code : int }
 
 type t =
   | String of string
@@ -14,6 +14,7 @@ type t =
   | Func of function_t
   | Prototype of prototype
   | Process of process
+  | ProcessResult of process_result
   | FileHandle
 
 (* TODO add positions for error messages *)
@@ -47,6 +48,7 @@ let to_class_name = function
   | Func _ -> "Function"
   | Prototype _ -> "Prototype"
   | Process _ -> "Process"
+  | ProcessResult _ -> "ProcessResult"
   | FileHandle -> "FileHandle"
 
 let rec to_s t' =
@@ -87,6 +89,7 @@ let rec to_s t' =
   | Func _ -> "Func(TODO)"
   | Prototype { name } -> Printf.sprintf "Type(%s)" name
   | Process { cmd } -> Printf.sprintf "Process(cmd=[%s])" @@ stringify_list cmd
+  | ProcessResult { code } -> Printf.sprintf "ProcessResult(code=%d)" code
   | FileHandle -> "FileHandle(TODO)"
 
 let num_of_val = function Num f -> Some f | _ -> None

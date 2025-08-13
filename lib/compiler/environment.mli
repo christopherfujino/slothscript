@@ -1,6 +1,9 @@
 type t
 
 val create : string -> t
+
+(* For REPL *)
+val update_src : t -> string -> t
 val src : t -> string
 val push_empty : t -> t
 val find : t -> string -> string option

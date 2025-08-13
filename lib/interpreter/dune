@@ -1,5 +1,5 @@
 (library
  (name interpreter)
- (libraries compiler unix sloth_common)
+ (libraries compiler core_unix sloth_common)
  (preprocess
   (pps ppx_jane)))

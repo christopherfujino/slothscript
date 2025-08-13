@@ -9,6 +9,7 @@ let create_frame previous = { previous; values = [] }
 let push_empty env = { env with ids = create_frame (Some env.ids) }
 let create src = { ids = create_frame None; src }
 let src t' = t'.src
+let update_src t' src = { t' with src }
 
 (* TODO pass a position here *)
 let bind env name =

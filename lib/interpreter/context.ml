@@ -179,8 +179,29 @@ let make_ctx m src =
               in
               match meth with
               | "|" ->
-                  make_method "|" 2 cl.instance_members (fun args ->
+                  make_method meth 2 cl.instance_members (fun args ->
                       process_infix_methods args (fun _ _ -> failwith __LOC__))
+              | "!" ->
+                  make_method meth 1 cl.instance_members (fun args ->
+                      let process = List.hd_exn args in
+                      let cmd =
+                        match process with
+                        | Process { cmd } -> cmd
+                        | _ ->
+                            Printf.sprintf "Internal error %s\n\n%s"
+                              (Runtime.to_class_name process)
+                              __LOC__
+                            |> failwith
+                      in
+
+                      let prog = List.hd_exn cmd in
+
+                      let pid = Core_unix.fork_exec ~prog ~argv:cmd () in
+                      match Core_unix.waitpid pid with
+                      | Ok () -> Ok (Runtime.ProcessResult { code = 0 })
+                      | Error _ ->
+                          Error
+                            "Your subprocess failed with a mysterious(?) error")
               | _ ->
                   Printf.sprintf "`Process` does not implement the method `%s`"
                     meth

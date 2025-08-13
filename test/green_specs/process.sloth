@@ -2,14 +2,14 @@
 process
 
 ### Program
-let result = Process.new(["uname"]) | Process.new(["tr", "x", "s"])!
+#let result = Process.new(["uname"]) | Process.new(["tr", "x", "s"])!
+Process.new(["uname", "-a"])!
 
 ### Ast
 ((StmtDecl
-  (LetStmt
-    result
-    (MethodInvoc
-      (receiver
+  (ExprStmt
+    (UnaryExpr
+      (target
         (FuncInvoc
           (ObjDeref
             (IdRef
@@ -22,48 +22,20 @@ let result = Process.new(["uname"]) | Process.new(["tr", "x", "s"])!
               ((FullString
                 uname
                 [POS]))
-              [POS]))
+              [POS])
+              (String
+                ((FullString
+                  -a
+                  [POS]))
+                [POS]))
             [POS]))
           [POS]))
-      (target
-        |)
-      (args
-        ((UnaryExpr
-          (target
-            (FuncInvoc
-              (ObjDeref
-                (IdRef
-                  Process
-                  [POS])
-                new
-                [POS])
-              ((List
-                ((String
-                  ((FullString
-                    tr
-                    [POS]))
-                  [POS])
-                  (String
-                    ((FullString
-                      x
-                      [POS]))
-                    [POS])
-                  (String
-                    ((FullString
-                      s
-                      [POS]))
-                    [POS]))
-                [POS]))
-              [POS]))
-          (pos
-            [POS])
-          (is_prefix
-            false)
-          (operator
-            Bang))))
       (pos
-        [POS]))
-    [POS])))
+        [POS])
+      (is_prefix
+        false)
+      (operator
+        Bang)))))
 
 ### Stdout
 

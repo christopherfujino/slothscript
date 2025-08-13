@@ -2,6 +2,7 @@ open Core
 
 type prototype = { name : string }
 type process = { cmd : string list }
+type process_result = { code : int }
 
 type t =
   | String of string
@@ -13,6 +14,7 @@ type t =
   | Func of function_t
   | Prototype of prototype
   | Process of process
+  | ProcessResult of process_result
   | FileHandle
 
 (* TODO make this hidden *)
