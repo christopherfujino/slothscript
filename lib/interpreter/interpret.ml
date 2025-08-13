@@ -322,8 +322,7 @@ and interpret_expr ctx expr =
       (* TODO deprecate is_prefix when we've removed prefix bang *)
       match is_prefix with
       | false -> (
-          match operator with
-          | Bang -> interpret_method ~ctx ~pos target [] "!")
+          match operator with Bang -> interpret_method ~ctx ~pos target [] "!")
       | true -> (
           let v = interpret_expr ctx target in
           match operator with
@@ -349,7 +348,10 @@ and interpret_expr ctx expr =
         match receiver with
         (* Static access has different semantics *)
         | Prototype { name } -> ("static", name, fun cl -> cl.static_members)
-        | _ -> ("instance", Runtime.to_class_name receiver, fun cl -> cl.instance_members)
+        | _ ->
+            ( "instance",
+              Runtime.to_class_name receiver,
+              fun cl -> cl.instance_members )
       in
       match Hashtbl.find ctx.classes class_name with
       | None ->
@@ -388,8 +390,8 @@ and interpret_method ~ctx ~pos receiver args method_name =
   let klass = Hashtbl.find_exn ctx.classes class_name in
   match Hashtbl.find klass.instance_members method_name with
   | None ->
-      Printf.sprintf "The class %s does not have an instance field named %s" class_name
-        method_name
+      Printf.sprintf "The class %s does not have an instance field named %s"
+        class_name method_name
       |> failure ~ctx pos
   | Some func -> (
       match func with

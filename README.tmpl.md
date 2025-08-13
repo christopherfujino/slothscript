@@ -8,7 +8,8 @@ A slow scripting language.
 
 ## Tour
 
-Variables:
+User-written variables or functions must start with a lowercase letter or `_`.
+Names starting with a capital letter are reserved for class names.
 
 ```sloth
 {{ .test_green_specs_var_reference_sloth }}

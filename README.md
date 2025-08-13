@@ -16,8 +16,8 @@ print(fib(20))
 
 ## Tour
 
-Variables (or functions) must start with a lowercase letter or `_`. Names
-starting with a capital letter are reserved for class names.
+User-written variables or functions must start with a lowercase letter or `_`.
+Names starting with a capital letter are reserved for class names.
 
 ```sloth
 let x = 1 + 1

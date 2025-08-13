@@ -1,6 +1,7 @@
 open Core
 
 type prototype = { name : string }
+
 type process = {
   cmd : string list;
   mutable stdout : Core_unix.File_descr.t;
@@ -9,6 +10,7 @@ type process = {
   mutable pipes_to_collect : Core_unix.File_descr.t list;
   previous : process option;
 }
+
 type process_result = { code : int }
 
 type t =
