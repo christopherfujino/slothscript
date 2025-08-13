@@ -247,18 +247,28 @@ and interpret_expr ctx expr =
       let args = List.map args ~f:(interpret_expr ctx) in
       let class_name = Runtime.to_class_name rt_receiver in
       let klass = Hashtbl.find_exn ctx.classes class_name in
-      match Hashtbl.find klass.methods target with
+      match Hashtbl.find klass.instance_members target with
       | None ->
           Printf.sprintf "The class %s does not have a field named %s"
             class_name target
           |> failure ~ctx pos
       | Some func -> (
           match func with
-          | User _ -> failwith "Unreachable"
-          | Native { cb; _ } -> (
-              let args = rt_receiver :: args in
-              match cb args with Ok v -> v | Error msg -> failure ~ctx pos msg))
-      )
+          | Func func -> (
+              match func with
+              | User _ ->
+                  Printf.sprintf "Internal error: %s"
+                    __LOC__ |> failwith
+              | Native { cb; _ } -> (
+                  let args = rt_receiver :: args in
+                  match cb args with
+                  | Ok v -> v
+                  | Error msg -> failure ~ctx pos msg))
+          | _ ->
+              Printf.sprintf "Internal error: %s\n\n%s"
+                (Runtime.to_class_name func)
+                __LOC__
+              |> failwith))
   | FuncInvoc (receiver, args, pos) -> (
       let receiver' = interpret_expr ctx receiver in
       match receiver' with
@@ -344,12 +354,12 @@ and interpret_expr ctx expr =
             class_name __LOC__
           |> failure ~ctx pos
       | Some klass -> (
-          match Hashtbl.find klass.methods target with
+          match Hashtbl.find klass.instance_members target with
           | None ->
               Printf.sprintf "The class %s does not have a field named %s"
                 class_name target
               |> failure ~ctx pos
-          | Some func -> Runtime.Func func))
+          | Some func -> func))
 
 (** You must push an empty env frame on first *)
 and interpret_block ctx stmts =

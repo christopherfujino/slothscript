@@ -17,23 +17,24 @@ let make_ctx m src =
   let make_method name arity methods cb =
     Hashtbl.add_exn methods ~key:name
       ~data:
-        (Runtime.Native
-           {
-             parameters = [ "this"; "left"; "right" ];
-             cb =
-               (fun args ->
-                 let arg_len = List.length args in
-                 if not (Int.equal arg_len arity) then
-                   Error
-                     (Printf.sprintf
-                        "You passed %d arguments (%s) but %d were expected"
-                        arg_len
-                        (List.fold_left args ~init:"" ~f:(fun msg arg ->
-                             msg ^ Runtime.to_s arg ^ ", "))
-                        arity)
-                 else cb args);
-             identifiers;
-           })
+        (Runtime.Func
+           (Runtime.Native
+              {
+                parameters = [ "this"; "left"; "right" ];
+                cb =
+                  (fun args ->
+                    let arg_len = List.length args in
+                    if not (Int.equal arg_len arity) then
+                      Error
+                        (Printf.sprintf
+                           "You passed %d arguments (%s) but %d were expected"
+                           arg_len
+                           (List.fold_left args ~init:"" ~f:(fun msg arg ->
+                                msg ^ Runtime.to_s arg ^ ", "))
+                           arity)
+                    else cb args);
+                identifiers;
+              }))
   in
   let make_func name ?arity identifiers cb =
     Identifiers.bind identifiers name
@@ -98,8 +99,14 @@ let make_ctx m src =
           Printf.sprintf "TODO: You have not yet implemented %s" name
           |> failwith);
   List.iter Sloth_common.Stdlib_interface.globals.protos
-    ~f:(fun { name; methods } ->
-      let cl = Runtime.{ methods = Hashtbl.create (module String) } in
+    ~f:(fun { name; methods; static_members } ->
+      let cl =
+        Runtime.
+          {
+            instance_members = Hashtbl.create (module String);
+            static_members = Hashtbl.create (module String);
+          }
+      in
       (match name with
       | "Number" ->
           List.iter methods ~f:(fun meth ->
@@ -118,41 +125,42 @@ let make_ctx m src =
               in
               match meth with
               | "+" ->
-                  make_method "+" 2 cl.methods (fun args ->
+                  make_method "+" 2 cl.instance_members (fun args ->
                       process_infix_methods args (fun lhs rhs ->
                           Runtime.Num (lhs +. rhs)))
               | "-" ->
-                  make_method "-" 2 cl.methods (fun args ->
+                  make_method "-" 2 cl.instance_members (fun args ->
                       process_infix_methods args (fun lhs rhs ->
                           Runtime.Num (lhs -. rhs)))
               | "/" ->
-                  make_method "/" 2 cl.methods (fun args ->
+                  make_method "/" 2 cl.instance_members (fun args ->
                       process_infix_methods args (fun lhs rhs ->
                           Runtime.Num (lhs /. rhs)))
               | "*" ->
-                  make_method "*" 2 cl.methods (fun args ->
+                  make_method "*" 2 cl.instance_members (fun args ->
                       process_infix_methods args (fun lhs rhs ->
                           Runtime.Num (lhs *. rhs)))
               | "<=" ->
-                  make_method "<=" 2 cl.methods (fun args ->
+                  make_method "<=" 2 cl.instance_members (fun args ->
                       process_infix_methods args (fun lhs rhs ->
                           Runtime.Bool Float.(lhs <=. rhs)))
               | ">=" ->
-                  make_method ">=" 2 cl.methods (fun args ->
+                  make_method ">=" 2 cl.instance_members (fun args ->
                       process_infix_methods args (fun lhs rhs ->
                           Runtime.Bool Float.(lhs >=. rhs)))
               | ">" ->
-                  make_method ">" 2 cl.methods (fun args ->
+                  make_method ">" 2 cl.instance_members (fun args ->
                       process_infix_methods args (fun lhs rhs ->
                           Runtime.Bool Float.(lhs >. rhs)))
               | "<" ->
-                  make_method "<" 2 cl.methods (fun args ->
+                  make_method "<" 2 cl.instance_members (fun args ->
                       process_infix_methods args (fun lhs rhs ->
                           Runtime.Bool Float.(lhs <. rhs)))
               | _ ->
                   failwith
                     (Printf.sprintf "Number does not implement the method %s"
-                       meth))
+                       meth));
+          List.iter static_members ~f:(fun _ -> failwith __LOC__)
       | "Process" ->
           List.iter methods ~f:(fun meth ->
               let process_infix_methods args cb =
@@ -171,9 +179,22 @@ let make_ctx m src =
               in
               match meth with
               | "|" ->
-                  make_method "|" 2 cl.methods (fun args ->
-                      process_infix_methods args (fun _ _ -> failwith "TODO"))
-              | _ -> failwith "TODO")
+                  make_method "|" 2 cl.instance_members (fun args ->
+                      process_infix_methods args (fun _ _ -> failwith __LOC__))
+              | _ ->
+                  Printf.sprintf "`Process` does not implement the method `%s`"
+                    meth
+                  |> failwith);
+          List.iter static_members ~f:(fun name ->
+              match name with
+              | "new" ->
+                  Hashtbl.add_exn cl.static_members ~key:"TODO"
+                    ~data:Runtime.Null;
+                  failwith __LOC__
+              | _ ->
+                  Printf.sprintf
+                    "`Process` does not implement the static member `%s`" name
+                  |> failwith)
       | _ ->
           Printf.sprintf
             "TODO: class named %s has not been implemented in context.ml" name

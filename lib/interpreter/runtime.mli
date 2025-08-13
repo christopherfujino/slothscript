@@ -28,7 +28,11 @@ and function_t =
       identifiers : t Identifiers.t;
     }
 
-type class_t = { methods : (string, function_t) Hashtbl.t }
+type class_t = {
+  instance_members : (string, t) Hashtbl.t;
+  static_members : (string, t) Hashtbl.t;
+}
+
 type class_lookup = (string, class_t) Hashtbl.t
 
 val to_s : t -> string
