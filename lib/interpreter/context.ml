@@ -188,9 +188,38 @@ let make_ctx m src =
           List.iter static_members ~f:(fun name ->
               match name with
               | "new" ->
-                  Hashtbl.add_exn cl.static_members ~key:"TODO"
-                    ~data:Runtime.Null;
-                  failwith __LOC__
+                  make_method name 1 cl.static_members (fun args ->
+                      let arg = List.hd_exn args in
+                      match Runtime.list_of_val arg with
+                      | None ->
+                          Error
+                            (Printf.sprintf
+                               "Expected the first argument to `Process.new` \
+                                to be a List[String] but got `%s`"
+                            @@ Runtime.to_s arg)
+                      | Some arr ->
+                          let cmd_res =
+                            List.of_array arr
+                            (* Not efficient *)
+                            |> List.fold_right ~init:(Ok []) ~f:(fun t acc ->
+                                   match acc with
+                                   | Ok prev -> (
+                                       let string_opt =
+                                         Runtime.string_of_val t
+                                       in
+                                       match string_opt with
+                                       | Some s -> Ok (s :: prev)
+                                       | None ->
+                                           Error
+                                             (Printf.sprintf
+                                                "Expected the first argument \
+                                                 to `Process.new` to be a \
+                                                 List[String], but got a \
+                                                 non-String element"))
+                                   | Error _ -> acc)
+                          in
+                          Result.map cmd_res ~f:(fun cmd ->
+                              Runtime.Process { cmd }))
               | _ ->
                   Printf.sprintf
                     "`Process` does not implement the static member `%s`" name

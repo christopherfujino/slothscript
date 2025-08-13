@@ -257,8 +257,7 @@ and interpret_expr ctx expr =
           | Func func -> (
               match func with
               | User _ ->
-                  Printf.sprintf "Internal error: %s"
-                    __LOC__ |> failwith
+                  Printf.sprintf "Internal error: %s" __LOC__ |> failwith
               | Native { cb; _ } -> (
                   let args = rt_receiver :: args in
                   match cb args with
@@ -341,11 +340,12 @@ and interpret_expr ctx expr =
       interpret_block ctx block
   | ObjDeref (receiver, target, pos) -> (
       let receiver = interpret_expr ctx receiver in
-      let class_name =
+      let class_name, table_thunk =
+        let open Runtime in
         match receiver with
         (* Static access has different semantics *)
-        | Prototype { name } -> name
-        | _ -> Runtime.to_class_name receiver
+        | Prototype { name } -> (name, fun cl -> cl.static_members)
+        | _ -> (Runtime.to_class_name receiver, fun cl -> cl.instance_members)
       in
       match Hashtbl.find ctx.classes class_name with
       | None ->
@@ -354,7 +354,7 @@ and interpret_expr ctx expr =
             class_name __LOC__
           |> failure ~ctx pos
       | Some klass -> (
-          match Hashtbl.find klass.instance_members target with
+          match Hashtbl.find (table_thunk klass) target with
           | None ->
               Printf.sprintf "The class %s does not have a field named %s"
                 class_name target

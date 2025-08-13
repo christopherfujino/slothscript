@@ -1,3 +1,4 @@
+(* TODO move arity here *)
 type class_t = { name : string; methods : string list; static_members : string list }
 type t = { ids : string list; protos : class_t list }
 
