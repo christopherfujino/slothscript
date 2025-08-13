@@ -13,13 +13,14 @@ let wrap_parse env line =
     exit 1
 
 let repl () =
+  (* TODO history file *)
   Readline.init ();
   let ctx = Context.make_ctx (module Sloth_stdlib.Prod) "" in
   let env = Compiler.Environment.create "" |> Compiler.Environment.populate in
   let rec repl_inner ctx env =
     let line =
       (* TODO autocomplete *)
-      let line_opt = Readline.readline ~prompt:"> " () in
+      let line_opt = Readline.readline ~completion_fun:(fun foo -> Readline.Custom []) ~prompt:"> " () in
       match line_opt with
       | None ->
           Printf.printf "\n";
