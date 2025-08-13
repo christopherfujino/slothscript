@@ -8,8 +8,9 @@ class Process {
   static run(List[String]) -> ProcessResult
   static start(List[String]) -> ProcessHandle
 
-  operator | -> Process
-  operator ! -> ProcessResult
+  infix operator | (Process) -> Process
+
+  unary operator ! -> ProcessResult
 
   stdout : FileHandle
   stderr : FileHandle
@@ -18,7 +19,7 @@ class Process {
 
 ### A handle to a running process
 class ProcessHandle {
-  wait : ProcessResult
+  wait() -> ProcessResult
 }
 
 class ProcessResult {
