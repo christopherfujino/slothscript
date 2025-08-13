@@ -221,9 +221,10 @@ and optimize_expr (env : Environment.t) (e : Ast.expr) : expr =
           failure ~env ~pos msg
       | Some _ -> IdRef (name, pos))
   | ProtoRef (name, pos) -> (
-      match Environment.has_proto env name with
-      | true -> failwith "YAY"
-      | false -> failure ~env ~pos @@ Printf.sprintf "Undeclared class %s" name)
+      (* Validate this class name is defined by our STDLIB *)
+      match Environment.find env name with
+      | Some _ -> IdRef (name, pos)
+      | None -> failure ~env ~pos @@ Printf.sprintf "Undeclared class %s" name)
   | FuncExpr { parameters; block; pos } ->
       let parameters2 = List.rev parameters in
       let env2 = Environment.push_empty env in

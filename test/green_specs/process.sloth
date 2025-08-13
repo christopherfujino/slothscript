@@ -2,18 +2,18 @@
 process
 
 ### Program
-
 let result = Process.new(["uname"]) | Process.new(["tr", "x", "s"])!
 
 ### Ast
 ((StmtDecl
-  (ExprStmt
+  (LetStmt
+    result
     (MethodInvoc
       (receiver
         (FuncInvoc
           (ObjDeref
             (IdRef
-              ProcGroup
+              Process
               [POS])
             new
             [POS])
@@ -33,7 +33,7 @@ let result = Process.new(["uname"]) | Process.new(["tr", "x", "s"])!
             (FuncInvoc
               (ObjDeref
                 (IdRef
-                  ProcGroup
+                  Process
                   [POS])
                 new
                 [POS])
@@ -62,7 +62,8 @@ let result = Process.new(["uname"]) | Process.new(["tr", "x", "s"])!
           (operator
             Bang))))
       (pos
-        [POS])))))
+        [POS]))
+    [POS])))
 
 ### Stdout
 

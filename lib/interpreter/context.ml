@@ -3,6 +3,9 @@ open Core
 type t = {
   l : (module Sloth_stdlib.StdlibSig);
   identifiers : Runtime.t Identifiers.t;
+  (* We need to store these at the top level so that we can find these for
+   runtime lookup. They must also be stored in identifiers however, so users
+   can invoke them explicitly. *)
   classes : Runtime.class_lookup;
   src : string;
 }
@@ -54,140 +57,133 @@ let make_ctx m src =
             }))
     |> Option.value_exn
   in
-  List.iter Sloth_common.Stdlib_interface.globals ~f:(fun (name, variant) ->
-      match variant with
-      | Value -> (
-          match name with
-          | "print" ->
-              make_func "print" ~arity:1 identifiers (fun args ->
-                  let arg = List.hd_exn args in
-                  Runtime.to_s arg |> M.print_s;
-                  M.print_s "\n";
-                  Ok Runtime.Null)
-          | "assert" ->
-              make_func "assert" identifiers (fun args ->
-                  let arg = List.hd_exn args in
-                  let second_arg = List.nth args 1 in
-                  (match second_arg with
-                  | Some msg -> (
-                      match Runtime.string_of_val msg with
-                      | Some msg ->
-                          Ok (Printf.sprintf "Assertion failed: %s" msg)
-                      | None ->
-                          Error
-                            (Printf.sprintf
-                               "The second argument to assert() must be a \
-                                String, got %s"
-                            @@ Runtime.to_s msg))
-                  | None -> Ok "Assertion failed")
-                  |> Result.bind ~f:(fun err_msg ->
-                         match Runtime.bool_of_val arg with
-                         | Some condition ->
-                             if condition then Ok (Runtime.Bool true)
-                             else Error err_msg
-                         | None ->
-                             Error
-                               (Printf.sprintf
-                                  "The first argument to assert() must be a \
-                                   Bool value, got %s"
-                               @@ Runtime.to_s arg)))
-          | "$cwd" ->
-              Identifiers.bind identifiers "$cwd" (Runtime.String "TODO")
-              |> Option.value_exn
-          | _ ->
-              Printf.sprintf "TODO: You have not yet implemented %s" name
-              |> failwith)
-      | Class { properties; methods } -> (
-          match name with
-          | "Number" -> (
-              let cl = Runtime.{ methods = Hashtbl.create (module String) } in
-              List.iter properties ~f:(fun _ -> failwith "TODO properties");
-              List.iter methods ~f:(fun meth ->
-                  let process_infix_methods args cb =
-                    let lhs =
-                      List.nth_exn args 0 |> Runtime.num_of_val
-                      |> Option.value_exn
-                    in
-                    let rhs_t = List.nth_exn args 1 in
-                    match Runtime.num_of_val rhs_t with
-                    | None ->
-                        Error
-                          (Printf.sprintf
-                             "Expected right-hand side to be a Number, but got \
-                              %s"
-                          @@ Runtime.to_s rhs_t)
-                    | Some rhs -> Ok (cb lhs rhs)
-                  in
-                  match meth with
-                  | "+" ->
-                      make_method "+" 2 cl.methods (fun args ->
-                          process_infix_methods args (fun lhs rhs ->
-                              Runtime.Num (lhs +. rhs)))
-                  | "-" ->
-                      make_method "-" 2 cl.methods (fun args ->
-                          process_infix_methods args (fun lhs rhs ->
-                              Runtime.Num (lhs -. rhs)))
-                  | "/" ->
-                      make_method "/" 2 cl.methods (fun args ->
-                          process_infix_methods args (fun lhs rhs ->
-                              Runtime.Num (lhs /. rhs)))
-                  | "*" ->
-                      make_method "*" 2 cl.methods (fun args ->
-                          process_infix_methods args (fun lhs rhs ->
-                              Runtime.Num (lhs *. rhs)))
-                  | "<=" ->
-                      make_method "<=" 2 cl.methods (fun args ->
-                          process_infix_methods args (fun lhs rhs ->
-                              Runtime.Bool Float.(lhs <=. rhs)))
-                  | ">=" ->
-                      make_method ">=" 2 cl.methods (fun args ->
-                          process_infix_methods args (fun lhs rhs ->
-                              Runtime.Bool Float.(lhs >=. rhs)))
-                  | ">" ->
-                      make_method ">" 2 cl.methods (fun args ->
-                          process_infix_methods args (fun lhs rhs ->
-                              Runtime.Bool Float.(lhs >. rhs)))
-                  | "<" ->
-                      make_method "<" 2 cl.methods (fun args ->
-                          process_infix_methods args (fun lhs rhs ->
-                              Runtime.Bool Float.(lhs <. rhs)))
-                  | _ ->
-                      failwith
+  List.iter Sloth_common.Stdlib_interface.globals.ids ~f:(fun name ->
+      match name with
+      | "print" ->
+          make_func "print" ~arity:1 identifiers (fun args ->
+              let arg = List.hd_exn args in
+              Runtime.to_s arg |> M.print_s;
+              M.print_s "\n";
+              Ok Runtime.Null)
+      | "assert" ->
+          make_func "assert" identifiers (fun args ->
+              let arg = List.hd_exn args in
+              let second_arg = List.nth args 1 in
+              (match second_arg with
+              | Some msg -> (
+                  match Runtime.string_of_val msg with
+                  | Some msg -> Ok (Printf.sprintf "Assertion failed: %s" msg)
+                  | None ->
+                      Error
                         (Printf.sprintf
-                           "Number does not implement the method %s" meth));
-              match Hashtbl.add classes ~key:name ~data:cl with
-              | `Duplicate ->
-                  Printf.sprintf "Tried to implement the class %s twice" name
+                           "The second argument to assert() must be a String, \
+                            got %s"
+                        @@ Runtime.to_s msg))
+              | None -> Ok "Assertion failed")
+              |> Result.bind ~f:(fun err_msg ->
+                     match Runtime.bool_of_val arg with
+                     | Some condition ->
+                         if condition then Ok (Runtime.Bool true)
+                         else Error err_msg
+                     | None ->
+                         Error
+                           (Printf.sprintf
+                              "The first argument to assert() must be a Bool \
+                               value, got %s"
+                           @@ Runtime.to_s arg)))
+      | "$cwd" ->
+          Identifiers.bind identifiers "$cwd" (Runtime.String "TODO")
+          |> Option.value_exn
+      | _ ->
+          Printf.sprintf "TODO: You have not yet implemented %s" name
+          |> failwith);
+  List.iter Sloth_common.Stdlib_interface.globals.protos
+    ~f:(fun { name; methods } ->
+      let cl = Runtime.{ methods = Hashtbl.create (module String) } in
+      (match name with
+      | "Number" ->
+          List.iter methods ~f:(fun meth ->
+              let process_infix_methods args cb =
+                let lhs =
+                  List.nth_exn args 0 |> Runtime.num_of_val |> Option.value_exn
+                in
+                let rhs_t = List.nth_exn args 1 in
+                match Runtime.num_of_val rhs_t with
+                | None ->
+                    Error
+                      (Printf.sprintf
+                         "Expected right-hand side to be a Number, but got %s"
+                      @@ Runtime.to_s rhs_t)
+                | Some rhs -> Ok (cb lhs rhs)
+              in
+              match meth with
+              | "+" ->
+                  make_method "+" 2 cl.methods (fun args ->
+                      process_infix_methods args (fun lhs rhs ->
+                          Runtime.Num (lhs +. rhs)))
+              | "-" ->
+                  make_method "-" 2 cl.methods (fun args ->
+                      process_infix_methods args (fun lhs rhs ->
+                          Runtime.Num (lhs -. rhs)))
+              | "/" ->
+                  make_method "/" 2 cl.methods (fun args ->
+                      process_infix_methods args (fun lhs rhs ->
+                          Runtime.Num (lhs /. rhs)))
+              | "*" ->
+                  make_method "*" 2 cl.methods (fun args ->
+                      process_infix_methods args (fun lhs rhs ->
+                          Runtime.Num (lhs *. rhs)))
+              | "<=" ->
+                  make_method "<=" 2 cl.methods (fun args ->
+                      process_infix_methods args (fun lhs rhs ->
+                          Runtime.Bool Float.(lhs <=. rhs)))
+              | ">=" ->
+                  make_method ">=" 2 cl.methods (fun args ->
+                      process_infix_methods args (fun lhs rhs ->
+                          Runtime.Bool Float.(lhs >=. rhs)))
+              | ">" ->
+                  make_method ">" 2 cl.methods (fun args ->
+                      process_infix_methods args (fun lhs rhs ->
+                          Runtime.Bool Float.(lhs >. rhs)))
+              | "<" ->
+                  make_method "<" 2 cl.methods (fun args ->
+                      process_infix_methods args (fun lhs rhs ->
+                          Runtime.Bool Float.(lhs <. rhs)))
+              | _ ->
+                  failwith
+                    (Printf.sprintf "Number does not implement the method %s"
+                       meth))
+      | "Process" ->
+          List.iter methods ~f:(fun meth ->
+              let process_infix_methods args cb =
+                let lhs =
+                  List.nth_exn args 0 |> Runtime.num_of_val |> Option.value_exn
+                in
+                let rhs_t = List.nth_exn args 1 in
+                let err_cb () =
+                  Printf.sprintf
+                    "Expected right-hand side to be a Number, but got %s"
+                  @@ Runtime.to_s rhs_t
                   |> failwith
-              | `Ok -> ())
-          | "Process" ->
-              let cl = Runtime.{ methods = Hashtbl.create (module String) } in
-              List.iter properties ~f:(fun _ -> failwith "TODO properties");
-              List.iter methods ~f:(fun meth ->
-                  let process_infix_methods args cb =
-                    let lhs =
-                      List.nth_exn args 0 |> Runtime.num_of_val
-                      |> Option.value_exn
-                    in
-                    let rhs_t = List.nth_exn args 1 in
-                    let err_cb () =
-                          (Printf.sprintf
-                             "Expected right-hand side to be a Number, but got \
-                              %s"
-                          @@ Runtime.to_s rhs_t) |> failwith
-                    in
-                    let rhs = Runtime.process_of_val ~cb:err_cb rhs_t in
-                    Ok (cb lhs rhs)
-                  in
-                  match meth with
-                  | "|" ->
-                      make_method "|" 2 cl.methods (fun args ->
-                          process_infix_methods args (fun _ _ ->
-                              failwith "TODO"))
-                  | _ -> failwith "TODO")
-          | _ ->
-              Printf.sprintf
-                "TODO: class named %s has not been implemented in context.ml"
-                name
-              |> failwith));
+                in
+                let rhs = Runtime.process_of_val ~cb:err_cb rhs_t in
+                Ok (cb lhs rhs)
+              in
+              match meth with
+              | "|" ->
+                  make_method "|" 2 cl.methods (fun args ->
+                      process_infix_methods args (fun _ _ -> failwith "TODO"))
+              | _ -> failwith "TODO")
+      | _ ->
+          Printf.sprintf
+            "TODO: class named %s has not been implemented in context.ml" name
+          |> failwith);
+      (match Hashtbl.add classes ~key:name ~data:cl with
+      | `Duplicate ->
+          Printf.sprintf "Tried to implement the class %s twice" name
+          |> failwith
+      | `Ok -> ());
+      Identifiers.bind identifiers name (Runtime.Prototype { name })
+      |> Option.value_exn);
+
   { l = m; identifiers; src; classes }

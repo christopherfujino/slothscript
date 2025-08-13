@@ -245,12 +245,13 @@ and interpret_expr ctx expr =
   | MethodInvoc { receiver; target; args; pos } -> (
       let rt_receiver = interpret_expr ctx receiver in
       let args = List.map args ~f:(interpret_expr ctx) in
-      let klass =
-        Hashtbl.find_exn ctx.classes (Runtime.to_class_name rt_receiver)
-      in
+      let class_name = Runtime.to_class_name rt_receiver in
+      let klass = Hashtbl.find_exn ctx.classes class_name in
       match Hashtbl.find klass.methods target with
       | None ->
-          Printf.sprintf "Undefined field named %s" target |> failure ~ctx pos
+          Printf.sprintf "The class %s does not have a field named %s"
+            class_name target
+          |> failure ~ctx pos
       | Some func -> (
           match func with
           | User _ -> failwith "Unreachable"
@@ -328,11 +329,27 @@ and interpret_expr ctx expr =
         { ctx with identifiers = Identifiers.push_empty ctx.identifiers }
       in
       interpret_block ctx block
-  | ObjDeref (receiver, _, _) -> (
-      match interpret_expr ctx receiver with
-      | Prototype { name = _ } ->
-          failwith "TODO implement static fields in classes"
-      | _ -> failwith "TODO")
+  | ObjDeref (receiver, target, pos) -> (
+      let receiver = interpret_expr ctx receiver in
+      let class_name =
+        match receiver with
+        (* Static access has different semantics *)
+        | Prototype { name } -> name
+        | _ -> Runtime.to_class_name receiver
+      in
+      match Hashtbl.find ctx.classes class_name with
+      | None ->
+          Printf.sprintf
+            "Internal error: could not find prototype for the %s class (%s)"
+            class_name __LOC__
+          |> failure ~ctx pos
+      | Some klass -> (
+          match Hashtbl.find klass.methods target with
+          | None ->
+              Printf.sprintf "The class %s does not have a field named %s"
+                class_name target
+              |> failure ~ctx pos
+          | Some func -> Runtime.Func func))
 
 (** You must push an empty env frame on first *)
 and interpret_block ctx stmts =
