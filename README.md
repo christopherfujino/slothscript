@@ -14,6 +14,13 @@ func fib(n) {
 print(fib(20))
 ```
 
+## Dependencies
+
+Only tested on Linux, should support macOS, but Windows is explicitly not
+supported.
+
+The runtime dependency is `readline(3)`.
+
 ## Tour
 
 User-written variables or functions must start with a lowercase letter or `_`.

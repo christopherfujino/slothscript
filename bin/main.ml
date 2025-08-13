@@ -20,7 +20,7 @@ let repl () =
   let rec repl_inner ctx env =
     let line =
       (* TODO autocomplete *)
-      let line_opt = Readline.readline ~completion_fun:(fun foo -> Readline.Custom []) ~prompt:"> " () in
+      let line_opt = Readline.readline ~prompt:"> " () in
       match line_opt with
       | None ->
           Printf.printf "\n";
