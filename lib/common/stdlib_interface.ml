@@ -7,7 +7,7 @@ let globals =
     ids = [ "print"; "assert"; "$cwd" ];
     protos =
       [
-        { name = "Process"; methods = ["!"]; static_members = ["new"]};
+        { name = "Process"; methods = ["!"; "|"]; static_members = ["new"]};
         {
           name = "Number";
           methods = [ "+"; "-"; "/"; "*"; "<"; ">"; "<="; ">=" ];

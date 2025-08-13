@@ -344,12 +344,12 @@ and interpret_expr ctx expr =
       interpret_block ctx block
   | ObjDeref (receiver, target, pos) -> (
       let receiver = interpret_expr ctx receiver in
-      let class_name, table_thunk =
+      let descriptor, class_name, table_thunk =
         let open Runtime in
         match receiver with
         (* Static access has different semantics *)
-        | Prototype { name } -> (name, fun cl -> cl.static_members)
-        | _ -> (Runtime.to_class_name receiver, fun cl -> cl.instance_members)
+        | Prototype { name } -> ("static", name, fun cl -> cl.static_members)
+        | _ -> ("instance", Runtime.to_class_name receiver, fun cl -> cl.instance_members)
       in
       match Hashtbl.find ctx.classes class_name with
       | None ->
@@ -360,8 +360,8 @@ and interpret_expr ctx expr =
       | Some klass -> (
           match Hashtbl.find (table_thunk klass) target with
           | None ->
-              Printf.sprintf "The class %s does not have a field named %s"
-                class_name target
+              Printf.sprintf "The class %s does not have a %s field named %s"
+                class_name descriptor target
               |> failure ~ctx pos
           | Some func -> func))
 
@@ -388,7 +388,7 @@ and interpret_method ~ctx ~pos receiver args method_name =
   let klass = Hashtbl.find_exn ctx.classes class_name in
   match Hashtbl.find klass.instance_members method_name with
   | None ->
-      Printf.sprintf "The class %s does not have a field named %s" class_name
+      Printf.sprintf "The class %s does not have an instance field named %s" class_name
         method_name
       |> failure ~ctx pos
   | Some func -> (

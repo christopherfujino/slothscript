@@ -1,7 +1,13 @@
 open Core
 
 type prototype = { name : string }
-type process = { cmd : string list }
+type process = {
+  cmd : string list;
+  mutable stdout : Core_unix.File_descr.t;
+  mutable stderr : Core_unix.File_descr.t;
+  mutable stdin : Core_unix.File_descr.t;
+  previous : process option;
+}
 type process_result = { code : int }
 
 type t =
@@ -88,7 +94,8 @@ let rec to_s t' =
       ^ "}"
   | Func _ -> "Func(TODO)"
   | Prototype { name } -> Printf.sprintf "Type(%s)" name
-  | Process { cmd } -> Printf.sprintf "Process(cmd=[%s])" @@ stringify_list cmd
+  (* TODO we should list out all in the group *)
+  | Process { cmd; _ } -> Printf.sprintf "Process(cmd=[%s])" @@ stringify_list cmd
   | ProcessResult { code } -> Printf.sprintf "ProcessResult(code=%d)" code
   | FileHandle -> "FileHandle(TODO)"
 

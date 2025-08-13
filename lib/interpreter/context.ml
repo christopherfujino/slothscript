@@ -10,6 +10,39 @@ type t = {
   src : string;
 }
 
+let exec_proc proc =
+  let rec get_pids proc =
+    let prev_pids =
+      match Runtime.(proc.previous) with
+      | Some prev -> get_pids prev
+      | None -> []
+    in
+    let prog = List.hd_exn Runtime.(proc.cmd) in
+
+    let this_pid =
+      match Core_unix.fork () with
+      | `In_the_child ->
+          (* TODO apply file descriptors
+            dup2(in_fd, STDIN_FILENO);
+            dup2(out_fd, STDOUT_FILENO);
+           *)
+          let _ = Core_unix.exec ~prog ~argv:proc.cmd () in
+          failwith "unreachable"
+      | `In_the_parent pid -> pid
+    in
+    this_pid :: prev_pids
+  in
+
+  let pids = get_pids proc in
+
+  (* First is the last in the queue *)
+  let last_pid = List.hd_exn pids in
+  match Core_unix.waitpid last_pid with
+  | Error _ -> Error "Your subprocess failed with a mysterious(?) error"
+  | Ok () ->
+      (* TODO check all the other pids too *)
+      Ok (Runtime.ProcessResult { code = 0 })
+
 let make_ctx m src =
   let module M = (val m : Sloth_stdlib.StdlibSig) in
   let classes = Hashtbl.create (module String) in
@@ -164,13 +197,11 @@ let make_ctx m src =
       | "Process" ->
           List.iter methods ~f:(fun meth ->
               let process_infix_methods args cb =
-                let lhs =
-                  List.nth_exn args 0 |> Runtime.num_of_val |> Option.value_exn
-                in
+                let lhs = List.nth_exn args 0 |> Runtime.process_of_val in
                 let rhs_t = List.nth_exn args 1 in
                 let err_cb () =
                   Printf.sprintf
-                    "Expected right-hand side to be a Number, but got %s"
+                    "Expected right-hand side to be a Process, but got %s"
                   @@ Runtime.to_s rhs_t
                   |> failwith
                 in
@@ -180,13 +211,18 @@ let make_ctx m src =
               match meth with
               | "|" ->
                   make_method meth 2 cl.instance_members (fun args ->
-                      process_infix_methods args (fun _ _ -> failwith __LOC__))
+                      process_infix_methods args (fun left right ->
+                          let read, write = Core_unix.pipe () in
+                          left.stdout <- write;
+                          right.stdin <- read;
+                          let right = { right with previous = Some left } in
+                          Runtime.Process right))
               | "!" ->
                   make_method meth 1 cl.instance_members (fun args ->
                       let process = List.hd_exn args in
-                      let cmd =
+                      let proc =
                         match process with
-                        | Process { cmd } -> cmd
+                        | Runtime.Process proc -> proc
                         | _ ->
                             Printf.sprintf "Internal error %s\n\n%s"
                               (Runtime.to_class_name process)
@@ -194,14 +230,7 @@ let make_ctx m src =
                             |> failwith
                       in
 
-                      let prog = List.hd_exn cmd in
-
-                      let pid = Core_unix.fork_exec ~prog ~argv:cmd () in
-                      match Core_unix.waitpid pid with
-                      | Ok () -> Ok (Runtime.ProcessResult { code = 0 })
-                      | Error _ ->
-                          Error
-                            "Your subprocess failed with a mysterious(?) error")
+                      exec_proc proc)
               | _ ->
                   Printf.sprintf "`Process` does not implement the method `%s`"
                     meth
@@ -240,7 +269,17 @@ let make_ctx m src =
                                    | Error _ -> acc)
                           in
                           Result.map cmd_res ~f:(fun cmd ->
-                              Runtime.Process { cmd }))
+                              let proc =
+                                Runtime.
+                                  {
+                                    cmd;
+                                    stdin = Core_unix.stdin;
+                                    stdout = Core_unix.stdout;
+                                    stderr = Core_unix.stderr;
+                                    previous = None;
+                                  }
+                              in
+                              Runtime.Process proc))
               | _ ->
                   Printf.sprintf
                     "`Process` does not implement the static member `%s`" name
@@ -254,6 +293,7 @@ let make_ctx m src =
           Printf.sprintf "Tried to implement the class %s twice" name
           |> failwith
       | `Ok -> ());
+      (* Bind at the root scope so users can reach it from IdRefs *)
       Identifiers.bind identifiers name (Runtime.Prototype { name })
       |> Option.value_exn);
 

@@ -62,10 +62,10 @@
    These are ordered, from high to low precedence.
    *)
 
+%left BANG
 %left NOT_EQUALS DOUBLE_EQUALS GEQ LEQ LESS GREATER
 %left MINUS PLUS PIPE
 %left PRODUCT DIVIDE
-%right BANG
 
 (* Declare the starting point for parsing (root of AST) *)
 %start <Ast.decl list> prog

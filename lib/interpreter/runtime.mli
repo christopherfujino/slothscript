@@ -1,7 +1,13 @@
 open Core
 
 type prototype = { name : string }
-type process = { cmd : string list }
+type process = {
+  cmd : string list;
+  mutable stdout : Core_unix.File_descr.t;
+  mutable stderr : Core_unix.File_descr.t;
+  mutable stdin : Core_unix.File_descr.t;
+  previous : process option;
+}
 type process_result = { code : int }
 
 type t =
