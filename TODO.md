@@ -1,6 +1,7 @@
 ## Milestones
 
 ### v0.1
+- [ ] Make `Process.new` variadic
 - [ ] $backtick function
 - [ ] Context variables, with statements
 - [ ] Nicer lambdas
@@ -49,6 +50,6 @@
 - [x] For-in loops
 - [x] Do blocks
 - [x] README.md
-- [ ] Process class
-- [ ] Class static methods
-- [ ] Class prototypes
+- [x] Process class
+- [x] Class static methods
+- [x] Class prototypes
