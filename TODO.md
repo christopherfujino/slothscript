@@ -9,6 +9,7 @@
 - [ ] Language versioning
 
 ### v0.2
+- [ ] Regular expression
 - [ ] raw string literals
 - [ ] Optional function parameters
 - [ ] List mutation methods
@@ -19,6 +20,7 @@
 - [ ] Formatter
 - [ ] LSP server
 - [ ] Security policy
+- [ ] Use readline for REPL
 
 ### Stretch goals
 - [ ] Unicode strings
