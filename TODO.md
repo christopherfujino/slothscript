@@ -1,6 +1,7 @@
 ## Milestones
 
 ### v0.1
+- [ ] Mock out process subsystem for unit tests
 - [ ] Make `Process.new` variadic
 - [ ] $backtick function
 - [ ] Context variables, with statements

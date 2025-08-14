@@ -4,4 +4,4 @@
  ; entrypoint module, aka //bin/main.ml
  (name main)
  ; deps, depends on sloth_script from //lib/dune
- (libraries sloth_script))
+ (libraries sloth_script readline))

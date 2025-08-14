@@ -29,6 +29,7 @@
    (ppx_jane (and (>= v0.17) (< v0.18)))
    ; Sep 3, 2024
    (re (>= 1.12.0))
+   (readline (>= 0.2))
  )
  (tags
   (topics "to describe" your project)))
