@@ -1,6 +1,6 @@
 ## Milestones
 
-### v0.1
+### v0.1 - initial version
 - [ ] Mock out process subsystem for unit tests
 - [ ] Make `Process.new` variadic
 - [ ] $backtick function
@@ -9,9 +9,11 @@
 - [ ] Standard Library
 - [ ] Language versioning
 
-### v0.2
-- [ ] Regular expression
+### v0.2 - initial pre-release
+- [ ] statically link readline
+- [ ] Regular expressions
 - [ ] raw string literals
+- [ ] string escapes
 - [ ] Optional function parameters
 - [ ] List mutation methods
 - [ ] Stack traces; depends on storing locs in runtime values
@@ -21,7 +23,6 @@
 - [ ] Formatter
 - [ ] LSP server
 - [ ] Security policy
-- [ ] Use readline for REPL
 
 ### Stretch goals
 - [ ] Unicode strings
@@ -56,9 +57,7 @@
 - [x] For-in loops
 - [x] Do blocks
 - [x] README.md
-<<<<<<< HEAD
 - [x] Process class
 - [x] Class static methods
 - [x] Class prototypes
-=======
->>>>>>> 072f9ad (update TODOs)
+- [x] Use readline for REPL

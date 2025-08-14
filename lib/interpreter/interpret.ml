@@ -3,12 +3,21 @@ open Common
 
 let failure ~ctx pos msg =
   let pos_s = Sloth_common.Position.string_of_t pos in
-  let msg =
+  let msg1 =
     Printf.sprintf "%s\n\n[%s] Runtime error: %s"
       (Sloth_common.Position.summarize pos Context.(ctx.src))
       pos_s msg
   in
-  raise (Failure msg)
+  let msg2 =
+    if Sloth_common.Config.print_internal_backtraces then
+      let callstack_depth = 50 in
+      Printf.sprintf "%s\n\n%s" msg1
+        (* Core.Printexc does not implement .get_callstack *)
+        (Stdlib.Printexc.get_callstack callstack_depth
+        |> Stdlib.Printexc.raw_backtrace_to_string)
+    else msg1
+  in
+  raise (Failure msg2)
 
 let rec interpret_prog ctx prog =
   match prog with

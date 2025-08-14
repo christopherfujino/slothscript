@@ -5,11 +5,21 @@ let parse env line =
   let decls =
     try Parser.prog filter lexbuf
     with Parser.Error i ->
-      let msg = Printf.sprintf "Parser error (%d)" i in
-      (* TODO Interpolate lexer position *)
+      let msg =
+        Printf.sprintf "Parser error (%d)\n\n%s" i
+          (* TODO Interpolate lexer position *)
+          (Printexc.get_backtrace ())
+      in
       raise (Common.ParserFailure msg)
   in
-  Optimizer.optimize_prog env decls
+  try Optimizer.optimize_prog env decls
+  with Optimizer.Failure msg ->
+    let msg =
+      (* This has a summary, so it will already describe it as an
+       "Optimizer error" *)
+      Printf.sprintf "%s\n\n%s" msg (Printexc.get_backtrace ())
+    in
+    raise (Common.ParserFailure msg)
 
 (* TODO figure out how to derive this *)
 let to_s token =
