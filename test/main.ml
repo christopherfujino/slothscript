@@ -74,6 +74,20 @@ let make_test spec =
 let make_failing_test spec =
   let open Compiler in
   spec.name >:: fun _ ->
+  let handle_failure actual_msg actual_name : unit =
+    match spec.failure with
+    | None -> assert_failure @@ Printf.sprintf "%s: %s" actual_name actual_msg
+    | Some expectation ->
+        if String.is_substring actual_msg ~substring:expectation then ()
+        else
+          assert_failure
+          @@ Printf.sprintf
+               "Received unexpected error\n\n\
+                Expected: \"%s\"\n\n\
+                Received:\n\n\
+                %s"
+               expectation actual_msg
+  in
   (* Parser *)
   try
     let env =
@@ -100,67 +114,11 @@ let make_failing_test spec =
     in
     assert_failure msg
   with
-  | Compiler.Lexer.SyntaxError (err, pos) -> (
-      match spec.failure with
-      | Some expectation -> (
-          match expectation with
-          | Scanner_error -> ()
-          | _ ->
-              let open Sloth_common.Position in
-              Printf.sprintf
-                "[%s] Expected %s but got Compiler.Lexer.SyntaxError(%s)"
-                (t_of_lexing_position pos |> string_of_t)
-                (string_of_failure expectation)
-                err
-              |> failwith)
-      | None ->
-          Printf.sprintf
-            "Expected no failure, but got Compiler.Lexer.SyntaxError(%s)" err
-          |> failwith)
-  | Optimizer.Failure msg -> (
-      match spec.failure with
-      | None ->
-          Printf.sprintf "Expected no failure, but got Optimizer.Failure(%s)"
-            msg
-          |> assert_failure
-      | Some expectation -> (
-          match expectation with
-          | Optimizer_error -> ()
-          | _ ->
-              Printf.sprintf "Got an Optimizer.Failure but expected a %s:\n\n%s"
-                (string_of_failure expectation)
-                msg
-              |> assert_failure))
-  | Interpreter.Common.Failure msg -> (
-      match spec.failure with
-      | None ->
-          Printf.sprintf
-            "Expected no failure, but got Interpreter.Common.Failure (%s)" msg
-          |> assert_failure
-      | Some expectation -> (
-          match expectation with
-          | Runtime_error -> ()
-          | _ ->
-              Printf.sprintf
-                "Got an Interpreter.Common.Failure but expected something else \
-                 (%s)"
-                msg
-              |> assert_failure))
-  | Compiler.Common.ParserFailure msg -> (
-      match spec.failure with
-      | None ->
-          Printf.sprintf
-            "Expected no failure but got Compiler.Common.ParserFailure (%s)" msg
-          |> assert_failure
-      | Some expectation -> (
-          match expectation with
-          | Parser_error -> ()
-          | _ ->
-              Printf.sprintf
-                "Got a Compiler.Common.ParserFailure (%s) but expected a \
-                 different error"
-                msg
-              |> assert_failure))
+  | Optimizer.Failure msg -> handle_failure msg "Compiler.Optimizer.Failure"
+  | Interpreter.Common.Failure msg ->
+      handle_failure msg "Interpreter.Common.Failure"
+  | Compiler.Common.ParserFailure msg ->
+      handle_failure msg "Compiler.Common.ParserFailure"
 
 let tests =
   "slothscript"

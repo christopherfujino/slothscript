@@ -27,9 +27,7 @@ let serialize path spec =
   print "";
 
   print "### Failure";
-  (match spec.failure with
-  | None -> ()
-  | Some f -> string_of_failure f |> print);
+  (match spec.failure with None -> () | Some f -> print f);
   print "\n";
 
   let chan = Out_channel.create path in
@@ -87,14 +85,9 @@ let deserialize path =
       | "Name" -> name_opt_ref := Some body
       | "Program" -> program_opt_ref := Some body
       | "Ast" -> ast_opt_ref := Some body
-      | "Failure" -> (
-          failure_opt_ref :=
-            match body with
-            | "Parser_error" -> Some Parser_error
-            | "Optimizer_error" -> Some Optimizer_error
-            | "Runtime_error" -> Some Runtime_error
-            | "" -> None
-            | _ -> Printf.sprintf "Huh? %s" body |> failwith)
+      | "Failure" ->
+          if String.equal body "" then failure_opt_ref := None
+          else failure_opt_ref := Some body
       | "Stdout" -> stdout_expect_opt_ref := Some body
       | "Foo" (* No-op *) -> ()
       | _ -> Printf.sprintf "Huh? %s" title |> failwith);

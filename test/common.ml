@@ -5,16 +5,8 @@ type test_spec = {
   program : string;
   ast : string;
   stdout_expect : string;
-  failure : failure_t option;
+  failure : string option;
 }
-
-and failure_t = Scanner_error | Parser_error | Optimizer_error | Runtime_error
-
-let string_of_failure = function
-  | Scanner_error -> "Scanner_error"
-  | Parser_error -> "Parser_error"
-  | Optimizer_error -> "Optimizer_error"
-  | Runtime_error -> "Runtime_error"
 
 let find_child_specs dir_path =
   let dir_fd = Core_unix.opendir dir_path in

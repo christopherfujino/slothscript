@@ -3,14 +3,21 @@ open Core
 let parse env line =
   let filter, lexbuf = Lexer.bootstrap line in
   let decls =
-    try Parser.prog filter lexbuf
-    with Parser.Error i ->
-      let msg =
-        Printf.sprintf "Parser error (%d)\n\n%s" i
-          (* TODO Interpolate lexer position *)
-          (Printexc.get_backtrace ())
-      in
-      raise (Common.ParserFailure msg)
+    try Parser.prog filter lexbuf with
+    | Parser.Error i ->
+        let msg =
+          Printf.sprintf "Parser error (%d)\n\n%s" i
+            (* TODO Interpolate lexer position *)
+            (Printexc.get_backtrace ())
+        in
+        raise (Common.ParserFailure msg)
+    | Lexer.SyntaxError (msg, pos) ->
+        let pos = Sloth_common.Position.t_of_lexing_position pos in
+        let msg =
+          Printf.sprintf "Lexer error: Unknown token `%s`\n\n%s\n" msg
+            (Sloth_common.Position.summarize pos line)
+        in
+        raise (Common.ParserFailure msg)
   in
   try Optimizer.optimize_prog env decls
   with Optimizer.Failure msg ->
