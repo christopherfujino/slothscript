@@ -253,32 +253,6 @@ and interpret_expr ctx expr =
       Runtime.Bool (is_equal ctx is_equality lhs rhs)
   | MethodInvoc { receiver; target; args; pos } ->
       interpret_method ~ctx ~pos receiver args target
-      (*
-      let rt_receiver = interpret_expr ctx receiver in
-      let args = List.map args ~f:(interpret_expr ctx) in
-      let class_name = Runtime.to_class_name rt_receiver in
-      let klass = Hashtbl.find_exn ctx.classes class_name in
-      match Hashtbl.find klass.instance_members target with
-      | None ->
-          Printf.sprintf "The class %s does not have a field named %s"
-            class_name target
-          |> failure ~ctx pos
-      | Some func -> (
-          match func with
-          | Func func -> (
-              match func with
-              | User _ ->
-                  Printf.sprintf "Internal error: %s" __LOC__ |> failwith
-              | Native { cb; _ } -> (
-                  let args = rt_receiver :: args in
-                  match cb args with
-                  | Ok v -> v
-                  | Error msg -> failure ~ctx pos msg))
-          | _ ->
-              Printf.sprintf "Internal error: %s\n\n%s"
-                (Runtime.to_class_name func)
-                __LOC__
-              |> failwith)*)
   | FuncInvoc (receiver, args, pos) -> (
       let receiver' = interpret_expr ctx receiver in
       match receiver' with

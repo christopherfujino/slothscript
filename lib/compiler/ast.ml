@@ -46,7 +46,9 @@ and expr =
   | IdRef of string * Sloth_common.Position.t
   | ProtoRef of string * Sloth_common.Position.t
   | FuncInvoc of expr * expr list * Sloth_common.Position.t
+  (* Migrate to Binary *)
   | Equality of expr * expr * bool * Sloth_common.Position.t
+  | Binary of expr * expr * operator * Sloth_common.Position.t
   | ObjDeref of expr * string * Sloth_common.Position.t
   | MethodInvoc of {
       receiver : expr;
@@ -85,7 +87,18 @@ and cond_cont =
     }
   | ElseCont of stmt list * Sloth_common.Position.t
 
-and operator = Bang [@@deriving sexp]
+and operator =
+  | Plus
+  | Minus
+  | Product
+  | Divide
+  | Pipe
+  | Less
+  | Greater
+  | Leq
+  | Geq
+  | Bang
+[@@deriving sexp]
 
 let num_of_expr expr =
   match expr with
