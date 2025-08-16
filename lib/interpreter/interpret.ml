@@ -396,7 +396,11 @@ and interpret_method ~ctx ~pos receiver args method_name =
   let receiver = interpret_expr ctx receiver in
   let args = List.map args ~f:(interpret_expr ctx) in
   let class_name = Runtime.to_class_name receiver in
-  let klass = Hashtbl.find_exn ctx.classes class_name in
+  let klass =
+    match Hashtbl.find ctx.classes class_name with
+    | None -> Sloth_common.Common.internal_failure __LOC__
+    | Some klass -> klass
+  in
   match Hashtbl.find klass.instance_members method_name with
   | None ->
       Printf.sprintf "The class %s does not have an instance field named %s"
