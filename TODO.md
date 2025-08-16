@@ -1,7 +1,6 @@
 ## Milestones
 
 ### v0.1 - initial version
-- [ ] MAYBE...operators shouldn't be methods, but top level functions that DO one thing, but allow for a lot of implicit casting of its operands to make that happen
 - [ ] Mock out process subsystem for unit tests
 - [ ] Make `Process.new` variadic
 - [ ] $backtick function
@@ -61,3 +60,4 @@
 - [x] Class static methods
 - [x] Class prototypes
 - [x] Use readline for REPL
+- [ ] operators shouldn't be methods, but top level functions that DO one thing, but allow for a lot of implicit casting of its operands to make that happen

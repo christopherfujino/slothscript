@@ -3,6 +3,8 @@ process
 
 ### Program
 let result = Process.new(["uname"]) | Process.new(["tr", "x", "s"])!
+
+result = "uname" | "tr 'x' 's'"
 #Process.new(["uname", "-a"])!
 
 ### Ast
