@@ -1,11 +1,11 @@
 ## Milestones
 
 ### v0.1 - initial version
+- [ ] MAYBE...operators shouldn't be methods, but top level functions that DO one thing, but allow for a lot of implicit casting of its operands to make that happen
 - [ ] Mock out process subsystem for unit tests
 - [ ] Make `Process.new` variadic
 - [ ] $backtick function
 - [ ] Context variables, with statements
-- [ ] Nicer lambdas
 - [ ] Standard Library
 - [ ] Language versioning
 
@@ -17,7 +17,7 @@
 - [ ] Optional function parameters
 - [ ] List mutation methods
 - [ ] Stack traces; depends on storing locs in runtime values
-- [ ] return, break, continue keywords
+- [ ] return, break, continue keywords; error handling (`let result = mayError() catch (e) DEFAULT;`)
 
 ### v1.0
 - [ ] Formatter
