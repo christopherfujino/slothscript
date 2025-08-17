@@ -45,6 +45,22 @@ let escape () =
       fun _ ->
         let output = shell_like_escape "two words" in
         assert_equal ~pp_diff output [ "two"; "words" ] );
+    ( "track double quotes",
+      fun _ ->
+        let input = "print \"Hello, world!\"" in
+        let output = shell_like_escape input in
+        assert_equal ~pp_diff output [ "print"; "Hello, world!" ] );
+    ( "track single quotes",
+      fun _ ->
+        let input = "print 'Hello, world!'" in
+        let output = shell_like_escape input in
+        assert_equal ~pp_diff output [ "print"; "Hello, world!" ] );
+    ( "nested quotes",
+      fun _ ->
+        let input = "'this should be \"only a single\" string'" in
+        let output = shell_like_escape input in
+        assert_equal ~pp_diff output
+          [ "this should be \"only a single\" string" ] );
   ]
 
 let get () =

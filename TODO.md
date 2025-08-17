@@ -2,7 +2,6 @@
 
 ### v0.1 - initial version
 - [ ] Mock out process subsystem for unit tests
-- [ ] Make `Process.new` variadic
 - [ ] $backtick function
 - [ ] Context variables, with statements
 - [ ] Standard Library
@@ -60,4 +59,4 @@
 - [x] Class static methods
 - [x] Class prototypes
 - [x] Use readline for REPL
-- [ ] operators shouldn't be methods, but top level functions that DO one thing, but allow for a lot of implicit casting of its operands to make that happen
+- [x] operators are top level functions that DO one thing, but allow for implicit casting of its operands
