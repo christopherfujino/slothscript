@@ -16,8 +16,12 @@ let wrap_parse env line =
     None
 
 let repl () =
-  (* TODO history file *)
-  Readline.init ();
+  (match Sys.getenv "HOME" with
+  | None -> Readline.init ()
+  | Some home ->
+      let history_file = Printf.sprintf "%s/.sloth_repl.history" home in
+      Readline.init ~history_file ());
+
   let ctx = Context.make_ctx (module Sloth_stdlib.Prod) "" in
   let env = Compiler.Environment.create "" |> Compiler.Environment.populate in
   let rec repl_inner ctx env =
