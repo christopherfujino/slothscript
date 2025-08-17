@@ -2,14 +2,27 @@
 string literal
 
 ### Program
-"Hello";
+assert("Hello" == 'Hello')
 
 ### Ast
 ((StmtDecl
   (ExprStmt
-    (String
-      ((FullString
-        Hello
+    (FuncInvoc
+      (IdRef
+        assert
+        [POS])
+      ((Equality
+        (String
+          ((FullString
+            Hello
+            [POS]))
+          [POS])
+        (String
+          ((FullString
+            Hello
+            [POS]))
+          [POS])
+        true
         [POS]))
       [POS]))))
 

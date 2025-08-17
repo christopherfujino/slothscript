@@ -93,8 +93,13 @@ rule private_read last_token state =
   | '#' { read_comment lexbuf.lex_curr_p lexbuf }
   | '|' { let token = PIPE lexbuf.lex_curr_p in last_token := Some token; token }
   | '.' { let token = DOT lexbuf.lex_curr_p in last_token := Some token; token }
+  | '\'' {
+    let token = read_string '\'' (Buffer.create string_buffer_size) lexbuf.lex_curr_p state lexbuf in
+    last_token := Some token;
+    token
+  }
   | '"' {
-    let token = read_string (Buffer.create string_buffer_size) lexbuf.lex_curr_p state lexbuf in
+    let token = read_string '"' (Buffer.create string_buffer_size) lexbuf.lex_curr_p state lexbuf in
     last_token := Some token;
     token
   }
@@ -102,7 +107,7 @@ rule private_read last_token state =
   | '}' {
     let token = (match !state with
     | NotInterpolating -> RCURLY lexbuf.lex_curr_p
-    | Interpolating -> (read_string (Buffer.create string_buffer_size) lexbuf.lex_curr_p state lexbuf)) in
+    | Interpolating -> (read_string '"' (Buffer.create string_buffer_size) lexbuf.lex_curr_p state lexbuf)) in
     last_token := Some token;
     token
   }
@@ -146,16 +151,27 @@ and read_comment pos =
     (read_comment[@tailcall]) pos lexbuf
   }
 
-and read_string buf pos state =
+and read_string delimiter buf pos state =
   (* TODO implement escapes *)
   parse
-  | '"' {
-    match !state with
-    | NotInterpolating -> STRING_FULL (Buffer.contents buf, pos)
-    | Interpolating -> (
-      state := NotInterpolating;
-      STRING_END (Buffer.contents buf, pos)
-    )
+  | '\'' as cur_char {
+    if cur_char = delimiter then
+      STRING_FULL (Buffer.contents buf, pos)
+    else
+      (Buffer.add_char buf cur_char;
+      (read_string[@tailcall]) delimiter buf pos state lexbuf)
+  }
+  | '"' as cur_char {
+    if cur_char = delimiter then
+      (match !state with
+      | NotInterpolating -> STRING_FULL (Buffer.contents buf, pos)
+      | Interpolating -> (
+        state := NotInterpolating;
+        STRING_END (Buffer.contents buf, pos)
+      ))
+    else
+      (Buffer.add_char buf cur_char;
+      (read_string[@tailcall]) delimiter buf pos state lexbuf)
   }
   | "${" {
     match !state with
@@ -165,10 +181,11 @@ and read_string buf pos state =
     )
     | Interpolating -> STRING_MIDDLE (Buffer.contents buf, pos)
   }
-  | [^ '"' '$']+ {
+  | [^ '"' '\'' '$']+ {
     let chunk = (Lexing.lexeme lexbuf) in
     Buffer.add_string buf chunk;
-      (read_string[@tailcall]) buf pos state lexbuf }
+    (read_string[@tailcall]) delimiter buf pos state lexbuf
+  }
 
 (* Footer *)
 {

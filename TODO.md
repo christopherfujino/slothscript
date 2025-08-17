@@ -10,7 +10,6 @@
 ### v0.2 - initial pre-release
 - [ ] statically link readline
 - [ ] Regular expressions
-- [ ] raw string literals
 - [ ] string escapes
 - [ ] Optional function parameters
 - [ ] List mutation methods
@@ -59,3 +58,4 @@
 - [x] Class prototypes
 - [x] Use readline for REPL
 - [x] operators are top level functions that DO one thing, but allow for implicit casting of its operands
+- [x] raw string literals
