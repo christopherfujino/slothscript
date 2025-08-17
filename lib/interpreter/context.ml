@@ -48,47 +48,38 @@ let make_ctx m src =
   let classes = Hashtbl.create (module String) in
   let identifiers = Identifiers.create () in
   let make_method name arity methods cb =
-    Hashtbl.add_exn methods ~key:name
-      ~data:
-        (Runtime.Func
-           (Runtime.Native
-              {
-                parameters = [ "this"; "left"; "right" ];
-                cb =
-                  (fun args ->
-                    let arg_len = List.length args in
-                    if not (Int.equal arg_len arity) then
-                      Error
-                        (Printf.sprintf
-                           "You passed %d arguments (%s) but %d were expected"
-                           arg_len
-                           (List.fold_left args ~init:"" ~f:(fun msg arg ->
-                                msg ^ Runtime.to_s arg ^ ", "))
-                           arity)
-                    else cb args);
-                identifiers;
-              }))
+    let cb =
+     fun args ->
+      let arg_len = List.length args in
+      if not (Int.equal arg_len arity) then
+        Error
+          (Printf.sprintf "You passed %d arguments (%s) but %d were expected"
+             arg_len
+             (List.fold_left args ~init:"" ~f:(fun msg arg ->
+                  msg ^ Runtime.to_s arg ^ ", "))
+             arity)
+      else cb args
+    in
+    let native =
+      Runtime.Native
+        { parameters = [ "this"; "left"; "right" ]; cb; identifiers }
+    in
+    Hashtbl.add_exn methods ~key:name ~data:(Runtime.Func native)
   in
   let make_func name ?arity identifiers cb =
+    let cb =
+     fun args ->
+      let arg_len = List.length args in
+      if
+        Option.is_some arity && not (Int.equal arg_len (Option.value_exn arity))
+      then
+        Error
+          (Printf.sprintf "You passed %d arguments but %d were expected" arg_len
+             (Option.value_exn arity))
+      else cb args
+    in
     Identifiers.bind identifiers name
-      (Runtime.Func
-         (Native
-            {
-              parameters = [ "value" ];
-              cb =
-                (fun args ->
-                  let arg_len = List.length args in
-                  if
-                    Option.is_some arity
-                    && not (Int.equal arg_len (Option.value_exn arity))
-                  then
-                    Error
-                      (Printf.sprintf
-                         "You passed %d arguments but %d were expected" arg_len
-                         (Option.value_exn arity))
-                  else cb args);
-              identifiers;
-            }))
+      (Runtime.Func (Native { parameters = [ "value" ]; cb; identifiers }))
     |> Option.value_exn
   in
   List.iter Sloth_common.Stdlib_interface.globals.ids ~f:(fun name ->
@@ -129,8 +120,9 @@ let make_ctx m src =
           Identifiers.bind identifiers "$cwd" (Runtime.String "TODO")
           |> Option.value_exn
       | _ ->
-          Printf.sprintf "TODO: You have not yet implemented %s" name
-          |> failwith);
+          Printf.sprintf "TODO: You have not yet implemented %s at %s" name
+            __LOC__
+          |> Sloth_common.Common.internal_failure);
   List.iter Sloth_common.Stdlib_interface.globals.protos
     ~f:(fun { name; methods; static_members } ->
       let cl =
@@ -152,20 +144,6 @@ let make_ctx m src =
       | "Process" ->
           List.iter methods ~f:(fun meth ->
               match meth with
-              | "!" ->
-                  make_method meth 1 cl.instance_members (fun args ->
-                      let process = List.hd_exn args in
-                      let proc =
-                        match process with
-                        | Runtime.Process proc -> proc
-                        | _ ->
-                            Printf.sprintf "Internal error %s\n\n%s"
-                              (Runtime.to_class_name process)
-                              __LOC__
-                            |> failwith
-                      in
-
-                      exec_proc proc)
               | _ ->
                   Printf.sprintf "`Process` does not implement the method `%s`"
                     meth

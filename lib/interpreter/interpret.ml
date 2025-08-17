@@ -307,7 +307,12 @@ and interpret_expr ctx expr =
       match is_prefix with
       | false -> (
           match operator with
-          | Bang -> interpret_method ~ctx ~pos target [] "!"
+          | Bang -> (
+              let target = interpret_expr ctx target in
+              let proc = cast_to_process ~ctx ~pos target in
+              match Context.exec_proc proc with
+              | Ok t' -> t'
+              | Error err -> failure ~ctx pos err)
           | _ -> Sloth_common.Common.internal_failure __LOC__)
       | true -> (
           let v = interpret_expr ctx target in
@@ -455,44 +460,44 @@ and dereference_object ctx receiver target pos =
           |> failure ~ctx pos
       | Some func -> func)
 
+and cast_to_process ~ctx ~pos = function
+  | Runtime.Process p -> p
+  | Runtime.List _ as l ->
+      let constructor =
+        match
+          dereference_object ctx
+            (Runtime.Prototype { name = "Process" })
+            "new" pos
+        with
+        | Func func -> func
+        | _ -> Sloth_common.Common.internal_failure __LOC__
+      in
+      let callback =
+        match constructor with
+        | Native { cb; _ } -> cb
+        | User _ -> Sloth_common.Common.internal_failure __LOC__
+      in
+      let proc =
+        match callback @@ [ l ] with
+        | Error err -> failure ~ctx pos err
+        | Ok proc -> proc
+      in
+      (cast_to_process [@tailcall]) ~ctx ~pos proc
+  | Runtime.String s ->
+      let list =
+        shell_like_escape s
+        |> List.map ~f:(fun s -> Runtime.String s)
+        |> Array.of_list
+      in
+      (cast_to_process [@tailcall]) ~ctx ~pos (Runtime.List list)
+  | _ as t' ->
+      failure ~ctx pos
+      @@ Printf.sprintf "Expected a Process, but got a %s"
+      @@ Runtime.to_s t'
+
 and interpret_binary ctx lhs rhs op pos =
   let lhs = interpret_expr ctx lhs in
   let rhs = interpret_expr ctx rhs in
-  let rec cast_to_process = function
-    | Runtime.Process p -> p
-    | Runtime.List _ as l ->
-        let constructor =
-          match
-            dereference_object ctx
-              (Runtime.Prototype { name = "Process" })
-              "new" pos
-          with
-          | Func func -> func
-          | _ -> Sloth_common.Common.internal_failure __LOC__
-        in
-        let callback =
-          match constructor with
-          | Native { cb; _ } -> cb
-          | User _ -> Sloth_common.Common.internal_failure __LOC__
-        in
-        let proc =
-          match callback @@ [ l ] with
-          | Error err -> failure ~ctx pos err
-          | Ok proc -> proc
-        in
-        (cast_to_process [@tailcall]) proc
-    | Runtime.String s ->
-        let list =
-          shell_like_escape s
-          |> List.map ~f:(fun s -> Runtime.String s)
-          |> Array.of_list
-        in
-        (cast_to_process [@tailcall]) @@ Runtime.List list
-    | _ as t' ->
-        failure ~ctx pos
-        @@ Printf.sprintf "Expected a Process, but got a %s"
-        @@ Runtime.to_s t'
-  in
   let cast_to_number = function
     | Runtime.Num f -> f
     | Runtime.String s -> (
@@ -508,8 +513,8 @@ and interpret_binary ctx lhs rhs op pos =
   in
   match op with
   | Pipe ->
-      let left = cast_to_process lhs in
-      let right = cast_to_process rhs in
+      let left = cast_to_process ~ctx ~pos lhs in
+      let right = cast_to_process ~ctx ~pos rhs in
       let read, write = Core_unix.pipe () in
       left.stdout <- write;
       left.pipes_to_collect <- write :: left.pipes_to_collect;

@@ -41,10 +41,10 @@ let escape () =
         let input = "thisISaLongSTRING_without.anySPACES" in
         let output = shell_like_escape input in
         assert_equal ~pp_diff output [ input ] );
-        ("multiple elements output in the right order", fun _ ->
-          let output = shell_like_escape "two words" in
-          assert_equal ~pp_diff output ["two"; "words"]
-    );
+    ( "multiple elements output in the right order",
+      fun _ ->
+        let output = shell_like_escape "two words" in
+        assert_equal ~pp_diff output [ "two"; "words" ] );
   ]
 
 let get () =
