@@ -15,7 +15,7 @@ let globals =
         { name = "Process"; methods = [ "!" ]; static_members = [ "new" ] };
         {
           name = "Number";
-          methods = [ "+"; "-"; "/"; "*"; "<"; ">"; "<="; ">=" ];
+          methods = [];
           static_members = [];
         };
       ];

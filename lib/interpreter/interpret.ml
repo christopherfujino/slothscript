@@ -493,6 +493,19 @@ and interpret_binary ctx lhs rhs op pos =
         @@ Printf.sprintf "Expected a Process, but got a %s"
         @@ Runtime.to_s t'
   in
+  let cast_to_number = function
+    | Runtime.Num f -> f
+    | Runtime.String s -> (
+        match Float.of_string_opt s with
+        | Some f -> f
+        | None ->
+            failure ~ctx pos
+            @@ Printf.sprintf "Expected a Number, but got the string \"%s\"" s)
+    | _ as t' ->
+        failure ~ctx pos
+        @@ Printf.sprintf "Expected a Number, but got a %s"
+        @@ Runtime.to_s t'
+  in
   match op with
   | Pipe ->
       let left = cast_to_process lhs in
@@ -504,4 +517,36 @@ and interpret_binary ctx lhs rhs op pos =
       right.pipes_to_collect <- read :: right.pipes_to_collect;
       let right = { right with previous = Some left } in
       Runtime.Process right
+  | Plus ->
+      let left = cast_to_number lhs in
+      let right = cast_to_number rhs in
+      Runtime.Num (left +. right)
+  | Minus ->
+      let left = cast_to_number lhs in
+      let right = cast_to_number rhs in
+      Runtime.Num (left -. right)
+  | Divide ->
+      let left = cast_to_number lhs in
+      let right = cast_to_number rhs in
+      Runtime.Num (left /. right)
+  | Product ->
+      let left = cast_to_number lhs in
+      let right = cast_to_number rhs in
+      Runtime.Num (left *. right)
+  | Leq ->
+      let left = cast_to_number lhs in
+      let right = cast_to_number rhs in
+      Runtime.Bool Float.(left <= right)
+  | Geq ->
+      let left = cast_to_number lhs in
+      let right = cast_to_number rhs in
+      Runtime.Bool Float.(left >= right)
+  | Less ->
+      let left = cast_to_number lhs in
+      let right = cast_to_number rhs in
+      Runtime.Bool Float.(left < right)
+  | Greater ->
+      let left = cast_to_number lhs in
+      let right = cast_to_number rhs in
+      Runtime.Bool Float.(left > right)
   | _ -> failwith (Printf.sprintf "TODO: %s" __LOC__)

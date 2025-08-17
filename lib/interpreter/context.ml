@@ -143,52 +143,7 @@ let make_ctx m src =
       (match name with
       | "Number" ->
           List.iter methods ~f:(fun meth ->
-              let process_infix_methods args cb =
-                let lhs =
-                  List.nth_exn args 0 |> Runtime.num_of_val |> Option.value_exn
-                in
-                let rhs_t = List.nth_exn args 1 in
-                match Runtime.num_of_val rhs_t with
-                | None ->
-                    Error
-                      (Printf.sprintf
-                         "Expected right-hand side to be a Number, but got %s"
-                      @@ Runtime.to_s rhs_t)
-                | Some rhs -> Ok (cb lhs rhs)
-              in
               match meth with
-              | "+" ->
-                  make_method "+" 2 cl.instance_members (fun args ->
-                      process_infix_methods args (fun lhs rhs ->
-                          Runtime.Num (lhs +. rhs)))
-              | "-" ->
-                  make_method "-" 2 cl.instance_members (fun args ->
-                      process_infix_methods args (fun lhs rhs ->
-                          Runtime.Num (lhs -. rhs)))
-              | "/" ->
-                  make_method "/" 2 cl.instance_members (fun args ->
-                      process_infix_methods args (fun lhs rhs ->
-                          Runtime.Num (lhs /. rhs)))
-              | "*" ->
-                  make_method "*" 2 cl.instance_members (fun args ->
-                      process_infix_methods args (fun lhs rhs ->
-                          Runtime.Num (lhs *. rhs)))
-              | "<=" ->
-                  make_method "<=" 2 cl.instance_members (fun args ->
-                      process_infix_methods args (fun lhs rhs ->
-                          Runtime.Bool Float.(lhs <=. rhs)))
-              | ">=" ->
-                  make_method ">=" 2 cl.instance_members (fun args ->
-                      process_infix_methods args (fun lhs rhs ->
-                          Runtime.Bool Float.(lhs >=. rhs)))
-              | ">" ->
-                  make_method ">" 2 cl.instance_members (fun args ->
-                      process_infix_methods args (fun lhs rhs ->
-                          Runtime.Bool Float.(lhs >. rhs)))
-              | "<" ->
-                  make_method "<" 2 cl.instance_members (fun args ->
-                      process_infix_methods args (fun lhs rhs ->
-                          Runtime.Bool Float.(lhs <. rhs)))
               | _ ->
                   failwith
                     (Printf.sprintf "Number does not implement the method %s"
@@ -196,35 +151,7 @@ let make_ctx m src =
           List.iter static_members ~f:(fun _ -> failwith __LOC__)
       | "Process" ->
           List.iter methods ~f:(fun meth ->
-            (*
-              let process_infix_methods args cb =
-                let lhs = List.nth_exn args 0 |> Runtime.process_of_val in
-                let rhs_t = List.nth_exn args 1 in
-                let err_cb () =
-                  Printf.sprintf
-                    "Expected right-hand side to be a Process, but got %s"
-                  @@ Runtime.to_s rhs_t
-                  |> failwith
-                in
-                let rhs = Runtime.process_of_val ~cb:err_cb rhs_t in
-                Ok (cb lhs rhs)
-              in
-              *)
               match meth with
-              (*
-              | "|" ->
-                  make_method meth 2 cl.instance_members (fun args ->
-                      process_infix_methods args (fun left right ->
-                          let read, write = Core_unix.pipe () in
-                          left.stdout <- write;
-                          left.pipes_to_collect <-
-                            write :: left.pipes_to_collect;
-                          right.stdin <- read;
-                          right.pipes_to_collect <-
-                            read :: right.pipes_to_collect;
-                          let right = { right with previous = Some left } in
-                          Runtime.Process right))
-          *)
               | "!" ->
                   make_method meth 1 cl.instance_members (fun args ->
                       let process = List.hd_exn args in

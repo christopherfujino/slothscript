@@ -53,6 +53,9 @@ rule private_read last_token state =
         | NUM _ -> asi ()
         | STRING_FULL _ -> asi ()
         | STRING_END _ -> asi ()
+        | NULL _ -> asi ()
+        (* ! is a postfix operator *)
+        | BANG _ -> asi ()
         | _ -> (private_read [@tailcall]) last_token state lexbuf
     )
   }
