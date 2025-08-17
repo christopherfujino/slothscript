@@ -24,19 +24,15 @@ print(fib(20))
       (IfExpr
         (IfCont
           (conditional
-            (MethodInvoc
-              (receiver
-                (IdRef
-                  n
-                  [POS]))
-              (target
-                <=)
-              (args
-                ((Num
-                  1
-                  [POS])))
-              (pos
-                [POS])))
+            (Binary
+              (IdRef
+                n
+                [POS])
+              (Num
+                1
+                [POS])
+              Leq
+              [POS]))
           (block
             ((ExprStmt
               (IdRef
@@ -45,49 +41,37 @@ print(fib(20))
           (continuation
             ((ElseCont
               ((ExprStmt
-                (MethodInvoc
-                  (receiver
-                    (FuncInvoc
+                (Binary
+                  (FuncInvoc
+                    (IdRef
+                      fib
+                      [POS])
+                    ((Binary
                       (IdRef
-                        fib
+                        n
                         [POS])
-                      ((MethodInvoc
-                        (receiver
-                          (IdRef
-                            n
-                            [POS]))
-                        (target
-                          -)
-                        (args
-                          ((Num
-                            1
-                            [POS])))
-                        (pos
-                          [POS])))
+                      (Num
+                        1
+                        [POS])
+                      Minus
                       [POS]))
-                  (target
-                    +)
-                  (args
-                    ((FuncInvoc
+                    [POS])
+                  (FuncInvoc
+                    (IdRef
+                      fib
+                      [POS])
+                    ((Binary
                       (IdRef
-                        fib
+                        n
                         [POS])
-                      ((MethodInvoc
-                        (receiver
-                          (IdRef
-                            n
-                            [POS]))
-                        (target
-                          -)
-                        (args
-                          ((Num
-                            2
-                            [POS])))
-                        (pos
-                          [POS])))
-                      [POS])))
-                  (pos
-                    [POS]))))
+                      (Num
+                        2
+                        [POS])
+                      Minus
+                      [POS]))
+                    [POS])
+                  Plus
+                  [POS])))
               [POS])))
           (pos
             [POS]))

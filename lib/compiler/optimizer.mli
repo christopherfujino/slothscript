@@ -28,7 +28,7 @@ and stmt =
     }
 [@@deriving sexp]
 
-and expr = private
+and expr =
   | Num of float * Sloth_common.Position.t
   | Bool of bool * Sloth_common.Position.t
   | Null of Sloth_common.Position.t
@@ -38,6 +38,7 @@ and expr = private
   | Subscript of expr * expr * Sloth_common.Position.t
   | IdRef of string * Sloth_common.Position.t
   | Equality of expr * expr * bool * Sloth_common.Position.t
+  | Binary of expr * expr * Ast.operator * Sloth_common.Position.t
   | FuncInvoc of expr * expr list * Sloth_common.Position.t
   | MethodInvoc of {
       receiver : expr;

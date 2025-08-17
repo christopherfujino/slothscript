@@ -251,6 +251,7 @@ and interpret_expr ctx expr =
       let rhs = interpret_expr ctx rhs in
 
       Runtime.Bool (is_equal ctx is_equality lhs rhs)
+  | Binary (lhs, rhs, op, pos) -> interpret_binary ctx lhs rhs op pos
   | MethodInvoc { receiver; target; args; pos } ->
       interpret_method ~ctx ~pos receiver args target
   | FuncInvoc (receiver, args, pos) -> (
@@ -305,7 +306,9 @@ and interpret_expr ctx expr =
       (* TODO deprecate is_prefix when we've removed prefix bang *)
       match is_prefix with
       | false -> (
-          match operator with Bang -> interpret_method ~ctx ~pos target [] "!")
+          match operator with
+          | Bang -> interpret_method ~ctx ~pos target [] "!"
+          | _ -> Sloth_common.Common.internal_failure __LOC__)
       | true -> (
           let v = interpret_expr ctx target in
           match operator with
@@ -318,37 +321,16 @@ and interpret_expr ctx expr =
                        "The prefix ! operator must be applied to a Bool value, \
                         but got %s"
                   |> failure ~ctx pos
-              | Some b -> Runtime.Bool (not b))))
+              | Some b -> Runtime.Bool (not b))
+          | _ -> Sloth_common.Common.internal_failure __LOC__))
   | DoBlock (block, _) ->
       let ctx =
         { ctx with identifiers = Identifiers.push_empty ctx.identifiers }
       in
       interpret_block ctx block
-  | ObjDeref (receiver, target, pos) -> (
+  | ObjDeref (receiver, target, pos) ->
       let receiver = interpret_expr ctx receiver in
-      let descriptor, class_name, table_thunk =
-        let open Runtime in
-        match receiver with
-        (* Static access has different semantics *)
-        | Prototype { name } -> ("static", name, fun cl -> cl.static_members)
-        | _ ->
-            ( "instance",
-              Runtime.to_class_name receiver,
-              fun cl -> cl.instance_members )
-      in
-      match Hashtbl.find ctx.classes class_name with
-      | None ->
-          Printf.sprintf
-            "Internal error: could not find prototype for the %s class (%s)"
-            class_name __LOC__
-          |> failure ~ctx pos
-      | Some klass -> (
-          match Hashtbl.find (table_thunk klass) target with
-          | None ->
-              Printf.sprintf "The class %s does not have a %s field named %s"
-                class_name descriptor target
-              |> failure ~ctx pos
-          | Some func -> func))
+      dereference_object ctx receiver target pos
 
 (** You must push an empty env frame on first *)
 and interpret_block ctx stmts =
@@ -447,3 +429,79 @@ and is_equal ctx is_equality lhs rhs =
     | _ ->
         Printf.sprintf "is_equal the type %s is not implemented" lh_s
         |> failwith
+
+and dereference_object ctx receiver target pos =
+  let descriptor, class_name, table_thunk =
+    let open Runtime in
+    match receiver with
+    (* Static access has different semantics *)
+    | Prototype { name } -> ("static", name, fun cl -> cl.static_members)
+    | _ ->
+        ( "instance",
+          Runtime.to_class_name receiver,
+          fun cl -> cl.instance_members )
+  in
+  match Hashtbl.find ctx.classes class_name with
+  | None ->
+      Printf.sprintf
+        "Internal error: could not find prototype for the %s class (%s)"
+        class_name __LOC__
+      |> failure ~ctx pos
+  | Some klass -> (
+      match Hashtbl.find (table_thunk klass) target with
+      | None ->
+          Printf.sprintf "The class %s does not have a %s field named %s"
+            class_name descriptor target
+          |> failure ~ctx pos
+      | Some func -> func)
+
+and interpret_binary ctx lhs rhs op pos =
+  let lhs = interpret_expr ctx lhs in
+  let rhs = interpret_expr ctx rhs in
+  let rec cast_to_process = function
+    | Runtime.Process p -> p
+    | Runtime.List _ as l ->
+        let constructor =
+          match
+            dereference_object ctx
+              (Runtime.Prototype { name = "Process" })
+              "new" pos
+          with
+          | Func func -> func
+          | _ -> Sloth_common.Common.internal_failure __LOC__
+        in
+        let callback =
+          match constructor with
+          | Native { cb; _ } -> cb
+          | User _ -> Sloth_common.Common.internal_failure __LOC__
+        in
+        let proc =
+          match callback @@ [ l ] with
+          | Error err -> failure ~ctx pos err
+          | Ok proc -> proc
+        in
+        (cast_to_process [@tailcall]) proc
+    | Runtime.String s ->
+        let list =
+          shell_like_escape s
+          |> List.map ~f:(fun s -> Runtime.String s)
+          |> Array.of_list
+        in
+        (cast_to_process [@tailcall]) @@ Runtime.List list
+    | _ as t' ->
+        failure ~ctx pos
+        @@ Printf.sprintf "Expected a Process, but got a %s"
+        @@ Runtime.to_s t'
+  in
+  match op with
+  | Pipe ->
+      let left = cast_to_process lhs in
+      let right = cast_to_process rhs in
+      let read, write = Core_unix.pipe () in
+      left.stdout <- write;
+      left.pipes_to_collect <- write :: left.pipes_to_collect;
+      right.stdin <- read;
+      right.pipes_to_collect <- read :: right.pipes_to_collect;
+      let right = { right with previous = Some left } in
+      Runtime.Process right
+  | _ -> failwith (Printf.sprintf "TODO: %s" __LOC__)

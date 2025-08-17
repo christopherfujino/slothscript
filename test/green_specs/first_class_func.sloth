@@ -34,19 +34,15 @@ print(counter())
           (block
             ((AssignStmt
               x
-              (MethodInvoc
-                (receiver
-                  (IdRef
-                    x
-                    [POS]))
-                (target
-                  +)
-                (args
-                  ((Num
-                    1
-                    [POS])))
-                (pos
-                  [POS]))
+              (Binary
+                (IdRef
+                  x
+                  [POS])
+                (Num
+                  1
+                  [POS])
+                Plus
+                [POS])
               [POS])
               (ExprStmt
                 (IdRef

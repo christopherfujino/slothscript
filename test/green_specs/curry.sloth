@@ -19,19 +19,15 @@ func a(x) {func(y) {x+y;};};print(a(1)(2));
             [POS])))
         (block
           ((ExprStmt
-            (MethodInvoc
-              (receiver
-                (IdRef
-                  x
-                  [POS]))
-              (target
-                +)
-              (args
-                ((IdRef
-                  y
-                  [POS])))
-              (pos
-                [POS])))))
+            (Binary
+              (IdRef
+                x
+                [POS])
+              (IdRef
+                y
+                [POS])
+              Plus
+              [POS]))))
         (pos
           [POS])))))
   (pos

@@ -196,6 +196,7 @@ let make_ctx m src =
           List.iter static_members ~f:(fun _ -> failwith __LOC__)
       | "Process" ->
           List.iter methods ~f:(fun meth ->
+            (*
               let process_infix_methods args cb =
                 let lhs = List.nth_exn args 0 |> Runtime.process_of_val in
                 let rhs_t = List.nth_exn args 1 in
@@ -208,7 +209,9 @@ let make_ctx m src =
                 let rhs = Runtime.process_of_val ~cb:err_cb rhs_t in
                 Ok (cb lhs rhs)
               in
+              *)
               match meth with
+              (*
               | "|" ->
                   make_method meth 2 cl.instance_members (fun args ->
                       process_infix_methods args (fun left right ->
@@ -221,6 +224,7 @@ let make_ctx m src =
                             read :: right.pipes_to_collect;
                           let right = { right with previous = Some left } in
                           Runtime.Process right))
+          *)
               | "!" ->
                   make_method meth 1 cl.instance_members (fun args ->
                       let process = List.hd_exn args in

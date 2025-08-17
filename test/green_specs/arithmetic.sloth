@@ -10,49 +10,33 @@ print(value);
 ((StmtDecl
   (LetStmt
     value
-    (MethodInvoc
-      (receiver
-        (MethodInvoc
-          (receiver
+    (Binary
+      (Binary
+        (Num
+          2
+          [POS])
+        (Binary
+          (Binary
             (Num
-              2
-              [POS]))
-          (target
-            +)
-          (args
-            ((MethodInvoc
-              (receiver
-                (MethodInvoc
-                  (receiver
-                    (Num
-                      3
-                      [POS]))
-                  (target
-                    *)
-                  (args
-                    ((Num
-                      4
-                      [POS])))
-                  (pos
-                    [POS])))
-              (target
-                /)
-              (args
-                ((Num
-                  5
-                  [POS])))
-              (pos
-                [POS]))))
-          (pos
-            [POS])))
-      (target
-        -)
-      (args
-        ((Num
-          6
-          [POS])))
-      (pos
-        [POS]))
+              3
+              [POS])
+            (Num
+              4
+              [POS])
+            Product
+            [POS])
+          (Num
+            5
+            [POS])
+          Divide
+          [POS])
+        Plus
+        [POS])
+      (Num
+        6
+        [POS])
+      Minus
+      [POS])
     [POS]))
   (StmtDecl
     (ExprStmt
