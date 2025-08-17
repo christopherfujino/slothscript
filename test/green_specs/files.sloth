@@ -2,21 +2,11 @@
 files
 
 ### Program
-File("README.md")
+#let f = <- File("README.md")
+#print(f)
 
 ### Ast
-((StmtDecl
-  (ExprStmt
-    (FuncInvoc
-      (IdRef
-        File
-        [POS])
-      ((String
-        ((FullString
-          README.md
-          [POS]))
-        [POS]))
-      [POS]))))
+()
 
 ### Stdout
 

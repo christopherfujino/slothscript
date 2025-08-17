@@ -61,7 +61,6 @@ and expr =
   | UnaryExpr of {
       target : expr;
       pos : Sloth_common.Position.t;
-      is_prefix : bool;
       operator : operator;
     }
   | DoBlock of stmt list * Sloth_common.Position.t
@@ -98,6 +97,7 @@ and operator =
   | Leq
   | Geq
   | Bang
+  | Not
 [@@deriving sexp]
 
 let num_of_expr expr =

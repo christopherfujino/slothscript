@@ -40,6 +40,7 @@
 %token <Lexing.position> LESS
 %token <Lexing.position> GREATER
 %token <Lexing.position> BANG
+%token <Lexing.position> NOT
 
 %token <Lexing.position> SEMICOLON
 %token <Lexing.position> DOT
@@ -64,10 +65,11 @@
    These are ordered, from high to low precedence.
    *)
 
-%left BANG
+%left BANG (* Postfix *)
 %left NOT_EQUALS DOUBLE_EQUALS GEQ LEQ LESS GREATER
 %left MINUS PLUS PIPE
 %left PRODUCT DIVIDE
+%left NOT (* Does precedence matter?! *)
 
 (* Declare the starting point for parsing (root of AST) *)
 %start <Ast.decl list> prog
@@ -203,14 +205,14 @@ expr2:
   }
 
   (* ! *)
-  | pos = BANG; e = expr2 {
+  | pos = NOT; e = expr2 {
     let pos = Sloth_common.Position.t_of_lexing_position pos in
-    UnaryExpr { target=e; is_prefix=true; operator=Bang; pos}
+    UnaryExpr { target=e; operator=Not; pos}
   }
 
   | e = expr2; pos = BANG {
     let pos = Sloth_common.Position.t_of_lexing_position pos in
-    UnaryExpr { target = e; is_prefix=false; operator=Bang; pos}
+    UnaryExpr { target = e; operator=Bang; pos}
   }
  
   | e = expr7 { e }

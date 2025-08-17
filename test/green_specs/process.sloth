@@ -39,8 +39,6 @@ result = Process.new(["uname"]) | Process.new(["tr", "x", "s"])!
             [POS]))
         (pos
           [POS])
-        (is_prefix
-          false)
         (operator
           Bang))
       [POS]))
@@ -94,8 +92,6 @@ result = Process.new(["uname"]) | Process.new(["tr", "x", "s"])!
             [POS]))
         (pos
           [POS])
-        (is_prefix
-          false)
         (operator
           Bang))
       [POS])))

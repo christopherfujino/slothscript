@@ -22,6 +22,7 @@ From high to low precedence (left-associative):
 
 ### Sloth
 
+`not`
 `*`, `/`, `%`
 `+`, `-`, `|`
 `==`, `!=`, `<`, `<=`, `>`, `>=`

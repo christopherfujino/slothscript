@@ -310,32 +310,27 @@ and interpret_expr ctx expr =
       let parameters = List.map parameters ~f:(fun (name, _) -> name) in
       Func (User { parameters; block; identifiers = ctx.identifiers })
   | IfExpr (cond, _) -> interpret_cond ctx cond
-  | UnaryExpr { target; pos; is_prefix; operator } -> (
+  | UnaryExpr { target; pos; operator } -> (
       (* TODO deprecate is_prefix when we've removed prefix bang *)
-      match is_prefix with
-      | false -> (
-          match operator with
-          | Bang -> (
-              let target = interpret_expr ctx target in
-              let proc = cast_to_process ~ctx ~pos target in
-              match Context.exec_proc proc with
-              | Ok t' -> t'
-              | Error err -> failure ~ctx pos err)
-          | _ -> Sloth_common.Common.internal_failure __LOC__)
-      | true -> (
-          let v = interpret_expr ctx target in
-          match operator with
-          | Bang -> (
-              let bool_opt = Runtime.bool_of_val v in
-              match bool_opt with
-              | None ->
-                  Runtime.to_s v
-                  |> Printf.sprintf
-                       "The prefix ! operator must be applied to a Bool value, \
-                        but got %s"
-                  |> failure ~ctx pos
-              | Some b -> Runtime.Bool (not b))
-          | _ -> Sloth_common.Common.internal_failure __LOC__))
+      let v = interpret_expr ctx target in
+      match operator with
+      | Not -> (
+          let bool_opt = Runtime.bool_of_val v in
+          match bool_opt with
+          | None ->
+              Runtime.to_s v
+              |> Printf.sprintf
+                   "The `not` operator must be applied to a Bool value, but \
+                    got %s"
+              |> failure ~ctx pos
+          | Some b -> Runtime.Bool (not b))
+      | Bang -> (
+          let target = interpret_expr ctx target in
+          let proc = cast_to_process ~ctx ~pos target in
+          match Context.exec_proc proc with
+          | Ok t' -> t'
+          | Error err -> failure ~ctx pos err)
+      | _ -> Sloth_common.Common.internal_failure __LOC__)
   | DoBlock (block, _) ->
       let ctx =
         { ctx with identifiers = Identifiers.push_empty ctx.identifiers }
