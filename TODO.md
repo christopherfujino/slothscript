@@ -1,9 +1,9 @@
 ## Milestones
 
 ### v0.1 - initial version
-- [ ] Mock out process subsystem for unit tests
-- [ ] $backtick function
+- [ ] return, break, continue keywords; error handling (`let result = mayError() catch (e) DEFAULT;`)
 - [ ] Context variables, with statements
+- [ ] Mock out process subsystem for unit tests
 - [ ] Standard Library
 - [ ] Language versioning
 
@@ -15,7 +15,6 @@
 - [ ] Optional function parameters
 - [ ] List mutation methods
 - [ ] Stack traces; depends on storing locs in runtime values
-- [ ] return, break, continue keywords; error handling (`let result = mayError() catch (e) DEFAULT;`)
 
 ### v1.0
 - [ ] Formatter
