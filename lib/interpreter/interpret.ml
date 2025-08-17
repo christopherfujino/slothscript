@@ -294,6 +294,14 @@ and interpret_expr ctx expr =
               match cb arg_vals with
               | Ok v -> v
               | Error msg -> failure ~ctx pos msg))
+      | Prototype { name } -> (
+          if not @@ phys_equal (List.length args) 1 then failwith "TODO"
+          else
+            let arg_expr = List.hd_exn args in
+            let arg = interpret_expr ctx arg_expr in
+            match name with
+            | "File" -> cast_to_file ~ctx ~pos arg
+            | _ -> Sloth_common.Common.internal_failure __LOC__)
       | _ ->
           Printf.sprintf "Tried to invoke %s, but it is not a function"
             (Runtime.to_s receiver')
@@ -460,17 +468,43 @@ and dereference_object ctx receiver target pos =
           |> failure ~ctx pos
       | Some func -> func)
 
+and cast_to_file ~ctx ~pos = function
+  | Runtime.String filename -> (
+      let func_opt =
+        dereference_object ctx (Runtime.Prototype { name = "File" }) "new" pos
+        |> Runtime.func_of_val
+      in
+      let constructor =
+        match func_opt with
+        | None -> Sloth_common.Common.internal_failure __LOC__
+        | Some func -> func
+      in
+      let callback =
+        match constructor with
+        | Native { cb; _ } -> cb
+        | User _ -> Sloth_common.Common.internal_failure __LOC__
+      in
+      match callback [ Runtime.String filename ] with
+      | Ok file -> file
+      | Error err -> failure ~ctx pos err)
+  | _ as t' ->
+      failure ~ctx pos
+      @@ Printf.sprintf "Expected a File but got a %s"
+      @@ Runtime.to_s t'
+
 and cast_to_process ~ctx ~pos = function
   | Runtime.Process p -> p
   | Runtime.List _ as l ->
+      let constructor_opt =
+        dereference_object ctx
+          (Runtime.Prototype { name = "Process" })
+          "new" pos
+        |> Runtime.func_of_val
+      in
       let constructor =
-        match
-          dereference_object ctx
-            (Runtime.Prototype { name = "Process" })
-            "new" pos
-        with
-        | Func func -> func
-        | _ -> Sloth_common.Common.internal_failure __LOC__
+        match constructor_opt with
+        | None -> Sloth_common.Common.internal_failure __LOC__
+        | Some cons -> cons
       in
       let callback =
         match constructor with
@@ -478,7 +512,7 @@ and cast_to_process ~ctx ~pos = function
         | User _ -> Sloth_common.Common.internal_failure __LOC__
       in
       let proc =
-        match callback @@ [ l ] with
+        match callback [ l ] with
         | Error err -> failure ~ctx pos err
         | Ok proc -> proc
       in

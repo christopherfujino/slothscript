@@ -11,6 +11,7 @@ type process = {
   previous : process option;
 }
 
+type file = { path : string }
 type process_result = { code : int }
 
 type t =
@@ -24,6 +25,7 @@ type t =
   | Prototype of prototype
   | Process of process
   | ProcessResult of process_result
+  | File of file
   | FileHandle
 
 (* TODO make this hidden *)
@@ -53,5 +55,6 @@ val int_of_val : t -> int option
 val bool_of_val : t -> bool option
 val list_of_val : t -> t Array.t option
 val hashmap_of_val : t -> (t, t) Stdlib.Hashtbl.t option
-val process_of_val : ?cb:(unit -> process) -> t -> process
+val process_of_val : t -> process option
+val func_of_val : t -> function_t option
 val to_class_name : t -> string

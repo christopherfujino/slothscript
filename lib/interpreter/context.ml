@@ -97,13 +97,13 @@ let make_ctx m src =
               (match second_arg with
               | Some msg -> (
                   match Runtime.string_of_val msg with
-                  | Some msg -> Ok (Printf.sprintf "Assertion failed: %s" msg)
                   | None ->
                       Error
                         (Printf.sprintf
                            "The second argument to assert() must be a String, \
                             got %s"
-                        @@ Runtime.to_s msg))
+                        @@ Runtime.to_s msg)
+                  | Some msg -> Ok (Printf.sprintf "Assertion failed: %s" msg))
               | None -> Ok "Assertion failed")
               |> Result.bind ~f:(fun err_msg ->
                      match Runtime.bool_of_val arg with
@@ -198,9 +198,35 @@ let make_ctx m src =
                   Printf.sprintf
                     "`Process` does not implement the static member `%s`" name
                   |> failwith)
+      | "File" ->
+          List.iter methods ~f:(fun meth ->
+              match meth with
+              | _ ->
+                  Printf.sprintf "`File` does not implement the method `%s`"
+                    meth
+                  |> failwith);
+          List.iter static_members ~f:(fun name ->
+              match name with
+              | "new" ->
+                  make_method name 1 cl.static_members (fun args ->
+                      let first_arg = List.hd_exn args in
+                      (match Runtime.string_of_val first_arg with
+                      | None ->
+                          Error
+                            (Printf.sprintf
+                               "You must pass a String to File.new(), but got \
+                                a %s"
+                            @@ Runtime.to_s first_arg)
+                      | Some str -> Ok str)
+                      |> Result.bind ~f:(fun path -> Ok (Runtime.File { path })))
+              | _ ->
+                  Printf.sprintf
+                    "`File` does not implement the static member `%s`" name
+                  |> failwith)
       | _ ->
           Printf.sprintf
-            "TODO: class named %s has not been implemented in context.ml" name
+            "TODO: class named \"%s\" has not been implemented in %s" name
+            __FILE__
           |> failwith);
       (match Hashtbl.add classes ~key:name ~data:cl with
       | `Duplicate ->
