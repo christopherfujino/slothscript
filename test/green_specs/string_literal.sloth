@@ -3,6 +3,10 @@ string literal
 
 ### Program
 assert("Hello" == 'Hello')
+print("Hello\nworld")
+print('Hello\nworld')
+print("Hello\tworld")
+print("\"Hello, world!\"")
 
 ### Ast
 ((StmtDecl
@@ -24,10 +28,62 @@ assert("Hello" == 'Hello')
           [POS])
         true
         [POS]))
-      [POS]))))
+      [POS])))
+  (StmtDecl
+    (ExprStmt
+      (FuncInvoc
+        (IdRef
+          print
+          [POS])
+        ((String
+          ((FullString
+            "Hello\nworld"
+            [POS]))
+          [POS]))
+        [POS])))
+  (StmtDecl
+    (ExprStmt
+      (FuncInvoc
+        (IdRef
+          print
+          [POS])
+        ((String
+          ((FullString
+            Hello\nworld
+            [POS]))
+          [POS]))
+        [POS])))
+  (StmtDecl
+    (ExprStmt
+      (FuncInvoc
+        (IdRef
+          print
+          [POS])
+        ((String
+          ((FullString
+            "Hello\tworld"
+            [POS]))
+          [POS]))
+        [POS])))
+  (StmtDecl
+    (ExprStmt
+      (FuncInvoc
+        (IdRef
+          print
+          [POS])
+        ((String
+          ((FullString
+            "\"Hello, world!\""
+            [POS]))
+          [POS]))
+        [POS]))))
 
 ### Stdout
-
+Hello
+world
+Hello\nworld
+Hello	world
+"Hello, world!"
 
 ### Failure
 

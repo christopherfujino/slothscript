@@ -19,11 +19,21 @@ let rec sexp_formatter_inner parent_indent indent buffer (s : Sexp.t) =
             | '\t' -> true
             | '\r' -> true
             | '\n' -> true
+            | '"' -> true
             | _ -> false)
       in
       match whitespace_opt with
       (* Escape if our atom includes whitespace *)
-      | Some _ -> print (Printf.sprintf "\"%s\"" a)
+      | Some _ ->
+          let buf = Buffer.create (String.length a) in
+          String.iter a ~f:(function
+            | '\t' -> Buffer.add_string buf "\\t"
+            | '\n' -> Buffer.add_string buf "\\n"
+            | '\r' -> Buffer.add_string buf "\\r"
+            | '\\' -> Buffer.add_string buf "\\\\"
+            | '"' -> Buffer.add_string buf "\\\""
+            | _ as ch -> Buffer.add_char buf ch);
+          print (Printf.sprintf "\"%s\"" @@ Buffer.contents buf)
       | None -> if String.length a = 0 then print "\"\"" else print a)
   | List l -> (
       match List.length l with

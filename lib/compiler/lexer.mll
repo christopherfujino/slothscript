@@ -173,6 +173,51 @@ and read_string delimiter buf pos state =
       (Buffer.add_char buf cur_char;
       (read_string[@tailcall]) delimiter buf pos state lexbuf)
   }
+  | '\\' 'n' {
+    if delimiter = '\'' then (
+      Buffer.add_string buf (Lexing.lexeme lexbuf);
+      (read_string[@tailcall]) delimiter buf pos state lexbuf)
+    else (
+      Buffer.add_char buf '\n';
+      (read_string[@tailcall]) delimiter buf pos state lexbuf
+    )
+  }
+  | '\\' 't' {
+    if delimiter = '\'' then (
+      Buffer.add_string buf (Lexing.lexeme lexbuf);
+      (read_string[@tailcall]) delimiter buf pos state lexbuf)
+    else (
+      Buffer.add_char buf '\t';
+      (read_string[@tailcall]) delimiter buf pos state lexbuf
+    )
+  }
+  | '\\' 'r' {
+    if delimiter = '\'' then (
+      Buffer.add_string buf (Lexing.lexeme lexbuf);
+      (read_string[@tailcall]) delimiter buf pos state lexbuf)
+    else (
+      Buffer.add_char buf '\r';
+      (read_string[@tailcall]) delimiter buf pos state lexbuf
+    )
+  }
+  | '\\' '\\' {
+    if delimiter = '\'' then (
+      Buffer.add_string buf (Lexing.lexeme lexbuf);
+      (read_string[@tailcall]) delimiter buf pos state lexbuf)
+    else (
+      Buffer.add_char buf '\\';
+      (read_string[@tailcall]) delimiter buf pos state lexbuf
+    )
+  }
+  | '\\' '"' {
+    if delimiter = '\'' then (
+      Buffer.add_string buf (Lexing.lexeme lexbuf);
+      (read_string[@tailcall]) delimiter buf pos state lexbuf)
+    else (
+      Buffer.add_char buf '"';
+      (read_string[@tailcall]) delimiter buf pos state lexbuf
+    )
+  }
   | "${" {
     match !state with
     | NotInterpolating -> (
@@ -181,7 +226,7 @@ and read_string delimiter buf pos state =
     )
     | Interpolating -> STRING_MIDDLE (Buffer.contents buf, pos)
   }
-  | [^ '"' '\'' '$']+ {
+  | [^ '"' '\\' '\'' '$']+ {
     let chunk = (Lexing.lexeme lexbuf) in
     Buffer.add_string buf chunk;
     (read_string[@tailcall]) delimiter buf pos state lexbuf
