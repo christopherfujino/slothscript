@@ -17,68 +17,52 @@ assert(y == 9)
     (DoBlock
       ((LetStmt
         x
-        (MethodInvoc
-          (receiver
-            (Num
-              1
-              [POS]))
-          (target
-            +)
-          (args
-            ((Num
-              2
-              [POS])))
-          (pos
-            [POS]))
+        (Binary
+          (Num
+            1
+            [POS])
+          (Num
+            2
+            [POS])
+          Plus
+          [POS])
         [POS])
         (LetStmt
           y
-          (MethodInvoc
-            (receiver
-              (Num
-                2
-                [POS]))
-            (target
-              +)
-            (args
-              ((Num
-                3
-                [POS])))
-            (pos
-              [POS]))
+          (Binary
+            (Num
+              2
+              [POS])
+            (Num
+              3
+              [POS])
+            Plus
+            [POS])
           [POS])
         (ExprStmt
-          (MethodInvoc
-            (receiver
-              (IdRef
-                x
-                [POS]))
-            (target
-              +)
-            (args
-              ((IdRef
-                y
-                [POS])))
-            (pos
-              [POS]))))
+          (Binary
+            (IdRef
+              x
+              [POS])
+            (IdRef
+              y
+              [POS])
+            Plus
+            [POS])))
       [POS])
     [POS]))
   (StmtDecl
     (LetStmt
       y
-      (MethodInvoc
-        (receiver
-          (IdRef
-            x
-            [POS]))
-        (target
-          +)
-        (args
-          ((Num
-            1
-            [POS])))
-        (pos
-          [POS]))
+      (Binary
+        (IdRef
+          x
+          [POS])
+        (Num
+          1
+          [POS])
+        Plus
+        [POS])
       [POS]))
   (StmtDecl
     (ExprStmt

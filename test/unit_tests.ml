@@ -27,10 +27,49 @@ print("The answer is: ${f()}.")|} in
         assert_equal double_quote_count 2 );
   ]
 
+let escape () =
+  let open Interpreter.Common in
+  let pp_diff formatter tuple =
+    let left, right = tuple in
+    let left = List.to_string ~f:Fun.id left in
+    let right = List.to_string ~f:Fun.id right in
+    Format.fprintf formatter "Actual: \"%s\"\nExpected: \"%s\"" left right
+  in
+  [
+    ( "with no spaces, returns a single element",
+      fun _ ->
+        let input = "thisISaLongSTRING_without.anySPACES" in
+        let output = shell_like_escape input in
+        assert_equal ~pp_diff output [ input ] );
+    ( "multiple elements output in the right order",
+      fun _ ->
+        let output = shell_like_escape "two words" in
+        assert_equal ~pp_diff output [ "two"; "words" ] );
+    ( "track double quotes",
+      fun _ ->
+        let input = "print \"Hello, world!\"" in
+        let output = shell_like_escape input in
+        assert_equal ~pp_diff output [ "print"; "Hello, world!" ] );
+    ( "track single quotes",
+      fun _ ->
+        let input = "print 'Hello, world!'" in
+        let output = shell_like_escape input in
+        assert_equal ~pp_diff output [ "print"; "Hello, world!" ] );
+    ( "nested quotes",
+      fun _ ->
+        let input = "'this should be \"only a single\" string'" in
+        let output = shell_like_escape input in
+        assert_equal ~pp_diff output
+          [ "this should be \"only a single\" string" ] );
+  ]
+
 let get () =
   let f =
    fun tuple ->
     let name, callback = tuple in
     name >:: callback
   in
-  [ "pretty" >::: List.map pretty ~f ]
+  [
+    "shell_like_escape" >::: List.map (escape ()) ~f;
+    "pretty" >::: List.map pretty ~f;
+  ]

@@ -7,29 +7,21 @@ chained infix calls
 ### Ast
 ((StmtDecl
   (ExprStmt
-    (MethodInvoc
-      (receiver
-        (MethodInvoc
-          (receiver
-            (Num
-              1
-              [POS]))
-          (target
-            +)
-          (args
-            ((Num
-              2
-              [POS])))
-          (pos
-            [POS])))
-      (target
-        +)
-      (args
-        ((Num
-          3
-          [POS])))
-      (pos
-        [POS])))))
+    (Binary
+      (Binary
+        (Num
+          1
+          [POS])
+        (Num
+          2
+          [POS])
+        Plus
+        [POS])
+      (Num
+        3
+        [POS])
+      Plus
+      [POS]))))
 
 ### Stdout
 

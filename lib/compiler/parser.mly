@@ -25,6 +25,8 @@
 %token <Lexing.position> IN
 %token <Lexing.position> DO
 %token <Lexing.position> FOR
+
+(* Operators *)
 %token <Lexing.position> PLUS
 %token <Lexing.position> MINUS
 %token <Lexing.position> EQUALS
@@ -32,9 +34,14 @@
 %token <Lexing.position> NOT_EQUALS
 %token <Lexing.position> PRODUCT
 %token <Lexing.position> DIVIDE
-%token <Lexing.position> SEMICOLON
-
 %token <Lexing.position> PIPE
+%token <Lexing.position> LEQ
+%token <Lexing.position> GEQ
+%token <Lexing.position> LESS
+%token <Lexing.position> GREATER
+%token <Lexing.position> BANG
+
+%token <Lexing.position> SEMICOLON
 %token <Lexing.position> DOT
 %token <Lexing.position> COLON
 %token <Lexing.position> LCURLY
@@ -44,11 +51,6 @@
 %token <Lexing.position> LBRACKET
 %token <Lexing.position> RBRACKET
 %token <Lexing.position> COMMA
-%token <Lexing.position> LEQ
-%token <Lexing.position> GEQ
-%token <Lexing.position> LESS
-%token <Lexing.position> GREATER
-%token <Lexing.position> BANG
 
 (* These will be stripped out by the Lexer; optional position is of EOF *)
 %token <Lexing.position * Lexing.position option> COMMENT
@@ -162,42 +164,42 @@ expr2:
   }
   | e1 = expr2; pos = LESS; e2 = expr2 {
     let pos = Sloth_common.Position.t_of_lexing_position pos in
-    MethodInvoc { receiver=e1; target="<"; args=[e2]; pos}
+    Binary ( e1, e2, Less, pos)
   }
   | e1 = expr2; pos = GREATER; e2 = expr2 {
     let pos = Sloth_common.Position.t_of_lexing_position pos in
-    MethodInvoc { receiver=e1; target=">"; args=[e2]; pos}
+    Binary ( e1, e2, Greater, pos)
   }
   | e1 = expr2; pos = LEQ; e2 = expr2 {
     let pos = Sloth_common.Position.t_of_lexing_position pos in
-    MethodInvoc { receiver=e1; target="<="; args=[e2]; pos}
+    Binary ( e1, e2, Leq, pos)
   }
   | e1 = expr2; pos = GEQ; e2 = expr2 {
     let pos = Sloth_common.Position.t_of_lexing_position pos in
-    MethodInvoc { receiver=e1; target=">="; args=[e2]; pos}
+    Binary ( e1, e2, Geq, pos)
   }
 
   | e1 = expr2; pos = PLUS; e2 = expr2 {
     let pos = Sloth_common.Position.t_of_lexing_position pos in
-    MethodInvoc { receiver=e1; target="+"; args=[e2]; pos}
+    Binary ( e1, e2, Plus, pos)
   }
   | e1 = expr2; pos = MINUS; e2 = expr2 {
     let pos = Sloth_common.Position.t_of_lexing_position pos in
-    MethodInvoc { receiver=e1; target="-"; args=[e2]; pos}
+    Binary ( e1, e2, Minus, pos)
   }
   | e1 = expr2; pos = PIPE; e2 = expr2 {
     let pos = Sloth_common.Position.t_of_lexing_position pos in
-    MethodInvoc { receiver=e1; target="|"; args=[e2]; pos}
+    Binary ( e1, e2, Pipe, pos)
   }
 
   (* operators *, /; TODO add % *)
   | e1 = expr2; pos = PRODUCT; e2 = expr2 {
     let pos = Sloth_common.Position.t_of_lexing_position pos in
-    MethodInvoc { receiver=e1; target="*"; args=[e2]; pos}
+    Binary ( e1, e2, Product, pos)
   }
   | e1 = expr2; pos = DIVIDE; e2 = expr2 {
     let pos = Sloth_common.Position.t_of_lexing_position pos in
-    MethodInvoc { receiver=e1; target="/"; args=[e2]; pos}
+    Binary ( e1, e2, Divide, pos)
   }
 
   (* ! *)

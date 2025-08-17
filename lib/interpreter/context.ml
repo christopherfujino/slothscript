@@ -48,47 +48,38 @@ let make_ctx m src =
   let classes = Hashtbl.create (module String) in
   let identifiers = Identifiers.create () in
   let make_method name arity methods cb =
-    Hashtbl.add_exn methods ~key:name
-      ~data:
-        (Runtime.Func
-           (Runtime.Native
-              {
-                parameters = [ "this"; "left"; "right" ];
-                cb =
-                  (fun args ->
-                    let arg_len = List.length args in
-                    if not (Int.equal arg_len arity) then
-                      Error
-                        (Printf.sprintf
-                           "You passed %d arguments (%s) but %d were expected"
-                           arg_len
-                           (List.fold_left args ~init:"" ~f:(fun msg arg ->
-                                msg ^ Runtime.to_s arg ^ ", "))
-                           arity)
-                    else cb args);
-                identifiers;
-              }))
+    let cb =
+     fun args ->
+      let arg_len = List.length args in
+      if not (Int.equal arg_len arity) then
+        Error
+          (Printf.sprintf "You passed %d arguments (%s) but %d were expected"
+             arg_len
+             (List.fold_left args ~init:"" ~f:(fun msg arg ->
+                  msg ^ Runtime.to_s arg ^ ", "))
+             arity)
+      else cb args
+    in
+    let native =
+      Runtime.Native
+        { parameters = [ "this"; "left"; "right" ]; cb; identifiers }
+    in
+    Hashtbl.add_exn methods ~key:name ~data:(Runtime.Func native)
   in
   let make_func name ?arity identifiers cb =
+    let cb =
+     fun args ->
+      let arg_len = List.length args in
+      if
+        Option.is_some arity && not (Int.equal arg_len (Option.value_exn arity))
+      then
+        Error
+          (Printf.sprintf "You passed %d arguments but %d were expected" arg_len
+             (Option.value_exn arity))
+      else cb args
+    in
     Identifiers.bind identifiers name
-      (Runtime.Func
-         (Native
-            {
-              parameters = [ "value" ];
-              cb =
-                (fun args ->
-                  let arg_len = List.length args in
-                  if
-                    Option.is_some arity
-                    && not (Int.equal arg_len (Option.value_exn arity))
-                  then
-                    Error
-                      (Printf.sprintf
-                         "You passed %d arguments but %d were expected" arg_len
-                         (Option.value_exn arity))
-                  else cb args);
-              identifiers;
-            }))
+      (Runtime.Func (Native { parameters = [ "value" ]; cb; identifiers }))
     |> Option.value_exn
   in
   List.iter Sloth_common.Stdlib_interface.globals.ids ~f:(fun name ->
@@ -129,8 +120,9 @@ let make_ctx m src =
           Identifiers.bind identifiers "$cwd" (Runtime.String "TODO")
           |> Option.value_exn
       | _ ->
-          Printf.sprintf "TODO: You have not yet implemented %s" name
-          |> failwith);
+          Printf.sprintf "TODO: You have not yet implemented %s at %s" name
+            __LOC__
+          |> Sloth_common.Common.internal_failure);
   List.iter Sloth_common.Stdlib_interface.globals.protos
     ~f:(fun { name; methods; static_members } ->
       let cl =
@@ -143,52 +135,7 @@ let make_ctx m src =
       (match name with
       | "Number" ->
           List.iter methods ~f:(fun meth ->
-              let process_infix_methods args cb =
-                let lhs =
-                  List.nth_exn args 0 |> Runtime.num_of_val |> Option.value_exn
-                in
-                let rhs_t = List.nth_exn args 1 in
-                match Runtime.num_of_val rhs_t with
-                | None ->
-                    Error
-                      (Printf.sprintf
-                         "Expected right-hand side to be a Number, but got %s"
-                      @@ Runtime.to_s rhs_t)
-                | Some rhs -> Ok (cb lhs rhs)
-              in
               match meth with
-              | "+" ->
-                  make_method "+" 2 cl.instance_members (fun args ->
-                      process_infix_methods args (fun lhs rhs ->
-                          Runtime.Num (lhs +. rhs)))
-              | "-" ->
-                  make_method "-" 2 cl.instance_members (fun args ->
-                      process_infix_methods args (fun lhs rhs ->
-                          Runtime.Num (lhs -. rhs)))
-              | "/" ->
-                  make_method "/" 2 cl.instance_members (fun args ->
-                      process_infix_methods args (fun lhs rhs ->
-                          Runtime.Num (lhs /. rhs)))
-              | "*" ->
-                  make_method "*" 2 cl.instance_members (fun args ->
-                      process_infix_methods args (fun lhs rhs ->
-                          Runtime.Num (lhs *. rhs)))
-              | "<=" ->
-                  make_method "<=" 2 cl.instance_members (fun args ->
-                      process_infix_methods args (fun lhs rhs ->
-                          Runtime.Bool Float.(lhs <=. rhs)))
-              | ">=" ->
-                  make_method ">=" 2 cl.instance_members (fun args ->
-                      process_infix_methods args (fun lhs rhs ->
-                          Runtime.Bool Float.(lhs >=. rhs)))
-              | ">" ->
-                  make_method ">" 2 cl.instance_members (fun args ->
-                      process_infix_methods args (fun lhs rhs ->
-                          Runtime.Bool Float.(lhs >. rhs)))
-              | "<" ->
-                  make_method "<" 2 cl.instance_members (fun args ->
-                      process_infix_methods args (fun lhs rhs ->
-                          Runtime.Bool Float.(lhs <. rhs)))
               | _ ->
                   failwith
                     (Printf.sprintf "Number does not implement the method %s"
@@ -196,45 +143,7 @@ let make_ctx m src =
           List.iter static_members ~f:(fun _ -> failwith __LOC__)
       | "Process" ->
           List.iter methods ~f:(fun meth ->
-              let process_infix_methods args cb =
-                let lhs = List.nth_exn args 0 |> Runtime.process_of_val in
-                let rhs_t = List.nth_exn args 1 in
-                let err_cb () =
-                  Printf.sprintf
-                    "Expected right-hand side to be a Process, but got %s"
-                  @@ Runtime.to_s rhs_t
-                  |> failwith
-                in
-                let rhs = Runtime.process_of_val ~cb:err_cb rhs_t in
-                Ok (cb lhs rhs)
-              in
               match meth with
-              | "|" ->
-                  make_method meth 2 cl.instance_members (fun args ->
-                      process_infix_methods args (fun left right ->
-                          let read, write = Core_unix.pipe () in
-                          left.stdout <- write;
-                          left.pipes_to_collect <-
-                            write :: left.pipes_to_collect;
-                          right.stdin <- read;
-                          right.pipes_to_collect <-
-                            read :: right.pipes_to_collect;
-                          let right = { right with previous = Some left } in
-                          Runtime.Process right))
-              | "!" ->
-                  make_method meth 1 cl.instance_members (fun args ->
-                      let process = List.hd_exn args in
-                      let proc =
-                        match process with
-                        | Runtime.Process proc -> proc
-                        | _ ->
-                            Printf.sprintf "Internal error %s\n\n%s"
-                              (Runtime.to_class_name process)
-                              __LOC__
-                            |> failwith
-                      in
-
-                      exec_proc proc)
               | _ ->
                   Printf.sprintf "`Process` does not implement the method `%s`"
                     meth

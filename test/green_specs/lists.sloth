@@ -77,19 +77,15 @@ print(l);
           (IdRef
             l
             [POS])
-          (MethodInvoc
-            (receiver
-              (Num
-                2
-                [POS]))
-            (target
-              +)
-            (args
-              ((Num
-                3
-                [POS])))
-            (pos
-              [POS]))
+          (Binary
+            (Num
+              2
+              [POS])
+            (Num
+              3
+              [POS])
+            Plus
+            [POS])
           [POS]))
         [POS])))
   (StmtDecl

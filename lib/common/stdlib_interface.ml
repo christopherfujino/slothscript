@@ -12,11 +12,7 @@ let globals =
     ids = [ "print"; "assert"; "$cwd" ];
     protos =
       [
-        { name = "Process"; methods = [ "!"; "|" ]; static_members = [ "new" ] };
-        {
-          name = "Number";
-          methods = [ "+"; "-"; "/"; "*"; "<"; ">"; "<="; ">=" ];
-          static_members = [];
-        };
+        { name = "Process"; methods = []; static_members = [ "new" ] };
+        { name = "Number"; methods = []; static_members = [] };
       ];
   }

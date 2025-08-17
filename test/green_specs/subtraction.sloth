@@ -7,19 +7,15 @@ subtraction
 ### Ast
 ((StmtDecl
   (ExprStmt
-    (MethodInvoc
-      (receiver
-        (Num
-          1
-          [POS]))
-      (target
-        -)
-      (args
-        ((Num
-          1
-          [POS])))
-      (pos
-        [POS])))))
+    (Binary
+      (Num
+        1
+        [POS])
+      (Num
+        1
+        [POS])
+      Minus
+      [POS]))))
 
 ### Stdout
 

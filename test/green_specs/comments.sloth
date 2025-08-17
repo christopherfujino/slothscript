@@ -28,19 +28,15 @@ let x = 1 +
   (StmtDecl
     (LetStmt
       x
-      (MethodInvoc
-        (receiver
-          (Num
-            1
-            [POS]))
-        (target
-          +)
-        (args
-          ((Num
-            1
-            [POS])))
-        (pos
-          [POS]))
+      (Binary
+        (Num
+          1
+          [POS])
+        (Num
+          1
+          [POS])
+        Plus
+        [POS])
       [POS])))
 
 ### Stdout
