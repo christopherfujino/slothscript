@@ -10,7 +10,7 @@ result = "uname" | "tr x s"!
 # Is equivalent to the more verbose...
 result = Process.new(["uname"]) | Process.new(["tr", "x", "s"])!
 
-# Because the pipe operator will has rules for implicit casts
+# Because the pipe operator has rules for implicit casts
 
 ### Ast
 ((StmtDecl
