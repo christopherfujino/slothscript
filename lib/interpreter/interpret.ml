@@ -300,7 +300,7 @@ and interpret_expr ctx expr =
             let arg_expr = List.hd_exn args in
             let arg = interpret_expr ctx arg_expr in
             match name with
-            | "File" -> cast_to_file ~ctx ~pos arg
+            | "File" -> Runtime.File (cast_to_file ~ctx ~pos arg)
             | _ -> Sloth_common.Common.internal_failure __LOC__)
       | _ ->
           Printf.sprintf "Tried to invoke %s, but it is not a function"
@@ -330,7 +330,26 @@ and interpret_expr ctx expr =
           match Context.exec_proc proc with
           | Ok t' -> t'
           | Error err -> failure ~ctx pos err)
-      | _ -> Sloth_common.Common.internal_failure __LOC__)
+      | LeftArrow -> (
+          let target = interpret_expr ctx target in
+          let file = cast_to_file ~ctx ~pos target in
+          let target = Runtime.File file in
+          let func =
+            dereference_object ctx target "readString" pos
+          in
+          let func =
+            match Runtime.func_of_val func with
+            | None -> Sloth_common.Common.internal_failure __LOC__
+            | Some func -> func
+          in
+          let cb =
+            match func with
+            | User _ -> Sloth_common.Common.internal_failure __LOC__
+            | Native { cb; _ } -> cb
+          in
+          match cb [target] with Error err -> failure ~ctx pos err | Ok t' -> t')
+      | Plus | Minus | Product | Divide | Pipe | Less | Greater | Leq | Geq ->
+          (* Unreachable *) Sloth_common.Common.internal_failure __LOC__)
   | DoBlock (block, _) ->
       let ctx =
         { ctx with identifiers = Identifiers.push_empty ctx.identifiers }
@@ -464,6 +483,7 @@ and dereference_object ctx receiver target pos =
       | Some func -> func)
 
 and cast_to_file ~ctx ~pos = function
+  | Runtime.File f -> f
   | Runtime.String filename -> (
       let func_opt =
         dereference_object ctx (Runtime.Prototype { name = "File" }) "new" pos
@@ -480,7 +500,7 @@ and cast_to_file ~ctx ~pos = function
         | User _ -> Sloth_common.Common.internal_failure __LOC__
       in
       match callback [ Runtime.String filename ] with
-      | Ok file -> file
+      | Ok file -> (cast_to_file [@tailcall]) ~ctx ~pos file
       | Error err -> failure ~ctx pos err)
   | _ as t' ->
       failure ~ctx pos

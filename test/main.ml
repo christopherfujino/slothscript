@@ -33,21 +33,7 @@ let pp_diff formatter left_right_tuple =
 let make_test spec =
   let open Compiler in
   spec.name >:: fun _ ->
-  (* Is AST pretty? *)
   let pretty_ast = Printer.sexp_formatter spec.ast in
-  if not (String.equal pretty_ast spec.ast) then (
-    let buf = Buffer.create 256 in
-    let formatter = Format.formatter_of_buffer buf in
-    pp_diff formatter (pretty_ast, spec.ast);
-    (* Flush *)
-    Format.pp_print_newline formatter ();
-    let msg = Buffer.contents buf in
-    let msg =
-      Printf.sprintf
-        "Un-pretty AST for %s\n\nExpected:\n%s\n\nShould be:\n%s\n\n%s"
-        spec.name spec.ast pretty_ast msg
-    in
-    assert_failure msg);
   (* Parser *)
   let env =
     Compiler.Environment.create spec.program |> Compiler.Environment.populate
@@ -67,9 +53,26 @@ let make_test spec =
         Some (match acc with None -> cur | Some acc -> acc ^ cur))
       ~init:None
   in
+  (* Is STDOUT correct? *)
   match catted_output_opt with
   | None -> assert_equal ~printer spec.stdout_expect ""
-  | Some s -> assert_equal ~printer spec.stdout_expect (String.strip s)
+  | Some s -> assert_equal ~printer spec.stdout_expect (String.strip s);
+
+  (* Is AST pretty? *)
+  if not (String.equal pretty_ast spec.ast) then (
+    let buf = Buffer.create 256 in
+    let formatter = Format.formatter_of_buffer buf in
+    pp_diff formatter (pretty_ast, spec.ast);
+    (* Flush *)
+    Format.pp_print_newline formatter ();
+    let msg = Buffer.contents buf in
+    let msg =
+      Printf.sprintf
+        "Un-pretty AST for %s\n\nExpected:\n%s\n\nShould be:\n%s\n\n%s"
+        spec.name spec.ast pretty_ast msg
+    in
+    assert_failure msg)
+
 
 let make_failing_test spec =
   let open Compiler in

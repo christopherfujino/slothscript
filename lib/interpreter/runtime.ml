@@ -43,11 +43,24 @@ and function_t =
     }
 
 type class_t = {
+  constructor : t -> (t, string) Result.t;
   instance_members : (string, t) Hashtbl.t;
   static_members : (string, t) Hashtbl.t;
 }
 
-type class_lookup = (string, class_t) Hashtbl.t
+type class_lookup = {
+  string : class_t;
+  bool : class_t;
+  num : class_t;
+  list : class_t;
+  hash_map : class_t;
+  func : class_t;
+  prototype : class_t;
+  process : class_t;
+  process_result : class_t;
+  file : class_t;
+  null : class_t;
+}
 
 let to_class_name = function
   | String _ -> "String"
@@ -120,3 +133,4 @@ let list_of_val = function List l -> Some l | _ -> None
 let hashmap_of_val = function HashMap h -> Some h | _ -> None
 let process_of_val = function Process p -> Some p | _ -> None
 let func_of_val = function Func func -> Some func | _ -> None
+let file_of_val = function File f -> Some f | _ -> None

@@ -98,6 +98,7 @@ and operator =
   | Geq
   | Bang
   | Not
+  | LeftArrow
 [@@deriving sexp]
 
 let num_of_expr expr =

@@ -26,5 +26,6 @@ From high to low precedence (left-associative):
 `*`, `/`, `%`
 `+`, `-`, `|`
 `==`, `!=`, `<`, `<=`, `>`, `>=`
+`<-`
 `and`
 `or` `!` (postfix)

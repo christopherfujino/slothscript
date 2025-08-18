@@ -201,6 +201,17 @@ let make_ctx m src =
       | "File" ->
           List.iter methods ~f:(fun meth ->
               match meth with
+              | "readString" ->
+                  make_method meth 1 cl.instance_members (fun args ->
+                      let first_arg = List.hd_exn args in
+                      let Runtime.{ path } =
+                        match Runtime.file_of_val first_arg with
+                        | Some f -> f
+                        | None -> Sloth_common.Common.internal_failure __LOC__
+                      in
+                      (* Errors? *)
+                      let contents = In_channel.read_all path in
+                      Ok (Runtime.String contents))
               | _ ->
                   Printf.sprintf "`File` does not implement the method `%s`"
                     meth

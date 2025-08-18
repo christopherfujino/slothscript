@@ -33,6 +33,7 @@ let to_s token =
   let open Parser in
   match token with
   | BANG _ -> "BANG"
+  | LEFT_ARROW _ -> "LEFT_ARROW"
   | NOT _ -> "NOT"
   | DOT _ -> "DOT"
   | PIPE _ -> "PIPE"

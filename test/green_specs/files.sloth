@@ -2,11 +2,40 @@
 files
 
 ### Program
-#let f = <- File("README.md")
-#print(f)
+let f = <- File("./README.md")
+print(f)
 
 ### Ast
-()
+((StmtDecl
+  (LetStmt
+    f
+    (UnaryExpr
+      (target
+        (FuncInvoc
+          (IdRef
+            File
+            [POS])
+          ((String
+            ((FullString
+              ./README.md
+              [POS]))
+            [POS]))
+          [POS]))
+      (pos
+        [POS])
+      (operator
+        LeftArrow))
+    [POS]))
+  (StmtDecl
+    (ExprStmt
+      (FuncInvoc
+        (IdRef
+          print
+          [POS])
+        ((IdRef
+          f
+          [POS]))
+        [POS]))))
 
 ### Stdout
 
