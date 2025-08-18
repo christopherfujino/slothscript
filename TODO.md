@@ -16,6 +16,7 @@
 - [ ] Optional function parameters
 - [ ] List mutation methods
 - [ ] Stack traces; depends on storing locs in runtime values
+- [ ] Allow single statement blocks to omit semicolons
 
 ### v1.0
 - [ ] Formatter

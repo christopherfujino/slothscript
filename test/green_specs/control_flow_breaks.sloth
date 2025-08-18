@@ -1,0 +1,23 @@
+### Name
+return, break, continue, error
+
+### Program
+func earlyReturn() {}
+
+### Ast
+((FuncDecl
+  (name
+    earlyReturn)
+  (parameters
+    ())
+  (block
+    ())
+  (pos
+    [POS])))
+
+### Stdout
+
+
+### Failure
+
+
