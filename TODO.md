@@ -9,6 +9,7 @@
 - [ ] Language versioning
 
 ### v0.2 - initial pre-release
+- [ ] CLI args
 - [ ] statically link readline
 - [ ] Regular expressions
 - [ ] string escapes
@@ -60,4 +61,4 @@
 - [x] Use readline for REPL
 - [x] operators are top level functions that DO one thing, but allow for implicit casting of its operands
 - [x] raw string literals
-- [ ] Files
+- [x] Files
