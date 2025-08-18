@@ -99,6 +99,7 @@ and operator =
   | Bang
   | Not
   | LeftArrow
+  | RightArrow
 [@@deriving sexp]
 
 let num_of_expr expr =

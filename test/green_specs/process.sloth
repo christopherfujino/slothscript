@@ -2,99 +2,38 @@
 process
 
 ### Program
-let result = null
-
 #This short version...
-result = "uname" | "tr x s"!
+let result1 = "uname" | "tr x s"!
 
 # Is equivalent to the more verbose...
-result = Process.new(["uname"]) | Process.new(["tr", "x", "s"])!
+let result2 = Process.new(["uname"]) | Process.new(["tr", "x", "s"])!
 
 # Because the pipe operator has rules for implicit casts
 
 ### Ast
 ((StmtDecl
   (LetStmt
-    result
-    (Null
-      [POS])
-    [POS]))
-  (StmtDecl
-    (AssignStmt
-      result
-      (UnaryExpr
-        (target
-          (Binary
-            (String
-              ((FullString
-                uname
-                [POS]))
-              [POS])
-            (String
-              ((FullString
-                "tr x s"
-                [POS]))
-              [POS])
-            Pipe
-            [POS]))
-        (pos
-          [POS])
-        (operator
-          Bang))
-      [POS]))
-  (StmtDecl
-    (AssignStmt
-      result
-      (UnaryExpr
-        (target
-          (Binary
-            (FuncInvoc
-              (ObjDeref
-                (IdRef
-                  Process
-                  [POS])
-                new
-                [POS])
-              ((List
-                ((String
-                  ((FullString
-                    uname
-                    [POS]))
-                  [POS]))
-                [POS]))
-              [POS])
-            (FuncInvoc
-              (ObjDeref
-                (IdRef
-                  Process
-                  [POS])
-                new
-                [POS])
-              ((List
-                ((String
-                  ((FullString
-                    tr
-                    [POS]))
-                  [POS])
-                  (String
-                    ((FullString
-                      x
-                      [POS]))
-                    [POS])
-                  (String
-                    ((FullString
-                      s
-                      [POS]))
-                    [POS]))
-                [POS]))
-              [POS])
-            Pipe
-            [POS]))
-        (pos
-          [POS])
-        (operator
-          Bang))
-      [POS])))
+    result1
+    (UnaryExpr
+      (target
+        (Binary
+          (String
+            ((FullString
+              uname
+              [POS]))
+            [POS])
+          (String
+            ((FullString
+              "tr x s"
+              [POS]))
+            [POS])
+          Pipe
+          [POS]))
+      (pos
+        [POS])
+      (operator
+        Bang))
+    [POS])))
 
 ### Stdout
 

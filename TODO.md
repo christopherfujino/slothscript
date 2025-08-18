@@ -3,6 +3,7 @@
 ### v0.1 - initial version
 - [ ] return, break, continue keywords; error handling (`let result = mayError() catch (e) DEFAULT;`)
 - [ ] Context variables, with statements
+    - [ ] $echo = true
 - [ ] Mock out process subsystem for unit tests
 - [ ] Standard Library
 - [ ] Language versioning

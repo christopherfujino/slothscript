@@ -39,8 +39,6 @@ let make_test spec =
     Compiler.Environment.create spec.program |> Compiler.Environment.populate
   in
   let _, prog = Main.parse env spec.program in
-  assert_equal ~pp_diff ~printer spec.ast
-    (Optimizer.prog_to_str prog |> Printer.sexp_formatter);
 
   (* Interpreter *)
   let module Lib = Interpreter.Sloth_stdlib.Make_test () in
@@ -59,6 +57,9 @@ let make_test spec =
   | Some s -> assert_equal ~printer spec.stdout_expect (String.strip s);
 
   (* Is AST pretty? *)
+  assert_equal ~pp_diff ~printer spec.ast
+    (Optimizer.prog_to_str prog |> Printer.sexp_formatter);
+
   if not (String.equal pretty_ast spec.ast) then (
     let buf = Buffer.create 256 in
     let formatter = Format.formatter_of_buffer buf in

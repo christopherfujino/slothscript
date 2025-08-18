@@ -42,6 +42,7 @@
 %token <Lexing.position> BANG
 %token <Lexing.position> NOT
 %token <Lexing.position> LEFT_ARROW
+%token <Lexing.position> RIGHT_ARROW
 
 %token <Lexing.position> SEMICOLON
 %token <Lexing.position> DOT
@@ -67,7 +68,7 @@
    *)
 
 %left BANG (* Postfix *)
-%left LEFT_ARROW (* Prefix *)
+%left LEFT_ARROW (* Prefix *) RIGHT_ARROW (* Postfix *)
 %left NOT_EQUALS DOUBLE_EQUALS GEQ LEQ LESS GREATER
 %left MINUS PLUS PIPE
 %left PRODUCT DIVIDE
@@ -206,7 +207,10 @@ expr2:
     Binary ( e1, e2, Divide, pos)
   }
 
-  (* Unary *)
+  | e1 = expr2; pos = RIGHT_ARROW; e2 = expr2 {
+    let pos = Sloth_common.Position.t_of_lexing_position pos in
+    Binary ( e1, e2, RightArrow, pos)
+  }
   | pos = LEFT_ARROW; e = expr2 {
     let pos = Sloth_common.Position.t_of_lexing_position pos in
     UnaryExpr { target=e; operator=LeftArrow; pos}

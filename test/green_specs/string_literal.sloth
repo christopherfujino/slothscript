@@ -2,6 +2,7 @@
 string literal
 
 ### Program
+"awk $"
 assert("Hello" == 'Hello')
 print("Hello\nworld")
 print('Hello\nworld')
@@ -11,24 +12,31 @@ print("\"Hello, world!\"")
 ### Ast
 ((StmtDecl
   (ExprStmt
-    (FuncInvoc
-      (IdRef
-        assert
-        [POS])
-      ((Equality
-        (String
-          ((FullString
-            Hello
-            [POS]))
-          [POS])
-        (String
-          ((FullString
-            Hello
-            [POS]))
-          [POS])
-        true
+    (String
+      ((FullString
+        "awk $"
         [POS]))
       [POS])))
+  (StmtDecl
+    (ExprStmt
+      (FuncInvoc
+        (IdRef
+          assert
+          [POS])
+        ((Equality
+          (String
+            ((FullString
+              Hello
+              [POS]))
+            [POS])
+          (String
+            ((FullString
+              Hello
+              [POS]))
+            [POS])
+          true
+          [POS]))
+        [POS])))
   (StmtDecl
     (ExprStmt
       (FuncInvoc

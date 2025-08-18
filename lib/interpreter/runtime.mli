@@ -12,7 +12,11 @@ type process = {
 }
 
 type file = { path : string }
-type process_result = { code : int }
+type process_result = {
+  code : int;
+  stdout : string;
+  stderr : string;
+}
 
 type t =
   | String of string

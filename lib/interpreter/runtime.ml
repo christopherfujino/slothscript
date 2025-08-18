@@ -11,7 +11,7 @@ type process = {
   previous : process option;
 }
 
-type process_result = { code : int }
+type process_result = { code : int; stdout : string; stderr : string }
 type file = { path : string }
 
 type t =
@@ -43,24 +43,11 @@ and function_t =
     }
 
 type class_t = {
-  constructor : t -> (t, string) Result.t;
   instance_members : (string, t) Hashtbl.t;
   static_members : (string, t) Hashtbl.t;
 }
 
-type class_lookup = {
-  string : class_t;
-  bool : class_t;
-  num : class_t;
-  list : class_t;
-  hash_map : class_t;
-  func : class_t;
-  prototype : class_t;
-  process : class_t;
-  process_result : class_t;
-  file : class_t;
-  null : class_t;
-}
+type class_lookup = (string, class_t) Hashtbl.t
 
 let to_class_name = function
   | String _ -> "String"
@@ -116,7 +103,11 @@ let rec to_s t' =
   (* TODO we should list out all in the group *)
   | Process { cmd; _ } ->
       Printf.sprintf "Process(cmd=[%s])" @@ stringify_list cmd
-  | ProcessResult { code } -> Printf.sprintf "ProcessResult(code=%d)" code
+  | ProcessResult { code; stdout; stderr } ->
+      let stdout = String.strip stdout in
+      let stderr = String.strip stderr in
+      Printf.sprintf "ProcessResult(code=%d, stdout=\"%s\", stderr=\"%s\")" code
+        stdout stderr
   | File { path } -> Printf.sprintf "File(path=%s)" path
   | FileHandle -> "FileHandle(TODO)"
 

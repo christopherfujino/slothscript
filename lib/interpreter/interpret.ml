@@ -334,9 +334,7 @@ and interpret_expr ctx expr =
           let target = interpret_expr ctx target in
           let file = cast_to_file ~ctx ~pos target in
           let target = Runtime.File file in
-          let func =
-            dereference_object ctx target "readString" pos
-          in
+          let func = dereference_object ctx target "readString" pos in
           let func =
             match Runtime.func_of_val func with
             | None -> Sloth_common.Common.internal_failure __LOC__
@@ -347,8 +345,11 @@ and interpret_expr ctx expr =
             | User _ -> Sloth_common.Common.internal_failure __LOC__
             | Native { cb; _ } -> cb
           in
-          match cb [target] with Error err -> failure ~ctx pos err | Ok t' -> t')
-      | Plus | Minus | Product | Divide | Pipe | Less | Greater | Leq | Geq ->
+          match cb [ target ] with
+          | Error err -> failure ~ctx pos err
+          | Ok t' -> t')
+      | Plus | Minus | Product | Divide | Pipe | Less | Greater | Leq | Geq
+      | RightArrow ->
           (* Unreachable *) Sloth_common.Common.internal_failure __LOC__)
   | DoBlock (block, _) ->
       let ctx =
@@ -603,4 +604,25 @@ and interpret_binary ctx lhs rhs op pos =
       let left = cast_to_number lhs in
       let right = cast_to_number rhs in
       Runtime.Bool Float.(left > right)
-  | _ -> failwith (Printf.sprintf "TODO: %s" __LOC__)
+  | RightArrow ->
+      let left = cast_to_string ~ctx ~pos lhs in
+      let Runtime.{path} = cast_to_file ~ctx ~pos rhs in
+      Out_channel.write_all path ~data:left;
+      Runtime.String left
+  | Bang | Not | LeftArrow ->
+      (* Not binary ops, unreachable *)
+      Sloth_common.Common.internal_failure __LOC__
+
+and cast_to_string ~ctx ~pos t' =
+  let open Runtime in
+  match t' with
+  | String s -> s
+  | ProcessResult { stdout; _ } -> stdout
+  | Process proc -> (
+      match Context.exec_proc proc with
+      | Ok t' -> (cast_to_string [@tailcall]) ~ctx ~pos t'
+      | Error err -> failure ~ctx pos err)
+  | _ as t' ->
+      failure ~ctx pos
+      @@ Printf.sprintf "Expected a String, but got a %s"
+      @@ Runtime.to_s t'

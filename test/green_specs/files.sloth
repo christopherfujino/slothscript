@@ -2,40 +2,45 @@
 files
 
 ### Program
-let f = <- File("./README.md")
-print(f)
+# String -> File
+# Here we do implicit casts: Process -> ProcessResult -> String
+Process.new(["uname"]) -> File("foo")
+
+# <- File => String
+#let f = <- File("./README.md")
+#print(f)
 
 ### Ast
 ((StmtDecl
-  (LetStmt
-    f
-    (UnaryExpr
-      (target
-        (FuncInvoc
+  (ExprStmt
+    (Binary
+      (FuncInvoc
+        (ObjDeref
           (IdRef
-            File
+            Process
             [POS])
+          new
+          [POS])
+        ((List
           ((String
             ((FullString
-              ./README.md
+              uname
               [POS]))
             [POS]))
           [POS]))
-      (pos
         [POS])
-      (operator
-        LeftArrow))
-    [POS]))
-  (StmtDecl
-    (ExprStmt
       (FuncInvoc
         (IdRef
-          print
+          File
           [POS])
-        ((IdRef
-          f
+        ((String
+          ((FullString
+            foo
+            [POS]))
           [POS]))
-        [POS]))))
+        [POS])
+      RightArrow
+      [POS]))))
 
 ### Stdout
 
