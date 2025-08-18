@@ -52,9 +52,9 @@ let make_test spec =
       ~init:None
   in
   (* Is STDOUT correct? *)
-  match catted_output_opt with
+  (match catted_output_opt with
   | None -> assert_equal ~printer spec.stdout_expect ""
-  | Some s -> assert_equal ~printer spec.stdout_expect (String.strip s);
+  | Some s -> assert_equal ~printer spec.stdout_expect (String.strip s));
 
   (* Is AST pretty? *)
   assert_equal ~pp_diff ~printer spec.ast
@@ -73,7 +73,6 @@ let make_test spec =
         spec.name spec.ast pretty_ast msg
     in
     assert_failure msg)
-
 
 let make_failing_test spec =
   let open Compiler in

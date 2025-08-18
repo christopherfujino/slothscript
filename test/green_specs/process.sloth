@@ -33,7 +33,60 @@ let result2 = Process.new(["uname"]) | Process.new(["tr", "x", "s"])!
         [POS])
       (operator
         Bang))
-    [POS])))
+    [POS]))
+  (StmtDecl
+    (LetStmt
+      result2
+      (UnaryExpr
+        (target
+          (Binary
+            (FuncInvoc
+              (ObjDeref
+                (IdRef
+                  Process
+                  [POS])
+                new
+                [POS])
+              ((List
+                ((String
+                  ((FullString
+                    uname
+                    [POS]))
+                  [POS]))
+                [POS]))
+              [POS])
+            (FuncInvoc
+              (ObjDeref
+                (IdRef
+                  Process
+                  [POS])
+                new
+                [POS])
+              ((List
+                ((String
+                  ((FullString
+                    tr
+                    [POS]))
+                  [POS])
+                  (String
+                    ((FullString
+                      x
+                      [POS]))
+                    [POS])
+                  (String
+                    ((FullString
+                      s
+                      [POS]))
+                    [POS]))
+                [POS]))
+              [POS])
+            Pipe
+            [POS]))
+        (pos
+          [POS])
+        (operator
+          Bang))
+      [POS])))
 
 ### Stdout
 

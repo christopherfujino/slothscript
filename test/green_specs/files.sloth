@@ -2,45 +2,87 @@
 files
 
 ### Program
+let file = File("foo")
 # String -> File
 # Here we do implicit casts: Process -> ProcessResult -> String
-Process.new(["uname"]) -> File("foo")
+Process.new(["uname"]) -> file
 
 # <- File => String
-#let f = <- File("./README.md")
-#print(f)
+let contents = <- file
+assert(contents == "Linux\n", contents)
 
 ### Ast
 ((StmtDecl
-  (ExprStmt
-    (Binary
-      (FuncInvoc
-        (ObjDeref
-          (IdRef
-            Process
+  (LetStmt
+    file
+    (FuncInvoc
+      (IdRef
+        File
+        [POS])
+      ((String
+        ((FullString
+          foo
+          [POS]))
+        [POS]))
+      [POS])
+    [POS]))
+  (StmtDecl
+    (ExprStmt
+      (Binary
+        (FuncInvoc
+          (ObjDeref
+            (IdRef
+              Process
+              [POS])
+            new
             [POS])
-          new
-          [POS])
-        ((List
-          ((String
-            ((FullString
-              uname
+          ((List
+            ((String
+              ((FullString
+                uname
+                [POS]))
               [POS]))
             [POS]))
-          [POS]))
-        [POS])
+          [POS])
+        (IdRef
+          file
+          [POS])
+        RightArrow
+        [POS])))
+  (StmtDecl
+    (LetStmt
+      contents
+      (UnaryExpr
+        (target
+          (IdRef
+            file
+            [POS]))
+        (pos
+          [POS])
+        (operator
+          LeftArrow))
+      [POS]))
+  (StmtDecl
+    (ExprStmt
       (FuncInvoc
         (IdRef
-          File
+          assert
           [POS])
-        ((String
-          ((FullString
-            foo
+        ((Equality
+          (IdRef
+            contents
+            [POS])
+          (String
+            ((FullString
+              "Linux\n"
+              [POS]))
+            [POS])
+          true
+          [POS])
+          (IdRef
+            contents
             [POS]))
-          [POS]))
-        [POS])
-      RightArrow
-      [POS]))))
+        [POS]))))
 
 ### Stdout
 
