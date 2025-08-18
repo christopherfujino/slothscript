@@ -13,6 +13,12 @@ let globals =
     protos =
       [
         { name = "Process"; methods = []; static_members = [ "new" ] };
+        (*{ name = "ProcessResult"; methods = []; static_members = [] }; *)
         { name = "Number"; methods = []; static_members = [] };
+        {
+          name = "File";
+          methods = [ "readString" ];
+          static_members = [ "new" ];
+        };
       ];
   }

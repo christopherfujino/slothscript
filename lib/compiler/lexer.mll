@@ -75,6 +75,7 @@ rule private_read last_token state =
   | '*' { let token = PRODUCT lexbuf.lex_curr_p in last_token := Some token; token }
   | '/' { let token = DIVIDE lexbuf.lex_curr_p in last_token := Some token; token }
   | '!' { let token = BANG lexbuf.lex_curr_p in last_token := Some token; token }
+  | "not" { let token = NOT lexbuf.lex_curr_p in last_token := Some token; token }
   | ';' {
     let parse_semicolon () =
       let token = SEMICOLON lexbuf.lex_curr_p in
@@ -120,6 +121,8 @@ rule private_read last_token state =
   | ">=" { let token = GEQ lexbuf.lex_curr_p in last_token := Some token; token}
   | "==" { let token = DOUBLE_EQUALS lexbuf.lex_curr_p in last_token := Some token; token }
   | "!=" { let token = NOT_EQUALS lexbuf.lex_curr_p in last_token := Some token; token }
+  | "<-" { let token = LEFT_ARROW lexbuf.lex_curr_p in last_token := Some token; token }
+  | "->" { let token = RIGHT_ARROW lexbuf.lex_curr_p in last_token := Some token; token }
   | '[' { let token = LBRACKET lexbuf.lex_curr_p in last_token := Some token; token}
   | ']' { let token = RBRACKET lexbuf.lex_curr_p in last_token := Some token; token}
   (* Lexing.lexeme means return the string that matched the pattern *)
@@ -225,6 +228,10 @@ and read_string delimiter buf pos state =
       STRING_START (Buffer.contents buf, pos)
     )
     | Interpolating -> STRING_MIDDLE (Buffer.contents buf, pos)
+  }
+  | '$' {
+    Buffer.add_char buf '$';
+    (read_string[@tailcall]) delimiter buf pos state lexbuf
   }
   | [^ '"' '\\' '\'' '$']+ {
     let chunk = (Lexing.lexeme lexbuf) in

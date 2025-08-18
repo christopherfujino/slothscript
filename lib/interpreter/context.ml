@@ -10,7 +10,12 @@ type t = {
   src : string;
 }
 
-let exec_proc proc =
+let exec_proc (proc : Runtime.process) =
+  (* TODO check $echo *)
+  let read_stdout, write_stdout = Core_unix.pipe ~close_on_exec:true () in
+  let read_stderr, write_stderr = Core_unix.pipe ~close_on_exec:true () in
+  proc.stdout <- write_stdout;
+  proc.stderr <- write_stderr;
   let rec get_pids proc =
     let prev_pids =
       match Runtime.(proc.previous) with
@@ -22,10 +27,17 @@ let exec_proc proc =
     let this_pid =
       match Core_unix.fork () with
       | `In_the_child ->
+          Core_unix.close read_stdout;
+          Core_unix.close read_stderr;
+          if phys_equal write_stdout proc.stdout then ()
+          else Core_unix.close write_stdout;
+          if phys_equal write_stderr proc.stderr then ()
+          else Core_unix.close write_stderr;
+
           Core_unix.dup2 ~src:proc.stdin ~dst:Core_unix.stdin ();
           Core_unix.dup2 ~src:proc.stdout ~dst:Core_unix.stdout ();
           let _ = Core_unix.exec ~prog ~argv:proc.cmd () in
-          failwith "unreachable"
+          Sloth_common.Common.internal_failure __LOC__
       | `In_the_parent pid ->
           List.iter proc.pipes_to_collect ~f:(fun pipe -> Core_unix.close pipe);
           pid
@@ -35,13 +47,35 @@ let exec_proc proc =
 
   let pids = get_pids proc in
 
+  Core_unix.close write_stdout;
+  Core_unix.close write_stderr;
+
+  let buf_size = 2048 in
+  let buf = Bytes.create buf_size in
+  let rec read_from_pipe string_buf chan =
+    let bytes_read = In_channel.input chan ~buf ~pos:0 ~len:buf_size in
+    if bytes_read = 0 then Buffer.contents string_buf
+    else (
+      Buffer.add_subbytes string_buf buf ~pos:0 ~len:bytes_read;
+      (read_from_pipe [@tailcall]) string_buf chan)
+  in
+
+  let stdout =
+    read_from_pipe (Buffer.create buf_size)
+    @@ Core_unix.in_channel_of_descr read_stdout
+  in
+  let stderr =
+    read_from_pipe (Buffer.create buf_size)
+    @@ Core_unix.in_channel_of_descr read_stderr
+  in
+
   (* First is the last in the queue *)
   let last_pid = List.hd_exn pids in
   match Core_unix.waitpid last_pid with
   | Error _ -> Error "Your subprocess failed with a mysterious(?) error"
   | Ok () ->
       (* TODO check all the other pids too *)
-      Ok (Runtime.ProcessResult { code = 0 })
+      Ok (Runtime.ProcessResult { code = 0; stdout; stderr })
 
 let make_ctx m src =
   let module M = (val m : Sloth_stdlib.StdlibSig) in
@@ -97,13 +131,13 @@ let make_ctx m src =
               (match second_arg with
               | Some msg -> (
                   match Runtime.string_of_val msg with
-                  | Some msg -> Ok (Printf.sprintf "Assertion failed: %s" msg)
                   | None ->
                       Error
                         (Printf.sprintf
                            "The second argument to assert() must be a String, \
                             got %s"
-                        @@ Runtime.to_s msg))
+                        @@ Runtime.to_s msg)
+                  | Some msg -> Ok (Printf.sprintf "Assertion failed: %s" msg))
               | None -> Ok "Assertion failed")
               |> Result.bind ~f:(fun err_msg ->
                      match Runtime.bool_of_val arg with
@@ -198,9 +232,46 @@ let make_ctx m src =
                   Printf.sprintf
                     "`Process` does not implement the static member `%s`" name
                   |> failwith)
+      | "File" ->
+          List.iter methods ~f:(fun meth ->
+              match meth with
+              | "readString" ->
+                  make_method meth 1 cl.instance_members (fun args ->
+                      let first_arg = List.hd_exn args in
+                      let Runtime.{ path } =
+                        match Runtime.file_of_val first_arg with
+                        | Some f -> f
+                        | None -> Sloth_common.Common.internal_failure __LOC__
+                      in
+                      (* Errors? *)
+                      let contents = In_channel.read_all path in
+                      Ok (Runtime.String contents))
+              | _ ->
+                  Printf.sprintf "`File` does not implement the method `%s`"
+                    meth
+                  |> failwith);
+          List.iter static_members ~f:(fun name ->
+              match name with
+              | "new" ->
+                  make_method name 1 cl.static_members (fun args ->
+                      let first_arg = List.hd_exn args in
+                      (match Runtime.string_of_val first_arg with
+                      | None ->
+                          Error
+                            (Printf.sprintf
+                               "You must pass a String to File.new(), but got \
+                                a %s"
+                            @@ Runtime.to_s first_arg)
+                      | Some str -> Ok str)
+                      |> Result.bind ~f:(fun path -> Ok (Runtime.File { path })))
+              | _ ->
+                  Printf.sprintf
+                    "`File` does not implement the static member `%s`" name
+                  |> failwith)
       | _ ->
           Printf.sprintf
-            "TODO: class named %s has not been implemented in context.ml" name
+            "TODO: class named \"%s\" has not been implemented in %s" name
+            __FILE__
           |> failwith);
       (match Hashtbl.add classes ~key:name ~data:cl with
       | `Duplicate ->

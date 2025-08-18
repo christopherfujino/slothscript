@@ -68,7 +68,6 @@ and expr =
   | UnaryExpr of {
       target : expr;
       pos : Sloth_common.Position.t;
-      is_prefix : bool;
       operator : Ast.operator;
     }
   | DoBlock of stmt list * Sloth_common.Position.t
@@ -245,9 +244,9 @@ and optimize_expr (env : Environment.t) (e : Ast.expr) : expr =
       let block2 = optimize_block env3 block in
       FuncExpr { parameters = parameters2; block = block2; pos }
   | IfExpr (cond_cont, pos) -> IfExpr (optimize_continuation env cond_cont, pos)
-  | UnaryExpr { target; is_prefix; operator; pos } ->
+  | UnaryExpr { target; operator; pos } ->
       let target = optimize_expr env target in
-      UnaryExpr { target; is_prefix; operator; pos }
+      UnaryExpr { target; operator; pos }
   | MethodInvoc { target; receiver; args; pos } ->
       let optim_receiver = optimize_expr env receiver in
       let optim_args = List.rev args |> List.map ~f:(optimize_expr env) in

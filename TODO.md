@@ -3,11 +3,13 @@
 ### v0.1 - initial version
 - [ ] return, break, continue keywords; error handling (`let result = mayError() catch (e) DEFAULT;`)
 - [ ] Context variables, with statements
+    - [ ] $echo = true
 - [ ] Mock out process subsystem for unit tests
 - [ ] Standard Library
 - [ ] Language versioning
 
 ### v0.2 - initial pre-release
+- [ ] CLI args
 - [ ] statically link readline
 - [ ] Regular expressions
 - [ ] string escapes
@@ -59,3 +61,4 @@
 - [x] Use readline for REPL
 - [x] operators are top level functions that DO one thing, but allow for implicit casting of its operands
 - [x] raw string literals
+- [x] Files

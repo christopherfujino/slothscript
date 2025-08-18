@@ -16,15 +16,15 @@ for arr in matrix {
   let name = arr[2]
 
   assert(first == first, name)
-  assert(!(first == second), name)
+  assert(not (first == second), name)
   assert(first != second, name)
-  assert(!(first != first), name)
+  assert(not (first != first), name)
 
   assert(first != null, name)
 }
 
 assert(null == null)
-assert(!(null != null))
+assert(not (null != null))
 
 ### Ast
 ((StmtDecl
@@ -205,10 +205,8 @@ assert(!(null != null))
                     [POS]))
                 (pos
                   [POS])
-                (is_prefix
-                  true)
                 (operator
-                  Bang))
+                  Not))
                 (IdRef
                   name
                   [POS]))
@@ -249,10 +247,8 @@ assert(!(null != null))
                     [POS]))
                 (pos
                   [POS])
-                (is_prefix
-                  true)
                 (operator
-                  Bang))
+                  Not))
                 (IdRef
                   name
                   [POS]))
@@ -307,10 +303,8 @@ assert(!(null != null))
               [POS]))
           (pos
             [POS])
-          (is_prefix
-            true)
           (operator
-            Bang)))
+            Not)))
         [POS]))))
 
 ### Stdout

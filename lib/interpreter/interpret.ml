@@ -294,6 +294,14 @@ and interpret_expr ctx expr =
               match cb arg_vals with
               | Ok v -> v
               | Error msg -> failure ~ctx pos msg))
+      | Prototype { name } -> (
+          if not @@ phys_equal (List.length args) 1 then failwith "TODO"
+          else
+            let arg_expr = List.hd_exn args in
+            let arg = interpret_expr ctx arg_expr in
+            match name with
+            | "File" -> Runtime.File (cast_to_file ~ctx ~pos arg)
+            | _ -> Sloth_common.Common.internal_failure __LOC__)
       | _ ->
           Printf.sprintf "Tried to invoke %s, but it is not a function"
             (Runtime.to_s receiver')
@@ -302,32 +310,47 @@ and interpret_expr ctx expr =
       let parameters = List.map parameters ~f:(fun (name, _) -> name) in
       Func (User { parameters; block; identifiers = ctx.identifiers })
   | IfExpr (cond, _) -> interpret_cond ctx cond
-  | UnaryExpr { target; pos; is_prefix; operator } -> (
+  | UnaryExpr { target; pos; operator } -> (
       (* TODO deprecate is_prefix when we've removed prefix bang *)
-      match is_prefix with
-      | false -> (
-          match operator with
-          | Bang -> (
-              let target = interpret_expr ctx target in
-              let proc = cast_to_process ~ctx ~pos target in
-              match Context.exec_proc proc with
-              | Ok t' -> t'
-              | Error err -> failure ~ctx pos err)
-          | _ -> Sloth_common.Common.internal_failure __LOC__)
-      | true -> (
-          let v = interpret_expr ctx target in
-          match operator with
-          | Bang -> (
-              let bool_opt = Runtime.bool_of_val v in
-              match bool_opt with
-              | None ->
-                  Runtime.to_s v
-                  |> Printf.sprintf
-                       "The prefix ! operator must be applied to a Bool value, \
-                        but got %s"
-                  |> failure ~ctx pos
-              | Some b -> Runtime.Bool (not b))
-          | _ -> Sloth_common.Common.internal_failure __LOC__))
+      let v = interpret_expr ctx target in
+      match operator with
+      | Not -> (
+          let bool_opt = Runtime.bool_of_val v in
+          match bool_opt with
+          | None ->
+              Runtime.to_s v
+              |> Printf.sprintf
+                   "The `not` operator must be applied to a Bool value, but \
+                    got %s"
+              |> failure ~ctx pos
+          | Some b -> Runtime.Bool (not b))
+      | Bang -> (
+          let target = interpret_expr ctx target in
+          let proc = cast_to_process ~ctx ~pos target in
+          match Context.exec_proc proc with
+          | Ok t' -> t'
+          | Error err -> failure ~ctx pos err)
+      | LeftArrow -> (
+          let target = interpret_expr ctx target in
+          let file = cast_to_file ~ctx ~pos target in
+          let target = Runtime.File file in
+          let func = dereference_object ctx target "readString" pos in
+          let func =
+            match Runtime.func_of_val func with
+            | None -> Sloth_common.Common.internal_failure __LOC__
+            | Some func -> func
+          in
+          let cb =
+            match func with
+            | User _ -> Sloth_common.Common.internal_failure __LOC__
+            | Native { cb; _ } -> cb
+          in
+          match cb [ target ] with
+          | Error err -> failure ~ctx pos err
+          | Ok t' -> t')
+      | Plus | Minus | Product | Divide | Pipe | Less | Greater | Leq | Geq
+      | RightArrow ->
+          (* Unreachable *) Sloth_common.Common.internal_failure __LOC__)
   | DoBlock (block, _) ->
       let ctx =
         { ctx with identifiers = Identifiers.push_empty ctx.identifiers }
@@ -460,17 +483,44 @@ and dereference_object ctx receiver target pos =
           |> failure ~ctx pos
       | Some func -> func)
 
+and cast_to_file ~ctx ~pos = function
+  | Runtime.File f -> f
+  | Runtime.String filename -> (
+      let func_opt =
+        dereference_object ctx (Runtime.Prototype { name = "File" }) "new" pos
+        |> Runtime.func_of_val
+      in
+      let constructor =
+        match func_opt with
+        | None -> Sloth_common.Common.internal_failure __LOC__
+        | Some func -> func
+      in
+      let callback =
+        match constructor with
+        | Native { cb; _ } -> cb
+        | User _ -> Sloth_common.Common.internal_failure __LOC__
+      in
+      match callback [ Runtime.String filename ] with
+      | Ok file -> (cast_to_file [@tailcall]) ~ctx ~pos file
+      | Error err -> failure ~ctx pos err)
+  | _ as t' ->
+      failure ~ctx pos
+      @@ Printf.sprintf "Expected a File but got a %s"
+      @@ Runtime.to_s t'
+
 and cast_to_process ~ctx ~pos = function
   | Runtime.Process p -> p
   | Runtime.List _ as l ->
+      let constructor_opt =
+        dereference_object ctx
+          (Runtime.Prototype { name = "Process" })
+          "new" pos
+        |> Runtime.func_of_val
+      in
       let constructor =
-        match
-          dereference_object ctx
-            (Runtime.Prototype { name = "Process" })
-            "new" pos
-        with
-        | Func func -> func
-        | _ -> Sloth_common.Common.internal_failure __LOC__
+        match constructor_opt with
+        | None -> Sloth_common.Common.internal_failure __LOC__
+        | Some cons -> cons
       in
       let callback =
         match constructor with
@@ -478,7 +528,7 @@ and cast_to_process ~ctx ~pos = function
         | User _ -> Sloth_common.Common.internal_failure __LOC__
       in
       let proc =
-        match callback @@ [ l ] with
+        match callback [ l ] with
         | Error err -> failure ~ctx pos err
         | Ok proc -> proc
       in
@@ -554,4 +604,25 @@ and interpret_binary ctx lhs rhs op pos =
       let left = cast_to_number lhs in
       let right = cast_to_number rhs in
       Runtime.Bool Float.(left > right)
-  | _ -> failwith (Printf.sprintf "TODO: %s" __LOC__)
+  | RightArrow ->
+      let left = cast_to_string ~ctx ~pos lhs in
+      let Runtime.{ path } = cast_to_file ~ctx ~pos rhs in
+      Out_channel.write_all path ~data:left;
+      Runtime.String left
+  | Bang | Not | LeftArrow ->
+      (* Not binary ops, unreachable *)
+      Sloth_common.Common.internal_failure __LOC__
+
+and cast_to_string ~ctx ~pos t' =
+  let open Runtime in
+  match t' with
+  | String s -> s
+  | ProcessResult { stdout; _ } -> stdout
+  | Process proc -> (
+      match Context.exec_proc proc with
+      | Ok t' -> (cast_to_string [@tailcall]) ~ctx ~pos t'
+      | Error err -> failure ~ctx pos err)
+  | _ as t' ->
+      failure ~ctx pos
+      @@ Printf.sprintf "Expected a String, but got a %s"
+      @@ Runtime.to_s t'

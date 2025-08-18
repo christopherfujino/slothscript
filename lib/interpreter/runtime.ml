@@ -11,7 +11,8 @@ type process = {
   previous : process option;
 }
 
-type process_result = { code : int }
+type process_result = { code : int; stdout : string; stderr : string }
+type file = { path : string }
 
 type t =
   | String of string
@@ -24,6 +25,7 @@ type t =
   | Prototype of prototype
   | Process of process
   | ProcessResult of process_result
+  | File of file
   | FileHandle
 
 (* TODO add positions for error messages *)
@@ -58,6 +60,7 @@ let to_class_name = function
   | Prototype _ -> "Prototype"
   | Process _ -> "Process"
   | ProcessResult _ -> "ProcessResult"
+  | File _ -> "File"
   | FileHandle -> "FileHandle"
 
 let rec to_s t' =
@@ -100,7 +103,12 @@ let rec to_s t' =
   (* TODO we should list out all in the group *)
   | Process { cmd; _ } ->
       Printf.sprintf "Process(cmd=[%s])" @@ stringify_list cmd
-  | ProcessResult { code } -> Printf.sprintf "ProcessResult(code=%d)" code
+  | ProcessResult { code; stdout; stderr } ->
+      let stdout = String.strip stdout in
+      let stderr = String.strip stderr in
+      Printf.sprintf "ProcessResult(code=%d, stdout=\"%s\", stderr=\"%s\")" code
+        stdout stderr
+  | File { path } -> Printf.sprintf "File(path=%s)" path
   | FileHandle -> "FileHandle(TODO)"
 
 let num_of_val = function Num f -> Some f | _ -> None
@@ -114,10 +122,6 @@ let int_of_val v =
 let bool_of_val = function Bool b' -> Some b' | _ -> None
 let list_of_val = function List l -> Some l | _ -> None
 let hashmap_of_val = function HashMap h -> Some h | _ -> None
-
-let process_of_val ?cb = function
-  | Process p -> p
-  | _ -> (
-      match cb with
-      | Some cb -> cb ()
-      | None -> failwith "You should pass a cb to process_of_val")
+let process_of_val = function Process p -> Some p | _ -> None
+let func_of_val = function Func func -> Some func | _ -> None
+let file_of_val = function File f -> Some f | _ -> None

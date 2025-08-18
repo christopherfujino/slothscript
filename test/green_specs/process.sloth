@@ -2,51 +2,41 @@
 process
 
 ### Program
-let result = null
-
 #This short version...
-result = "uname" | "tr x s"!
+let result1 = "uname" | "tr x s"!
 
 # Is equivalent to the more verbose...
-result = Process.new(["uname"]) | Process.new(["tr", "x", "s"])!
+let result2 = Process.new(["uname"]) | Process.new(["tr", "x", "s"])!
 
 # Because the pipe operator has rules for implicit casts
 
 ### Ast
 ((StmtDecl
   (LetStmt
-    result
-    (Null
-      [POS])
+    result1
+    (UnaryExpr
+      (target
+        (Binary
+          (String
+            ((FullString
+              uname
+              [POS]))
+            [POS])
+          (String
+            ((FullString
+              "tr x s"
+              [POS]))
+            [POS])
+          Pipe
+          [POS]))
+      (pos
+        [POS])
+      (operator
+        Bang))
     [POS]))
   (StmtDecl
-    (AssignStmt
-      result
-      (UnaryExpr
-        (target
-          (Binary
-            (String
-              ((FullString
-                uname
-                [POS]))
-              [POS])
-            (String
-              ((FullString
-                "tr x s"
-                [POS]))
-              [POS])
-            Pipe
-            [POS]))
-        (pos
-          [POS])
-        (is_prefix
-          false)
-        (operator
-          Bang))
-      [POS]))
-  (StmtDecl
-    (AssignStmt
-      result
+    (LetStmt
+      result2
       (UnaryExpr
         (target
           (Binary
@@ -94,8 +84,6 @@ result = Process.new(["uname"]) | Process.new(["tr", "x", "s"])!
             [POS]))
         (pos
           [POS])
-        (is_prefix
-          false)
         (operator
           Bang))
       [POS])))

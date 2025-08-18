@@ -1,0 +1,92 @@
+### Name
+files
+
+### Program
+let file = File("foo")
+# String -> File
+# Here we do implicit casts: Process -> ProcessResult -> String
+Process.new(["uname"]) -> file
+
+# <- File => String
+let contents = <- file
+assert(contents == "Linux\n", contents)
+
+### Ast
+((StmtDecl
+  (LetStmt
+    file
+    (FuncInvoc
+      (IdRef
+        File
+        [POS])
+      ((String
+        ((FullString
+          foo
+          [POS]))
+        [POS]))
+      [POS])
+    [POS]))
+  (StmtDecl
+    (ExprStmt
+      (Binary
+        (FuncInvoc
+          (ObjDeref
+            (IdRef
+              Process
+              [POS])
+            new
+            [POS])
+          ((List
+            ((String
+              ((FullString
+                uname
+                [POS]))
+              [POS]))
+            [POS]))
+          [POS])
+        (IdRef
+          file
+          [POS])
+        RightArrow
+        [POS])))
+  (StmtDecl
+    (LetStmt
+      contents
+      (UnaryExpr
+        (target
+          (IdRef
+            file
+            [POS]))
+        (pos
+          [POS])
+        (operator
+          LeftArrow))
+      [POS]))
+  (StmtDecl
+    (ExprStmt
+      (FuncInvoc
+        (IdRef
+          assert
+          [POS])
+        ((Equality
+          (IdRef
+            contents
+            [POS])
+          (String
+            ((FullString
+              "Linux\n"
+              [POS]))
+            [POS])
+          true
+          [POS])
+          (IdRef
+            contents
+            [POS]))
+        [POS]))))
+
+### Stdout
+
+
+### Failure
+
+

@@ -55,7 +55,6 @@ and expr =
   | UnaryExpr of {
       target : expr;
       pos : Sloth_common.Position.t;
-      is_prefix : bool;
       operator : Ast.operator;
     }
   | DoBlock of stmt list * Sloth_common.Position.t
