@@ -12,11 +12,7 @@ type process = {
 }
 
 type file = { path : string }
-type process_result = {
-  code : int;
-  stdout : string;
-  stderr : string;
-}
+type process_result = { code : int; stdout : string; stderr : string }
 
 type t =
   | String of string
@@ -62,5 +58,4 @@ val hashmap_of_val : t -> (t, t) Stdlib.Hashtbl.t option
 val process_of_val : t -> process option
 val func_of_val : t -> function_t option
 val file_of_val : t -> file option
-
 val to_class_name : t -> string

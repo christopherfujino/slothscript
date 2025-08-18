@@ -606,7 +606,7 @@ and interpret_binary ctx lhs rhs op pos =
       Runtime.Bool Float.(left > right)
   | RightArrow ->
       let left = cast_to_string ~ctx ~pos lhs in
-      let Runtime.{path} = cast_to_file ~ctx ~pos rhs in
+      let Runtime.{ path } = cast_to_file ~ctx ~pos rhs in
       Out_channel.write_all path ~data:left;
       Runtime.String left
   | Bang | Not | LeftArrow ->
