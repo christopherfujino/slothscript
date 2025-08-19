@@ -15,9 +15,13 @@
 %token <string * Lexing.position> STRING_START
 %token <string * Lexing.position> STRING_MIDDLE
 %token <string * Lexing.position> STRING_END
+
+(* Literals *)
 %token <Lexing.position> TRUE
 %token <Lexing.position> FALSE
 %token <Lexing.position> NULL
+
+(* Keywords *)
 %token <Lexing.position> LET
 %token <Lexing.position> FUNC
 %token <Lexing.position> IF
@@ -25,6 +29,7 @@
 %token <Lexing.position> IN
 %token <Lexing.position> DO
 %token <Lexing.position> FOR
+%token <Lexing.position> RETURN
 
 (* Operators *)
 %token <Lexing.position> PLUS
@@ -120,9 +125,8 @@ stmt:
   }
   ;
 
-(* Used in for loops *)
+(* Used in single statement blocks *)
 stmt_sans_semicolon:
-  | e1 = expr1 { ExprStmt e1 }
   | LET; id = ID; EQUALS; e1 = expr1 {
     let (id, pos) = id in
     let pos = Sloth_common.Position.t_of_lexing_position pos in
@@ -136,6 +140,15 @@ stmt_sans_semicolon:
     let pos = Sloth_common.Position.t_of_lexing_position pos in
     SubAssignStmt {subscript; value=rhs; pos }
   }
+  | pos = RETURN; e = expr1 {
+    let pos = Sloth_common.Position.t_of_lexing_position pos in
+    BreakingStmt (Return, Some e, pos)
+  }
+  | pos = RETURN {
+    let pos = Sloth_common.Position.t_of_lexing_position pos in
+    BreakingStmt (Return, None, pos)
+  }
+  | e1 = expr1 { ExprStmt e1 }
   ;
 
 (* Conditionals *)

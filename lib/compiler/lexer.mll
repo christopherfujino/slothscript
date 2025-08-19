@@ -59,9 +59,12 @@ rule private_read last_token state =
         | _ -> (private_read [@tailcall]) last_token state lexbuf
     )
   }
+  (* Literals *)
   | "true" { let token = TRUE lexbuf.lex_curr_p in last_token := Some token; token }
   | "false" { let token = FALSE lexbuf.lex_curr_p in last_token := Some token; token }
   | "null" { let token = NULL lexbuf.lex_curr_p in last_token := Some token; token }
+
+  (* Keywords *)
   | "let" { let token = LET lexbuf.lex_curr_p in last_token := Some token; token }
   | "func" { let token = FUNC lexbuf.lex_curr_p in last_token := Some token; token }
   | "if" { let token = IF lexbuf.lex_curr_p in last_token := Some token; token }
@@ -69,6 +72,9 @@ rule private_read last_token state =
   | "in" { let token = IN lexbuf.lex_curr_p in last_token := Some token; token }
   | "do" { let token = DO lexbuf.lex_curr_p in last_token := Some token; token }
   | "for" { let token = FOR lexbuf.lex_curr_p in last_token := Some token; token }
+  | "return" { let token = RETURN lexbuf.lex_curr_p in last_token := Some token; token }
+
+  (* Operators *)
   | '+' { let token = PLUS lexbuf.lex_curr_p in last_token := Some token; token }
   | '-' { let token = MINUS lexbuf.lex_curr_p in last_token := Some token; token }
   | '=' { let token = EQUALS lexbuf.lex_curr_p in last_token := Some token; token }

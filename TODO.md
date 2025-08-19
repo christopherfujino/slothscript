@@ -9,6 +9,9 @@
 - [ ] Language versioning
 
 ### v0.2 - initial pre-release
+- [ ] Have optimizer check that:
+    - `return` always occurs in a function definition
+    - `break` and `continue` always occur in loops
 - [ ] CLI args
 - [ ] statically link readline
 - [ ] Regular expressions

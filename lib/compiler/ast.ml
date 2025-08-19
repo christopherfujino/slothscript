@@ -33,6 +33,11 @@ and stmt =
       block : stmt list;
       pos : Sloth_common.Position.t;
     }
+  | BreakingStmt of breaking_type * expr option * Sloth_common.Position.t
+[@@deriving sexp]
+
+and breaking_type =
+  | Return
 [@@deriving sexp]
 
 and expr =
