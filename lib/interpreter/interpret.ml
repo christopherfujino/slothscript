@@ -256,25 +256,32 @@ and interpret_cond ctx cond =
 (* Yes, if they call a function that mutates a global *)
 and interpret_expr ctx expr :
     (Runtime.t, Compiler.Ast.breaking_type * Runtime.t) Either.t =
-  let ( >>= ) =
-   fun either cb -> Either.value_map either ~second:Fun.id ~first:cb
-  in
   let open Compiler.Optimizer in
   match expr with
   | Num (f, _) -> First (Runtime.Num f)
   | String (parts, _) ->
+      let ( >>= ) =
+       fun either cb ->
+        Either.value_map either ~second:(fun tup -> Second tup) ~first:cb
+      in
+
       let buf = Buffer.create 128 in
-      List.fold parts ~init:None ~f:(fun either part ->
+      List.fold parts ~init:(First ()) ~f:(fun either part ->
+          either >>= fun _ ->
           match part with
-          | FullString (contents, _) -> Buffer.add_string buf contents
-          | StartStringInterp (contents, _) -> Buffer.add_string buf contents
-          | MiddleStringInterp (contents, _) -> Buffer.add_string buf contents
-          | EndStringInterp (contents, _) -> Buffer.add_string buf contents
+          | FullString (contents, _) -> First (Buffer.add_string buf contents)
+          | StartStringInterp (contents, _) ->
+              First (Buffer.add_string buf contents)
+          | MiddleStringInterp (contents, _) ->
+              First (Buffer.add_string buf contents)
+          | EndStringInterp (contents, _) ->
+              First (Buffer.add_string buf contents)
           | ExpressionStringInterp e ->
               interpret_expr ctx e >>= fun v ->
               let s = Runtime.to_s v in
-              Buffer.add_string buf s);
-      First (Runtime.String (Buffer.contents buf))
+              Buffer.add_string buf s;
+              First ())
+      >>= fun () -> First (Runtime.String (Buffer.contents buf))
   | Bool (b, _) -> First (Runtime.Bool b)
   | Null _ -> First Runtime.Null
   | List (els, _) ->
