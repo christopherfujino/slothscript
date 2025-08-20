@@ -256,15 +256,14 @@ and interpret_cond ctx cond =
 (* Yes, if they call a function that mutates a global *)
 and interpret_expr ctx expr :
     (Runtime.t, Compiler.Ast.breaking_type * Runtime.t) Either.t =
+  let ( >>= ) =
+   fun either cb ->
+    Either.value_map either ~second:(fun tuple -> Second tuple) ~first:cb
+  in
   let open Compiler.Optimizer in
   match expr with
   | Num (f, _) -> First (Runtime.Num f)
   | String (parts, _) ->
-      let ( >>= ) =
-       fun either cb ->
-        Either.value_map either ~second:(fun tup -> Second tup) ~first:cb
-      in
-
       let buf = Buffer.create 128 in
       List.fold parts ~init:(First ()) ~f:(fun either part ->
           either >>= fun _ ->
@@ -285,7 +284,11 @@ and interpret_expr ctx expr :
   | Bool (b, _) -> First (Runtime.Bool b)
   | Null _ -> First Runtime.Null
   | List (els, _) ->
-      let arr = List.map els ~f:(interpret_expr ctx) |> Array.of_list in
+      List.fold els ~init:(First []) ~f:(fun acc cur ->
+          acc >>= fun prev ->
+          interpret_expr ctx cur >>= fun el -> First (List.append prev [ el ]))
+      >>= fun els ->
+      let arr = Array.of_list els in
       First (Runtime.List arr)
   | HashMap (kvps, _) ->
       let kvps' =
