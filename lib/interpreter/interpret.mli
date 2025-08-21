@@ -15,5 +15,3 @@ val interpret_expr :
 
 val interpret_prog :
   Context.t -> Compiler.Optimizer.decl list -> Context.t * Runtime.t
-
-val interpret_cond : Context.t -> Compiler.Optimizer.cond_cont -> Runtime.t
