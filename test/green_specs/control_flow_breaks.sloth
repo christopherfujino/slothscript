@@ -3,11 +3,11 @@ return, break, continue, error
 
 ### Program
 func earlyReturn() {
-  return
+  return true
   assert(false)
 }
 
-earlyReturn()
+assert(earlyReturn())
 
 ### Ast
 ((FuncDecl
@@ -18,7 +18,9 @@ earlyReturn()
   (block
     ((BreakingStmt
       Return
-      ()
+      ((Bool
+        true
+        [POS]))
       [POS])
       (ExprStmt
         (FuncInvoc
@@ -35,9 +37,14 @@ earlyReturn()
     (ExprStmt
       (FuncInvoc
         (IdRef
-          earlyReturn
+          assert
           [POS])
-        ()
+        ((FuncInvoc
+          (IdRef
+            earlyReturn
+            [POS])
+          ()
+          [POS]))
         [POS]))))
 
 ### Stdout
