@@ -39,6 +39,7 @@ and stmt =
       block : stmt list;
       pos : Sloth_common.Position.t;
     }
+  | BreakingStmt of Ast.breaking_type * expr option * Sloth_common.Position.t
 [@@deriving sexp]
 
 and expr =
@@ -171,6 +172,9 @@ and optimize_stmt env stmts : Environment.t * stmt =
       let iteratee = optimize_expr env iteratee in
       let block = optimize_block inner_env block in
       (env, ForInLoop { iterator_name; iteratee; block; pos })
+  | BreakingStmt (breaking_t, expr_opt, pos) ->
+      let expr_opt = Option.map expr_opt ~f:(optimize_expr env) in
+      (env, BreakingStmt (breaking_t, expr_opt, pos))
 
 (** You must push a new frame to the env first. *)
 and optimize_block env rev_stmts =

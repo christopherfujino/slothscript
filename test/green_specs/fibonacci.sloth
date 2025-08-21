@@ -4,10 +4,9 @@ fibonacci
 ### Program
 func fib(n) {
   if n <= 1 {
-    n
-  } else {
-    fib(n - 1) + fib(n - 2)
+    return n
   }
+  fib(n - 1) + fib(n - 2)
 }
 
 print(fib(20))
@@ -34,48 +33,49 @@ print(fib(20))
               Leq
               [POS]))
           (block
-            ((ExprStmt
-              (IdRef
+            ((BreakingStmt
+              Return
+              ((IdRef
                 n
-                [POS]))))
-          (continuation
-            ((ElseCont
-              ((ExprStmt
-                (Binary
-                  (FuncInvoc
-                    (IdRef
-                      fib
-                      [POS])
-                    ((Binary
-                      (IdRef
-                        n
-                        [POS])
-                      (Num
-                        1
-                        [POS])
-                      Minus
-                      [POS]))
-                    [POS])
-                  (FuncInvoc
-                    (IdRef
-                      fib
-                      [POS])
-                    ((Binary
-                      (IdRef
-                        n
-                        [POS])
-                      (Num
-                        2
-                        [POS])
-                      Minus
-                      [POS]))
-                    [POS])
-                  Plus
-                  [POS])))
+                [POS]))
               [POS])))
+          (continuation
+            ())
           (pos
             [POS]))
-        [POS]))))
+        [POS]))
+      (ExprStmt
+        (Binary
+          (FuncInvoc
+            (IdRef
+              fib
+              [POS])
+            ((Binary
+              (IdRef
+                n
+                [POS])
+              (Num
+                1
+                [POS])
+              Minus
+              [POS]))
+            [POS])
+          (FuncInvoc
+            (IdRef
+              fib
+              [POS])
+            ((Binary
+              (IdRef
+                n
+                [POS])
+              (Num
+                2
+                [POS])
+              Minus
+              [POS]))
+            [POS])
+          Plus
+          [POS]))))
   (pos
     [POS]))
   (StmtDecl

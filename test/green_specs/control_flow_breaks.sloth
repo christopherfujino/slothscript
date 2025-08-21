@@ -1,0 +1,55 @@
+### Name
+return, break, continue, error
+
+### Program
+func earlyReturn() {
+  return true
+  assert(false)
+}
+
+assert(earlyReturn())
+
+### Ast
+((FuncDecl
+  (name
+    earlyReturn)
+  (parameters
+    ())
+  (block
+    ((BreakingStmt
+      Return
+      ((Bool
+        true
+        [POS]))
+      [POS])
+      (ExprStmt
+        (FuncInvoc
+          (IdRef
+            assert
+            [POS])
+          ((Bool
+            false
+            [POS]))
+          [POS]))))
+  (pos
+    [POS]))
+  (StmtDecl
+    (ExprStmt
+      (FuncInvoc
+        (IdRef
+          assert
+          [POS])
+        ((FuncInvoc
+          (IdRef
+            earlyReturn
+            [POS])
+          ()
+          [POS]))
+        [POS]))))
+
+### Stdout
+
+
+### Failure
+
+

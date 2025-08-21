@@ -1,21 +1,25 @@
 ## Milestones
 
 ### v0.1 - initial version
-- [ ] return, break, continue keywords; error handling (`let result = mayError() catch (e) DEFAULT;`)
+- [ ] break, continue keywords; error handling (`let result = mayError() catch (e) DEFAULT;`)
 - [ ] Context variables, with statements
     - [ ] $echo = true
 - [ ] Mock out process subsystem for unit tests
-- [ ] Standard Library
+- [ ] Stack traces
 - [ ] Language versioning
+- [ ] Standard Library
 
 ### v0.2 - initial pre-release
+- [ ] Have optimizer check that:
+    - `return` always occurs in a function definition
+    - `break` and `continue` always occur in loops
 - [ ] CLI args
 - [ ] statically link readline
 - [ ] Regular expressions
 - [ ] string escapes
 - [ ] Optional function parameters
 - [ ] List mutation methods
-- [ ] Stack traces; depends on storing locs in runtime values
+- [ ] Allow single statement blocks to omit semicolons
 
 ### v1.0
 - [ ] Formatter
@@ -62,3 +66,4 @@
 - [x] operators are top level functions that DO one thing, but allow for implicit casting of its operands
 - [x] raw string literals
 - [x] Files
+- [x] Return statements
