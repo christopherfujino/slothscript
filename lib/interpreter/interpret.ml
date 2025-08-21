@@ -225,7 +225,7 @@ and interpret_stmt (ctx : Context.t) stmt :
 and interpret_cond ctx cond =
   let ( >>= ) =
    fun either cb ->
-    Either.value_map either ~second:(fun (bt, v) -> (Some bt, v)) ~first:cb
+    Either.value_map either ~second:(fun tuple -> Second tuple) ~first:cb
   in
   match cond with
   | Compiler.Optimizer.IfCont { conditional; block; continuation; pos } -> (
@@ -236,21 +236,23 @@ and interpret_cond ctx cond =
             let ctx =
               { ctx with identifiers = Identifiers.push_empty ctx.identifiers }
             in
-            interpret_block ctx block
+            let bt_opt, v = interpret_block ctx block in
+            match bt_opt with None -> First v | Some bt -> Second (bt, v)
           else
             match continuation with
-            | None -> (None, Runtime.Null)
+            | None -> First Runtime.Null (* TODO: Is this right? *)
             | Some cond -> (interpret_cond [@tailcall]) ctx cond)
       | None ->
           Printf.sprintf
             "If-expressions must have a boolean expression, but you used %s"
             (Runtime.to_s condition)
           |> failure ~ctx pos)
-  | Compiler.Optimizer.ElseCont (stmts, _) ->
+  | Compiler.Optimizer.ElseCont (stmts, _) -> (
       let ctx =
         { ctx with identifiers = Identifiers.push_empty ctx.identifiers }
       in
-      interpret_block ctx stmts
+      let bt_opt, v = interpret_block ctx stmts in
+      match bt_opt with None -> First v | Some bt -> Second (bt, v))
 
 (* TODO Note this does not return a context--can expressions mutate context?! *)
 (* Yes, if they call a function that mutates a global *)
@@ -411,9 +413,7 @@ and interpret_expr ctx expr :
   | FuncExpr { parameters; block; _ } ->
       let parameters = List.map parameters ~f:(fun (name, _) -> name) in
       First (Func (User { parameters; block; identifiers = ctx.identifiers }))
-  | IfExpr (cond, _) -> (
-      let bt_opt, t = interpret_cond ctx cond in
-      match bt_opt with None -> First t | Some bt -> Second (bt, t))
+  | IfExpr (cond, _) -> interpret_cond ctx cond
   | UnaryExpr { target; pos; operator } -> (
       (* TODO deprecate is_prefix when we've removed prefix bang *)
       interpret_expr ctx target
@@ -478,11 +478,12 @@ and interpret_block (ctx : Context.t) (stmts : Compiler.Optimizer.stmt list) :
         let ctx'', bt_opt, v = interpret_stmt ctx' hd in
         match bt_opt with
         | Some _ -> (bt_opt, v)
-        | None -> (traverse_stmts [@tailcall]) ctx'' tl)
+        | None ->
+            if List.is_empty tl then (None, v)
+            else (traverse_stmts [@tailcall]) ctx'' tl)
   in
   (* discard context *)
-  let tuple = traverse_stmts ctx stmts in
-  tuple
+  traverse_stmts ctx stmts
 
 and interpret_method ~ctx ~pos receiver args method_name =
   let ( >>= ) =
