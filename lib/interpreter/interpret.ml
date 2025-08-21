@@ -341,9 +341,7 @@ and interpret_expr ctx expr :
       interpret_expr ctx lhs >>= fun lhs ->
       interpret_expr ctx rhs >>= fun rhs ->
       First (Runtime.Bool (is_equal ctx is_equality lhs rhs))
-  | Binary (lhs, rhs, op, pos) -> (
-      let bt_opt, v = interpret_binary ctx lhs rhs op pos in
-      match bt_opt with None -> First v | Some bt -> Second (bt, v))
+  | Binary (lhs, rhs, op, pos) -> interpret_binary ctx lhs rhs op pos
   | MethodInvoc { receiver; target; args; pos } ->
       interpret_method ~ctx ~pos receiver args target
   | FuncInvoc (receiver, args, pos) -> (
@@ -669,8 +667,12 @@ and cast_to_process ~ctx ~pos = function
       @@ Runtime.to_s t'
 
 and interpret_binary ctx lhs rhs op pos =
-  let lhs = interpret_expr ctx lhs in
-  let rhs = interpret_expr ctx rhs in
+  let ( >>= ) =
+   fun either cb ->
+    Either.value_map either ~first:cb ~second:(fun tuple -> Second tuple)
+  in
+  interpret_expr ctx lhs >>= fun lhs ->
+  interpret_expr ctx rhs >>= fun rhs ->
   let cast_to_number = function
     | Runtime.Num f -> f
     | Runtime.String s -> (
@@ -694,44 +696,44 @@ and interpret_binary ctx lhs rhs op pos =
       right.stdin <- read;
       right.pipes_to_collect <- read :: right.pipes_to_collect;
       let right = { right with previous = Some left } in
-      Runtime.Process right
+      First (Runtime.Process right)
   | Plus ->
       let left = cast_to_number lhs in
       let right = cast_to_number rhs in
-      Runtime.Num (left +. right)
+      Either.first @@ Runtime.Num (left +. right)
   | Minus ->
       let left = cast_to_number lhs in
       let right = cast_to_number rhs in
-      Runtime.Num (left -. right)
+      Either.first @@ Runtime.Num (left -. right)
   | Divide ->
       let left = cast_to_number lhs in
       let right = cast_to_number rhs in
-      Runtime.Num (left /. right)
+      Either.first @@ Runtime.Num (left /. right)
   | Product ->
       let left = cast_to_number lhs in
       let right = cast_to_number rhs in
-      Runtime.Num (left *. right)
+      Either.first @@ Runtime.Num (left *. right)
   | Leq ->
       let left = cast_to_number lhs in
       let right = cast_to_number rhs in
-      Runtime.Bool Float.(left <= right)
+      Either.first @@ Runtime.Bool Float.(left <= right)
   | Geq ->
       let left = cast_to_number lhs in
       let right = cast_to_number rhs in
-      Runtime.Bool Float.(left >= right)
+      Either.first @@ Runtime.Bool Float.(left >= right)
   | Less ->
       let left = cast_to_number lhs in
       let right = cast_to_number rhs in
-      Runtime.Bool Float.(left < right)
+      Either.first @@ Runtime.Bool Float.(left < right)
   | Greater ->
       let left = cast_to_number lhs in
       let right = cast_to_number rhs in
-      Runtime.Bool Float.(left > right)
+      Either.first @@ Runtime.Bool Float.(left > right)
   | RightArrow ->
       let left = cast_to_string ~ctx ~pos lhs in
       let Runtime.{ path } = cast_to_file ~ctx ~pos rhs in
       Out_channel.write_all path ~data:left;
-      Runtime.String left
+      Either.first @@ Runtime.String left
   | Bang | Not | LeftArrow ->
       (* Not binary ops, unreachable *)
       Sloth_common.Common.internal_failure __LOC__
