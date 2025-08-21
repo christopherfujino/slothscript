@@ -286,21 +286,29 @@ and interpret_expr ctx expr :
   | List (els, _) ->
       List.fold els ~init:(First []) ~f:(fun acc cur ->
           acc >>= fun prev ->
-          interpret_expr ctx cur >>= fun el -> First (List.append prev [ el ]))
+          interpret_expr ctx cur >>= fun el ->
+          First
+            ((* This is expensive, but we must preserve list order *)
+             List.append prev [ el ]))
       >>= fun els ->
       let arr = Array.of_list els in
       First (Runtime.List arr)
   | HashMap (kvps, _) ->
-      let kvps' =
-        List.map kvps ~f:(fun (k, v) ->
-            (interpret_expr ctx k, interpret_expr ctx v))
-      in
+      List.fold kvps ~init:(First []) ~f:(fun acc (k, v) ->
+          acc >>= fun prev ->
+          interpret_expr ctx k >>= fun k ->
+          interpret_expr ctx v >>= fun v ->
+          let cur = (k, v) in
+          (* Order doesn't matter here *)
+          (* TODO: we could already populate the Hashtbl here *)
+          First (cur :: prev))
+      >>= fun kvps' ->
       let tbl = Stdlib.Hashtbl.create 8 in
       List.iter kvps' ~f:(fun (k, v) -> Stdlib.Hashtbl.add tbl k v);
-      First (HashMap tbl)
+      First (Runtime.HashMap tbl)
   | Subscript (receiver, subscript, pos) -> (
-      let receiver' = interpret_expr ctx receiver in
-      let subscript' = interpret_expr ctx subscript in
+      interpret_expr ctx receiver >>= fun receiver' ->
+      interpret_expr ctx subscript >>= fun subscript' ->
       match receiver' with
       | Runtime.List elements -> (
           match subscript' with
@@ -330,9 +338,8 @@ and interpret_expr ctx expr :
           Printf.sprintf "The name %s has not been declared in this scope" i
           |> failure ~ctx pos)
   | Equality (lhs, rhs, is_equality, _) ->
-      let lhs = interpret_expr ctx lhs in
-      let rhs = interpret_expr ctx rhs in
-
+      interpret_expr ctx lhs >>= fun lhs ->
+      interpret_expr ctx rhs >>= fun rhs ->
       First (Runtime.Bool (is_equal ctx is_equality lhs rhs))
   | Binary (lhs, rhs, op, pos) -> (
       let bt_opt, v = interpret_binary ctx lhs rhs op pos in
@@ -340,26 +347,28 @@ and interpret_expr ctx expr :
   | MethodInvoc { receiver; target; args; pos } ->
       interpret_method ~ctx ~pos receiver args target
   | FuncInvoc (receiver, args, pos) -> (
-      let receiver' = interpret_expr ctx receiver in
-      match receiver' with
+      interpret_expr ctx receiver >>= function
       | Func f -> (
           match f with
-          | User { parameters; block; identifiers } ->
+          | User { parameters; block; identifiers } -> (
               let identifiers2 = Identifiers.push_empty identifiers in
               (* Bind args to env *)
               (match
-                 List.iter2 parameters args ~f:(fun param_name arg_expr ->
-                     (* Note this is interpreted with the enclosing env *)
-                     let v = interpret_expr ctx arg_expr in
-                     Identifiers.bind identifiers2 param_name v
+                 List.fold2 parameters args ~init:(First ())
+                   ~f:(fun either p a ->
+                     either >>= fun () ->
+                     interpret_expr ctx a >>= fun arg_val ->
                      (* This must not throw *)
-                     |> Option.value_exn)
+                     Identifiers.bind identifiers2 p arg_val |> Option.value_exn;
+                     First ())
                with
-              | Ok () -> ()
+              | Ok either -> either
               | Unequal_lengths ->
                   Printf.sprintf
-                    "Mismatched number of params and args in call to function"
-                  |> failure ~ctx pos);
+                    "You passed %d arguments to a function that expected %d"
+                    (List.length args) (List.length parameters)
+                  |> failure ~ctx pos)
+              >>= fun () ->
               let temp_ctx = { ctx with identifiers = identifiers2 } in
               let rec traverse_stmts ctx stmts =
                 match stmts with
@@ -376,13 +385,16 @@ and interpret_expr ctx expr :
               (* discard context *)
               (* Note, Return has already been unwrapped *)
               let _, bt_opt, v = traverse_stmts temp_ctx block in
-              (bt_opt, v)
+              match bt_opt with None -> First v | Some bt -> Second (bt, v))
           | Native { cb; parameters = _; identifiers = _ } -> (
-              let arg_vals =
-                List.map args ~f:(fun arg -> interpret_expr ctx arg)
-              in
-              match cb arg_vals with
-              | Ok v -> (None, v)
+              List.fold args ~init:(First []) ~f:(fun either arg ->
+                  either >>= fun prev ->
+                  interpret_expr ctx arg >>= fun arg ->
+                  (* This is reversed... *) First (arg :: prev))
+              >>= fun reversed_args ->
+              let args = List.rev reversed_args in
+              match cb args with
+              | Ok v -> First v
               | Error msg ->
                   (* TODO: should this return a `Some SlothError`? *)
                   failure ~ctx pos msg))
@@ -390,21 +402,24 @@ and interpret_expr ctx expr :
           if not @@ phys_equal (List.length args) 1 then failwith "TODO"
           else
             let arg_expr = List.hd_exn args in
-            let arg = interpret_expr ctx arg_expr in
+            interpret_expr ctx arg_expr >>= fun arg ->
             match name with
-            | "File" -> Runtime.File (cast_to_file ~ctx ~pos arg)
+            | "File" -> First (Runtime.File (cast_to_file ~ctx ~pos arg))
             | _ -> Sloth_common.Common.internal_failure __LOC__)
-      | _ ->
+      | _ as t ->
           Printf.sprintf "Tried to invoke %s, but it is not a function"
-            (Runtime.to_s receiver')
+            (Runtime.to_s t)
           |> failwith)
   | FuncExpr { parameters; block; _ } ->
       let parameters = List.map parameters ~f:(fun (name, _) -> name) in
-      (None, Func (User { parameters; block; identifiers = ctx.identifiers }))
-  | IfExpr (cond, _) -> interpret_cond ctx cond
+      First (Func (User { parameters; block; identifiers = ctx.identifiers }))
+  | IfExpr (cond, _) -> (
+      let bt_opt, t = interpret_cond ctx cond in
+      match bt_opt with None -> First t | Some bt -> Second (bt, t))
   | UnaryExpr { target; pos; operator } -> (
       (* TODO deprecate is_prefix when we've removed prefix bang *)
-      let v = interpret_expr ctx target in
+      interpret_expr ctx target
+      >>= fun v ->
       match operator with
       | Not -> (
           let bool_opt = Runtime.bool_of_val v in
@@ -415,15 +430,15 @@ and interpret_expr ctx expr :
                    "The `not` operator must be applied to a Bool value, but \
                     got %s"
               |> failure ~ctx pos
-          | Some b -> Runtime.Bool (not b))
+          | Some b -> First (Runtime.Bool (not b)))
       | Bang -> (
-          let target = interpret_expr ctx target in
+          interpret_expr ctx target >>= fun target ->
           let proc = cast_to_process ~ctx ~pos target in
           match Context.exec_proc proc with
-          | Ok t' -> t'
+          | Ok t' -> First t'
           | Error err -> failure ~ctx pos err)
       | LeftArrow -> (
-          let target = interpret_expr ctx target in
+          interpret_expr ctx target >>= fun target ->
           let file = cast_to_file ~ctx ~pos target in
           let target = Runtime.File file in
           let func = dereference_object ctx target "readString" pos in
@@ -439,18 +454,19 @@ and interpret_expr ctx expr :
           in
           match cb [ target ] with
           | Error err -> failure ~ctx pos err
-          | Ok t' -> t')
+          | Ok t' -> First t')
       | Plus | Minus | Product | Divide | Pipe | Less | Greater | Leq | Geq
       | RightArrow ->
           (* Unreachable *) Sloth_common.Common.internal_failure __LOC__)
-  | DoBlock (block, _) ->
+  | DoBlock (block, _) -> (
       let ctx =
         { ctx with identifiers = Identifiers.push_empty ctx.identifiers }
       in
-      interpret_block ctx block
+      let bt_opt, t = interpret_block ctx block in
+      match bt_opt with None -> First t | Some bt -> Second (bt, t))
   | ObjDeref (receiver, target, pos) ->
-      let receiver = interpret_expr ctx receiver in
-      dereference_object ctx receiver target pos
+      interpret_expr ctx receiver >>= fun receiver ->
+      First (dereference_object ctx receiver target pos)
 
 (** You must push an empty env frame on first *)
 and interpret_block (ctx : Context.t) (stmts : Compiler.Optimizer.stmt list) :
@@ -471,18 +487,18 @@ and interpret_block (ctx : Context.t) (stmts : Compiler.Optimizer.stmt list) :
   tuple
 
 and interpret_method ~ctx ~pos receiver args method_name =
-  let bt_either, receiver = interpret_expr ctx receiver in
-  let args_either =
-    List.fold args ~init:(First []) ~f:(fun acc cur ->
-        Either.map acc
-          ~first:(fun prev ->
-            let bt_either = interpret_expr ctx cur in
-            match bt_either with
-            | First v -> v :: prev
-            | Second bt_tuple -> bt_tuple)
-          ~second:Fun.id)
+  let ( >>= ) =
+   fun either cb ->
+    Either.value_map either ~second:(fun tuple -> Second tuple) ~first:cb
   in
-  let args = List.map args ~f:(interpret_expr ctx) in
+  interpret_expr ctx receiver >>= fun receiver ->
+  List.fold args ~init:(First []) ~f:(fun acc cur ->
+      acc >>= fun prev ->
+      interpret_expr ctx cur >>= fun arg ->
+      (* This is reversed... *)
+      First (arg :: prev))
+  >>= fun reversed_args ->
+  let args = List.rev reversed_args in
   let class_name = Runtime.to_class_name receiver in
   let klass =
     match Hashtbl.find ctx.classes class_name with
