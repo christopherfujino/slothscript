@@ -375,7 +375,7 @@ and interpret_expr ctx expr :
                     let ctx, bt_opt, return_val = interpret_stmt ctx hd in
                     match bt_opt with
                     | None ->
-                        if List.is_empty stmts then (ctx, None, return_val)
+                        if List.is_empty tl then (ctx, None, return_val)
                         else (traverse_stmts [@tailrec]) ctx tl
                     | Some bt -> (
                         match bt with Return -> (ctx, None, return_val)))
