@@ -220,7 +220,7 @@ and interpret_stmt (ctx : Context.t) stmt :
       >>= fun ret_val -> (ctx, None, ret_val)
   | BreakingStmt (break_type, expr_opt, _) ->
       (match expr_opt with
-      | None -> First Runtime.Null
+      | None -> Second (break_type, Runtime.Null)
       | Some e -> interpret_expr ctx e)
       >>= fun v -> (ctx, Some break_type, v)
 

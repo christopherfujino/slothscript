@@ -174,7 +174,7 @@ and optimize_stmt env stmts : Environment.t * stmt =
       (env, ForInLoop { iterator_name; iteratee; block; pos })
   | BreakingStmt (breaking_t, expr_opt, pos) ->
       let expr_opt = Option.map expr_opt ~f:(optimize_expr env) in
-      env, BreakingStmt (breaking_t, expr_opt, pos)
+      (env, BreakingStmt (breaking_t, expr_opt, pos))
 
 (** You must push a new frame to the env first. *)
 and optimize_block env rev_stmts =

@@ -2,7 +2,12 @@
 return, break, continue, error
 
 ### Program
-func earlyReturn() {}
+func earlyReturn() {
+  return
+  assert(false)
+}
+
+earlyReturn()
 
 ### Ast
 ((FuncDecl
@@ -11,9 +16,29 @@ func earlyReturn() {}
   (parameters
     ())
   (block
-    ())
+    ((BreakingStmt
+      Return
+      ()
+      [POS])
+      (ExprStmt
+        (FuncInvoc
+          (IdRef
+            assert
+            [POS])
+          ((Bool
+            false
+            [POS]))
+          [POS]))))
   (pos
-    [POS])))
+    [POS]))
+  (StmtDecl
+    (ExprStmt
+      (FuncInvoc
+        (IdRef
+          earlyReturn
+          [POS])
+        ()
+        [POS]))))
 
 ### Stdout
 
