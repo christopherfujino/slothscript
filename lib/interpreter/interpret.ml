@@ -50,43 +50,59 @@ and interpret_decl (ctx : Context.t) decl =
           |> failure ~ctx pos);
       (ctx, f)
   | StmtDecl s ->
-      let ctx, bt_opt, v = interpret_stmt ctx s in
-      (match bt_opt with
-      | None -> ()
-      | Some bt -> (
-          match bt with
-          | Return ->
-              (* TODO: This should be caught by optimizer *)
-              Sloth_common.Common.internal_failure __LOC__));
+      let ctx, either = interpret_stmt ctx s in
+      let v =
+        match either with
+        | First v -> v
+        | Second (bt, _) -> (
+            match bt with
+            | Return ->
+                (* TODO: This should be caught by optimizer *)
+                Sloth_common.Common.internal_failure __LOC__)
+      in
       (ctx, v)
 
 and interpret_stmt (ctx : Context.t) stmt :
-    Context.t * Compiler.Ast.breaking_type option * Runtime.t =
+    Context.t * (Runtime.t, Compiler.Ast.breaking_type * Runtime.t) Either.t =
+  (* Context.t * Compiler.Ast.breaking_type option * Runtime.t = *)
   let open Compiler.Optimizer in
   let ( >>= ) =
-   fun (either : (Runtime.t, Compiler.Ast.breaking_type * Runtime.t) Either.t)
+   fun (tuple :
+         Context.t
+         * (Runtime.t, Compiler.Ast.breaking_type * Runtime.t) Either.t)
        (cb :
-         Runtime.t -> Context.t * Compiler.Ast.breaking_type option * Runtime.t)
-     ->
-    Either.value_map either ~second:(fun (bt, v) -> (ctx, Some bt, v)) ~first:cb
+         Context.t ->
+         Runtime.t ->
+         Context.t
+         * (Runtime.t, Compiler.Ast.breaking_type * Runtime.t) Either.t) ->
+    let ctx, either = tuple in
+    Either.value_map either
+      ~second:(fun tuple -> (ctx, Second tuple))
+      ~first:(cb ctx)
   in
 
   match stmt with
-  | LetStmt (id, e, pos) -> (
-      let bt_either = interpret_expr ctx e in
-      match bt_either with
-      | First v ->
-          (match Identifiers.bind ctx.identifiers id v with
-          | Some () -> ()
-          | None ->
-              Printf.sprintf
-                "The name %s has already been declared in this scope; did you \
-                 mean to assign to it?"
-                id
-              |> failure ~ctx pos);
-          (ctx, None, v)
-      | Second (bt, v) -> (ctx, Some bt, v))
+  | LetStmt (id, e, pos) ->
+      (ctx, interpret_expr ctx e) >>= fun ctx v ->
+      (match Identifiers.bind ctx.identifiers id v with
+      | Some () -> ()
+      | None ->
+          Printf.sprintf
+            "The name %s has already been declared in this scope; did you mean \
+             to assign to it?"
+            id
+          |> failure ~ctx pos);
+      (ctx, First v)
   | AssignStmt (id, e, pos) -> (
+      (ctx, interpret_expr ctx e) >>= fun ctx v ->
+      match Identifiers.reassign ctx.identifiers id v with
+      | Some () -> (ctx, First v)
+      | None ->
+          Printf.sprintf
+            "The name %s has not been declared yet; did you mean to declare it?"
+            id
+          |> failure ~ctx pos
+      (*
       match interpret_expr ctx e with
       | First v ->
           (match Identifiers.reassign ctx.identifiers id v with
@@ -99,21 +115,23 @@ and interpret_stmt (ctx : Context.t) stmt :
               |> failure ~ctx pos);
           (ctx, None, v)
       | Second (bt, v) -> (ctx, Some bt, v))
+  *)
+      )
   | SubAssignStmt { subscript; value; pos = _ } -> (
       match subscript with
       | Subscript (receiver, subscript, pos) -> (
-          interpret_expr ctx receiver >>= fun receiver' ->
-          interpret_expr ctx subscript >>= fun subscript' ->
-          interpret_expr ctx value >>= fun value' ->
+          (ctx, interpret_expr ctx receiver) >>= fun ctx receiver' ->
+          (ctx, interpret_expr ctx subscript) >>= fun ctx subscript' ->
+          (ctx, interpret_expr ctx value) >>= fun ctx value' ->
           match receiver' with
           | HashMap tbl ->
               Stdlib.Hashtbl.replace tbl subscript' value';
-              (ctx, None, value')
+              (ctx, First value')
           | List elements -> (
               match Runtime.int_of_val subscript' with
               | Some i ->
                   Array.set elements i value';
-                  (ctx, None, receiver')
+                  (ctx, First receiver')
               | None ->
                   Printf.sprintf
                     "Lists can only be subscripted with Numbers, but you used \
@@ -125,24 +143,20 @@ and interpret_stmt (ctx : Context.t) stmt :
                 (Runtime.to_s receiver')
               |> failure ~ctx pos)
       | _ -> Sloth_common.Common.internal_failure __LOC__)
-  | ExprStmt expr -> (
-      match interpret_expr ctx expr with
-      | First v -> (ctx, None, v)
-      | Second (bt, v) -> (ctx, Some bt, v))
+  | ExprStmt expr -> (ctx, interpret_expr ctx expr)
   | ForLoop (init, cmp, inc, bl, pos) ->
       let identifiers = Identifiers.push_empty ctx.identifiers in
       let ctx' = { ctx with identifiers } in
-      let ctx'', bt_opt, _ = interpret_stmt ctx' init in
-      (match bt_opt with
-      | Some bt -> (
+      let ctx'', either = interpret_stmt ctx' init in
+      (match either with
+      | Second (bt, _) -> (
           match bt with
           | Return ->
               (* TODO optimizer should check for this *)
               Sloth_common.Common.internal_failure __LOC__)
-      | None -> ());
+      | First _ -> ());
 
-      let rec interpret_for_loop ctx cmp inc bl (last_val : Runtime.t) :
-          Context.t * Compiler.Ast.breaking_type option * Runtime.t =
+      let rec interpret_for_loop ctx cmp inc bl (last_val : Runtime.t) =
         let bt_either = interpret_expr ctx cmp in
         (* TODO use >>= once we have errors and we've migrated cmp to an expr *)
         let cmp_val =
@@ -156,7 +170,7 @@ and interpret_stmt (ctx : Context.t) stmt :
         in
         match cmp_val |> Runtime.bool_of_val with
         | Some cmp_val -> (
-            if not cmp_val then (ctx, None, last_val)
+            if not cmp_val then (ctx, First last_val)
             else
               (* Each iteration should have its own scope *)
               let inner_ctx =
@@ -167,23 +181,17 @@ and interpret_stmt (ctx : Context.t) stmt :
                   }
               in
 
-              let _, bt_opt, rt_t =
-                interpret_block inner_ctx bl >>= fun ret_val ->
-                (* this iteration had no breaking stmt *)
-                let ctx, bt_opt, _ = interpret_stmt ctx inc in
-                match bt_opt with
-                | None ->
-                    (interpret_for_loop [@tailcall]) ctx cmp inc bl ret_val
-                | Some bt -> (
-                    match bt with
-                    | Return ->
-                        (* This should be unreachable once we refactor inc to be an expr *)
-                        Sloth_common.Common.internal_failure __LOC__)
-              in
-              match bt_opt with
-              | None -> (ctx, None, rt_t)
-              | Some breaking_type -> (
-                  match breaking_type with Return -> (ctx, Some Return, rt_t)))
+              (inner_ctx, interpret_block inner_ctx bl) >>= fun _ ret_val ->
+              (* this iteration had no breaking stmt *)
+              let ctx, either = interpret_stmt ctx inc in
+              match either with
+              | First _ ->
+                  (interpret_for_loop [@tailcall]) ctx cmp inc bl ret_val
+              | Second (bt, _) -> (
+                  match bt with
+                  | Return ->
+                      (* This should be unreachable once we refactor inc to be an expr *)
+                      Sloth_common.Common.internal_failure __LOC__))
         | None ->
             Printf.sprintf
               "The comparison of a for loop must be a Boolean value, but you \
@@ -191,14 +199,14 @@ and interpret_stmt (ctx : Context.t) stmt :
               (Runtime.to_s cmp_val)
             |> failure ~ctx pos
       in
-      let _, bt_opt, v = interpret_for_loop ctx'' cmp inc bl Runtime.Null in
-      (ctx, bt_opt, v)
+      let _, either = interpret_for_loop ctx'' cmp inc bl Runtime.Null in
+      (ctx, either)
       (* for <iterator_name> in <iteratee> { <block> } *)
   | ForInLoop { iterator_name; iteratee; block; pos } ->
       let ctx =
         { ctx with identifiers = Identifiers.push_empty ctx.identifiers }
       in
-      interpret_expr ctx iteratee >>= fun iteratee ->
+      (ctx, interpret_expr ctx iteratee) >>= fun ctx iteratee ->
       let iteratee_array =
         match iteratee with
         | List l -> l
@@ -207,22 +215,26 @@ and interpret_stmt (ctx : Context.t) stmt :
               (Runtime.to_class_name iteratee)
             |> failure ~ctx pos
       in
-      Array.fold iteratee_array ~init:(First Runtime.Null)
-        ~f:(fun prev element ->
-          if Either.is_second prev then prev
-          else
-            let ctx =
-              { ctx with identifiers = Identifiers.push_empty ctx.identifiers }
-            in
-            Identifiers.bind ctx.identifiers iterator_name element
-            |> Option.value_exn;
-            interpret_block ctx block)
-      >>= fun ret_val -> (ctx, None, ret_val)
+      ( ctx,
+        Array.fold iteratee_array ~init:(First Runtime.Null)
+          ~f:(fun prev element ->
+            if Either.is_second prev then prev
+            else
+              let temp_ctx =
+                {
+                  ctx with
+                  identifiers = Identifiers.push_empty ctx.identifiers;
+                }
+              in
+              Identifiers.bind temp_ctx.identifiers iterator_name element
+              |> Option.value_exn;
+              interpret_block temp_ctx block) )
+      >>= fun _ ret_val -> (ctx, First ret_val)
   | BreakingStmt (break_type, expr_opt, _) ->
       (match expr_opt with
-      | None -> Second (break_type, Runtime.Null)
-      | Some e -> interpret_expr ctx e)
-      >>= fun v -> (ctx, Some break_type, v)
+      | None -> (ctx, Second (break_type, Runtime.Null))
+      | Some e -> (ctx, interpret_expr ctx e))
+      >>= fun ctx v -> (ctx, Second (break_type, v))
 
 and interpret_cond ctx cond =
   let ( >>= ) =
@@ -350,7 +362,7 @@ and interpret_expr ctx expr :
       interpret_expr ctx receiver >>= function
       | Func f -> (
           match f with
-          | User { parameters; block; identifiers } -> (
+          | User { parameters; block; identifiers } ->
               let identifiers2 = Identifiers.push_empty identifiers in
               (* Bind args to env *)
               (match
@@ -372,20 +384,20 @@ and interpret_expr ctx expr :
               let temp_ctx = { ctx with identifiers = identifiers2 } in
               let rec traverse_stmts ctx stmts =
                 match stmts with
-                | [] -> (ctx, None, Runtime.Null)
+                | [] -> (ctx, First Runtime.Null)
                 | hd :: tl -> (
-                    let ctx, bt_opt, return_val = interpret_stmt ctx hd in
-                    match bt_opt with
-                    | None ->
-                        if List.is_empty tl then (ctx, None, return_val)
+                    let ctx, either = interpret_stmt ctx hd in
+                    match either with
+                    | First return_val ->
+                        if List.is_empty tl then (ctx, First return_val)
                         else (traverse_stmts [@tailrec]) ctx tl
-                    | Some bt -> (
-                        match bt with Return -> (ctx, None, return_val)))
+                    | Second (bt, return_val) -> (
+                        match bt with Return -> (ctx, First return_val)))
               in
               (* discard context *)
               (* Note, Return has already been unwrapped *)
-              let _, bt_opt, v = traverse_stmts temp_ctx block in
-              match bt_opt with None -> First v | Some bt -> Second (bt, v))
+              let _, either = traverse_stmts temp_ctx block in
+              either
           | Native { cb; parameters = _; identifiers = _ } -> (
               List.fold args ~init:(First []) ~f:(fun either arg ->
                   either >>= fun prev ->
@@ -474,10 +486,10 @@ and interpret_block (ctx : Context.t) (stmts : Compiler.Optimizer.stmt list) :
     match stmts with
     | [] -> First Runtime.Null
     | hd :: tl -> (
-        let ctx'', bt_opt, v = interpret_stmt ctx' hd in
-        match bt_opt with
-        | Some bt -> Second (bt, v)
-        | None ->
+        let ctx'', either = interpret_stmt ctx' hd in
+        match either with
+        | Second (bt, v) -> Second (bt, v)
+        | First v ->
             if List.is_empty tl then First v
             else (traverse_stmts [@tailcall]) ctx'' tl)
   in

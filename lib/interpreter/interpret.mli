@@ -6,7 +6,7 @@ val interpret_decl :
 val interpret_stmt :
   Context.t ->
   Compiler.Optimizer.stmt ->
-  Context.t * Compiler.Ast.breaking_type option * Runtime.t
+  Context.t * (Runtime.t, Compiler.Ast.breaking_type * Runtime.t) Either.t
 
 val interpret_expr :
   Context.t ->
