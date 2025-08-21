@@ -142,9 +142,9 @@ and interpret_stmt (ctx : Context.t) stmt :
       | None -> ());
 
       let rec interpret_for_loop ctx cmp inc bl (last_val : Runtime.t) :
-          Compiler.Ast.breaking_type option * Runtime.t =
+          Context.t * Compiler.Ast.breaking_type option * Runtime.t =
         let bt_either = interpret_expr ctx cmp in
-        (* TODO use >>= once we have errors *)
+        (* TODO use >>= once we have errors and we've migrated cmp to an expr *)
         let cmp_val =
           match bt_either with
           | First v -> v
@@ -156,7 +156,7 @@ and interpret_stmt (ctx : Context.t) stmt :
         in
         match cmp_val |> Runtime.bool_of_val with
         | Some cmp_val -> (
-            if not cmp_val then (None, last_val)
+            if not cmp_val then (ctx, None, last_val)
             else
               (* Each iteration should have its own scope *)
               let inner_ctx =
@@ -167,18 +167,23 @@ and interpret_stmt (ctx : Context.t) stmt :
                   }
               in
 
-              let bt_opt, ret_val = interpret_block inner_ctx bl in
+              let _, bt_opt, rt_t =
+                interpret_block inner_ctx bl >>= fun ret_val ->
+                (* this iteration had no breaking stmt *)
+                let ctx, bt_opt, _ = interpret_stmt ctx inc in
+                match bt_opt with
+                | None ->
+                    (interpret_for_loop [@tailcall]) ctx cmp inc bl ret_val
+                | Some bt -> (
+                    match bt with
+                    | Return ->
+                        (* This should be unreachable once we refactor inc to be an expr *)
+                        Sloth_common.Common.internal_failure __LOC__)
+              in
               match bt_opt with
-              | None ->
-                  (* this iteration had no breaking stmt *)
-                  let ctx, bt_opt, _ = interpret_stmt ctx inc in
-                  (* TODO we won't need this when this becomes an expression *)
-                  if Option.is_some bt_opt then
-                    Sloth_common.Common.internal_failure __LOC__
-                  else ();
-                  (interpret_for_loop [@tailcall]) ctx cmp inc bl ret_val
+              | None -> (ctx, None, rt_t)
               | Some breaking_type -> (
-                  match breaking_type with Return -> (Some Return, ret_val)))
+                  match breaking_type with Return -> (ctx, Some Return, rt_t)))
         | None ->
             Printf.sprintf
               "The comparison of a for loop must be a Boolean value, but you \
@@ -186,7 +191,7 @@ and interpret_stmt (ctx : Context.t) stmt :
               (Runtime.to_s cmp_val)
             |> failure ~ctx pos
       in
-      let bt_opt, v = interpret_for_loop ctx'' cmp inc bl Runtime.Null in
+      let _, bt_opt, v = interpret_for_loop ctx'' cmp inc bl Runtime.Null in
       (ctx, bt_opt, v)
       (* for <iterator_name> in <iteratee> { <block> } *)
   | ForInLoop { iterator_name; iteratee; block; pos } ->
@@ -211,10 +216,7 @@ and interpret_stmt (ctx : Context.t) stmt :
             in
             Identifiers.bind ctx.identifiers iterator_name element
             |> Option.value_exn;
-            let bt_opt, ret_val = interpret_block ctx block in
-            match bt_opt with
-            | Some bt -> Second (bt, ret_val)
-            | None -> First ret_val)
+            interpret_block ctx block)
       >>= fun ret_val -> (ctx, None, ret_val)
   | BreakingStmt (break_type, expr_opt, _) ->
       (match expr_opt with
@@ -236,8 +238,7 @@ and interpret_cond ctx cond =
             let ctx =
               { ctx with identifiers = Identifiers.push_empty ctx.identifiers }
             in
-            let bt_opt, v = interpret_block ctx block in
-            match bt_opt with None -> First v | Some bt -> Second (bt, v)
+            interpret_block ctx block
           else
             match continuation with
             | None -> First Runtime.Null (* TODO: Is this right? *)
@@ -247,12 +248,11 @@ and interpret_cond ctx cond =
             "If-expressions must have a boolean expression, but you used %s"
             (Runtime.to_s condition)
           |> failure ~ctx pos)
-  | Compiler.Optimizer.ElseCont (stmts, _) -> (
+  | Compiler.Optimizer.ElseCont (stmts, _) ->
       let ctx =
         { ctx with identifiers = Identifiers.push_empty ctx.identifiers }
       in
-      let bt_opt, v = interpret_block ctx stmts in
-      match bt_opt with None -> First v | Some bt -> Second (bt, v))
+      interpret_block ctx stmts
 
 (* TODO Note this does not return a context--can expressions mutate context?! *)
 (* Yes, if they call a function that mutates a global *)
@@ -456,33 +456,31 @@ and interpret_expr ctx expr :
       | Plus | Minus | Product | Divide | Pipe | Less | Greater | Leq | Geq
       | RightArrow ->
           (* Unreachable *) Sloth_common.Common.internal_failure __LOC__)
-  | DoBlock (block, _) -> (
+  | DoBlock (block, _) ->
       let ctx =
         { ctx with identifiers = Identifiers.push_empty ctx.identifiers }
       in
-      let bt_opt, t = interpret_block ctx block in
-      match bt_opt with None -> First t | Some bt -> Second (bt, t))
+      interpret_block ctx block
   | ObjDeref (receiver, target, pos) ->
       interpret_expr ctx receiver >>= fun receiver ->
       First (dereference_object ctx receiver target pos)
 
 (** You must push an empty env frame on first *)
 and interpret_block (ctx : Context.t) (stmts : Compiler.Optimizer.stmt list) :
-    Compiler.Ast.breaking_type option * Runtime.t =
+    (Runtime.t, Compiler.Ast.breaking_type * Runtime.t) Either.t =
   (* TODO can't use List.fold_left because we want to handle empty list
      differently *)
   let rec traverse_stmts ctx' stmts =
     match stmts with
-    | [] -> (None, Runtime.Null)
+    | [] -> First Runtime.Null
     | hd :: tl -> (
         let ctx'', bt_opt, v = interpret_stmt ctx' hd in
         match bt_opt with
-        | Some _ -> (bt_opt, v)
+        | Some bt -> Second (bt, v)
         | None ->
-            if List.is_empty tl then (None, v)
+            if List.is_empty tl then First v
             else (traverse_stmts [@tailcall]) ctx'' tl)
   in
-  (* discard context *)
   traverse_stmts ctx stmts
 
 and interpret_method ~ctx ~pos receiver args method_name =
