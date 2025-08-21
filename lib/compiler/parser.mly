@@ -420,7 +420,9 @@ elif:
 
 block:
   | LCURLY; RCURLY { [] }
+  (* Allow a single statement block without a trailing semicolon *)
   | LCURLY; s = stmts; RCURLY { s }
+  | LCURLY; s = stmt_sans_semicolon; RCURLY { [s] }
 
 (* arg-list or list literal *)
 expr_list:

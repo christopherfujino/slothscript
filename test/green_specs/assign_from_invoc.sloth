@@ -2,9 +2,7 @@
 Assign from invocation
 
 ### Program
-func fn() {
-  1;
-}
+func fn() { 1 }
 
 let n = fn();
 print(n);

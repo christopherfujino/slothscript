@@ -19,7 +19,6 @@
 - [ ] string escapes
 - [ ] Optional function parameters
 - [ ] List mutation methods
-- [ ] Allow single statement blocks to omit semicolons
 
 ### v1.0
 - [ ] Formatter
@@ -67,3 +66,4 @@
 - [x] raw string literals
 - [x] Files
 - [x] Return statements
+- [ ] Allow single statement blocks to omit semicolons

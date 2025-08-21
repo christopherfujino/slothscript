@@ -2,7 +2,9 @@
 re-assignment
 
 ### Program
-let x = 0;x = 1;print(x);
+let x = 0
+x = 1
+print(x);
 
 ### Ast
 ((StmtDecl

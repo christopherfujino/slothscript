@@ -2,7 +2,7 @@
 closures
 
 ### Program
-let x = 0;func f() {print(x);};x = 1;f();
+let x = 0;func f() {print(x)};x = 1;f();
 
 ### Ast
 ((StmtDecl
