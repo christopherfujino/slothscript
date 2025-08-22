@@ -10,26 +10,27 @@ for album in l {
 
 ### Ast
 ((StmtDecl
-  (LetStmt
-    l
-    (List
-      ((String
-        ((FullString
-          "Rubber Soul"
-          [POS]))
-        [POS])
-        (String
+  (ExprStmt
+    (LetExpr
+      l
+      (List
+        ((String
           ((FullString
-            Revolver
+            "Rubber Soul"
             [POS]))
           [POS])
-        (String
-          ((FullString
-            "Sgt. Pepper's Lonely Hearts Club Band"
+          (String
+            ((FullString
+              Revolver
+              [POS]))
+            [POS])
+          (String
+            ((FullString
+              "Sgt. Pepper's Lonely Hearts Club Band"
+              [POS]))
             [POS]))
-          [POS]))
-      [POS])
-    [POS]))
+        [POS])
+      [POS])))
   (StmtDecl
     (ForInLoop
       (iterator_name

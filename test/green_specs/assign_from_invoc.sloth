@@ -21,15 +21,16 @@ print(n);
   (pos
     [POS]))
   (StmtDecl
-    (LetStmt
-      n
-      (FuncInvoc
-        (IdRef
-          fn
+    (ExprStmt
+      (LetExpr
+        n
+        (FuncInvoc
+          (IdRef
+            fn
+            [POS])
+          ()
           [POS])
-        ()
-        [POS])
-      [POS]))
+        [POS])))
   (StmtDecl
     (ExprStmt
       (FuncInvoc

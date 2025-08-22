@@ -66,4 +66,5 @@
 - [x] raw string literals
 - [x] Files
 - [x] Return statements
-- [ ] Allow single statement blocks to omit semicolons
+- [x] Allow single statement blocks to omit semicolons
+- [x] Migrate var declarations and reassignment to expressions

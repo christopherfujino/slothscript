@@ -8,19 +8,21 @@ print(x);
 
 ### Ast
 ((StmtDecl
-  (LetStmt
-    x
-    (Num
-      0
-      [POS])
-    [POS]))
-  (StmtDecl
-    (AssignStmt
+  (ExprStmt
+    (LetExpr
       x
       (Num
-        1
+        0
         [POS])
-      [POS]))
+      [POS])))
+  (StmtDecl
+    (ExprStmt
+      (AssignExpr
+        x
+        (Num
+          1
+          [POS])
+        [POS])))
   (StmtDecl
     (ExprStmt
       (FuncInvoc

@@ -13,19 +13,20 @@ assert(contents == "Linux\n", contents)
 
 ### Ast
 ((StmtDecl
-  (LetStmt
-    file
-    (FuncInvoc
-      (IdRef
-        File
-        [POS])
-      ((String
-        ((FullString
-          foo
+  (ExprStmt
+    (LetExpr
+      file
+      (FuncInvoc
+        (IdRef
+          File
+          [POS])
+        ((String
+          ((FullString
+            foo
+            [POS]))
           [POS]))
-        [POS]))
-      [POS])
-    [POS]))
+        [POS])
+      [POS])))
   (StmtDecl
     (ExprStmt
       (Binary
@@ -50,18 +51,19 @@ assert(contents == "Linux\n", contents)
         RightArrow
         [POS])))
   (StmtDecl
-    (LetStmt
-      contents
-      (UnaryExpr
-        (target
-          (IdRef
-            file
-            [POS]))
-        (pos
-          [POS])
-        (operator
-          LeftArrow))
-      [POS]))
+    (ExprStmt
+      (LetExpr
+        contents
+        (UnaryExpr
+          (target
+            (IdRef
+              file
+              [POS]))
+          (pos
+            [POS])
+          (operator
+            LeftArrow))
+        [POS])))
   (StmtDecl
     (ExprStmt
       (FuncInvoc

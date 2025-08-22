@@ -8,36 +8,37 @@ print(value);
 
 ### Ast
 ((StmtDecl
-  (LetStmt
-    value
-    (Binary
+  (ExprStmt
+    (LetExpr
+      value
       (Binary
-        (Num
-          2
-          [POS])
         (Binary
-          (Binary
-            (Num
-              3
-              [POS])
-            (Num
-              4
-              [POS])
-            Product
-            [POS])
           (Num
-            5
+            2
             [POS])
-          Divide
+          (Binary
+            (Binary
+              (Num
+                3
+                [POS])
+              (Num
+                4
+                [POS])
+              Product
+              [POS])
+            (Num
+              5
+              [POS])
+            Divide
+            [POS])
+          Plus
           [POS])
-        Plus
+        (Num
+          6
+          [POS])
+        Minus
         [POS])
-      (Num
-        6
-        [POS])
-      Minus
-      [POS])
-    [POS]))
+      [POS])))
   (StmtDecl
     (ExprStmt
       (FuncInvoc

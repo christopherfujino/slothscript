@@ -11,7 +11,7 @@ val interpret_stmt :
 val interpret_expr :
   Context.t ->
   Compiler.Optimizer.expr ->
-  (Runtime.t, Compiler.Ast.breaking_type * Runtime.t) Either.t
+  Context.t * (Runtime.t, Compiler.Ast.breaking_type * Runtime.t) Either.t
 
 val interpret_prog :
   Context.t -> Compiler.Optimizer.decl list -> Context.t * Runtime.t

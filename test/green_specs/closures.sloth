@@ -6,12 +6,13 @@ let x = 0;func f() {print(x)};x = 1;f();
 
 ### Ast
 ((StmtDecl
-  (LetStmt
-    x
-    (Num
-      0
-      [POS])
-    [POS]))
+  (ExprStmt
+    (LetExpr
+      x
+      (Num
+        0
+        [POS])
+      [POS])))
   (FuncDecl
     (name
       f)
@@ -30,12 +31,13 @@ let x = 0;func f() {print(x)};x = 1;f();
     (pos
       [POS]))
   (StmtDecl
-    (AssignStmt
-      x
-      (Num
-        1
-        [POS])
-      [POS]))
+    (ExprStmt
+      (AssignExpr
+        x
+        (Num
+          1
+          [POS])
+        [POS])))
   (StmtDecl
     (ExprStmt
       (FuncInvoc

@@ -19,7 +19,7 @@ and decl = FuncDecl of func_stmt_t | StmtDecl of stmt
 and stmt =
   (* No position *)
   | ExprStmt of expr
-  | ForLoop of stmt * expr * stmt * stmt list * Sloth_common.Position.t
+  | ForLoop of expr * expr * expr * stmt list * Sloth_common.Position.t
   | ForInLoop of {
       iterator_name : string;
       iteratee : expr;

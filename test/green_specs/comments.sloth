@@ -26,18 +26,19 @@ let x = 1 +
   (pos
     [POS]))
   (StmtDecl
-    (LetStmt
-      x
-      (Binary
-        (Num
-          1
+    (ExprStmt
+      (LetExpr
+        x
+        (Binary
+          (Num
+            1
+            [POS])
+          (Num
+            1
+            [POS])
+          Plus
           [POS])
-        (Num
-          1
-          [POS])
-        Plus
-        [POS])
-      [POS])))
+        [POS]))))
 
 ### Stdout
 

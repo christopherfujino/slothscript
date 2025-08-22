@@ -8,18 +8,19 @@ print(x)
 
 ### Ast
 ((StmtDecl
-  (LetStmt
-    x
-    (Binary
-      (Num
-        1
+  (ExprStmt
+    (LetExpr
+      x
+      (Binary
+        (Num
+          1
+          [POS])
+        (Num
+          1
+          [POS])
+        Plus
         [POS])
-      (Num
-        1
-        [POS])
-      Plus
-      [POS])
-    [POS]))
+      [POS])))
   (StmtDecl
     (ExprStmt
       (FuncInvoc

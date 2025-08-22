@@ -10,7 +10,7 @@ let v = if b {
 };
 print(v);
 
-if let x = false {
+if (let x = false) {
   # Unreachable
   assert(false)
 }
@@ -20,37 +20,39 @@ assert(x == false)
 
 ### Ast
 ((StmtDecl
-  (LetStmt
-    b
-    (Bool
-      false
-      [POS])
-    [POS]))
+  (ExprStmt
+    (LetExpr
+      b
+      (Bool
+        false
+        [POS])
+      [POS])))
   (StmtDecl
-    (LetStmt
-      v
-      (IfExpr
-        (IfCont
-          (conditional
-            (IdRef
-              b
-              [POS]))
-          (block
-            ((ExprStmt
-              (Num
-                1
-                [POS]))))
-          (continuation
-            ((ElseCont
+    (ExprStmt
+      (LetExpr
+        v
+        (IfExpr
+          (IfCont
+            (conditional
+              (IdRef
+                b
+                [POS]))
+            (block
               ((ExprStmt
                 (Num
-                  2
-                  [POS])))
-              [POS])))
-          (pos
-            [POS]))
-        [POS])
-      [POS]))
+                  1
+                  [POS]))))
+            (continuation
+              ((ElseCont
+                ((ExprStmt
+                  (Num
+                    2
+                    [POS])))
+                [POS])))
+            (pos
+              [POS]))
+          [POS])
+        [POS])))
   (StmtDecl
     (ExprStmt
       (FuncInvoc
@@ -59,6 +61,48 @@ assert(x == false)
           [POS])
         ((IdRef
           v
+          [POS]))
+        [POS])))
+  (StmtDecl
+    (ExprStmt
+      (IfExpr
+        (IfCont
+          (conditional
+            (LetExpr
+              x
+              (Bool
+                false
+                [POS])
+              [POS]))
+          (block
+            ((ExprStmt
+              (FuncInvoc
+                (IdRef
+                  assert
+                  [POS])
+                ((Bool
+                  false
+                  [POS]))
+                [POS]))))
+          (continuation
+            ())
+          (pos
+            [POS]))
+        [POS])))
+  (StmtDecl
+    (ExprStmt
+      (FuncInvoc
+        (IdRef
+          assert
+          [POS])
+        ((Equality
+          (IdRef
+            x
+            [POS])
+          (Bool
+            false
+            [POS])
+          true
           [POS]))
         [POS]))))
 

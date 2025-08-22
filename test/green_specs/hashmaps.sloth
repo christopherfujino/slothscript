@@ -18,16 +18,11 @@ h = {"on a": "single line"}
 
 ### Ast
 ((StmtDecl
-  (LetStmt
-    h
-    (HashMap
-      (((Num
-        3
-        [POS])
-        (Num
-          4
-          [POS]))
-        ((String
+  (ExprStmt
+    (LetExpr
+      h
+      (HashMap
+        (((String
           ((FullString
             foo
             [POS]))
@@ -36,45 +31,53 @@ h = {"on a": "single line"}
             ((FullString
               bar
               [POS]))
-            [POS])))
-      [POS])
-    [POS]))
-  (StmtDecl
-    (SubAssignStmt
-      (subscript
-        (Subscript
-          (IdRef
-            h
-            [POS])
-          (Bool
-            true
-            [POS])
-          [POS]))
-      (value
-        (String
-          ((FullString
-            true
             [POS]))
-          [POS]))
-      (pos
-        [POS])))
+          ((Num
+            3
+            [POS])
+            (Num
+              4
+              [POS])))
+        [POS])
+      [POS])))
   (StmtDecl
-    (SubAssignStmt
-      (subscript
-        (Subscript
-          (IdRef
-            h
-            [POS])
+    (ExprStmt
+      (SubAssignExpr
+        (subscript
+          (Subscript
+            (IdRef
+              h
+              [POS])
+            (Bool
+              true
+              [POS])
+            [POS]))
+        (value
+          (String
+            ((FullString
+              true
+              [POS]))
+            [POS]))
+        (pos
+          [POS]))))
+  (StmtDecl
+    (ExprStmt
+      (SubAssignExpr
+        (subscript
+          (Subscript
+            (IdRef
+              h
+              [POS])
+            (Num
+              1
+              [POS])
+            [POS]))
+        (value
           (Num
-            1
-            [POS])
-          [POS]))
-      (value
-        (Num
-          2
-          [POS]))
-      (pos
-        [POS])))
+            2
+            [POS]))
+        (pos
+          [POS]))))
   (StmtDecl
     (ExprStmt
       (FuncInvoc
@@ -123,21 +126,22 @@ h = {"on a": "single line"}
           [POS]))
         [POS])))
   (StmtDecl
-    (AssignStmt
-      h
-      (HashMap
-        (((String
-          ((FullString
-            "on a"
-            [POS]))
-          [POS])
-          (String
+    (ExprStmt
+      (AssignExpr
+        h
+        (HashMap
+          (((String
             ((FullString
-              "single line"
+              "on a"
               [POS]))
-            [POS])))
-        [POS])
-      [POS])))
+            [POS])
+            (String
+              ((FullString
+                "single line"
+                [POS]))
+              [POS])))
+          [POS])
+        [POS]))))
 
 ### Stdout
 2

@@ -17,12 +17,13 @@ if false {} else {let x = 1; print(x);};
           ())
         (continuation
           ((ElseCont
-            ((LetStmt
-              x
-              (Num
-                1
-                [POS])
-              [POS])
+            ((ExprStmt
+              (LetExpr
+                x
+                (Num
+                  1
+                  [POS])
+                [POS]))
               (ExprStmt
                 (FuncInvoc
                   (IdRef

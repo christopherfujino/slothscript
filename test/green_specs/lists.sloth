@@ -26,29 +26,30 @@ print(l);
   (pos
     [POS]))
   (StmtDecl
-    (LetStmt
-      l
-      (List
-        ((Num
-          2
+    (ExprStmt
+      (LetExpr
+        l
+        (List
+          ((Num
+            2
+            [POS])
+            (Num
+              3
+              [POS])
+            (Num
+              5
+              [POS])
+            (Num
+              7
+              [POS])
+            (Num
+              11
+              [POS])
+            (Num
+              13
+              [POS]))
           [POS])
-          (Num
-            3
-            [POS])
-          (Num
-            5
-            [POS])
-          (Num
-            7
-            [POS])
-          (Num
-            11
-            [POS])
-          (Num
-            13
-            [POS]))
-        [POS])
-      [POS]))
+        [POS])))
   (StmtDecl
     (ExprStmt
       (FuncInvoc
@@ -89,22 +90,23 @@ print(l);
           [POS]))
         [POS])))
   (StmtDecl
-    (SubAssignStmt
-      (subscript
-        (Subscript
-          (IdRef
-            l
-            [POS])
+    (ExprStmt
+      (SubAssignExpr
+        (subscript
+          (Subscript
+            (IdRef
+              l
+              [POS])
+            (Num
+              1
+              [POS])
+            [POS]))
+        (value
           (Num
-            1
-            [POS])
-          [POS]))
-      (value
-        (Num
-          2.5
-          [POS]))
-      (pos
-        [POS])))
+            2.5
+            [POS]))
+        (pos
+          [POS]))))
   (StmtDecl
     (ExprStmt
       (FuncInvoc

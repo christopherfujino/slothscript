@@ -67,87 +67,23 @@ and interpret_stmt (ctx : Context.t) stmt :
   (* Context.t * Compiler.Ast.breaking_type option * Runtime.t = *)
   let open Compiler.Optimizer in
   let ( >>= ) =
-   fun (tuple :
-         Context.t
-         * (Runtime.t, Compiler.Ast.breaking_type * Runtime.t) Either.t)
+   fun (ctx, either)
        (cb :
          Context.t ->
          Runtime.t ->
          Context.t
          * (Runtime.t, Compiler.Ast.breaking_type * Runtime.t) Either.t) ->
-    let ctx, either = tuple in
     Either.value_map either
       ~second:(fun tuple -> (ctx, Second tuple))
       ~first:(cb ctx)
   in
 
   match stmt with
-  | LetStmt (id, e, pos) ->
-      (ctx, interpret_expr ctx e) >>= fun ctx v ->
-      (match Identifiers.bind ctx.identifiers id v with
-      | Some () -> ()
-      | None ->
-          Printf.sprintf
-            "The name %s has already been declared in this scope; did you mean \
-             to assign to it?"
-            id
-          |> failure ~ctx pos);
-      (ctx, First v)
-  | AssignStmt (id, e, pos) -> (
-      (ctx, interpret_expr ctx e) >>= fun ctx v ->
-      match Identifiers.reassign ctx.identifiers id v with
-      | Some () -> (ctx, First v)
-      | None ->
-          Printf.sprintf
-            "The name %s has not been declared yet; did you mean to declare it?"
-            id
-          |> failure ~ctx pos
-      (*
-      match interpret_expr ctx e with
-      | First v ->
-          (match Identifiers.reassign ctx.identifiers id v with
-          | Some () -> ()
-          | None ->
-              Printf.sprintf
-                "The name %s has not been declared yet; did you mean to \
-                 declare it?"
-                id
-              |> failure ~ctx pos);
-          (ctx, None, v)
-      | Second (bt, v) -> (ctx, Some bt, v))
-  *)
-      )
-  | SubAssignStmt { subscript; value; pos = _ } -> (
-      match subscript with
-      | Subscript (receiver, subscript, pos) -> (
-          (ctx, interpret_expr ctx receiver) >>= fun ctx receiver' ->
-          (ctx, interpret_expr ctx subscript) >>= fun ctx subscript' ->
-          (ctx, interpret_expr ctx value) >>= fun ctx value' ->
-          match receiver' with
-          | HashMap tbl ->
-              Stdlib.Hashtbl.replace tbl subscript' value';
-              (ctx, First value')
-          | List elements -> (
-              match Runtime.int_of_val subscript' with
-              | Some i ->
-                  Array.set elements i value';
-                  (ctx, First receiver')
-              | None ->
-                  Printf.sprintf
-                    "Lists can only be subscripted with Numbers, but you used \
-                     %s"
-                    (Runtime.to_s subscript')
-                  |> failure ~ctx pos)
-          | _ ->
-              Printf.sprintf "Assigning via subscript to %s not implemented"
-                (Runtime.to_s receiver')
-              |> failure ~ctx pos)
-      | _ -> Sloth_common.Common.internal_failure __LOC__)
-  | ExprStmt expr -> (ctx, interpret_expr ctx expr)
+  | ExprStmt expr -> interpret_expr ctx expr
   | ForLoop (init, cmp, inc, bl, pos) ->
       let identifiers = Identifiers.push_empty ctx.identifiers in
       let ctx' = { ctx with identifiers } in
-      let ctx'', either = interpret_stmt ctx' init in
+      let ctx'', either = interpret_expr ctx' init in
       (match either with
       | Second (bt, _) -> (
           match bt with
@@ -157,7 +93,7 @@ and interpret_stmt (ctx : Context.t) stmt :
       | First _ -> ());
 
       let rec interpret_for_loop ctx cmp inc bl (last_val : Runtime.t) =
-        let bt_either = interpret_expr ctx cmp in
+        let ctx, bt_either = interpret_expr ctx cmp in
         (* TODO use >>= once we have errors and we've migrated cmp to an expr *)
         let cmp_val =
           match bt_either with
@@ -183,7 +119,7 @@ and interpret_stmt (ctx : Context.t) stmt :
 
               (inner_ctx, interpret_block inner_ctx bl) >>= fun _ ret_val ->
               (* this iteration had no breaking stmt *)
-              let ctx, either = interpret_stmt ctx inc in
+              let ctx, either = interpret_expr ctx inc in
               match either with
               | First _ ->
                   (interpret_for_loop [@tailcall]) ctx cmp inc bl ret_val
@@ -206,7 +142,7 @@ and interpret_stmt (ctx : Context.t) stmt :
       let ctx =
         { ctx with identifiers = Identifiers.push_empty ctx.identifiers }
       in
-      (ctx, interpret_expr ctx iteratee) >>= fun ctx iteratee ->
+      interpret_expr ctx iteratee >>= fun ctx iteratee ->
       let iteratee_array =
         match iteratee with
         | List l -> l
@@ -233,27 +169,29 @@ and interpret_stmt (ctx : Context.t) stmt :
   | BreakingStmt (break_type, expr_opt, _) ->
       (match expr_opt with
       | None -> (ctx, Second (break_type, Runtime.Null))
-      | Some e -> (ctx, interpret_expr ctx e))
+      | Some e -> interpret_expr ctx e)
       >>= fun ctx v -> (ctx, Second (break_type, v))
 
 and interpret_cond ctx cond =
   let ( >>= ) =
-   fun either cb ->
-    Either.value_map either ~second:(fun tuple -> Second tuple) ~first:cb
+   fun (ctx, either) cb ->
+    Either.value_map either
+      ~second:(fun tuple -> (ctx, Second tuple))
+      ~first:(cb ctx)
   in
   match cond with
   | Compiler.Optimizer.IfCont { conditional; block; continuation; pos } -> (
-      interpret_expr ctx conditional >>= fun condition ->
+      interpret_expr ctx conditional >>= fun ctx condition ->
       match Runtime.bool_of_val condition with
       | Some condition_b -> (
           if condition_b then
-            let ctx =
+            let inner_ctx =
               { ctx with identifiers = Identifiers.push_empty ctx.identifiers }
             in
-            interpret_block ctx block
+            (ctx, interpret_block inner_ctx block)
           else
             match continuation with
-            | None -> First Runtime.Null (* TODO: Is this right? *)
+            | None -> (ctx, First Runtime.Null (* TODO: Is this right? *))
             | Some cond -> (interpret_cond [@tailcall]) ctx cond)
       | None ->
           Printf.sprintf
@@ -261,75 +199,80 @@ and interpret_cond ctx cond =
             (Runtime.to_s condition)
           |> failure ~ctx pos)
   | Compiler.Optimizer.ElseCont (stmts, _) ->
-      let ctx =
+      let inner_ctx =
         { ctx with identifiers = Identifiers.push_empty ctx.identifiers }
       in
-      interpret_block ctx stmts
+      (ctx, interpret_block inner_ctx stmts)
 
 (* TODO Note this does not return a context--can expressions mutate context?! *)
 (* Yes, if they call a function that mutates a global *)
 and interpret_expr ctx expr :
-    (Runtime.t, Compiler.Ast.breaking_type * Runtime.t) Either.t =
+    Context.t * (Runtime.t, Compiler.Ast.breaking_type * Runtime.t) Either.t =
   let ( >>= ) =
-   fun either cb ->
-    Either.value_map either ~second:(fun tuple -> Second tuple) ~first:cb
+   fun (ctx, either) cb ->
+    Either.value_map either
+      ~second:(fun tuple -> (ctx, Second tuple))
+      ~first:(cb ctx)
   in
   let open Compiler.Optimizer in
   match expr with
-  | Num (f, _) -> First (Runtime.Num f)
+  | Num (f, _) -> (ctx, First (Runtime.Num f))
   | String (parts, _) ->
       let buf = Buffer.create 128 in
-      List.fold parts ~init:(First ()) ~f:(fun either part ->
-          either >>= fun _ ->
+      List.fold parts ~init:(ctx, First ()) ~f:(fun (ctx, either) part ->
+          (ctx, either) >>= fun ctx _ ->
           match part with
-          | FullString (contents, _) -> First (Buffer.add_string buf contents)
+          | FullString (contents, _) ->
+              (ctx, First (Buffer.add_string buf contents))
           | StartStringInterp (contents, _) ->
-              First (Buffer.add_string buf contents)
+              (ctx, First (Buffer.add_string buf contents))
           | MiddleStringInterp (contents, _) ->
-              First (Buffer.add_string buf contents)
+              (ctx, First (Buffer.add_string buf contents))
           | EndStringInterp (contents, _) ->
-              First (Buffer.add_string buf contents)
+              (ctx, First (Buffer.add_string buf contents))
           | ExpressionStringInterp e ->
-              interpret_expr ctx e >>= fun v ->
+              interpret_expr ctx e >>= fun ctx v ->
               let s = Runtime.to_s v in
               Buffer.add_string buf s;
-              First ())
-      >>= fun () -> First (Runtime.String (Buffer.contents buf))
-  | Bool (b, _) -> First (Runtime.Bool b)
-  | Null _ -> First Runtime.Null
+              (ctx, First ()))
+      >>= fun ctx () -> (ctx, First (Runtime.String (Buffer.contents buf)))
+  | Bool (b, _) -> (ctx, First (Runtime.Bool b))
+  | Null _ -> (ctx, First Runtime.Null)
   | List (els, _) ->
-      List.fold els ~init:(First []) ~f:(fun acc cur ->
-          acc >>= fun prev ->
-          interpret_expr ctx cur >>= fun el ->
-          First
-            ((* This is expensive, but we must preserve list order *)
-             List.append prev [ el ]))
-      >>= fun els ->
+      List.fold els ~init:(ctx, First []) ~f:(fun ctx_either cur ->
+          ctx_either >>= fun ctx prev ->
+          interpret_expr ctx cur >>= fun ctx el ->
+          ( ctx,
+            First
+              ((* This reverses the order *)
+               el :: prev) ))
+      >>= fun ctx reversed_elements ->
+      let els = List.rev reversed_elements in
       let arr = Array.of_list els in
-      First (Runtime.List arr)
+      (ctx, First (Runtime.List arr))
   | HashMap (kvps, _) ->
-      List.fold kvps ~init:(First []) ~f:(fun acc (k, v) ->
-          acc >>= fun prev ->
-          interpret_expr ctx k >>= fun k ->
-          interpret_expr ctx v >>= fun v ->
+      List.fold kvps ~init:(ctx, First []) ~f:(fun acc (k, v) ->
+          acc >>= fun ctx prev ->
+          interpret_expr ctx k >>= fun ctx k ->
+          interpret_expr ctx v >>= fun ctx v ->
           let cur = (k, v) in
           (* Order doesn't matter here *)
           (* TODO: we could already populate the Hashtbl here *)
-          First (cur :: prev))
-      >>= fun kvps' ->
+          (ctx, First (cur :: prev)))
+      >>= fun ctx kvps' ->
       let tbl = Stdlib.Hashtbl.create 8 in
       List.iter kvps' ~f:(fun (k, v) -> Stdlib.Hashtbl.add tbl k v);
-      First (Runtime.HashMap tbl)
+      (ctx, First (Runtime.HashMap tbl))
   | Subscript (receiver, subscript, pos) -> (
-      interpret_expr ctx receiver >>= fun receiver' ->
-      interpret_expr ctx subscript >>= fun subscript' ->
+      interpret_expr ctx receiver >>= fun ctx receiver' ->
+      interpret_expr ctx subscript >>= fun ctx subscript' ->
       match receiver' with
       | Runtime.List elements -> (
           match subscript' with
           | Runtime.Num idx ->
               if Float.is_integer idx then
                 let i = Stdlib.int_of_float idx in
-                First (Array.get elements i)
+                (ctx, First (Array.get elements i))
               else
                 Printf.sprintf
                   "Lists can only be subscripted by integers, you used %s"
@@ -340,47 +283,48 @@ and interpret_expr ctx expr :
                 (Runtime.to_s subscript'
                 |> Printf.sprintf
                      "Lists can only be subscripted by Numbers, you used %s"))
-      | Runtime.HashMap tbl -> First (Stdlib.Hashtbl.find tbl subscript')
+      | Runtime.HashMap tbl -> (ctx, First (Stdlib.Hashtbl.find tbl subscript'))
       | _ ->
           Printf.sprintf "Cannot subscript the value %s"
             (Runtime.to_s receiver')
           |> failure ~ctx pos)
   | IdRef (i, pos) -> (
       match Identifiers.get ctx.identifiers i with
-      | Some v -> First v
+      | Some v -> (ctx, First v)
       | None ->
           Printf.sprintf "The name %s has not been declared in this scope" i
           |> failure ~ctx pos)
   | Equality (lhs, rhs, is_equality, _) ->
-      interpret_expr ctx lhs >>= fun lhs ->
-      interpret_expr ctx rhs >>= fun rhs ->
-      First (Runtime.Bool (is_equal ctx is_equality lhs rhs))
+      interpret_expr ctx lhs >>= fun ctx lhs ->
+      interpret_expr ctx rhs >>= fun ctx rhs ->
+      (ctx, First (Runtime.Bool (is_equal ctx is_equality lhs rhs)))
   | Binary (lhs, rhs, op, pos) -> interpret_binary ctx lhs rhs op pos
   | MethodInvoc { receiver; target; args; pos } ->
       interpret_method ~ctx ~pos receiver args target
   | FuncInvoc (receiver, args, pos) -> (
-      interpret_expr ctx receiver >>= function
+      interpret_expr ctx receiver >>= fun ctx -> function
       | Func f -> (
           match f with
           | User { parameters; block; identifiers } ->
               let identifiers2 = Identifiers.push_empty identifiers in
               (* Bind args to env *)
-              (match
-                 List.fold2 parameters args ~init:(First ())
-                   ~f:(fun either p a ->
-                     either >>= fun () ->
-                     interpret_expr ctx a >>= fun arg_val ->
-                     (* This must not throw *)
-                     Identifiers.bind identifiers2 p arg_val |> Option.value_exn;
-                     First ())
-               with
-              | Ok either -> either
+              let or_unequal =
+                List.fold2 parameters args ~init:(ctx, First ())
+                  ~f:(fun acc p a ->
+                    acc >>= fun ctx () ->
+                    interpret_expr ctx a >>= fun ctx arg_val ->
+                    (* This must not throw *)
+                    Identifiers.bind identifiers2 p arg_val |> Option.value_exn;
+                    (ctx, First ()))
+              in
+              (match or_unequal with
+              | Ok tuple -> tuple
               | Unequal_lengths ->
                   Printf.sprintf
                     "You passed %d arguments to a function that expected %d"
                     (List.length args) (List.length parameters)
                   |> failure ~ctx pos)
-              >>= fun () ->
+              >>= fun ctx () ->
               let temp_ctx = { ctx with identifiers = identifiers2 } in
               let rec traverse_stmts ctx stmts =
                 match stmts with
@@ -397,16 +341,17 @@ and interpret_expr ctx expr :
               (* discard context *)
               (* Note, Return has already been unwrapped *)
               let _, either = traverse_stmts temp_ctx block in
-              either
+              (ctx, either)
           | Native { cb; parameters = _; identifiers = _ } -> (
-              List.fold args ~init:(First []) ~f:(fun either arg ->
-                  either >>= fun prev ->
-                  interpret_expr ctx arg >>= fun arg ->
-                  (* This is reversed... *) First (arg :: prev))
-              >>= fun reversed_args ->
+              List.fold args ~init:(ctx, First []) ~f:(fun acc arg ->
+                  acc >>= fun ctx prev ->
+                  interpret_expr ctx arg >>= fun ctx arg ->
+                  (* This is reversed... *)
+                  (ctx, First (arg :: prev)))
+              >>= fun ctx reversed_args ->
               let args = List.rev reversed_args in
               match cb args with
-              | Ok v -> First v
+              | Ok v -> (ctx, First v)
               | Error msg ->
                   (* TODO: should this return a `Some SlothError`? *)
                   failure ~ctx pos msg))
@@ -414,9 +359,9 @@ and interpret_expr ctx expr :
           if not @@ phys_equal (List.length args) 1 then failwith "TODO"
           else
             let arg_expr = List.hd_exn args in
-            interpret_expr ctx arg_expr >>= fun arg ->
+            interpret_expr ctx arg_expr >>= fun ctx arg ->
             match name with
-            | "File" -> First (Runtime.File (cast_to_file ~ctx ~pos arg))
+            | "File" -> (ctx, First (Runtime.File (cast_to_file ~ctx ~pos arg)))
             | _ -> Sloth_common.Common.internal_failure __LOC__)
       | _ as t ->
           Printf.sprintf "Tried to invoke %s, but it is not a function"
@@ -424,12 +369,16 @@ and interpret_expr ctx expr :
           |> failwith)
   | FuncExpr { parameters; block; _ } ->
       let parameters = List.map parameters ~f:(fun (name, _) -> name) in
-      First (Func (User { parameters; block; identifiers = ctx.identifiers }))
+      let u =
+        Runtime.User { parameters; block; identifiers = ctx.identifiers }
+      in
+      let f = Runtime.Func u in
+      (ctx, First f)
   | IfExpr (cond, _) -> interpret_cond ctx cond
   | UnaryExpr { target; pos; operator } -> (
       (* TODO deprecate is_prefix when we've removed prefix bang *)
       interpret_expr ctx target
-      >>= fun v ->
+      >>= fun ctx v ->
       match operator with
       | Not -> (
           let bool_opt = Runtime.bool_of_val v in
@@ -440,15 +389,15 @@ and interpret_expr ctx expr :
                    "The `not` operator must be applied to a Bool value, but \
                     got %s"
               |> failure ~ctx pos
-          | Some b -> First (Runtime.Bool (not b)))
+          | Some b -> (ctx, First (Runtime.Bool (not b))))
       | Bang -> (
-          interpret_expr ctx target >>= fun target ->
+          interpret_expr ctx target >>= fun ctx target ->
           let proc = cast_to_process ~ctx ~pos target in
           match Context.exec_proc proc with
-          | Ok t' -> First t'
+          | Ok t' -> (ctx, First t')
           | Error err -> failure ~ctx pos err)
       | LeftArrow -> (
-          interpret_expr ctx target >>= fun target ->
+          interpret_expr ctx target >>= fun ctx target ->
           let file = cast_to_file ~ctx ~pos target in
           let target = Runtime.File file in
           let func = dereference_object ctx target "readString" pos in
@@ -464,18 +413,64 @@ and interpret_expr ctx expr :
           in
           match cb [ target ] with
           | Error err -> failure ~ctx pos err
-          | Ok t' -> First t')
+          | Ok t' -> (ctx, First t'))
       | Plus | Minus | Product | Divide | Pipe | Less | Greater | Leq | Geq
       | RightArrow ->
           (* Unreachable *) Sloth_common.Common.internal_failure __LOC__)
   | DoBlock (block, _) ->
-      let ctx =
+      let inner_ctx =
         { ctx with identifiers = Identifiers.push_empty ctx.identifiers }
       in
-      interpret_block ctx block
+      (ctx, interpret_block inner_ctx block)
   | ObjDeref (receiver, target, pos) ->
-      interpret_expr ctx receiver >>= fun receiver ->
-      First (dereference_object ctx receiver target pos)
+      interpret_expr ctx receiver >>= fun ctx receiver ->
+      (ctx, First (dereference_object ctx receiver target pos))
+  | LetExpr (id, e, pos) ->
+      interpret_expr ctx e >>= fun ctx v ->
+      (match Identifiers.bind ctx.identifiers id v with
+      | Some () -> ()
+      | None ->
+          Printf.sprintf
+            "The name %s has already been declared in this scope; did you mean \
+             to assign to it?"
+            id
+          |> failure ~ctx pos);
+      (ctx, First v)
+  | AssignExpr (id, e, pos) -> (
+      interpret_expr ctx e >>= fun ctx v ->
+      match Identifiers.reassign ctx.identifiers id v with
+      | Some () -> (ctx, First v)
+      | None ->
+          Printf.sprintf
+            "The name %s has not been declared yet; did you mean to declare it?"
+            id
+          |> failure ~ctx pos)
+  | SubAssignExpr { subscript; value; pos = _ } -> (
+      match subscript with
+      | Subscript (receiver, subscript, pos) -> (
+          interpret_expr ctx receiver >>= fun ctx receiver' ->
+          interpret_expr ctx subscript >>= fun ctx subscript' ->
+          interpret_expr ctx value >>= fun ctx value' ->
+          match receiver' with
+          | HashMap tbl ->
+              Stdlib.Hashtbl.replace tbl subscript' value';
+              (ctx, First value')
+          | List elements -> (
+              match Runtime.int_of_val subscript' with
+              | Some i ->
+                  Array.set elements i value';
+                  (ctx, First receiver')
+              | None ->
+                  Printf.sprintf
+                    "Lists can only be subscripted with Numbers, but you used \
+                     %s"
+                    (Runtime.to_s subscript')
+                  |> failure ~ctx pos)
+          | _ ->
+              Printf.sprintf "Assigning via subscript to %s not implemented"
+                (Runtime.to_s receiver')
+              |> failure ~ctx pos)
+      | _ -> Sloth_common.Common.internal_failure __LOC__)
 
 (** You must push an empty env frame on first *)
 and interpret_block (ctx : Context.t) (stmts : Compiler.Optimizer.stmt list) :
@@ -497,16 +492,18 @@ and interpret_block (ctx : Context.t) (stmts : Compiler.Optimizer.stmt list) :
 
 and interpret_method ~ctx ~pos receiver args method_name =
   let ( >>= ) =
-   fun either cb ->
-    Either.value_map either ~second:(fun tuple -> Second tuple) ~first:cb
+   fun (ctx, either) cb ->
+    Either.value_map either
+      ~second:(fun tuple -> (ctx, Second tuple))
+      ~first:(cb ctx)
   in
-  interpret_expr ctx receiver >>= fun receiver ->
-  List.fold args ~init:(First []) ~f:(fun acc cur ->
-      acc >>= fun prev ->
-      interpret_expr ctx cur >>= fun arg ->
+  interpret_expr ctx receiver >>= fun ctx receiver ->
+  List.fold args ~init:(ctx, First []) ~f:(fun acc cur ->
+      acc >>= fun ctx prev ->
+      interpret_expr ctx cur >>= fun ctx arg ->
       (* This is reversed... *)
-      First (arg :: prev))
-  >>= fun reversed_args ->
+      (ctx, First (arg :: prev)))
+  >>= fun ctx reversed_args ->
   let args = List.rev reversed_args in
   let class_name = Runtime.to_class_name receiver in
   let klass =
@@ -527,7 +524,7 @@ and interpret_method ~ctx ~pos receiver args method_name =
           | Native { cb; _ } -> (
               let args = receiver :: args in
               match cb args with
-              | Ok v -> First v
+              | Ok v -> (ctx, First v)
               | Error msg ->
                   (* TODO propagate SlothError *) failure ~ctx pos msg))
       | _ ->
@@ -679,11 +676,12 @@ and cast_to_process ~ctx ~pos = function
 
 and interpret_binary ctx lhs rhs op pos =
   let ( >>= ) =
-   fun either cb ->
-    Either.value_map either ~first:cb ~second:(fun tuple -> Second tuple)
+   fun (ctx, either) cb ->
+    Either.value_map either ~first:(cb ctx) ~second:(fun tuple ->
+        (ctx, Second tuple))
   in
-  interpret_expr ctx lhs >>= fun lhs ->
-  interpret_expr ctx rhs >>= fun rhs ->
+  interpret_expr ctx lhs >>= fun ctx lhs ->
+  interpret_expr ctx rhs >>= fun ctx rhs ->
   let cast_to_number = function
     | Runtime.Num f -> f
     | Runtime.String s -> (
@@ -707,44 +705,44 @@ and interpret_binary ctx lhs rhs op pos =
       right.stdin <- read;
       right.pipes_to_collect <- read :: right.pipes_to_collect;
       let right = { right with previous = Some left } in
-      First (Runtime.Process right)
+      (ctx, Either.first @@ Runtime.Process right)
   | Plus ->
       let left = cast_to_number lhs in
       let right = cast_to_number rhs in
-      Either.first @@ Runtime.Num (left +. right)
+      (ctx, Either.first @@ Runtime.Num (left +. right))
   | Minus ->
       let left = cast_to_number lhs in
       let right = cast_to_number rhs in
-      Either.first @@ Runtime.Num (left -. right)
+      (ctx, Either.first @@ Runtime.Num (left -. right))
   | Divide ->
       let left = cast_to_number lhs in
       let right = cast_to_number rhs in
-      Either.first @@ Runtime.Num (left /. right)
+      (ctx, Either.first @@ Runtime.Num (left /. right))
   | Product ->
       let left = cast_to_number lhs in
       let right = cast_to_number rhs in
-      Either.first @@ Runtime.Num (left *. right)
+      (ctx, Either.first @@ Runtime.Num (left *. right))
   | Leq ->
       let left = cast_to_number lhs in
       let right = cast_to_number rhs in
-      Either.first @@ Runtime.Bool Float.(left <= right)
+      (ctx, Either.first @@ Runtime.Bool Float.(left <= right))
   | Geq ->
       let left = cast_to_number lhs in
       let right = cast_to_number rhs in
-      Either.first @@ Runtime.Bool Float.(left >= right)
+      (ctx, Either.first @@ Runtime.Bool Float.(left >= right))
   | Less ->
       let left = cast_to_number lhs in
       let right = cast_to_number rhs in
-      Either.first @@ Runtime.Bool Float.(left < right)
+      (ctx, Either.first @@ Runtime.Bool Float.(left < right))
   | Greater ->
       let left = cast_to_number lhs in
       let right = cast_to_number rhs in
-      Either.first @@ Runtime.Bool Float.(left > right)
+      (ctx, Either.first @@ Runtime.Bool Float.(left > right))
   | RightArrow ->
       let left = cast_to_string ~ctx ~pos lhs in
       let Runtime.{ path } = cast_to_file ~ctx ~pos rhs in
       Out_channel.write_all path ~data:left;
-      Either.first @@ Runtime.String left
+      (ctx, Either.first @@ Runtime.String left)
   | Bang | Not | LeftArrow ->
       (* Not binary ops, unreachable *)
       Sloth_common.Common.internal_failure __LOC__

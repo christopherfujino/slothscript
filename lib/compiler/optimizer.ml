@@ -25,7 +25,7 @@ and decl =
 
 and stmt =
   | ExprStmt of expr
-  | ForLoop of stmt * expr * stmt * stmt list * Sloth_common.Position.t
+  | ForLoop of expr * expr * expr * stmt list * Sloth_common.Position.t
   | ForInLoop of {
       iterator_name : string;
       iteratee : expr;
@@ -140,9 +140,9 @@ and optimize_stmt env stmts : Environment.t * stmt =
       (env, ExprStmt e)
   | ForLoop (init, comp, inc, block, pos) ->
       let inner_env = Environment.push_empty env in
-      let inner_env, init' = optimize_stmt inner_env init in
+      let inner_env, init' = optimize_expr inner_env init in
       let inner_env, comp' = optimize_expr inner_env comp in
-      let inner_env, inc' = optimize_stmt inner_env inc in
+      let inner_env, inc' = optimize_expr inner_env inc in
       let block' = optimize_block inner_env block in
       (env, ForLoop (init', comp', inc', block', pos))
   | ForInLoop { iterator_name; iteratee; block; pos } ->

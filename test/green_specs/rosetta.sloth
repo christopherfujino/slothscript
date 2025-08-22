@@ -17,12 +17,13 @@ rosetta program
           ((arg
             [POS])))
         (block
-          ((LetStmt
-            private
-            (IdRef
-              arg
-              [POS])
-            [POS])
+          ((ExprStmt
+            (LetExpr
+              private
+              (IdRef
+                arg
+                [POS])
+              [POS]))
             (ExprStmt
               (FuncInvoc
                 (IdRef

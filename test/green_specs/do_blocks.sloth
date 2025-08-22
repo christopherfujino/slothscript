@@ -12,58 +12,62 @@ assert(y == 9)
 
 ### Ast
 ((StmtDecl
-  (LetStmt
-    x
-    (DoBlock
-      ((LetStmt
-        x
+  (ExprStmt
+    (LetExpr
+      x
+      (DoBlock
+        ((ExprStmt
+          (LetExpr
+            x
+            (Binary
+              (Num
+                1
+                [POS])
+              (Num
+                2
+                [POS])
+              Plus
+              [POS])
+            [POS]))
+          (ExprStmt
+            (LetExpr
+              y
+              (Binary
+                (Num
+                  2
+                  [POS])
+                (Num
+                  3
+                  [POS])
+                Plus
+                [POS])
+              [POS]))
+          (ExprStmt
+            (Binary
+              (IdRef
+                x
+                [POS])
+              (IdRef
+                y
+                [POS])
+              Plus
+              [POS])))
+        [POS])
+      [POS])))
+  (StmtDecl
+    (ExprStmt
+      (LetExpr
+        y
         (Binary
+          (IdRef
+            x
+            [POS])
           (Num
             1
             [POS])
-          (Num
-            2
-            [POS])
           Plus
           [POS])
-        [POS])
-        (LetStmt
-          y
-          (Binary
-            (Num
-              2
-              [POS])
-            (Num
-              3
-              [POS])
-            Plus
-            [POS])
-          [POS])
-        (ExprStmt
-          (Binary
-            (IdRef
-              x
-              [POS])
-            (IdRef
-              y
-              [POS])
-            Plus
-            [POS])))
-      [POS])
-    [POS]))
-  (StmtDecl
-    (LetStmt
-      y
-      (Binary
-        (IdRef
-          x
-          [POS])
-        (Num
-          1
-          [POS])
-        Plus
-        [POS])
-      [POS]))
+        [POS])))
   (StmtDecl
     (ExprStmt
       (FuncInvoc

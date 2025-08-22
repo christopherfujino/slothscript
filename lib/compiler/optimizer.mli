@@ -12,7 +12,7 @@ type decl = private
 
 and stmt =
   | ExprStmt of expr
-  | ForLoop of stmt * expr * stmt * stmt list * Sloth_common.Position.t
+  | ForLoop of expr * expr * expr * stmt list * Sloth_common.Position.t
   | ForInLoop of {
       iterator_name : string;
       iteratee : expr;

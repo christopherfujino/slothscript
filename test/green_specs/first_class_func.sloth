@@ -21,29 +21,31 @@ print(counter())
   (parameters
     ())
   (block
-    ((LetStmt
-      x
-      (Num
-        0
-        [POS])
-      [POS])
+    ((ExprStmt
+      (LetExpr
+        x
+        (Num
+          0
+          [POS])
+        [POS]))
       (ExprStmt
         (FuncExpr
           (parameters
             ())
           (block
-            ((AssignStmt
-              x
-              (Binary
-                (IdRef
-                  x
+            ((ExprStmt
+              (AssignExpr
+                x
+                (Binary
+                  (IdRef
+                    x
+                    [POS])
+                  (Num
+                    1
+                    [POS])
+                  Plus
                   [POS])
-                (Num
-                  1
-                  [POS])
-                Plus
-                [POS])
-              [POS])
+                [POS]))
               (ExprStmt
                 (IdRef
                   x
@@ -53,15 +55,16 @@ print(counter())
   (pos
     [POS]))
   (StmtDecl
-    (LetStmt
-      counter
-      (FuncInvoc
-        (IdRef
-          makeCounter
+    (ExprStmt
+      (LetExpr
+        counter
+        (FuncInvoc
+          (IdRef
+            makeCounter
+            [POS])
+          ()
           [POS])
-        ()
-        [POS])
-      [POS]))
+        [POS])))
   (StmtDecl
     (ExprStmt
       (FuncInvoc

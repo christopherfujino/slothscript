@@ -28,86 +28,75 @@ assert(not (null != null))
 
 ### Ast
 ((StmtDecl
-  (LetStmt
-    matrix
-    (List
-      ((List
-        ((Num
-          1
-          [POS])
-          (Num
-            2
+  (ExprStmt
+    (LetExpr
+      matrix
+      (List
+        ((List
+          ((Num
+            1
             [POS])
-          (String
-            ((FullString
-              Number
-              [POS]))
-            [POS]))
-        [POS])
-        (List
-          ((String
-            ((FullString
-              string
-              [POS]))
-            [POS])
-            (String
-              ((FullString
-                "a different string"
-                [POS]))
+            (Num
+              2
               [POS])
             (String
               ((FullString
-                String
+                Number
                 [POS]))
               [POS]))
           [POS])
-        (List
-          ((Bool
-            true
-            [POS])
-            (Bool
-              false
-              [POS])
-            (String
+          (List
+            ((String
               ((FullString
-                Bool
-                [POS]))
-              [POS]))
-          [POS])
-        (List
-          ((List
-            ((Num
-              1
-              [POS]))
-            [POS])
-            (List
-              ((Num
-                1
-                [POS])
-                (Num
-                  2
-                  [POS]))
-              [POS])
-            (String
-              ((FullString
-                List
-                [POS]))
-              [POS]))
-          [POS])
-        (List
-          ((HashMap
-            (((String
-              ((FullString
-                key
+                string
                 [POS]))
               [POS])
               (String
                 ((FullString
-                  value
+                  "a different string"
                   [POS]))
-                [POS])))
+                [POS])
+              (String
+                ((FullString
+                  String
+                  [POS]))
+                [POS]))
             [POS])
-            (HashMap
+          (List
+            ((Bool
+              true
+              [POS])
+              (Bool
+                false
+                [POS])
+              (String
+                ((FullString
+                  Bool
+                  [POS]))
+                [POS]))
+            [POS])
+          (List
+            ((List
+              ((Num
+                1
+                [POS]))
+              [POS])
+              (List
+                ((Num
+                  1
+                  [POS])
+                  (Num
+                    2
+                    [POS]))
+                [POS])
+              (String
+                ((FullString
+                  List
+                  [POS]))
+                [POS]))
+            [POS])
+          (List
+            ((HashMap
               (((String
                 ((FullString
                   key
@@ -115,18 +104,30 @@ assert(not (null != null))
                 [POS])
                 (String
                   ((FullString
-                    value2
+                    value
                     [POS]))
                   [POS])))
               [POS])
-            (String
-              ((FullString
-                HashMap
+              (HashMap
+                (((String
+                  ((FullString
+                    key
+                    [POS]))
+                  [POS])
+                  (String
+                    ((FullString
+                      value2
+                      [POS]))
+                    [POS])))
+                [POS])
+              (String
+                ((FullString
+                  HashMap
+                  [POS]))
                 [POS]))
-              [POS]))
-          [POS]))
-      [POS])
-    [POS]))
+            [POS]))
+        [POS])
+      [POS])))
   (StmtDecl
     (ForInLoop
       (iterator_name
@@ -136,39 +137,42 @@ assert(not (null != null))
           matrix
           [POS]))
       (block
-        ((LetStmt
-          first
-          (Subscript
-            (IdRef
-              arr
-              [POS])
-            (Num
-              0
-              [POS])
-            [POS])
-          [POS])
-          (LetStmt
-            second
+        ((ExprStmt
+          (LetExpr
+            first
             (Subscript
               (IdRef
                 arr
                 [POS])
               (Num
-                1
+                0
                 [POS])
               [POS])
-            [POS])
-          (LetStmt
-            name
-            (Subscript
-              (IdRef
-                arr
+            [POS]))
+          (ExprStmt
+            (LetExpr
+              second
+              (Subscript
+                (IdRef
+                  arr
+                  [POS])
+                (Num
+                  1
+                  [POS])
                 [POS])
-              (Num
-                2
+              [POS]))
+          (ExprStmt
+            (LetExpr
+              name
+              (Subscript
+                (IdRef
+                  arr
+                  [POS])
+                (Num
+                  2
+                  [POS])
                 [POS])
-              [POS])
-            [POS])
+              [POS]))
           (ExprStmt
             (FuncInvoc
               (IdRef
