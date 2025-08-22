@@ -127,19 +127,6 @@ stmt:
 
 (* Used in single statement blocks *)
 stmt_sans_semicolon:
-  | LET; id = ID; EQUALS; e1 = expr1 {
-    let (id, pos) = id in
-    let pos = Sloth_common.Position.t_of_lexing_position pos in
-    LetStmt (id, e1, pos)
-  }
-  | id = ID; EQUALS; e1 = expr1 {
-    let (id, pos) = id in
-    let pos = Sloth_common.Position.t_of_lexing_position pos in
-    AssignStmt (id, e1, pos) }
-  | subscript = subscript; pos = EQUALS; rhs = expr1 {
-    let pos = Sloth_common.Position.t_of_lexing_position pos in
-    SubAssignStmt {subscript; value=rhs; pos }
-  }
   | pos = RETURN; e = expr1 {
     let pos = Sloth_common.Position.t_of_lexing_position pos in
     BreakingStmt (Return, Some e, pos)
@@ -153,6 +140,20 @@ stmt_sans_semicolon:
 
 (* Conditionals *)
 expr1:
+  | LET; id = ID; EQUALS; e1 = expr1 {
+    let (id, pos) = id in
+    let pos = Sloth_common.Position.t_of_lexing_position pos in
+    LetExpr (id, e1, pos)
+  }
+  | id = ID; EQUALS; e1 = expr1 {
+    let (id, pos) = id in
+    let pos = Sloth_common.Position.t_of_lexing_position pos in
+    AssignExpr (id, e1, pos) }
+  | subscript = subscript; pos = EQUALS; rhs = expr1 {
+    let pos = Sloth_common.Position.t_of_lexing_position pos in
+    SubAssignExpr {subscript; value=rhs; pos }
+  }
+
   | pos = IF; e1 = expr2; b = block; cont = conditional_continuation {
     let pos = Sloth_common.Position.t_of_lexing_position pos in
     IfExpr (

@@ -10,6 +10,14 @@ let v = if b {
 };
 print(v);
 
+if let x = false {
+  # Unreachable
+  assert(false)
+}
+
+# x is bound here; is this right?
+assert(x == false)
+
 ### Ast
 ((StmtDecl
   (LetStmt

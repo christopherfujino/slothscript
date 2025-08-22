@@ -24,13 +24,6 @@ and decl =
 [@@deriving sexp]
 
 and stmt =
-  | LetStmt of string * expr * Sloth_common.Position.t
-  | AssignStmt of string * expr * Sloth_common.Position.t
-  | SubAssignStmt of {
-      subscript : expr;
-      value : expr;
-      pos : Sloth_common.Position.t;
-    }
   | ExprStmt of expr
   | ForLoop of stmt * expr * stmt * stmt list * Sloth_common.Position.t
   | ForInLoop of {
@@ -73,6 +66,13 @@ and expr =
     }
   | DoBlock of stmt list * Sloth_common.Position.t
   | ObjDeref of expr * string * Sloth_common.Position.t
+  | LetExpr of string * expr * Sloth_common.Position.t
+  | AssignExpr of string * expr * Sloth_common.Position.t
+  | SubAssignExpr of {
+      subscript : expr;
+      value : expr;
+      pos : Sloth_common.Position.t;
+    }
 [@@deriving sexp]
 
 and string_parts =
@@ -135,45 +135,32 @@ and optimize_decl env decl : Environment.t * decl =
 and optimize_stmt env stmts : Environment.t * stmt =
   let open Ast in
   match stmts with
-  | LetStmt (name, expr, pos) ->
-      (* TODO verify *)
-      let e = optimize_expr env expr in
-      let env2 =
-        match Environment.bind env name with
-        | None ->
-            Printf.sprintf "The name %s has already been declared in this scope"
-              name
-            |> failure ~env ~pos
-        | Some e -> e
-      in
-      (env2, LetStmt (name, e, pos))
-  | AssignStmt (name, expr, pos) ->
-      (* TODO verify *)
-      let e = optimize_expr env expr in
-      (env, AssignStmt (name, e, pos))
-  | SubAssignStmt { subscript; value; pos } ->
-      let subscript = optimize_expr env subscript in
-      let value = optimize_expr env value in
-      (env, SubAssignStmt { subscript; value; pos })
   | ExprStmt expr ->
-      let e = optimize_expr env expr in
+      let env, e = optimize_expr env expr in
       (env, ExprStmt e)
   | ForLoop (init, comp, inc, block, pos) ->
-      let env2, init' = optimize_stmt env init in
-      let comp' = optimize_expr env2 comp in
-      let env3, inc' = optimize_stmt env2 inc in
-      let block' = optimize_block env3 block in
+      let inner_env = Environment.push_empty env in
+      let inner_env, init' = optimize_stmt inner_env init in
+      let inner_env, comp' = optimize_expr inner_env comp in
+      let inner_env, inc' = optimize_stmt inner_env inc in
+      let block' = optimize_block inner_env block in
       (env, ForLoop (init', comp', inc', block', pos))
   | ForInLoop { iterator_name; iteratee; block; pos } ->
       let inner_env = Environment.push_empty env in
       let inner_env =
         Environment.bind inner_env iterator_name |> Option.value_exn
       in
-      let iteratee = optimize_expr env iteratee in
+      let inner_env, iteratee = optimize_expr inner_env iteratee in
       let block = optimize_block inner_env block in
       (env, ForInLoop { iterator_name; iteratee; block; pos })
   | BreakingStmt (breaking_t, expr_opt, pos) ->
-      let expr_opt = Option.map expr_opt ~f:(optimize_expr env) in
+      let env, expr_opt =
+        match expr_opt with
+        | None -> (env, None)
+        | Some expr ->
+            let env, expr = optimize_expr env expr in
+            (env, Some expr)
+      in
       (env, BreakingStmt (breaking_t, expr_opt, pos))
 
 (** You must push a new frame to the env first. *)
@@ -189,49 +176,62 @@ and optimize_block env rev_stmts =
   let _, rev_stmts2 = List.fold_left ~init:(env, []) ~f:cb stmts in
   List.rev rev_stmts2
 
-and optimize_expr (env : Environment.t) (e : Ast.expr) : expr =
+and optimize_expr (env : Environment.t) (e : Ast.expr) : Environment.t * expr =
   match e with
-  | Num (f, pos) -> Num (f, pos)
-  | Bool (b, pos) -> Bool (b, pos)
-  | Null pos -> Null pos
+  | Num (f, pos) -> (env, Num (f, pos))
+  | Bool (b, pos) -> (env, Bool (b, pos))
+  | Null pos -> (env, Null pos)
   | String (s, pos) -> optimize_string env s pos
   | List (els, pos) ->
-      let rev_opt_els = List.rev els |> List.map ~f:(optimize_expr env) in
-      List (rev_opt_els, pos)
+      let env, rev_opt_els =
+        List.fold els ~init:(env, []) ~f:(fun (env, prev) el ->
+            let env, expr = optimize_expr env el in
+            (* This (correctly) reverses the elements *)
+            (env, expr :: prev))
+      in
+      (env, List (rev_opt_els, pos))
   | HashMap (kvps, pos) ->
       (* TODO use a Hashtbl? *)
-      let kvps' =
-        List.map kvps ~f:(fun (k, v) ->
-            (optimize_expr env k, optimize_expr env v))
+      let env, kvps' =
+        List.fold kvps ~init:(env, []) ~f:(fun (env, prev) (k, v) ->
+            let env, k = optimize_expr env k in
+            let env, v = optimize_expr env v in
+            (* This reverses, but it shouldn't matter *)
+            (env, (k, v) :: prev))
       in
-      HashMap (kvps', pos)
+      (env, HashMap (kvps', pos))
   | Subscript (receiver, sub, pos) ->
-      let receiver' = optimize_expr env receiver in
-      let sub' = optimize_expr env sub in
-      Subscript (receiver', sub', pos)
+      let env, receiver' = optimize_expr env receiver in
+      let env, sub' = optimize_expr env sub in
+      (env, Subscript (receiver', sub', pos))
   | Equality (lhs, rhs, is_equal, pos) ->
-      let lhs = optimize_expr env lhs in
-      let rhs = optimize_expr env rhs in
-      Equality (lhs, rhs, is_equal, pos)
+      let env, lhs = optimize_expr env lhs in
+      let env, rhs = optimize_expr env rhs in
+      (env, Equality (lhs, rhs, is_equal, pos))
   | Binary (lhs, rhs, op, pos) ->
-      let lhs = optimize_expr env lhs in
-      let rhs = optimize_expr env rhs in
-      Binary (lhs, rhs, op, pos)
+      let env, lhs = optimize_expr env lhs in
+      let env, rhs = optimize_expr env rhs in
+      (env, Binary (lhs, rhs, op, pos))
   | FuncInvoc (receiver, args, pos) ->
-      let rev_args = List.rev args in
-      let rev_mapped_args = List.map rev_args ~f:(optimize_expr env) in
-      FuncInvoc (optimize_expr env receiver, rev_mapped_args, pos)
+      let env, receiver = optimize_expr env receiver in
+      let env, args =
+        List.fold args ~init:(env, []) ~f:(fun (env, prev) expr ->
+            let env, expr = optimize_expr env expr in
+            (* This (correctly) reverses the args *)
+            (env, expr :: prev))
+      in
+      (env, FuncInvoc (receiver, args, pos))
   | IdRef (name, pos) -> (
       let name_opt = Environment.find env name in
       match name_opt with
       | None ->
           let msg = Printf.sprintf "Undeclared identifier %s" name in
           failure ~env ~pos msg
-      | Some _ -> IdRef (name, pos))
+      | Some _ -> (env, IdRef (name, pos)))
   | ProtoRef (name, pos) -> (
       (* Validate this class name is defined by our STDLIB *)
       match Environment.find env name with
-      | Some _ -> IdRef (name, pos)
+      | Some _ -> (env, IdRef (name, pos))
       | None -> failure ~env ~pos @@ Printf.sprintf "Undeclared class %s" name)
   | FuncExpr { parameters; block; pos } ->
       let parameters2 = List.rev parameters in
@@ -246,51 +246,86 @@ and optimize_expr (env : Environment.t) (e : Ast.expr) : expr =
             | Some e -> e)
       in
       let block2 = optimize_block env3 block in
-      FuncExpr { parameters = parameters2; block = block2; pos }
-  | IfExpr (cond_cont, pos) -> IfExpr (optimize_continuation env cond_cont, pos)
+      (* We return the same input env *)
+      (env, FuncExpr { parameters = parameters2; block = block2; pos })
+  | IfExpr (cond_cont, pos) ->
+      let env, cont = optimize_continuation env cond_cont in
+      (env, IfExpr (cont, pos))
   | UnaryExpr { target; operator; pos } ->
-      let target = optimize_expr env target in
-      UnaryExpr { target; operator; pos }
+      let env, target = optimize_expr env target in
+      (env, UnaryExpr { target; operator; pos })
   | MethodInvoc { target; receiver; args; pos } ->
-      let optim_receiver = optimize_expr env receiver in
-      let optim_args = List.rev args |> List.map ~f:(optimize_expr env) in
-      MethodInvoc { target; receiver = optim_receiver; args = optim_args; pos }
-  | DoBlock (block, pos) -> DoBlock (optimize_block env block, pos)
+      let env, optim_receiver = optimize_expr env receiver in
+      let env, args =
+        List.fold args ~init:(env, []) ~f:(fun (env, prev) arg ->
+            let env, arg = optimize_expr env arg in
+            (* This (correctly) reverses the args *)
+            (env, arg :: prev))
+      in
+      (env, MethodInvoc { target; receiver = optim_receiver; args; pos })
+  | DoBlock (block, pos) -> (env, DoBlock (optimize_block env block, pos))
   | ObjDeref (receiver, name, pos) ->
-      let receiver = optimize_expr env receiver in
-      ObjDeref (receiver, name, pos)
+      let env, receiver = optimize_expr env receiver in
+      (env, ObjDeref (receiver, name, pos))
+  | LetExpr (name, expr, pos) ->
+      (* TODO verify *)
+      let env, e = optimize_expr env expr in
+      let env =
+        match Environment.bind env name with
+        | None ->
+            Printf.sprintf "The name %s has already been declared in this scope"
+              name
+            |> failure ~env ~pos
+        | Some e -> e
+      in
+      (env, LetExpr (name, e, pos))
+  | AssignExpr (name, expr, pos) ->
+      (* TODO verify *)
+      let env, e = optimize_expr env expr in
+      (env, AssignExpr (name, e, pos))
+  | SubAssignExpr { subscript; value; pos } ->
+      let env, subscript = optimize_expr env subscript in
+      let env, value = optimize_expr env value in
+      (env, SubAssignExpr { subscript; value; pos })
 
 and optimize_string env s pos =
-  String
-    ( (match s with
-      | FullString (s', pos) -> [ FullString (s', pos) ]
-      | StartStringInterp (s', cont1, pos) ->
-          let cont2 = optimize_string_continuation env cont1 in
-          StartStringInterp (s', pos) :: cont2),
-      pos )
+  let env, contents =
+    match s with
+    | FullString (s', pos) -> (env, [ FullString (s', pos) ])
+    | StartStringInterp (s', cont1, pos) ->
+        let env, cont2 = optimize_string_continuation env cont1 in
+        (env, StartStringInterp (s', pos) :: cont2)
+  in
+  (env, String (contents, pos))
 
 and optimize_string_continuation env cont =
   match cont with
   | MiddleStringInterp (e, s, cont2, pos) ->
-      let e2 = optimize_expr env e in
-      let cont3 = optimize_string_continuation env cont2 in
-      ExpressionStringInterp e2 :: MiddleStringInterp (s, pos) :: cont3
+      let env, e2 = optimize_expr env e in
+      let env, cont3 = optimize_string_continuation env cont2 in
+      (env, ExpressionStringInterp e2 :: MiddleStringInterp (s, pos) :: cont3)
   | EndStringInterp (e, s, pos) ->
-      [ ExpressionStringInterp (optimize_expr env e); EndStringInterp (s, pos) ]
+      let env, e = optimize_expr env e in
+      (env, [ ExpressionStringInterp e; EndStringInterp (s, pos) ])
 
 and optimize_continuation env c =
   match c with
   | Ast.IfCont { conditional; block; continuation; pos } ->
-      let conditional = optimize_expr env conditional in
+      (* If this binds a new name, it escapes the scope, is this right? *)
+      let env, conditional = optimize_expr env conditional in
       let env2 = Environment.push_empty env in
       let block = optimize_block env2 block in
-      let continuation =
-        Option.map continuation ~f:(optimize_continuation env)
+      let env, continuation =
+        match continuation with
+        | None -> (env, None)
+        | Some cont ->
+            let env, cont = optimize_continuation env cont in
+            (env, Some cont)
       in
-      IfCont { conditional; block; continuation; pos }
+      (env, IfCont { conditional; block; continuation; pos })
   | Ast.ElseCont (stmts, pos) ->
       let env2 = Environment.push_empty env in
       let optimized_stmts = optimize_block env2 stmts in
-      ElseCont (optimized_stmts, pos)
+      (env, ElseCont (optimized_stmts, pos))
 
 let prog_to_str stmts = sexp_of_prog stmts |> Sexp.to_string
