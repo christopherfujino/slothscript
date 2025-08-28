@@ -9,6 +9,14 @@ func earlyReturn() {
 
 assert(earlyReturn())
 
+let i = for (let i = 0; i < 10; i = i + 1) {
+  if i == 4 {
+    break i
+  }
+}
+
+assert(i == 4);
+
 ### Ast
 ((FuncDecl
   (name
