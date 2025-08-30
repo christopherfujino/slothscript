@@ -388,7 +388,7 @@ and interpret_expr ctx expr :
               |> failure ~ctx pos)
       | _ -> Sloth_common.Common.internal_failure __LOC__)
   | ForLoop (init, cmp, inc, bl, pos) ->
-      let root_ctx, root_either =
+      let _, either =
         let identifiers = Identifiers.push_empty ctx.identifiers in
         let ctx' = { ctx with identifiers } in
         let ctx'', either = interpret_expr ctx' init in
@@ -469,8 +469,7 @@ and interpret_expr ctx expr :
         let _, either = interpret_for_loop ctx cmp inc bl Runtime.Null in
         (ctx, either)
       in
-      (root_ctx, root_either)
-      (* TODO check for break continue? *)
+      (ctx, either)
       (* for <iterator_name> in <iteratee> { <block> } *)
   | ForInLoop { iterator_name; iteratee; block; pos } ->
       let ctx =
