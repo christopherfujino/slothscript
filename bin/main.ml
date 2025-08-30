@@ -55,22 +55,8 @@ let repl () =
   in
   repl_inner ctx env
 
-let interpreter () =
-  let rec read_all buf =
-    let cur_line_opt =
-      try
-        Out_channel.(flush stdout);
-        Some In_channel.(input_line_exn stdin)
-      with End_of_file -> None
-    in
-    match cur_line_opt with
-    | None -> Buffer.contents buf
-    | Some cur_line ->
-        Buffer.add_string buf cur_line;
-        Buffer.add_char buf '\n';
-        (read_all [@tailcall]) buf
-  in
-  let program = read_all (Buffer.create 256) in
+let interpreter path =
+  let program = In_channel.read_all path in
   let env =
     Compiler.Environment.create program |> Compiler.Environment.populate
   in
@@ -86,4 +72,12 @@ let interpreter () =
   in
   exit code
 
-let () = if Core_unix.isatty Core_unix.stdin then repl () else interpreter ()
+let () =
+  let argv = Sys.get_argv () in
+  let argc = Array.length argv in
+  match argc with
+  | 2 ->
+      let script = Array.get argv 1 in
+      interpreter script
+  | 1 -> repl ()
+  | _ -> Printf.sprintf "TODO: implement sub-commands" |> failwith
