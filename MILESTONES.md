@@ -1,6 +1,6 @@
-## Milestones
+# Milestones
 
-### v0.1 - initial version
+## v0.1 - initial version
 - [ ] error handling (`let result = mayError() catch (e) DEFAULT;`)
 - [ ] Context variables, with statements
     - [ ] $echo = true
@@ -8,8 +8,9 @@
 - [ ] Stack traces
 - [ ] Language versioning
 - [ ] Standard Library
+- [ ] Parser errors
 
-### v0.2 - initial pre-release
+## v0.2 - initial pre-release
 - [ ] Have optimizer check that:
     - `return` always occurs in a function definition
     - `break` and `continue` always occur in loops
@@ -20,19 +21,20 @@
 - [ ] Optional function parameters
 - [ ] List mutation methods
 
-### v1.0
+## v1.0
+- [ ] Formatter
 - [ ] LSP server
 - [ ] Security policy
 
-### Stretch goals
+## Stretch goals
 - [ ] Unicode strings
 - [ ] Method syntax for hash maps
 - [ ] Pattern matching
 - [ ] Formatter
 
-## Done
+# Done
 
-### pre-v0.1
+## pre-v0.1
 - [x] Lexical scoping
 - [x] Closures
 - [x] Variable re-assignment
