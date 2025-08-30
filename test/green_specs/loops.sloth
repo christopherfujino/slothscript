@@ -8,44 +8,45 @@ for let i = 1; i <= 10; i = i + 1 {
 
 ### Ast
 ((StmtDecl
-  (ForLoop
-    (LetExpr
-      i
-      (Num
-        1
-        [POS])
-      [POS])
-    (Binary
-      (IdRef
+  (ExprStmt
+    (ForLoop
+      (LetExpr
         i
+        (Num
+          1
+          [POS])
         [POS])
-      (Num
-        10
-        [POS])
-      Leq
-      [POS])
-    (AssignExpr
-      i
       (Binary
         (IdRef
           i
           [POS])
         (Num
-          1
+          10
           [POS])
-        Plus
+        Leq
         [POS])
-      [POS])
-    ((ExprStmt
-      (FuncInvoc
-        (IdRef
-          print
+      (AssignExpr
+        i
+        (Binary
+          (IdRef
+            i
+            [POS])
+          (Num
+            1
+            [POS])
+          Plus
           [POS])
-        ((IdRef
-          i
-          [POS]))
-        [POS])))
-    [POS])))
+        [POS])
+      ((ExprStmt
+        (FuncInvoc
+          (IdRef
+            print
+            [POS])
+          ((IdRef
+            i
+            [POS]))
+          [POS])))
+      [POS]))))
 
 ### Stdout
 1

@@ -19,17 +19,10 @@ and decl = FuncDecl of func_stmt_t | StmtDecl of stmt
 and stmt =
   (* No position *)
   | ExprStmt of expr
-  | ForLoop of expr * expr * expr * stmt list * Sloth_common.Position.t
-  | ForInLoop of {
-      iterator_name : string;
-      iteratee : expr;
-      block : stmt list;
-      pos : Sloth_common.Position.t;
-    }
   | BreakingStmt of breaking_type * expr option * Sloth_common.Position.t
 [@@deriving sexp]
 
-and breaking_type = Return [@@deriving sexp]
+and breaking_type = Return | Break | Continue [@@deriving sexp]
 
 and expr =
   | Num of float * Sloth_common.Position.t
@@ -65,6 +58,13 @@ and expr =
   | SubAssignExpr of {
       subscript : expr;
       value : expr;
+      pos : Sloth_common.Position.t;
+    }
+  | ForLoop of expr * expr * expr * stmt list * Sloth_common.Position.t
+  | ForInLoop of {
+      iterator_name : string;
+      iteratee : expr;
+      block : stmt list;
       pos : Sloth_common.Position.t;
     }
 [@@deriving sexp]

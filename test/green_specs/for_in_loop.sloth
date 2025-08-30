@@ -32,34 +32,35 @@ for album in l {
         [POS])
       [POS])))
   (StmtDecl
-    (ForInLoop
-      (iterator_name
-        album)
-      (iteratee
-        (IdRef
-          l
-          [POS]))
-      (block
-        ((ExprStmt
-          (FuncInvoc
-            (IdRef
-              print
-              [POS])
-            ((String
-              ((StartStringInterp
-                ""
+    (ExprStmt
+      (ForInLoop
+        (iterator_name
+          album)
+        (iteratee
+          (IdRef
+            l
+            [POS]))
+        (block
+          ((ExprStmt
+            (FuncInvoc
+              (IdRef
+                print
                 [POS])
-                (ExpressionStringInterp
-                  (IdRef
-                    album
+              ((String
+                ((StartStringInterp
+                  ""
+                  [POS])
+                  (ExpressionStringInterp
+                    (IdRef
+                      album
+                      [POS]))
+                  (EndStringInterp
+                    " was a great album."
                     [POS]))
-                (EndStringInterp
-                  " was a great album."
-                  [POS]))
-              [POS]))
-            [POS]))))
-      (pos
-        [POS]))))
+                [POS]))
+              [POS]))))
+        (pos
+          [POS])))))
 
 ### Stdout
 Rubber Soul was a great album.

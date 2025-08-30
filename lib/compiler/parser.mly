@@ -30,6 +30,8 @@
 %token <Lexing.position> DO
 %token <Lexing.position> FOR
 %token <Lexing.position> RETURN
+%token <Lexing.position> BREAK
+%token <Lexing.position> CONTINUE
 
 (* Operators *)
 %token <Lexing.position> PLUS
@@ -114,15 +116,6 @@ stmts:
 
 stmt:
   | s = stmt_sans_semicolon; SEMICOLON { s }
-  | pos = FOR; init = expr1; SEMICOLON; comp = expr1; SEMICOLON; inc = expr1; bl = block; SEMICOLON {
-    let pos = Sloth_common.Position.t_of_lexing_position pos in
-    ForLoop (init, comp, inc, bl, pos)
-  }
-  | pos = FOR; i = ID; IN; iteratee = expr1; block = block SEMICOLON {
-    let (iterator_name, _) = i in
-    let pos = Sloth_common.Position.t_of_lexing_position pos in
-    ForInLoop {iterator_name; iteratee; block; pos}
-  }
   ;
 
 (* Used in single statement blocks *)
@@ -135,11 +128,36 @@ stmt_sans_semicolon:
     let pos = Sloth_common.Position.t_of_lexing_position pos in
     BreakingStmt (Return, None, pos)
   }
+  | pos = BREAK; e = expr1 {
+    let pos = Sloth_common.Position.t_of_lexing_position pos in
+    BreakingStmt (Break, Some e, pos)
+  }
+  | pos = BREAK {
+    let pos = Sloth_common.Position.t_of_lexing_position pos in
+    BreakingStmt (Break, None, pos)
+  }
+  | pos = CONTINUE; e = expr1 {
+    let pos = Sloth_common.Position.t_of_lexing_position pos in
+    BreakingStmt (Continue, Some e, pos)
+  }
+  | pos = CONTINUE {
+    let pos = Sloth_common.Position.t_of_lexing_position pos in
+    BreakingStmt (Continue, None, pos)
+  }
   | e1 = expr1 { ExprStmt e1 }
   ;
 
 (* Conditionals *)
 expr1:
+  | pos = FOR; init = expr1; SEMICOLON; comp = expr1; SEMICOLON; inc = expr1; bl = block {
+    let pos = Sloth_common.Position.t_of_lexing_position pos in
+    ForLoop (init, comp, inc, bl, pos)
+  }
+  | pos = FOR; i = ID; IN; iteratee = expr1; block = block {
+    let (iterator_name, _) = i in
+    let pos = Sloth_common.Position.t_of_lexing_position pos in
+    ForInLoop {iterator_name; iteratee; block; pos}
+  }
   | LET; id = ID; EQUALS; e1 = expr1 {
     let (id, pos) = id in
     let pos = Sloth_common.Position.t_of_lexing_position pos in

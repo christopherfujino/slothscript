@@ -1,7 +1,7 @@
 ## Milestones
 
 ### v0.1 - initial version
-- [ ] break, continue keywords; error handling (`let result = mayError() catch (e) DEFAULT;`)
+- [ ] error handling (`let result = mayError() catch (e) DEFAULT;`)
 - [ ] Context variables, with statements
     - [ ] $echo = true
 - [ ] Mock out process subsystem for unit tests
@@ -68,3 +68,5 @@
 - [x] Return statements
 - [x] Allow single statement blocks to omit semicolons
 - [x] Migrate var declarations and reassignment to expressions
+- [x] First class for loops
+- [x] Break and continue statements

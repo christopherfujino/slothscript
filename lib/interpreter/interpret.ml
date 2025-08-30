@@ -56,7 +56,7 @@ and interpret_decl (ctx : Context.t) decl =
         | First v -> v
         | Second (bt, _) -> (
             match bt with
-            | Return ->
+            | Break | Continue | Return ->
                 (* TODO: This should be caught by optimizer *)
                 Sloth_common.Common.internal_failure __LOC__)
       in
@@ -80,92 +80,6 @@ and interpret_stmt (ctx : Context.t) stmt :
 
   match stmt with
   | ExprStmt expr -> interpret_expr ctx expr
-  | ForLoop (init, cmp, inc, bl, pos) ->
-      let identifiers = Identifiers.push_empty ctx.identifiers in
-      let ctx' = { ctx with identifiers } in
-      let ctx'', either = interpret_expr ctx' init in
-      (match either with
-      | Second (bt, _) -> (
-          match bt with
-          | Return ->
-              (* TODO optimizer should check for this *)
-              Sloth_common.Common.internal_failure __LOC__)
-      | First _ -> ());
-
-      let rec interpret_for_loop ctx cmp inc bl (last_val : Runtime.t) =
-        let ctx, bt_either = interpret_expr ctx cmp in
-        (* TODO use >>= once we have errors and we've migrated cmp to an expr *)
-        let cmp_val =
-          match bt_either with
-          | First v -> v
-          | Second (bt, _) -> (
-              match bt with
-              | Return ->
-                  (* TODO optimizer should check for this *)
-                  Sloth_common.Common.internal_failure __LOC__)
-        in
-        match cmp_val |> Runtime.bool_of_val with
-        | Some cmp_val -> (
-            if not cmp_val then (ctx, First last_val)
-            else
-              (* Each iteration should have its own scope *)
-              let inner_ctx =
-                Context.
-                  {
-                    ctx with
-                    identifiers = Identifiers.push_empty ctx.identifiers;
-                  }
-              in
-
-              (inner_ctx, interpret_block inner_ctx bl) >>= fun _ ret_val ->
-              (* this iteration had no breaking stmt *)
-              let ctx, either = interpret_expr ctx inc in
-              match either with
-              | First _ ->
-                  (interpret_for_loop [@tailcall]) ctx cmp inc bl ret_val
-              | Second (bt, _) -> (
-                  match bt with
-                  | Return ->
-                      (* This should be unreachable once we refactor inc to be an expr *)
-                      Sloth_common.Common.internal_failure __LOC__))
-        | None ->
-            Printf.sprintf
-              "The comparison of a for loop must be a Boolean value, but you \
-               used %s"
-              (Runtime.to_s cmp_val)
-            |> failure ~ctx pos
-      in
-      let _, either = interpret_for_loop ctx'' cmp inc bl Runtime.Null in
-      (ctx, either)
-      (* for <iterator_name> in <iteratee> { <block> } *)
-  | ForInLoop { iterator_name; iteratee; block; pos } ->
-      let ctx =
-        { ctx with identifiers = Identifiers.push_empty ctx.identifiers }
-      in
-      interpret_expr ctx iteratee >>= fun ctx iteratee ->
-      let iteratee_array =
-        match iteratee with
-        | List l -> l
-        | _ ->
-            Printf.sprintf "Cannot iterate over a %s"
-              (Runtime.to_class_name iteratee)
-            |> failure ~ctx pos
-      in
-      ( ctx,
-        Array.fold iteratee_array ~init:(First Runtime.Null)
-          ~f:(fun prev element ->
-            if Either.is_second prev then prev
-            else
-              let temp_ctx =
-                {
-                  ctx with
-                  identifiers = Identifiers.push_empty ctx.identifiers;
-                }
-              in
-              Identifiers.bind temp_ctx.identifiers iterator_name element
-              |> Option.value_exn;
-              interpret_block temp_ctx block) )
-      >>= fun _ ret_val -> (ctx, First ret_val)
   | BreakingStmt (break_type, expr_opt, _) ->
       (match expr_opt with
       | None -> (ctx, Second (break_type, Runtime.Null))
@@ -204,8 +118,6 @@ and interpret_cond ctx cond =
       in
       (ctx, interpret_block inner_ctx stmts)
 
-(* TODO Note this does not return a context--can expressions mutate context?! *)
-(* Yes, if they call a function that mutates a global *)
 and interpret_expr ctx expr :
     Context.t * (Runtime.t, Compiler.Ast.breaking_type * Runtime.t) Either.t =
   let ( >>= ) =
@@ -335,8 +247,10 @@ and interpret_expr ctx expr :
                     | First return_val ->
                         if List.is_empty tl then (ctx, First return_val)
                         else (traverse_stmts [@tailrec]) ctx tl
-                    | Second (bt, return_val) -> (
-                        match bt with Return -> (ctx, First return_val)))
+                    | Second (bt, return_val) as either -> (
+                        match bt with
+                        | Return -> (ctx, First return_val)
+                        | _ -> (ctx, either)))
               in
               (* discard context *)
               (* Note, Return has already been unwrapped *)
@@ -376,9 +290,7 @@ and interpret_expr ctx expr :
       (ctx, First f)
   | IfExpr (cond, _) -> interpret_cond ctx cond
   | UnaryExpr { target; pos; operator } -> (
-      (* TODO deprecate is_prefix when we've removed prefix bang *)
-      interpret_expr ctx target
-      >>= fun ctx v ->
+      interpret_expr ctx target >>= fun ctx v ->
       match operator with
       | Not -> (
           let bool_opt = Runtime.bool_of_val v in
@@ -471,6 +383,122 @@ and interpret_expr ctx expr :
                 (Runtime.to_s receiver')
               |> failure ~ctx pos)
       | _ -> Sloth_common.Common.internal_failure __LOC__)
+  | ForLoop (init, cmp, inc, bl, pos) ->
+      let _, either =
+        let identifiers = Identifiers.push_empty ctx.identifiers in
+        let ctx' = { ctx with identifiers } in
+        let ctx'', either = interpret_expr ctx' init in
+        (match either with
+        | Second (bt, _) -> (
+            match bt with
+            | Continue | Break | Return ->
+                (* TODO optimizer should check for this *)
+                Sloth_common.Common.internal_failure __LOC__)
+        | First _ -> (ctx'', Either.First Runtime.Null))
+        >>= fun ctx _ ->
+        let rec interpret_for_loop ctx cmp inc bl (last_val : Runtime.t) =
+          let ctx, bt_either = interpret_expr ctx cmp in
+          ( ctx,
+            match bt_either with
+            | First _ -> bt_either
+            | Second (bt, _) -> (
+                match bt with
+                | Return ->
+                    (* This is reachable if the expression was a do block with
+                       a return statement in it *)
+                    bt_either
+                | _ ->
+                    Printf.sprintf
+                      "TODO: figure out how to handle break/continue within \
+                       for loop comparison %s"
+                      __LOC__
+                    |> failwith) )
+          >>= fun ctx cmp_val ->
+          match Runtime.bool_of_val cmp_val with
+          | Some cmp_val -> (
+              if not cmp_val then (ctx, First last_val)
+              else
+                (* Each iteration should have its own scope *)
+                let inner_ctx =
+                  Context.
+                    {
+                      ctx with
+                      identifiers = Identifiers.push_empty ctx.identifiers;
+                    }
+                in
+
+                let recurse ret_val =
+                  (* this iteration had no breaking stmt *)
+                  let ctx, either = interpret_expr ctx inc in
+                  match either with
+                  | First _ ->
+                      (interpret_for_loop [@tailcall]) ctx cmp inc bl ret_val
+                  | Second (bt, _) -> (
+                      match bt with
+                      | Return ->
+                          (* This is reachable if the expression was a do block *)
+                          (ctx, either)
+                      | _ ->
+                          Printf.sprintf
+                            "TODO: figure out how to handle break/continue \
+                             within for loop increment %s"
+                            __LOC__
+                          |> failwith)
+                in
+
+                match interpret_block inner_ctx bl with
+                | First v ->
+                    (* The inner block cannot bind new names accessible out here *)
+                    recurse v
+                | Second (bt, break_val) as either -> (
+                    match bt with
+                    | Return ->
+                        (* let returns bubble up *)
+                        (ctx, either)
+                    | Break ->
+                        (* Done with loop, return break_val *)
+                        (ctx, First break_val)
+                    | Continue -> recurse break_val))
+          | None ->
+              Printf.sprintf
+                "The comparison of a for loop must be a Boolean value, but you \
+                 used %s"
+                (Runtime.to_s cmp_val)
+              |> failure ~ctx pos
+        in
+        let _, either = interpret_for_loop ctx cmp inc bl Runtime.Null in
+        (ctx, either)
+      in
+      (ctx, either)
+      (* for <iterator_name> in <iteratee> { <block> } *)
+  | ForInLoop { iterator_name; iteratee; block; pos } ->
+      let ctx =
+        { ctx with identifiers = Identifiers.push_empty ctx.identifiers }
+      in
+      interpret_expr ctx iteratee >>= fun ctx iteratee ->
+      let iteratee_array =
+        match iteratee with
+        | List l -> l
+        | _ ->
+            Printf.sprintf "Cannot iterate over a %s"
+              (Runtime.to_class_name iteratee)
+            |> failure ~ctx pos
+      in
+      ( ctx,
+        Array.fold iteratee_array ~init:(First Runtime.Null)
+          ~f:(fun prev element ->
+            if Either.is_second prev then prev
+            else
+              let temp_ctx =
+                {
+                  ctx with
+                  identifiers = Identifiers.push_empty ctx.identifiers;
+                }
+              in
+              Identifiers.bind temp_ctx.identifiers iterator_name element
+              |> Option.value_exn;
+              interpret_block temp_ctx block) )
+      >>= fun _ ret_val -> (ctx, First ret_val)
 
 (** You must push an empty env frame on first *)
 and interpret_block (ctx : Context.t) (stmts : Compiler.Optimizer.stmt list) :

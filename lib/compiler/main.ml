@@ -51,6 +51,8 @@ let to_s token =
   | LPAREN _ -> "LPAREN"
   | LET _ -> "LET"
   | RETURN _ -> "RETURN"
+  | BREAK _ -> "BREAK"
+  | CONTINUE _ -> "CONTINUE"
   | LESS _ -> "LESS"
   | GREATER _ -> "GREATER"
   | DOUBLE_EQUALS _ -> "DOUBLE_EQUALS"

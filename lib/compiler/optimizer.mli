@@ -12,13 +12,6 @@ type decl = private
 
 and stmt =
   | ExprStmt of expr
-  | ForLoop of expr * expr * expr * stmt list * Sloth_common.Position.t
-  | ForInLoop of {
-      iterator_name : string;
-      iteratee : expr;
-      block : stmt list;
-      pos : Sloth_common.Position.t;
-    }
   | BreakingStmt of Ast.breaking_type * expr option * Sloth_common.Position.t
 [@@deriving sexp]
 
@@ -58,6 +51,13 @@ and expr =
   | SubAssignExpr of {
       subscript : expr;
       value : expr;
+      pos : Sloth_common.Position.t;
+    }
+  | ForLoop of expr * expr * expr * stmt list * Sloth_common.Position.t
+  | ForInLoop of {
+      iterator_name : string;
+      iteratee : expr;
+      block : stmt list;
       pos : Sloth_common.Position.t;
     }
 [@@deriving sexp]
