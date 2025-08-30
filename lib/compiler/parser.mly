@@ -116,15 +116,6 @@ stmts:
 
 stmt:
   | s = stmt_sans_semicolon; SEMICOLON { s }
-  | pos = FOR; init = expr1; SEMICOLON; comp = expr1; SEMICOLON; inc = expr1; bl = block; SEMICOLON {
-    let pos = Sloth_common.Position.t_of_lexing_position pos in
-    ForLoop (init, comp, inc, bl, pos)
-  }
-  | pos = FOR; i = ID; IN; iteratee = expr1; block = block SEMICOLON {
-    let (iterator_name, _) = i in
-    let pos = Sloth_common.Position.t_of_lexing_position pos in
-    ForInLoop {iterator_name; iteratee; block; pos}
-  }
   ;
 
 (* Used in single statement blocks *)
@@ -158,6 +149,15 @@ stmt_sans_semicolon:
 
 (* Conditionals *)
 expr1:
+  | pos = FOR; init = expr1; SEMICOLON; comp = expr1; SEMICOLON; inc = expr1; bl = block {
+    let pos = Sloth_common.Position.t_of_lexing_position pos in
+    ForLoop (init, comp, inc, bl, pos)
+  }
+  | pos = FOR; i = ID; IN; iteratee = expr1; block = block {
+    let (iterator_name, _) = i in
+    let pos = Sloth_common.Position.t_of_lexing_position pos in
+    ForInLoop {iterator_name; iteratee; block; pos}
+  }
   | LET; id = ID; EQUALS; e1 = expr1 {
     let (id, pos) = id in
     let pos = Sloth_common.Position.t_of_lexing_position pos in

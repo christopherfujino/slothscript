@@ -25,13 +25,6 @@ and decl =
 
 and stmt =
   | ExprStmt of expr
-  | ForLoop of expr * expr * expr * stmt list * Sloth_common.Position.t
-  | ForInLoop of {
-      iterator_name : string;
-      iteratee : expr;
-      block : stmt list;
-      pos : Sloth_common.Position.t;
-    }
   | BreakingStmt of Ast.breaking_type * expr option * Sloth_common.Position.t
 [@@deriving sexp]
 
@@ -71,6 +64,13 @@ and expr =
   | SubAssignExpr of {
       subscript : expr;
       value : expr;
+      pos : Sloth_common.Position.t;
+    }
+  | ForLoop of expr * expr * expr * stmt list * Sloth_common.Position.t
+  | ForInLoop of {
+      iterator_name : string;
+      iteratee : expr;
+      block : stmt list;
       pos : Sloth_common.Position.t;
     }
 [@@deriving sexp]
@@ -138,21 +138,6 @@ and optimize_stmt env stmts : Environment.t * stmt =
   | ExprStmt expr ->
       let env, e = optimize_expr env expr in
       (env, ExprStmt e)
-  | ForLoop (init, comp, inc, block, pos) ->
-      let inner_env = Environment.push_empty env in
-      let inner_env, init' = optimize_expr inner_env init in
-      let inner_env, comp' = optimize_expr inner_env comp in
-      let inner_env, inc' = optimize_expr inner_env inc in
-      let block' = optimize_block inner_env block in
-      (env, ForLoop (init', comp', inc', block', pos))
-  | ForInLoop { iterator_name; iteratee; block; pos } ->
-      let inner_env = Environment.push_empty env in
-      let inner_env =
-        Environment.bind inner_env iterator_name |> Option.value_exn
-      in
-      let inner_env, iteratee = optimize_expr inner_env iteratee in
-      let block = optimize_block inner_env block in
-      (env, ForInLoop { iterator_name; iteratee; block; pos })
   | BreakingStmt (breaking_t, expr_opt, pos) ->
       let env, expr_opt =
         match expr_opt with
@@ -287,6 +272,21 @@ and optimize_expr (env : Environment.t) (e : Ast.expr) : Environment.t * expr =
       let env, subscript = optimize_expr env subscript in
       let env, value = optimize_expr env value in
       (env, SubAssignExpr { subscript; value; pos })
+  | ForLoop (init, comp, inc, block, pos) ->
+      let inner_env = Environment.push_empty env in
+      let inner_env, init' = optimize_expr inner_env init in
+      let inner_env, comp' = optimize_expr inner_env comp in
+      let inner_env, inc' = optimize_expr inner_env inc in
+      let block' = optimize_block inner_env block in
+      (env, ForLoop (init', comp', inc', block', pos))
+  | ForInLoop { iterator_name; iteratee; block; pos } ->
+      let inner_env = Environment.push_empty env in
+      let inner_env =
+        Environment.bind inner_env iterator_name |> Option.value_exn
+      in
+      let inner_env, iteratee = optimize_expr inner_env iteratee in
+      let block = optimize_block inner_env block in
+      (env, ForInLoop { iterator_name; iteratee; block; pos })
 
 and optimize_string env s pos =
   let env, contents =

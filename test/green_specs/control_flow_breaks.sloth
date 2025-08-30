@@ -9,20 +9,21 @@ func earlyReturn() {
 
 assert(earlyReturn())
 
-let i = for let i = 0; i < 10; i = i + 1 {
+let k = for let i = 0; i < 10; i = i + 1 {
   if i == 4 {
     break i
   }
 }
 
-assert(i == 4);
+assert(k == 4);
 
 let x = 0
 let y = for let i = 0; i < 10; i = i + 1 {
-  continue x + 1
+  x = x + 1
+  continue x
 }
 
-assert(x == 0, "x = ${x}")
+assert(y == 10, "y = ${y}")
 
 ### Ast
 ((FuncDecl
@@ -60,6 +61,170 @@ assert(x == 0, "x = ${x}")
             [POS])
           ()
           [POS]))
+        [POS])))
+  (StmtDecl
+    (ExprStmt
+      (LetExpr
+        k
+        (ForLoop
+          (LetExpr
+            i
+            (Num
+              0
+              [POS])
+            [POS])
+          (Binary
+            (IdRef
+              i
+              [POS])
+            (Num
+              10
+              [POS])
+            Less
+            [POS])
+          (AssignExpr
+            i
+            (Binary
+              (IdRef
+                i
+                [POS])
+              (Num
+                1
+                [POS])
+              Plus
+              [POS])
+            [POS])
+          ((ExprStmt
+            (IfExpr
+              (IfCont
+                (conditional
+                  (Equality
+                    (IdRef
+                      i
+                      [POS])
+                    (Num
+                      4
+                      [POS])
+                    true
+                    [POS]))
+                (block
+                  ((BreakingStmt
+                    Break
+                    ((IdRef
+                      i
+                      [POS]))
+                    [POS])))
+                (continuation
+                  ())
+                (pos
+                  [POS]))
+              [POS])))
+          [POS])
+        [POS])))
+  (StmtDecl
+    (ExprStmt
+      (FuncInvoc
+        (IdRef
+          assert
+          [POS])
+        ((Equality
+          (IdRef
+            k
+            [POS])
+          (Num
+            4
+            [POS])
+          true
+          [POS]))
+        [POS])))
+  (StmtDecl
+    (ExprStmt
+      (LetExpr
+        x
+        (Num
+          0
+          [POS])
+        [POS])))
+  (StmtDecl
+    (ExprStmt
+      (LetExpr
+        y
+        (ForLoop
+          (LetExpr
+            i
+            (Num
+              0
+              [POS])
+            [POS])
+          (Binary
+            (IdRef
+              i
+              [POS])
+            (Num
+              10
+              [POS])
+            Less
+            [POS])
+          (AssignExpr
+            i
+            (Binary
+              (IdRef
+                i
+                [POS])
+              (Num
+                1
+                [POS])
+              Plus
+              [POS])
+            [POS])
+          ((ExprStmt
+            (AssignExpr
+              x
+              (Binary
+                (IdRef
+                  x
+                  [POS])
+                (Num
+                  1
+                  [POS])
+                Plus
+                [POS])
+              [POS]))
+            (BreakingStmt
+              Continue
+              ((IdRef
+                x
+                [POS]))
+              [POS]))
+          [POS])
+        [POS])))
+  (StmtDecl
+    (ExprStmt
+      (FuncInvoc
+        (IdRef
+          assert
+          [POS])
+        ((Equality
+          (IdRef
+            y
+            [POS])
+          (Num
+            10
+            [POS])
+          true
+          [POS])
+          (String
+            ((StartStringInterp
+              "y = "
+              [POS])
+              (ExpressionStringInterp
+                (IdRef
+                  y
+                  [POS]))
+              (EndStringInterp
+                ""
+                [POS]))
+            [POS]))
         [POS]))))
 
 ### Stdout
