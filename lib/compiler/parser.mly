@@ -30,6 +30,8 @@
 %token <Lexing.position> DO
 %token <Lexing.position> FOR
 %token <Lexing.position> RETURN
+%token <Lexing.position> BREAK
+%token <Lexing.position> CONTINUE
 
 (* Operators *)
 %token <Lexing.position> PLUS
@@ -134,6 +136,22 @@ stmt_sans_semicolon:
   | pos = RETURN {
     let pos = Sloth_common.Position.t_of_lexing_position pos in
     BreakingStmt (Return, None, pos)
+  }
+  | pos = BREAK; e = expr1 {
+    let pos = Sloth_common.Position.t_of_lexing_position pos in
+    BreakingStmt (Break, Some e, pos)
+  }
+  | pos = BREAK {
+    let pos = Sloth_common.Position.t_of_lexing_position pos in
+    BreakingStmt (Break, None, pos)
+  }
+  | pos = CONTINUE; e = expr1 {
+    let pos = Sloth_common.Position.t_of_lexing_position pos in
+    BreakingStmt (Continue, Some e, pos)
+  }
+  | pos = CONTINUE {
+    let pos = Sloth_common.Position.t_of_lexing_position pos in
+    BreakingStmt (Continue, None, pos)
   }
   | e1 = expr1 { ExprStmt e1 }
   ;

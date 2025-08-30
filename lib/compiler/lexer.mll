@@ -55,6 +55,8 @@ rule private_read last_token state =
         | STRING_END _ -> asi ()
         | NULL _ -> asi ()
         | RETURN _ -> asi ()
+        | BREAK _ -> asi ()
+        | CONTINUE _ -> asi ()
         | TRUE _ -> asi ()
         | FALSE _ -> asi ()
         (* ! is a postfix operator *)
@@ -76,6 +78,8 @@ rule private_read last_token state =
   | "do" { let token = DO lexbuf.lex_curr_p in last_token := Some token; token }
   | "for" { let token = FOR lexbuf.lex_curr_p in last_token := Some token; token }
   | "return" { let token = RETURN lexbuf.lex_curr_p in last_token := Some token; token }
+  | "break" { let token = BREAK lexbuf.lex_curr_p in last_token := Some token; token }
+  | "continue" { let token = CONTINUE lexbuf.lex_curr_p in last_token := Some token; token }
 
   (* Operators *)
   | '+' { let token = PLUS lexbuf.lex_curr_p in last_token := Some token; token }

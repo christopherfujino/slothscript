@@ -29,7 +29,7 @@ and stmt =
   | BreakingStmt of breaking_type * expr option * Sloth_common.Position.t
 [@@deriving sexp]
 
-and breaking_type = Return [@@deriving sexp]
+and breaking_type = Return | Break | Continue [@@deriving sexp]
 
 and expr =
   | Num of float * Sloth_common.Position.t
