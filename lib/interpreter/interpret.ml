@@ -118,8 +118,6 @@ and interpret_cond ctx cond =
       in
       (ctx, interpret_block inner_ctx stmts)
 
-(* TODO Note this does not return a context--can expressions mutate context?! *)
-(* Yes, if they call a function that mutates a global *)
 and interpret_expr ctx expr :
     Context.t * (Runtime.t, Compiler.Ast.breaking_type * Runtime.t) Either.t =
   let ( >>= ) =
@@ -292,9 +290,7 @@ and interpret_expr ctx expr :
       (ctx, First f)
   | IfExpr (cond, _) -> interpret_cond ctx cond
   | UnaryExpr { target; pos; operator } -> (
-      (* TODO deprecate is_prefix when we've removed prefix bang *)
-      interpret_expr ctx target
-      >>= fun ctx v ->
+      interpret_expr ctx target >>= fun ctx v ->
       match operator with
       | Not -> (
           let bool_opt = Runtime.bool_of_val v in
@@ -402,7 +398,6 @@ and interpret_expr ctx expr :
         >>= fun ctx _ ->
         let rec interpret_for_loop ctx cmp inc bl (last_val : Runtime.t) =
           let ctx, bt_either = interpret_expr ctx cmp in
-          (* TODO use >>= once we have errors and we've migrated cmp to an expr *)
           ( ctx,
             match bt_either with
             | First _ -> bt_either
@@ -443,7 +438,12 @@ and interpret_expr ctx expr :
                       | Return ->
                           (* This is reachable if the expression was a do block *)
                           (ctx, either)
-                      | _ -> failwith "TODO")
+                      | _ ->
+                          Printf.sprintf
+                            "TODO: figure out how to handle break/continue \
+                             within for loop increment %s"
+                            __LOC__
+                          |> failwith)
                 in
 
                 match interpret_block inner_ctx bl with
