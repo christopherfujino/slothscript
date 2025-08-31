@@ -21,7 +21,6 @@
 - [ ] List mutation methods
 
 ### v1.0
-- [ ] Formatter
 - [ ] LSP server
 - [ ] Security policy
 
@@ -29,6 +28,7 @@
 - [ ] Unicode strings
 - [ ] Method syntax for hash maps
 - [ ] Pattern matching
+- [ ] Formatter
 
 ## Done
 
