@@ -1,0 +1,8 @@
+### Name
+context, with expressions
+
+### Program
+
+with($cwd = "${$script.parent()}") {
+  "pwd"!
+}
