@@ -2,8 +2,6 @@
 
 ## v0.1 - initial version
 - [ ] error handling (`let result = mayError() catch (e) DEFAULT;`)
-- [ ] Context variables, with statements
-    - [ ] $echo = true
 - [ ] Mock out process subsystem for unit tests
 - [ ] Stack traces
 - [ ] Language versioning
@@ -72,3 +70,4 @@
 - [x] Migrate var declarations and reassignment to expressions
 - [x] First class for loops
 - [x] Break and continue statements
+- [ ] Context variables, with statements
