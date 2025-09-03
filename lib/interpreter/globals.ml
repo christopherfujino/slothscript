@@ -3,7 +3,7 @@ open Core
 type t = {
   l : (module Sloth_stdlib.StdlibSig);
   identifiers : Runtime.t Identifiers.t;
-  context_ids : (string, Runtime.t) Hashtbl.t list;
+  context_ids : Context.t;
   (* We need to store these at the top level so that we can find these for
    runtime lookup. They must also be stored in identifiers however, so users
    can invoke them explicitly. *)
@@ -284,7 +284,7 @@ let make_globals m src =
       |> Option.value_exn);
 
   (* TODO: implement context globals *)
-  let context_ids = [] in
+  let context_ids = Context.create () in
 
   { l = m; identifiers; src; classes; context_ids }
 
