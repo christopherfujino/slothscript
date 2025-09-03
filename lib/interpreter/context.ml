@@ -283,4 +283,15 @@ let make_ctx m src =
       Identifiers.bind identifiers name (Runtime.Prototype { name })
       |> Option.value_exn);
 
-  { l = m; identifiers; src; classes }
+  (* TODO: implement context globals *)
+  let context_ids = [] in
+
+  { l = m; identifiers; src; classes; context_ids }
+
+let rec todo_get ids name =
+  match ids with
+  | [] -> None
+  | hd :: tl -> (
+      match Hashtbl.find hd name with
+      | Some _ as v_opt -> v_opt
+      | None -> (todo_get [@tailcall]) tl name)
