@@ -9,5 +9,4 @@ val push_empty : t -> t
 val find : t -> string -> string option
 val bind : t -> string -> t option
 val find_ctx : t -> string -> string option
-
 val populate : t -> t

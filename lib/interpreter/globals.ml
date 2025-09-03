@@ -160,8 +160,7 @@ let make_globals m src =
     | "$cwd" ->
         (* TODO does this need to be injected? *)
         let cwd = Sys_unix.getcwd () in
-        Context.bind context_ids "$cwd" (Runtime.String cwd)
-        |> Option.value_exn
+        Context.bind context_ids "$cwd" (Runtime.String cwd) |> Option.value_exn
     | _ as name ->
         Printf.sprintf
           "TODO: You have not yet implemented the context var %s at %s" name
