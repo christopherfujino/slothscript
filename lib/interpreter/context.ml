@@ -3,6 +3,7 @@ open Core
 type t = {
   l : (module Sloth_stdlib.StdlibSig);
   identifiers : Runtime.t Identifiers.t;
+  context_ids : (string, Runtime.t) Hashtbl.t list;
   (* We need to store these at the top level so that we can find these for
    runtime lookup. They must also be stored in identifiers however, so users
    can invoke them explicitly. *)

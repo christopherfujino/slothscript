@@ -37,6 +37,7 @@ and expr =
   | HashMap of (expr * expr) list * Sloth_common.Position.t
   | Subscript of expr * expr * Sloth_common.Position.t
   | IdRef of string * Sloth_common.Position.t
+  | ContextId of string * Sloth_common.Position.t
   | Equality of expr * expr * bool * Sloth_common.Position.t
   | Binary of expr * expr * Ast.operator * Sloth_common.Position.t
   | FuncInvoc of expr * expr list * Sloth_common.Position.t
@@ -213,6 +214,13 @@ and optimize_expr (env : Environment.t) (e : Ast.expr) : Environment.t * expr =
           let msg = Printf.sprintf "Undeclared identifier %s" name in
           failure ~env ~pos msg
       | Some _ -> (env, IdRef (name, pos)))
+  | ContextId (name, pos) -> (
+      let name_opt = Environment.find_ctx env name in
+      match name_opt with
+      | None ->
+          let msg = Printf.sprintf "Undeclared identifier %s" name in
+          failure ~env ~pos msg
+      | Some _ -> (env, ContextId (name, pos)))
   | ProtoRef (name, pos) -> (
       (* Validate this class name is defined by our STDLIB *)
       match Environment.find env name with

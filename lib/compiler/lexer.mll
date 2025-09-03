@@ -22,6 +22,7 @@ let letter = ['a'-'z' 'A'-'Z']
 (* IDs cannot start with a capital letter *)
 let id = ['a'-'z' '_'] ['a'-'z' 'A'-'Z' '0'-'9' '_']*
 let prototype = ['A'-'Z'] ['a'-'z' 'A'-'Z' '0'-'9' '_']*
+let context_id = '$' ['a'-'z' 'A'-'Z'] ['a'-'z' 'A'-'Z' '0'-'9' '_']*
 
 (* rule and parse are keywords *)
 rule private_read last_token state =
@@ -47,6 +48,7 @@ rule private_read last_token state =
     | None -> (private_read [@tailcall]) last_token state lexbuf
     | Some t -> (match t with
         | ID _ -> asi ()
+        | CONTEXT_ID _ -> asi ()
         | RPAREN _ -> asi ()
         | RCURLY _ -> asi ()
         | RBRACKET _ -> asi ()
@@ -140,6 +142,7 @@ rule private_read last_token state =
   | ']' { let token = RBRACKET lexbuf.lex_curr_p in last_token := Some token; token}
   (* Lexing.lexeme means return the string that matched the pattern *)
   | id { let token = ID (Lexing.lexeme lexbuf, lexbuf.lex_curr_p) in last_token := Some token; token }
+  | context_id { let token = CONTEXT_ID (Lexing.lexeme lexbuf, lexbuf.lex_curr_p) in last_token := Some token; token }
   | prototype { let token = PROTOTYPE (Lexing.lexeme lexbuf, lexbuf.lex_curr_p) in last_token := Some token; token }
   | num { let token = NUM (float_of_string (Lexing.lexeme lexbuf), lexbuf.lex_curr_p) in last_token := Some token; token }
   | _ { syntax_error (SyntaxError (Lexing.lexeme lexbuf, lexbuf.lex_curr_p))}

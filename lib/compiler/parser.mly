@@ -10,6 +10,7 @@
 (* In OCaml, `float` is a 64-bit IEEE float *)
 %token <float * Lexing.position> NUM
 %token <string * Lexing.position> ID
+%token <string * Lexing.position> CONTEXT_ID
 %token <string * Lexing.position> PROTOTYPE
 %token <string * Lexing.position> STRING_FULL
 %token <string * Lexing.position> STRING_START
@@ -341,6 +342,11 @@ expr8:
     let (i, pos) = i in
     let pos = Sloth_common.Position.t_of_lexing_position pos in
     IdRef (i, pos)
+  }
+  | i = CONTEXT_ID {
+    let (i, pos) = i in
+    let pos = Sloth_common.Position.t_of_lexing_position pos in
+    ContextId (i, pos)
   }
   | i = PROTOTYPE {
     let (i, pos) = i in

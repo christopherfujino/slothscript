@@ -78,6 +78,7 @@ let to_s token =
   | STRING_END (s, _) -> Printf.sprintf "STRING_END(%s)" s
   | NUM (n, _) -> Printf.sprintf "NUM(%f)" n
   | ID (s, _) -> Printf.sprintf "ID(%s)" s
+  | CONTEXT_ID (s, _) -> Printf.sprintf "CONTEXT_ID(%s)" s
   | PROTOTYPE (s, _) -> Printf.sprintf "PROTOTYPE(%s)" s
   | COMMENT _ -> failwith "Unreachable"
 

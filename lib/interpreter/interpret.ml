@@ -200,6 +200,12 @@ and interpret_expr ctx expr :
           Printf.sprintf "Cannot subscript the value %s"
             (Runtime.to_s receiver')
           |> failure ~ctx pos)
+  | ContextId (i, pos) -> (
+      match Identifiers.get ctx.identifiers i with
+      | Some v -> (ctx, First v)
+      | None ->
+          Printf.sprintf "The name %s has not been declared in this scope" i
+          |> failure ~ctx pos)
   | IdRef (i, pos) -> (
       match Identifiers.get ctx.identifiers i with
       | Some v -> (ctx, First v)
