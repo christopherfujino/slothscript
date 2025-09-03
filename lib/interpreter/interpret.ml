@@ -505,6 +505,17 @@ and interpret_expr ctx expr :
               |> Option.value_exn;
               interpret_block temp_ctx block) )
       >>= fun _ ret_val -> (ctx, First ret_val)
+  | WithExpr (assignments, block, pos) ->
+      List.fold assignments ~init:(ctx, First ()) ~f:(fun prev (name, expr) ->
+          prev >>= fun globals () ->
+          interpret_expr globals expr >>= fun globals v ->
+          (match Context.reassign globals.context_ids name v with
+          | Some () -> ()
+          | None ->
+              Printf.sprintf "The context variable named %s is not defined" name
+              |> failure ~ctx:globals pos);
+          (globals, First ()))
+      >>= fun globals () -> (globals, interpret_block globals block)
 
 (** You must push an empty env frame on first *)
 and interpret_block (ctx : Globals.t) (stmts : Compiler.Optimizer.stmt list) :

@@ -50,6 +50,7 @@ let to_s token =
   | MINUS _ -> "MINUS"
   | LPAREN _ -> "LPAREN"
   | LET _ -> "LET"
+  | WITH _ -> "WITH"
   | RETURN _ -> "RETURN"
   | BREAK _ -> "BREAK"
   | CONTINUE _ -> "CONTINUE"

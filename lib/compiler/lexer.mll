@@ -79,6 +79,7 @@ rule private_read last_token state =
   | "in" { let token = IN lexbuf.lex_curr_p in last_token := Some token; token }
   | "do" { let token = DO lexbuf.lex_curr_p in last_token := Some token; token }
   | "for" { let token = FOR lexbuf.lex_curr_p in last_token := Some token; token }
+  | "with" { let token = WITH lexbuf.lex_curr_p in last_token := Some token; token }
   | "return" { let token = RETURN lexbuf.lex_curr_p in last_token := Some token; token }
   | "break" { let token = BREAK lexbuf.lex_curr_p in last_token := Some token; token }
   | "continue" { let token = CONTINUE lexbuf.lex_curr_p in last_token := Some token; token }

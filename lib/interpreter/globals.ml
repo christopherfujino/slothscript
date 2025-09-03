@@ -82,6 +82,7 @@ let make_globals m src =
   let module M = (val m : Sloth_stdlib.StdlibSig) in
   let classes = Hashtbl.create (module String) in
   let identifiers = Identifiers.create () in
+  let context_ids = Context.create () in
   let make_method name arity methods cb =
     let cb =
      fun args ->
@@ -151,13 +152,21 @@ let make_globals m src =
                               "The first argument to assert() must be a Bool \
                                value, got %s"
                            @@ Runtime.to_s arg)))
-      | "$cwd" ->
-          Identifiers.bind identifiers "$cwd" (Runtime.String "TODO")
-          |> Option.value_exn
       | _ ->
           Printf.sprintf "TODO: You have not yet implemented %s at %s" name
             __LOC__
           |> Sloth_common.Common.internal_failure);
+  List.iter Sloth_common.Stdlib_interface.globals.context_ids ~f:(function
+    | "$cwd" ->
+        (* TODO does this need to be injected? *)
+        let cwd = Sys_unix.getcwd () in
+        Context.bind context_ids "$cwd" (Runtime.String cwd)
+        |> Option.value_exn
+    | _ as name ->
+        Printf.sprintf
+          "TODO: You have not yet implemented the context var %s at %s" name
+          __LOC__
+        |> Sloth_common.Common.internal_failure);
   List.iter Sloth_common.Stdlib_interface.globals.protos
     ~f:(fun { name; methods; static_members } ->
       let cl =
@@ -283,9 +292,4 @@ let make_globals m src =
       Identifiers.bind identifiers name (Runtime.Prototype { name })
       |> Option.value_exn);
 
-  (* TODO: implement context globals *)
-  let context_ids = Context.create () in
-
   { l = m; identifiers; src; classes; context_ids }
-
-

@@ -68,6 +68,7 @@ and expr =
       block : stmt list;
       pos : Sloth_common.Position.t;
     }
+  | WithExpr of (string * expr) list * stmt list * Sloth_common.Position.t
 [@@deriving sexp]
 
 and string_parts =

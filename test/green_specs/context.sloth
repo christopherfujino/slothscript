@@ -2,7 +2,74 @@
 context, with expressions
 
 ### Program
-
-with($cwd = "${$script.parent()}") {
-  "pwd"!
+with ($cwd = "one") {
+  with ($cwd = "two", $cwd = "three") {
+    with (
+      $cwd = "four",
+      $cwd = "five",
+    ) {
+      "pwd"!
+    }
+  }
 }
+
+### Ast
+((StmtDecl
+  (ExprStmt
+    (WithExpr
+      (($cwd
+        (String
+          ((FullString
+            one
+            [POS]))
+          [POS])))
+      ((ExprStmt
+        (WithExpr
+          (($cwd
+            (String
+              ((FullString
+                two
+                [POS]))
+              [POS]))
+            ($cwd
+              (String
+                ((FullString
+                  three
+                  [POS]))
+                [POS])))
+          ((ExprStmt
+            (WithExpr
+              (($cwd
+                (String
+                  ((FullString
+                    four
+                    [POS]))
+                  [POS]))
+                ($cwd
+                  (String
+                    ((FullString
+                      five
+                      [POS]))
+                    [POS])))
+              ((ExprStmt
+                (UnaryExpr
+                  (target
+                    (String
+                      ((FullString
+                        pwd
+                        [POS]))
+                      [POS]))
+                  (pos
+                    [POS])
+                  (operator
+                    Bang))))
+              [POS])))
+          [POS])))
+      [POS]))))
+
+### Stdout
+
+
+### Failure
+
+

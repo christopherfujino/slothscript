@@ -46,8 +46,13 @@ let populate env =
   let l = globals in
   let env =
     List.fold_left ~init:env
-      ~f:(fun acc name -> bind acc name |> Option.value_exn)
+      ~f:(fun env name -> bind env name |> Option.value_exn)
       l.ids
+  in
+  let env =
+    List.fold ~init:env
+      ~f:(fun env id -> bind_ctx env id |> Option.value_exn)
+      l.context_ids
   in
   List.fold_left ~init:env
     ~f:(fun env { name; methods = _; static_members = _ } ->

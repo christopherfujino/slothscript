@@ -33,6 +33,7 @@
 %token <Lexing.position> RETURN
 %token <Lexing.position> BREAK
 %token <Lexing.position> CONTINUE
+%token <Lexing.position> WITH
 
 (* Operators *)
 %token <Lexing.position> PLUS
@@ -186,6 +187,15 @@ expr1:
   | pos = IF; e1 = expr2; b = block {
     let pos = Sloth_common.Position.t_of_lexing_position pos in
     IfExpr (IfCont { conditional = e1; block = b; continuation = None; pos}, pos)
+  }
+  (* assignment_list never has trailing comma *)
+  | pos = WITH; LPAREN; assignments = assignment_list; COMMA; RPAREN; b = block {
+    let pos = Sloth_common.Position.t_of_lexing_position pos in
+    WithExpr (assignments, b, pos)
+  }
+  | pos = WITH; LPAREN; assignments = assignment_list; RPAREN; b = block {
+    let pos = Sloth_common.Position.t_of_lexing_position pos in
+    WithExpr (assignments, b, pos)
   }
   | e = expr2 { e }
 
@@ -356,6 +366,16 @@ expr8:
   | LPAREN; e = expr1; RPAREN { e }
   | h = hash_literals { h }
   ;
+
+assignment_list:
+  | prev = assignment_list; COMMA; name = CONTEXT_ID; EQUALS; e = expr1 {
+    let name, _ = name in
+    (name, e) :: prev
+  }
+  | name = CONTEXT_ID; EQUALS; e = expr1 {
+    let name, _ = name in
+    [(name, e)]
+  }
 
 (* Returns reversed list *)
 string_middle:
