@@ -5,7 +5,7 @@ let failure ~ctx pos msg =
   let pos_s = Sloth_common.Position.string_of_t pos in
   let msg1 =
     Printf.sprintf "%s\n\n[%s] Runtime error: %s"
-      (Sloth_common.Position.summarize pos Context.(ctx.src))
+      (Sloth_common.Position.summarize pos Globals.(ctx.src))
       pos_s msg
   in
   let msg2 =
@@ -28,7 +28,7 @@ let rec interpret_prog ctx prog =
       | [] -> (ctx, v)
       | _ -> (interpret_prog [@tailcall]) new_ctx tl)
 
-and interpret_decl (ctx : Context.t) decl =
+and interpret_decl (ctx : Globals.t) decl =
   let open Compiler.Optimizer in
   match decl with
   | FuncDecl { name; parameters; block; pos } ->
@@ -62,16 +62,16 @@ and interpret_decl (ctx : Context.t) decl =
       in
       (ctx, v)
 
-and interpret_stmt (ctx : Context.t) stmt :
-    Context.t * (Runtime.t, Compiler.Ast.breaking_type * Runtime.t) Either.t =
-  (* Context.t * Compiler.Ast.breaking_type option * Runtime.t = *)
+and interpret_stmt (ctx : Globals.t) stmt :
+    Globals.t * (Runtime.t, Compiler.Ast.breaking_type * Runtime.t) Either.t =
+  (* Globals.t * Compiler.Ast.breaking_type option * Runtime.t = *)
   let open Compiler.Optimizer in
   let ( >>= ) =
    fun (ctx, either)
        (cb :
-         Context.t ->
+         Globals.t ->
          Runtime.t ->
-         Context.t
+         Globals.t
          * (Runtime.t, Compiler.Ast.breaking_type * Runtime.t) Either.t) ->
     Either.value_map either
       ~second:(fun tuple -> (ctx, Second tuple))
@@ -119,7 +119,7 @@ and interpret_cond ctx cond =
       (ctx, interpret_block inner_ctx stmts)
 
 and interpret_expr ctx expr :
-    Context.t * (Runtime.t, Compiler.Ast.breaking_type * Runtime.t) Either.t =
+    Globals.t * (Runtime.t, Compiler.Ast.breaking_type * Runtime.t) Either.t =
   let ( >>= ) =
    fun (ctx, either) cb ->
     Either.value_map either
@@ -311,7 +311,7 @@ and interpret_expr ctx expr :
       | Bang -> (
           interpret_expr ctx target >>= fun ctx target ->
           let proc = cast_to_process ~ctx ~pos target in
-          match Context.exec_proc proc with
+          match Globals.exec_proc proc with
           | Ok t' -> (ctx, First t')
           | Error err -> failure ~ctx pos err)
       | LeftArrow -> (
@@ -426,7 +426,7 @@ and interpret_expr ctx expr :
               else
                 (* Each iteration should have its own scope *)
                 let inner_ctx =
-                  Context.
+                  Globals.
                     {
                       ctx with
                       identifiers = Identifiers.push_empty ctx.identifiers;
@@ -507,7 +507,7 @@ and interpret_expr ctx expr :
       >>= fun _ ret_val -> (ctx, First ret_val)
 
 (** You must push an empty env frame on first *)
-and interpret_block (ctx : Context.t) (stmts : Compiler.Optimizer.stmt list) :
+and interpret_block (ctx : Globals.t) (stmts : Compiler.Optimizer.stmt list) :
     (Runtime.t, Compiler.Ast.breaking_type * Runtime.t) Either.t =
   (* TODO can't use List.fold_left because we want to handle empty list
      differently *)
@@ -787,7 +787,7 @@ and cast_to_string ~ctx ~pos t' =
   | String s -> s
   | ProcessResult { stdout; _ } -> stdout
   | Process proc -> (
-      match Context.exec_proc proc with
+      match Globals.exec_proc proc with
       | Ok t' -> (cast_to_string [@tailcall]) ~ctx ~pos t'
       | Error err -> failure ~ctx pos err)
   | _ as t' ->

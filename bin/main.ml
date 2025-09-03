@@ -22,9 +22,9 @@ let repl () =
       let history_file = Printf.sprintf "%s/.sloth_repl.history" home in
       Readline.init ~history_file ());
 
-  let ctx = Context.make_ctx (module Sloth_stdlib.Prod) "" in
+  let globals = Globals.make_globals (module Sloth_stdlib.Prod) "" in
   let env = Compiler.Environment.create "" |> Compiler.Environment.populate in
-  let rec repl_inner ctx env =
+  let rec repl_inner globals env =
     let line =
       (* TODO autocomplete *)
       let line_opt = Readline.readline ~prompt:"> " () in
@@ -37,37 +37,37 @@ let repl () =
           line
     in
     let env = Compiler.Environment.update_src env line in
-    let ctx = Context.{ ctx with src = line } in
+    let globals = Globals.{ globals with src = line } in
 
     let ( let* ) o f = Option.bind o ~f in
 
     let opt =
       let* env, prog = wrap_parse env line in
-      let* ctx, v = wrap_interpret ctx prog in
+      let* globals, v = wrap_interpret globals prog in
       Runtime.to_s v |> print_endline;
-      Option.return (ctx, env)
+      Option.return (globals, env)
     in
 
-    let ctx, env =
-      match opt with Some (ctx, env) -> (ctx, env) | None -> (ctx, env)
+    let globals, env =
+      match opt with Some (ctx, env) -> (ctx, env) | None -> (globals, env)
     in
-    (repl_inner [@tailcall]) ctx env
+    (repl_inner [@tailcall]) globals env
   in
-  repl_inner ctx env
+  repl_inner globals env
 
 let interpreter path =
   let program = In_channel.read_all path in
   let env =
     Compiler.Environment.create program |> Compiler.Environment.populate
   in
-  let ctx = Context.make_ctx (module Sloth_stdlib.Prod) program in
+  let globals = Globals.make_globals (module Sloth_stdlib.Prod) program in
 
   let opt_ir = wrap_parse env program in
   let code =
     match opt_ir with
     | None -> 1
     | Some (_, ir) -> (
-        let opt = wrap_interpret ctx ir in
+        let opt = wrap_interpret globals ir in
         match opt with Some _ -> 0 | None -> 1)
   in
   exit code
