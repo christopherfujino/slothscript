@@ -11,7 +11,7 @@ type t = {
   src : string;
 }
 
-let exec_proc (proc : Runtime.process) =
+let exec_proc (proc : Runtime.process) (globals : t) =
   (* TODO check $echo *)
   let read_stdout, write_stdout = Core_unix.pipe ~close_on_exec:true () in
   let read_stderr, write_stderr = Core_unix.pipe ~close_on_exec:true () in
@@ -28,6 +28,8 @@ let exec_proc (proc : Runtime.process) =
     let this_pid =
       match Core_unix.fork () with
       | `In_the_child ->
+          let cwd = Context.get globals.context_ids "$cwd" |> Option.value_exn in
+          Runtime.string_of_val cwd |> Option.value_exn |> Core_unix.chdir;
           Core_unix.close read_stdout;
           Core_unix.close read_stderr;
           if phys_equal write_stdout proc.stdout then ()
@@ -37,8 +39,8 @@ let exec_proc (proc : Runtime.process) =
 
           Core_unix.dup2 ~src:proc.stdin ~dst:Core_unix.stdin ();
           Core_unix.dup2 ~src:proc.stdout ~dst:Core_unix.stdout ();
-          let _ = Core_unix.exec ~prog ~argv:proc.cmd () in
-          Sloth_common.Common.internal_failure __LOC__
+          let _ = Core_unix.exec ~use_path:true ~prog ~argv:proc.cmd () in
+          failwith "Unreachable"
       | `In_the_parent pid ->
           List.iter proc.pipes_to_collect ~f:(fun pipe -> Core_unix.close pipe);
           pid

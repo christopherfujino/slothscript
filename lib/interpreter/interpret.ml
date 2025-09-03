@@ -311,7 +311,7 @@ and interpret_expr ctx expr :
       | Bang -> (
           interpret_expr ctx target >>= fun ctx target ->
           let proc = cast_to_process ~ctx ~pos target in
-          match Globals.exec_proc proc with
+          match Globals.exec_proc proc ctx with
           | Ok t' -> (ctx, First t')
           | Error err -> failure ~ctx pos err)
       | LeftArrow -> (
@@ -798,7 +798,7 @@ and cast_to_string ~ctx ~pos t' =
   | String s -> s
   | ProcessResult { stdout; _ } -> stdout
   | Process proc -> (
-      match Globals.exec_proc proc with
+      match Globals.exec_proc proc ctx with
       | Ok t' -> (cast_to_string [@tailcall]) ~ctx ~pos t'
       | Error err -> failure ~ctx pos err)
   | _ as t' ->
