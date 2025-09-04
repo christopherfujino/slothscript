@@ -311,7 +311,7 @@ and interpret_expr ctx expr :
       | Bang -> (
           interpret_expr ctx target >>= fun ctx target ->
           let proc = cast_to_process ~ctx ~pos target in
-          match Globals.exec_proc proc ctx with
+          match Globals.exec_proc proc with
           | Ok t' -> (ctx, First t')
           | Error err -> failure ~ctx pos err)
       | LeftArrow -> (
@@ -506,16 +506,36 @@ and interpret_expr ctx expr :
               interpret_block temp_ctx block) )
       >>= fun _ ret_val -> (ctx, First ret_val)
   | WithExpr (assignments, block, pos) ->
-      List.fold assignments ~init:(ctx, First ()) ~f:(fun prev (name, expr) ->
-          prev >>= fun globals () ->
-          interpret_expr globals expr >>= fun globals v ->
-          (match Context.reassign globals.context_ids name v with
-          | Some () -> ()
-          | None ->
-              Printf.sprintf "The context variable named %s is not defined" name
-              |> failure ~ctx:globals pos);
-          (globals, First ()))
-      >>= fun globals () -> (globals, interpret_block globals block)
+      let globals = ctx in
+      let post_block_hook = ref None in
+      let inner_globals =
+        { globals with context_ids = Context.push_empty globals.context_ids }
+      in
+      let _, either =
+        List.fold assignments ~init:(inner_globals, First ())
+          ~f:(fun prev (name, expr) ->
+            prev >>= fun globals () ->
+            interpret_expr globals expr >>= fun globals v ->
+            (match Context.reassign globals.context_ids name v with
+            | Some () -> ()
+            | None ->
+                Printf.sprintf "The context variable named %s is not defined"
+                  name
+                |> failure ~ctx:globals pos);
+            (* Process side effects for certain context variables *)
+            (match name with
+            | "$cwd" ->
+                (* TODO: catch type error *)
+                let old_cwd = Sys_unix.getcwd () in
+                Runtime.string_of_val v |> Option.value_exn |> Core_unix.chdir;
+                post_block_hook := Some (fun () -> Core_unix.chdir old_cwd)
+            | _ -> ());
+            (globals, First ()))
+        >>= fun globals () -> (globals, interpret_block globals block)
+      in
+      (* This needs to run regardless of either's state *)
+      let _ = Option.map !post_block_hook ~f:(fun hook -> hook ()) in
+      (globals, either)
 
 (** You must push an empty env frame on first *)
 and interpret_block (ctx : Globals.t) (stmts : Compiler.Optimizer.stmt list) :
@@ -798,7 +818,7 @@ and cast_to_string ~ctx ~pos t' =
   | String s -> s
   | ProcessResult { stdout; _ } -> stdout
   | Process proc -> (
-      match Globals.exec_proc proc ctx with
+      match Globals.exec_proc proc with
       | Ok t' -> (cast_to_string [@tailcall]) ~ctx ~pos t'
       | Error err -> failure ~ctx pos err)
   | _ as t' ->

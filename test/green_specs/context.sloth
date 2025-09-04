@@ -8,9 +8,10 @@ with ($cwd = "one") {
       $cwd = "four",
       $cwd = "five",
     ) {
-      print("pwd"!)
+      print($cwd)
     }
   }
+  print($cwd)
 }
 
 ### Ast

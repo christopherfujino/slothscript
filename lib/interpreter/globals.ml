@@ -11,7 +11,7 @@ type t = {
   src : string;
 }
 
-let exec_proc (proc : Runtime.process) (globals : t) =
+let exec_proc (proc : Runtime.process) =
   (* TODO check $echo *)
   let read_stdout, write_stdout = Core_unix.pipe ~close_on_exec:true () in
   let read_stderr, write_stderr = Core_unix.pipe ~close_on_exec:true () in
@@ -28,8 +28,6 @@ let exec_proc (proc : Runtime.process) (globals : t) =
     let this_pid =
       match Core_unix.fork () with
       | `In_the_child ->
-          let cwd = Context.get globals.context_ids "$cwd" |> Option.value_exn in
-          Runtime.string_of_val cwd |> Option.value_exn |> Core_unix.chdir;
           Core_unix.close read_stdout;
           Core_unix.close read_stderr;
           if phys_equal write_stdout proc.stdout then ()
