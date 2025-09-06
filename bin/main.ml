@@ -4,8 +4,10 @@ open Interpreter
 let wrap_interpret ctx prog =
   try Some (Interpret.interpret_prog ctx prog)
   with Common.Failure msg ->
+    (* Ensure stdout is written before error handling *)
+    Out_channel.flush stdout;
     (* We probably don't need a stacktrace from Interpret.interpret_prog to here *)
-    Printf.fprintf stderr "%s%!" msg;
+    Printf.fprintf stderr "\n%s%!" msg;
     None
 
 let wrap_parse env line =
