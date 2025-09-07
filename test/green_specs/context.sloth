@@ -2,14 +2,9 @@
 context, with expressions
 
 ### Program
-with ($cwd = "one") {
-  with ($cwd = "two", $cwd = "three") {
-    with (
-      $cwd = "four",
-      $cwd = "five",
-    ) {
-      print($cwd)
-    }
+with ($cwd = "./lib") {
+  with ($cwd = "./common",) {
+    print($cwd)
   }
   print($cwd)
 }

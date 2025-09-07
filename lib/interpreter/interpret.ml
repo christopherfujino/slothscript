@@ -1,6 +1,12 @@
 open Core
 open Common
 
+let ( >>= ) =
+ fun (ctx, either) cb ->
+  Either.value_map either
+    ~second:(fun tuple -> (ctx, Second tuple))
+    ~first:(cb ctx)
+
 let failure ~ctx pos msg =
   let pos_s = Sloth_common.Position.string_of_t pos in
   let msg1 =
@@ -120,12 +126,6 @@ and interpret_cond ctx cond =
 
 and interpret_expr ctx expr :
     Globals.t * (Runtime.t, Compiler.Ast.breaking_type * Runtime.t) Either.t =
-  let ( >>= ) =
-   fun (ctx, either) cb ->
-    Either.value_map either
-      ~second:(fun tuple -> (ctx, Second tuple))
-      ~first:(cb ctx)
-  in
   let open Compiler.Optimizer in
   match expr with
   | Num (f, _) -> (ctx, First (Runtime.Num f))
@@ -270,11 +270,31 @@ and interpret_expr ctx expr :
                   (ctx, First (arg :: prev)))
               >>= fun ctx reversed_args ->
               let args = List.rev reversed_args in
+
               match cb args with
               | Ok v -> (ctx, First v)
               | Error msg ->
                   (* TODO: should this return a `Some SlothError`? *)
                   failure ~ctx pos msg))
+      | Method (receiver, func_t) -> (
+          match func_t with
+          | Native { cb; parameters = _; identifiers = _ } -> (
+              List.fold args ~init:(ctx, First []) ~f:(fun acc arg ->
+                  acc >>= fun ctx prev ->
+                  interpret_expr ctx arg >>= fun ctx arg ->
+                  (* This is reversed... *)
+                  (ctx, First (arg :: prev)))
+              >>= fun ctx reversed_args ->
+              let args = List.rev reversed_args in
+
+              match cb (receiver :: args) with
+              | Ok v -> (ctx, First v)
+              | Error msg ->
+                  (* TODO: should this return a `Some SlothError`? *)
+                  failure ~ctx pos msg)
+          | User _ ->
+              (* I think this is unreachable... *)
+              Sloth_common.Common.internal_failure __LOC__)
       | Prototype { name } -> (
           if not @@ phys_equal (List.length args) 1 then failwith "TODO"
           else
@@ -319,8 +339,8 @@ and interpret_expr ctx expr :
           let file = cast_to_file ~ctx ~pos target in
           let target = Runtime.File file in
           let func = dereference_object ctx target "readString" pos in
-          let func =
-            match Runtime.func_of_val func with
+          let receiver, func =
+            match Runtime.method_of_val func with
             | None -> Sloth_common.Common.internal_failure __LOC__
             | Some func -> func
           in
@@ -329,7 +349,7 @@ and interpret_expr ctx expr :
             | User _ -> Sloth_common.Common.internal_failure __LOC__
             | Native { cb; _ } -> cb
           in
-          match cb [ target ] with
+          match cb [ receiver; target ] with
           | Error err -> failure ~ctx pos err
           | Ok t' -> (ctx, First t'))
       | Plus | Minus | Product | Divide | Pipe | Less | Greater | Leq | Geq
@@ -675,18 +695,25 @@ and dereference_object ctx receiver target pos =
           Printf.sprintf "The class %s does not have a %s field named %s"
             class_name descriptor target
           |> failure ~ctx pos
-      | Some func -> func)
+      | Some field -> (
+          match field with
+          | Func func_t -> Method (receiver, func_t)
+          | _ -> failure ~ctx pos "TODO"))
 
 and cast_to_file ~ctx ~pos = function
   | Runtime.File f -> f
   | Runtime.String filename -> (
-      let func_opt =
+      let intermediate =
         dereference_object ctx (Runtime.Prototype { name = "File" }) "new" pos
-        |> Runtime.func_of_val
       in
-      let constructor =
+      let func_opt = Runtime.method_of_val intermediate in
+      let receiver, constructor =
         match func_opt with
-        | None -> Sloth_common.Common.internal_failure __LOC__
+        | None ->
+            Printf.sprintf "[%s] While trying to retrieve File.new, got %s"
+              __LOC__
+              (Runtime.to_s intermediate)
+            |> Sloth_common.Common.internal_failure
         | Some func -> func
       in
       let callback =
@@ -694,7 +721,7 @@ and cast_to_file ~ctx ~pos = function
         | Native { cb; _ } -> cb
         | User _ -> Sloth_common.Common.internal_failure __LOC__
       in
-      match callback [ Runtime.String filename ] with
+      match callback [ receiver; Runtime.String filename ] with
       | Ok file -> (cast_to_file [@tailcall]) ~ctx ~pos file
       | Error err -> failure ~ctx pos err)
   | _ as t' ->
@@ -705,24 +732,25 @@ and cast_to_file ~ctx ~pos = function
 and cast_to_process ~ctx ~pos = function
   | Runtime.Process p -> p
   | Runtime.List _ as l ->
-      let constructor_opt =
+      let constructor =
         dereference_object ctx
           (Runtime.Prototype { name = "Process" })
           "new" pos
-        |> Runtime.func_of_val
-      in
-      let constructor =
-        match constructor_opt with
-        | None -> Sloth_common.Common.internal_failure __LOC__
-        | Some cons -> cons
       in
       let callback =
         match constructor with
-        | Native { cb; _ } -> cb
-        | User _ -> Sloth_common.Common.internal_failure __LOC__
+        | Func func_t -> (
+            match func_t with
+            | Native { cb; _ } -> fun () -> cb [ l ]
+            | User _ -> Sloth_common.Common.internal_failure __LOC__)
+        | Method (receiver, func_t) -> (
+            match func_t with
+            | User _ -> Sloth_common.Common.internal_failure __LOC__
+            | Native { cb; _ } -> fun () -> cb [ receiver; l ])
+        | _ -> Sloth_common.Common.internal_failure __LOC__
       in
       let proc =
-        match callback [ l ] with
+        match callback () with
         | Error err -> failure ~ctx pos err
         | Ok proc -> proc
       in

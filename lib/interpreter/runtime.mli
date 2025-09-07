@@ -22,6 +22,7 @@ type t =
   | HashMap of (t, t) Stdlib.Hashtbl.t
   | Null
   | Func of function_t
+  | Method of t * function_t
   | Prototype of prototype
   | Process of process
   | ProcessResult of process_result
@@ -56,6 +57,8 @@ val bool_of_val : t -> bool option
 val list_of_val : t -> t Array.t option
 val hashmap_of_val : t -> (t, t) Stdlib.Hashtbl.t option
 val process_of_val : t -> process option
+val process_result_of_val : t -> process_result option
 val func_of_val : t -> function_t option
+val method_of_val : t -> (t * function_t) option
 val file_of_val : t -> file option
 val to_class_name : t -> string

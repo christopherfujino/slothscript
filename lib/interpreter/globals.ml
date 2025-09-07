@@ -89,11 +89,11 @@ let make_globals m src =
       let arg_len = List.length args in
       if not (Int.equal arg_len arity) then
         Error
-          (Printf.sprintf "You passed %d arguments (%s) but %d were expected"
-             arg_len
+          (Printf.sprintf
+             "You passed %d arguments (%s) to %s but %d were expected" arg_len
              (List.fold_left args ~init:"" ~f:(fun msg arg ->
                   msg ^ Runtime.to_s arg ^ ", "))
-             arity)
+             name arity)
       else cb args
     in
     let native =
@@ -194,8 +194,8 @@ let make_globals m src =
           List.iter static_members ~f:(fun name ->
               match name with
               | "new" ->
-                  make_method name 1 cl.static_members (fun args ->
-                      let arg = List.hd_exn args in
+                  make_method name 2 cl.static_members (fun args ->
+                      let arg = List.nth_exn args 1 in
                       match Runtime.list_of_val arg with
                       | None ->
                           Error
@@ -241,12 +241,26 @@ let make_globals m src =
                   Printf.sprintf
                     "`Process` does not implement the static member `%s`" name
                   |> failwith)
+      | "ProcessResult" ->
+          List.iter methods ~f:(fun meth ->
+              match meth with
+              | "stdout" ->
+                  make_method meth 1 cl.instance_members (fun args ->
+                      let proc = List.hd_exn args in
+                      let result =
+                        Runtime.process_result_of_val proc |> Option.value_exn
+                      in
+                      Ok (Runtime.String result.stdout))
+              | _ ->
+                  Printf.sprintf
+                    "`ProcessResult` does not implement the method `%s`" meth
+                  |> failwith)
       | "File" ->
           List.iter methods ~f:(fun meth ->
               match meth with
               | "readString" ->
-                  make_method meth 1 cl.instance_members (fun args ->
-                      let first_arg = List.hd_exn args in
+                  make_method meth 2 cl.instance_members (fun args ->
+                      let first_arg = List.nth_exn args 1 in
                       let Runtime.{ path } =
                         match Runtime.file_of_val first_arg with
                         | Some f -> f
@@ -262,8 +276,8 @@ let make_globals m src =
           List.iter static_members ~f:(fun name ->
               match name with
               | "new" ->
-                  make_method name 1 cl.static_members (fun args ->
-                      let first_arg = List.hd_exn args in
+                  make_method name 2 cl.static_members (fun args ->
+                      let first_arg = List.nth_exn args 1 in
                       (match Runtime.string_of_val first_arg with
                       | None ->
                           Error
