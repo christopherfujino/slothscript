@@ -72,6 +72,7 @@ let exec_proc (proc : Runtime.process) =
 
   (* First is the last in the queue *)
   let last_pid = List.hd_exn pids in
+  (* TODO support non-zero exit codes *)
   match Core_unix.waitpid last_pid with
   | Error _ -> Error "Your subprocess failed with a mysterious(?) error"
   | Ok () ->

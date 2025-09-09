@@ -832,6 +832,11 @@ and interpret_binary ctx lhs rhs op pos =
       let right = cast_to_number rhs in
       (ctx, Either.first @@ Runtime.Bool Float.(left > right))
   | RightArrow ->
+      (*
+        TODO: consider:
+          - directly write a string: `"Hello" -> "hello.txt"`
+          - write output of a proc: `Process.new("uname") -> "os.txt"` (this should be optimized)
+      *)
       let left = cast_to_string ~ctx ~pos lhs in
       let Runtime.{ path } = cast_to_file ~ctx ~pos rhs in
       Out_channel.write_all path ~data:left;

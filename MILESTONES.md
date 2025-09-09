@@ -6,6 +6,8 @@
 - [ ] Stack traces
 - [ ] Language versioning
 - [ ] Standard Library
+  - `$Process.allowNonzero : Bool`
+  - `$Process.copyToStdout : Bool`
 - [ ] Parser errors
 
 ## v0.2 - initial pre-release
