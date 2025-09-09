@@ -2,11 +2,9 @@
 context, with expressions
 
 ### Program
-with ($cwd = "./lib") {
-  with ($cwd = "./common",) {
-    print($cwd)
-  }
-  print($cwd)
+with ($cwd = "./green_specs") {
+  let real_cwd = ("pwd"!).stdout()
+  assert(false, real_cwd)
 }
 
 ### Ast
