@@ -13,7 +13,7 @@ module Make (T : StdlibInputSig) : StdlibSig = struct
 end
 
 module Prod = Make (struct
-  let print_s = print_string
+  let print_s = Printf.printf "%s%!"
 end)
 
 module type TestStdlibSig = sig
