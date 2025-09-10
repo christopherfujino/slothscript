@@ -3,8 +3,8 @@ context, with expressions
 
 ### Program
 with ($cwd = "./green_specs") {
-  let real_cwd = ("pwd"!).stdout()
-  assert(false, real_cwd)
+  let result = "ls" | "sort" | "tail -n 1"!
+  print(result.stdout())
 }
 
 ### Ast
@@ -14,55 +14,59 @@ with ($cwd = "./green_specs") {
       (($cwd
         (String
           ((FullString
-            one
+            ./green_specs
             [POS]))
           [POS])))
       ((ExprStmt
-        (WithExpr
-          (($cwd
-            (String
-              ((FullString
-                two
-                [POS]))
-              [POS]))
-            ($cwd
-              (String
-                ((FullString
-                  three
-                  [POS]))
-                [POS])))
-          ((ExprStmt
-            (WithExpr
-              (($cwd
-                (String
-                  ((FullString
-                    four
-                    [POS]))
-                  [POS]))
-                ($cwd
+        (LetExpr
+          result
+          (UnaryExpr
+            (target
+              (Binary
+                (Binary
                   (String
                     ((FullString
-                      five
+                      ls
                       [POS]))
-                    [POS])))
-              ((ExprStmt
-                (UnaryExpr
-                  (target
-                    (String
-                      ((FullString
-                        pwd
-                        [POS]))
-                      [POS]))
-                  (pos
                     [POS])
-                  (operator
-                    Bang))))
-              [POS])))
-          [POS])))
+                  (String
+                    ((FullString
+                      sort
+                      [POS]))
+                    [POS])
+                  Pipe
+                  [POS])
+                (String
+                  ((FullString
+                    "tail -n 1"
+                    [POS]))
+                  [POS])
+                Pipe
+                [POS]))
+            (pos
+              [POS])
+            (operator
+              Bang))
+          [POS]))
+        (ExprStmt
+          (FuncInvoc
+            (IdRef
+              print
+              [POS])
+            ((FuncInvoc
+              (ObjDeref
+                (IdRef
+                  result
+                  [POS])
+                stdout
+                [POS])
+              ()
+              [POS]))
+            [POS])))
       [POS]))))
 
 ### Stdout
-
+var_reference.sloth
 
 ### Failure
 
