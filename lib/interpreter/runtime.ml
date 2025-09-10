@@ -128,5 +128,9 @@ let hashmap_of_val = function HashMap h -> Some h | _ -> None
 let process_of_val = function Process p -> Some p | _ -> None
 let process_result_of_val = function ProcessResult p -> Some p | _ -> None
 let func_of_val = function Func func -> Some func | _ -> None
-let method_of_val = function Method (t, func_t) -> Some (t, func_t) | _ -> None
+
+let method_of_val = function
+  | Method (t, func_t) -> Some (t, func_t)
+  | _ -> None
+
 let file_of_val = function File f -> Some f | _ -> None

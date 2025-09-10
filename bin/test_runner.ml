@@ -16,7 +16,9 @@ let () =
   let env =
     Compiler.Environment.create spec.program |> Compiler.Environment.populate
   in
-  let globals = Globals.make_globals (module Sloth_stdlib.Make_test ()) spec.program in
+  let globals =
+    Globals.make_globals (module Sloth_stdlib.Make_test ()) spec.program
+  in
 
   let _, ir = Compiler.Main.parse env spec.program in
   let _, _ = Interpret.interpret_prog globals ir in
