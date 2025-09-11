@@ -829,7 +829,8 @@ and interpret_binary globals lhs rhs op pos =
       *)
       let left = cast_to_string ~globals ~pos lhs in
       let Runtime.{ path } = cast_to_file ~globals ~pos rhs in
-      Out_channel.write_all path ~data:left;
+      let module M = (val globals.l) in
+      M.file_write_all path ~data:left;
       (globals, Either.first @@ Runtime.String left)
   | Bang | Not | LeftArrow ->
       (* Not binary ops, unreachable *)

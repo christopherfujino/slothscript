@@ -2,30 +2,31 @@
 
 ## v0.1 - initial version
 - [ ] error handling (`let result = mayError() catch (e) DEFAULT;`)
-- [ ] Mock out process subsystem for unit tests; $cwd
 - [ ] Stack traces
 - [ ] Language versioning
 - [ ] Standard Library
+  - `List` methods
+  - `String` methods
   - `$Process.allowNonzero : Bool`
-  - `$Process.copyToStdout : Bool`
+  - `$Process.mirror : Bool`
+- [ ] CLI args
 - [ ] Parser errors
+- [ ] string escapes
 
 ## v0.2 - initial pre-release
-- [ ] Have optimizer check that:
-    - `return` always occurs in a function definition
-    - `break` and `continue` always occur in loops
-- [ ] CLI args
+- [ ] STDERR
 - [ ] statically link readline
 - [ ] Regular expressions
-- [ ] string escapes
 - [ ] Optional function parameters
-- [ ] List mutation methods
 
 ## v1.0
 - [ ] Test suite
 - [ ] Formatter
 - [ ] LSP server
 - [ ] Security policy
+- [ ] Have optimizer check that:
+    - `return` always occurs in a function definition
+    - `break` and `continue` always occur in loops
 
 ## Stretch goals
 - [ ] Unicode strings
@@ -73,4 +74,5 @@
 - [x] Migrate var declarations and reassignment to expressions
 - [x] First class for loops
 - [x] Break and continue statements
-- [ ] Context variables, with statements
+- [x] Context variables, with statements; $cwd
+- [ ] Mock out processes, files for unit tests

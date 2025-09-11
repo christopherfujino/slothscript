@@ -268,7 +268,7 @@ let make_globals m src =
                         | None -> Sloth_common.Common.internal_failure __LOC__
                       in
                       (* Errors? *)
-                      let contents = In_channel.read_all path in
+                      let contents = M.file_read_all path in
                       Ok (Runtime.String contents))
               | _ ->
                   Printf.sprintf "`File` does not implement the method `%s`"
