@@ -13,6 +13,7 @@ type t = {
 
 let exec_proc (proc : Runtime.process) =
   (* TODO check $echo *)
+  (* Is this right to ALWAYS create a pipe for stderr? *)
   let read_stdout, write_stdout = Core_unix.pipe ~close_on_exec:true () in
   let read_stderr, write_stderr = Core_unix.pipe ~close_on_exec:true () in
   proc.stdout <- write_stdout;
