@@ -13,10 +13,10 @@ module Prod : StdlibSig = struct
 end
 
 module type TestStdlibSig = sig
+  include StdlibSig
+
   val stdout_buffer : string list ref
   val file_system : (string, string) Hashtbl.t
-
-  include StdlibSig
 end
 
 module Make_test () : TestStdlibSig = struct
