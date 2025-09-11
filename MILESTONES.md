@@ -2,10 +2,12 @@
 
 ## v0.1 - initial version
 - [ ] error handling (`let result = mayError() catch (e) DEFAULT;`)
-- [ ] Mock out process subsystem for unit tests
+- [ ] Mock out process subsystem for unit tests; $cwd
 - [ ] Stack traces
 - [ ] Language versioning
 - [ ] Standard Library
+  - `$Process.allowNonzero : Bool`
+  - `$Process.copyToStdout : Bool`
 - [ ] Parser errors
 
 ## v0.2 - initial pre-release
@@ -20,6 +22,7 @@
 - [ ] List mutation methods
 
 ## v1.0
+- [ ] Test suite
 - [ ] Formatter
 - [ ] LSP server
 - [ ] Security policy

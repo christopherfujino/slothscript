@@ -37,6 +37,7 @@ and expr =
   | HashMap of (expr * expr) list * Sloth_common.Position.t
   | Subscript of expr * expr * Sloth_common.Position.t
   | IdRef of string * Sloth_common.Position.t
+  | ContextId of string * Sloth_common.Position.t
   | Equality of expr * expr * bool * Sloth_common.Position.t
   | Binary of expr * expr * Ast.operator * Sloth_common.Position.t
   | FuncInvoc of expr * expr list * Sloth_common.Position.t
@@ -73,6 +74,7 @@ and expr =
       block : stmt list;
       pos : Sloth_common.Position.t;
     }
+  | WithExpr of (string * expr) list * stmt list * Sloth_common.Position.t
 [@@deriving sexp]
 
 and string_parts =
@@ -213,6 +215,13 @@ and optimize_expr (env : Environment.t) (e : Ast.expr) : Environment.t * expr =
           let msg = Printf.sprintf "Undeclared identifier %s" name in
           failure ~env ~pos msg
       | Some _ -> (env, IdRef (name, pos)))
+  | ContextId (name, pos) -> (
+      let name_opt = Environment.find_ctx env name in
+      match name_opt with
+      | None ->
+          let msg = Printf.sprintf "Undeclared identifier %s" name in
+          failure ~env ~pos msg
+      | Some _ -> (env, ContextId (name, pos)))
   | ProtoRef (name, pos) -> (
       (* Validate this class name is defined by our STDLIB *)
       match Environment.find env name with
@@ -287,6 +296,17 @@ and optimize_expr (env : Environment.t) (e : Ast.expr) : Environment.t * expr =
       let inner_env, iteratee = optimize_expr inner_env iteratee in
       let block = optimize_block inner_env block in
       (env, ForInLoop { iterator_name; iteratee; block; pos })
+  | WithExpr (assignments, block, pos) ->
+      let env, assignments =
+        List.fold assignments ~init:(env, []) ~f:(fun (env, prev) assignment ->
+            let name, expr = assignment in
+            let env, expr = optimize_expr env expr in
+            (env, (name, expr) :: prev))
+      in
+      (* We don't need to push empty context frames *)
+      let inner_env = Environment.push_empty env in
+      let block = optimize_block inner_env block in
+      (env, WithExpr (assignments, block, pos))
 
 and optimize_string env s pos =
   let env, contents =

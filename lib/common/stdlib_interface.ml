@@ -5,15 +5,16 @@ type class_t = {
   static_members : string list;
 }
 
-type t = { ids : string list; protos : class_t list }
+type t = { ids : string list; context_ids : string list; protos : class_t list }
 
 let globals =
   {
-    ids = [ "print"; "assert"; "$cwd" ];
+    ids = [ "print"; "assert" ];
+    context_ids = [ "$cwd" ];
     protos =
       [
         { name = "Process"; methods = []; static_members = [ "new" ] };
-        (*{ name = "ProcessResult"; methods = []; static_members = [] }; *)
+        { name = "ProcessResult"; methods = [ "stdout" ]; static_members = [] };
         { name = "Number"; methods = []; static_members = [] };
         {
           name = "File";

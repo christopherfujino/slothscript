@@ -1,17 +1,17 @@
 open Core
 
 val interpret_decl :
-  Context.t -> Compiler.Optimizer.decl -> Context.t * Runtime.t
+  Globals.t -> Compiler.Optimizer.decl -> Globals.t * Runtime.t
 
 val interpret_stmt :
-  Context.t ->
+  Globals.t ->
   Compiler.Optimizer.stmt ->
-  Context.t * (Runtime.t, Compiler.Ast.breaking_type * Runtime.t) Either.t
+  Globals.t * (Runtime.t, Compiler.Ast.breaking_type * Runtime.t) Either.t
 
 val interpret_expr :
-  Context.t ->
+  Globals.t ->
   Compiler.Optimizer.expr ->
-  Context.t * (Runtime.t, Compiler.Ast.breaking_type * Runtime.t) Either.t
+  Globals.t * (Runtime.t, Compiler.Ast.breaking_type * Runtime.t) Either.t
 
 val interpret_prog :
-  Context.t -> Compiler.Optimizer.decl list -> Context.t * Runtime.t
+  Globals.t -> Compiler.Optimizer.decl list -> Globals.t * Runtime.t

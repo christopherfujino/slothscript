@@ -29,6 +29,7 @@ let rec get_opt env id =
 let get env id = match get_opt env id with Some v -> Some v | None -> None
 
 let rec reassign env id v =
+  (* TODO optimize to only use .change *)
   match Hashtbl.find env.values id with
   (* We don't care about the previous value, we just want to replace it *)
   | Some _ ->

@@ -1,0 +1,73 @@
+### Name
+context, with expressions
+
+### Program
+with ($cwd = "./green_specs") {
+  let result = "ls" | "sort" | "tail -n 1"!
+  print(result.stdout())
+}
+
+### Ast
+((StmtDecl
+  (ExprStmt
+    (WithExpr
+      (($cwd
+        (String
+          ((FullString
+            ./green_specs
+            [POS]))
+          [POS])))
+      ((ExprStmt
+        (LetExpr
+          result
+          (UnaryExpr
+            (target
+              (Binary
+                (Binary
+                  (String
+                    ((FullString
+                      ls
+                      [POS]))
+                    [POS])
+                  (String
+                    ((FullString
+                      sort
+                      [POS]))
+                    [POS])
+                  Pipe
+                  [POS])
+                (String
+                  ((FullString
+                    "tail -n 1"
+                    [POS]))
+                  [POS])
+                Pipe
+                [POS]))
+            (pos
+              [POS])
+            (operator
+              Bang))
+          [POS]))
+        (ExprStmt
+          (FuncInvoc
+            (IdRef
+              print
+              [POS])
+            ((FuncInvoc
+              (ObjDeref
+                (IdRef
+                  result
+                  [POS])
+                stdout
+                [POS])
+              ()
+              [POS]))
+            [POS])))
+      [POS]))))
+
+### Stdout
+var_reference.sloth
+
+### Failure
+
+

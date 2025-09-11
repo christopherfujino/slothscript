@@ -22,6 +22,7 @@ type t =
   | HashMap of (t, t) Stdlib.Hashtbl.t
   | Null
   | Func of function_t
+  | Method of t * function_t  (** This is created by Object de-referencing *)
   | Prototype of prototype
   | Process of process
   | ProcessResult of process_result
@@ -57,6 +58,7 @@ let to_class_name = function
   | Bool _ -> "Bool"
   | HashMap _ -> "HashMap"
   | Func _ -> "Function"
+  | Method _ -> "Method"
   | Prototype _ -> "Prototype"
   | Process _ -> "Process"
   | ProcessResult _ -> "ProcessResult"
@@ -99,6 +101,7 @@ let rec to_s t' =
         tbl "{"
       ^ "}"
   | Func _ -> "Func(TODO)"
+  | Method (receiver, _) -> Printf.sprintf "%s.Method" (to_s receiver)
   | Prototype { name } -> Printf.sprintf "Type(%s)" name
   (* TODO we should list out all in the group *)
   | Process { cmd; _ } ->
@@ -123,5 +126,11 @@ let bool_of_val = function Bool b' -> Some b' | _ -> None
 let list_of_val = function List l -> Some l | _ -> None
 let hashmap_of_val = function HashMap h -> Some h | _ -> None
 let process_of_val = function Process p -> Some p | _ -> None
+let process_result_of_val = function ProcessResult p -> Some p | _ -> None
 let func_of_val = function Func func -> Some func | _ -> None
+
+let method_of_val = function
+  | Method (t, func_t) -> Some (t, func_t)
+  | _ -> None
+
 let file_of_val = function File f -> Some f | _ -> None

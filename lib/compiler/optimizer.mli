@@ -24,6 +24,7 @@ and expr =
   | HashMap of (expr * expr) list * Sloth_common.Position.t
   | Subscript of expr * expr * Sloth_common.Position.t
   | IdRef of string * Sloth_common.Position.t
+  | ContextId of string * Sloth_common.Position.t
   | Equality of expr * expr * bool * Sloth_common.Position.t
   | Binary of expr * expr * Ast.operator * Sloth_common.Position.t
   | FuncInvoc of expr * expr list * Sloth_common.Position.t
@@ -60,6 +61,7 @@ and expr =
       block : stmt list;
       pos : Sloth_common.Position.t;
     }
+  | WithExpr of (string * expr) list * stmt list * Sloth_common.Position.t
 [@@deriving sexp]
 
 and string_parts =

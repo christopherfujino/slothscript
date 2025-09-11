@@ -8,6 +8,11 @@
  (modes byte))
 
 (executable
+ (public_name test_one)
+ (name test_one)
+ (libraries sloth_script re core_unix))
+
+(executable
  (public_name train_runner)
  (name train)
  (libraries sloth_script core_unix re))

@@ -42,7 +42,7 @@ let make_test spec =
 
   (* Interpreter *)
   let module Lib = Interpreter.Sloth_stdlib.Make_test () in
-  let ctx = Interpreter.Context.make_ctx (module Lib) spec.program in
+  let ctx = Interpreter.Globals.make_globals (module Lib) spec.program in
   let _ = Interpreter.Interpret.interpret_prog ctx prog in
   let forward_buffer = List.rev !Lib.stdout_buffer in
   let catted_output_opt =
@@ -101,7 +101,7 @@ let make_failing_test spec =
 
     (* Interpreter *)
     let module Lib = Interpreter.Sloth_stdlib.Make_test () in
-    let ctx = Interpreter.Context.make_ctx (module Lib) spec.program in
+    let ctx = Interpreter.Globals.make_globals (module Lib) spec.program in
     let _ = Interpreter.Interpret.interpret_prog ctx prog in
     let cb =
      fun acc cur ->
