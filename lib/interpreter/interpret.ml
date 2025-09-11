@@ -2,10 +2,10 @@ open Core
 open Common
 
 let ( >>= ) =
- fun (ctx, either) cb ->
+ fun (globals, either) cb ->
   Either.value_map either
-    ~second:(fun tuple -> (ctx, Second tuple))
-    ~first:(cb ctx)
+    ~second:(fun tuple -> (globals, Second tuple))
+    ~first:(cb globals)
 
 let failure ~ctx pos msg =
   let pos_s = Sloth_common.Position.string_of_t pos in
@@ -72,18 +72,6 @@ and interpret_stmt (ctx : Globals.t) stmt :
     Globals.t * (Runtime.t, Compiler.Ast.breaking_type * Runtime.t) Either.t =
   (* Globals.t * Compiler.Ast.breaking_type option * Runtime.t = *)
   let open Compiler.Optimizer in
-  let ( >>= ) =
-   fun (ctx, either)
-       (cb :
-         Globals.t ->
-         Runtime.t ->
-         Globals.t
-         * (Runtime.t, Compiler.Ast.breaking_type * Runtime.t) Either.t) ->
-    Either.value_map either
-      ~second:(fun tuple -> (ctx, Second tuple))
-      ~first:(cb ctx)
-  in
-
   match stmt with
   | ExprStmt expr -> interpret_expr ctx expr
   | BreakingStmt (break_type, expr_opt, _) ->
@@ -93,12 +81,6 @@ and interpret_stmt (ctx : Globals.t) stmt :
       >>= fun ctx v -> (ctx, Second (break_type, v))
 
 and interpret_cond ctx cond =
-  let ( >>= ) =
-   fun (ctx, either) cb ->
-    Either.value_map either
-      ~second:(fun tuple -> (ctx, Second tuple))
-      ~first:(cb ctx)
-  in
   match cond with
   | Compiler.Optimizer.IfCont { conditional; block; continuation; pos } -> (
       interpret_expr ctx conditional >>= fun ctx condition ->
@@ -576,12 +558,6 @@ and interpret_block (ctx : Globals.t) (stmts : Compiler.Optimizer.stmt list) :
   traverse_stmts ctx stmts
 
 and interpret_method ~ctx ~pos receiver args method_name =
-  let ( >>= ) =
-   fun (ctx, either) cb ->
-    Either.value_map either
-      ~second:(fun tuple -> (ctx, Second tuple))
-      ~first:(cb ctx)
-  in
   interpret_expr ctx receiver >>= fun ctx receiver ->
   List.fold args ~init:(ctx, First []) ~f:(fun acc cur ->
       acc >>= fun ctx prev ->
@@ -768,11 +744,6 @@ and cast_to_process ~ctx ~pos = function
       @@ Runtime.to_s t'
 
 and interpret_binary ctx lhs rhs op pos =
-  let ( >>= ) =
-   fun (ctx, either) cb ->
-    Either.value_map either ~first:(cb ctx) ~second:(fun tuple ->
-        (ctx, Second tuple))
-  in
   interpret_expr ctx lhs >>= fun ctx lhs ->
   interpret_expr ctx rhs >>= fun ctx rhs ->
   let cast_to_number = function
