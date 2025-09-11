@@ -88,7 +88,10 @@ and interpret_cond globals cond =
       | Some condition_b -> (
           if condition_b then
             let inner_globals =
-              { globals with identifiers = Identifiers.push_empty globals.identifiers }
+              {
+                globals with
+                identifiers = Identifiers.push_empty globals.identifiers;
+              }
             in
             (globals, interpret_block inner_globals block)
           else
@@ -102,7 +105,10 @@ and interpret_cond globals cond =
           |> failure ~globals pos)
   | Compiler.Optimizer.ElseCont (stmts, _) ->
       let inner_globals =
-        { globals with identifiers = Identifiers.push_empty globals.identifiers }
+        {
+          globals with
+          identifiers = Identifiers.push_empty globals.identifiers;
+        }
       in
       (globals, interpret_block inner_globals stmts)
 
@@ -113,7 +119,8 @@ and interpret_expr globals expr :
   | Num (f, _) -> (globals, First (Runtime.Num f))
   | String (parts, _) ->
       let buf = Buffer.create 128 in
-      List.fold parts ~init:(globals, First ()) ~f:(fun (globals, either) part ->
+      List.fold parts ~init:(globals, First ())
+        ~f:(fun (globals, either) part ->
           (globals, either) >>= fun globals _ ->
           match part with
           | FullString (contents, _) ->
@@ -129,7 +136,8 @@ and interpret_expr globals expr :
               let s = Runtime.to_s v in
               Buffer.add_string buf s;
               (globals, First ()))
-      >>= fun globals () -> (globals, First (Runtime.String (Buffer.contents buf)))
+      >>= fun globals () ->
+      (globals, First (Runtime.String (Buffer.contents buf)))
   | Bool (b, _) -> (globals, First (Runtime.Bool b))
   | Null _ -> (globals, First Runtime.Null)
   | List (els, _) ->
@@ -177,7 +185,8 @@ and interpret_expr globals expr :
                 (Runtime.to_s subscript'
                 |> Printf.sprintf
                      "Lists can only be subscripted by Numbers, you used %s"))
-      | Runtime.HashMap tbl -> (globals, First (Stdlib.Hashtbl.find tbl subscript'))
+      | Runtime.HashMap tbl ->
+          (globals, First (Stdlib.Hashtbl.find tbl subscript'))
       | _ ->
           Printf.sprintf "Cannot subscript the value %s"
             (Runtime.to_s receiver')
@@ -283,7 +292,8 @@ and interpret_expr globals expr :
             let arg_expr = List.hd_exn args in
             interpret_expr globals arg_expr >>= fun globals arg ->
             match name with
-            | "File" -> (globals, First (Runtime.File (cast_to_file ~globals ~pos arg)))
+            | "File" ->
+                (globals, First (Runtime.File (cast_to_file ~globals ~pos arg)))
             | _ -> Sloth_common.Common.internal_failure __LOC__)
       | _ as t ->
           Printf.sprintf "Tried to invoke %s, but it is not a function"
@@ -339,7 +349,10 @@ and interpret_expr globals expr :
           (* Unreachable *) Sloth_common.Common.internal_failure __LOC__)
   | DoBlock (block, _) ->
       let inner_globals =
-        { globals with identifiers = Identifiers.push_empty globals.identifiers }
+        {
+          globals with
+          identifiers = Identifiers.push_empty globals.identifiers;
+        }
       in
       (globals, interpret_block inner_globals block)
   | ObjDeref (receiver, target, pos) ->
@@ -440,7 +453,8 @@ and interpret_expr globals expr :
                   let globals, either = interpret_expr globals inc in
                   match either with
                   | First _ ->
-                      (interpret_for_loop [@tailcall]) globals cmp inc bl ret_val
+                      (interpret_for_loop [@tailcall]) globals cmp inc bl
+                        ret_val
                   | Second (bt, _) -> (
                       match bt with
                       | Return ->
@@ -481,7 +495,10 @@ and interpret_expr globals expr :
       (* for <iterator_name> in <iteratee> { <block> } *)
   | ForInLoop { iterator_name; iteratee; block; pos } ->
       let globals =
-        { globals with identifiers = Identifiers.push_empty globals.identifiers }
+        {
+          globals with
+          identifiers = Identifiers.push_empty globals.identifiers;
+        }
       in
       interpret_expr globals iteratee >>= fun globals iteratee ->
       let iteratee_array =
@@ -522,7 +539,7 @@ and interpret_expr globals expr :
             | None ->
                 Printf.sprintf "The context variable named %s is not defined"
                   name
-                |> failure ~globals:globals pos);
+                |> failure ~globals pos);
             (* Process side effects for certain context variables *)
             (match name with
             | "$cwd" ->
@@ -539,8 +556,8 @@ and interpret_expr globals expr :
       (globals, either)
 
 (** You must push an empty env frame on first *)
-and interpret_block (globals : Globals.t) (stmts : Compiler.Optimizer.stmt list) :
-    (Runtime.t, Compiler.Ast.breaking_type * Runtime.t) Either.t =
+and interpret_block (globals : Globals.t) (stmts : Compiler.Optimizer.stmt list)
+    : (Runtime.t, Compiler.Ast.breaking_type * Runtime.t) Either.t =
   (* TODO can't use List.fold_left because we want to handle empty list
      differently *)
   let rec traverse_stmts globals' stmts =
@@ -638,7 +655,8 @@ and is_equal globals is_equality lhs rhs =
                 else
                   match Stdlib.Hashtbl.find_opt rhs key with
                   | None -> false
-                  | Some right_value -> is_equal globals true left_value right_value)
+                  | Some right_value ->
+                      is_equal globals true left_value right_value)
               lhs true
           in
           Bool.(is_deep_equal = is_equality)
@@ -679,7 +697,9 @@ and cast_to_file ~globals ~pos = function
   | Runtime.File f -> f
   | Runtime.String filename -> (
       let intermediate =
-        dereference_object globals (Runtime.Prototype { name = "File" }) "new" pos
+        dereference_object globals
+          (Runtime.Prototype { name = "File" })
+          "new" pos
       in
       let func_opt = Runtime.method_of_val intermediate in
       let receiver, constructor =
