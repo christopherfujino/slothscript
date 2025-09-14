@@ -12,10 +12,10 @@ type t = {
 }
 
 let exec_proc (proc : Runtime.process) =
-  (* TODO check $echo *)
-  (* Is this right to ALWAYS create a pipe for stderr? *)
   let read_stdout, write_stdout = Core_unix.pipe ~close_on_exec:true () in
   let read_stderr, write_stderr = Core_unix.pipe ~close_on_exec:true () in
+  let original_stdout = proc.stdout in
+  let original_stderr = proc.stderr in
   proc.stdout <- write_stdout;
   proc.stderr <- write_stderr;
   let rec get_pids proc =
@@ -52,23 +52,41 @@ let exec_proc (proc : Runtime.process) =
   Core_unix.close write_stdout;
   Core_unix.close write_stderr;
 
-  let buf_size = 2048 in
-  let buf = Bytes.create buf_size in
-  let rec read_from_pipe string_buf chan =
-    let bytes_read = In_channel.input chan ~buf ~pos:0 ~len:buf_size in
-    if bytes_read = 0 then Buffer.contents string_buf
-    else (
-      Buffer.add_subbytes string_buf buf ~pos:0 ~len:bytes_read;
-      (read_from_pipe [@tailcall]) string_buf chan)
+  (*
+    https://github.com/bminor/glibc/blob/dbebe0c4188607991ff2f4deca5707b4afe254f3/libio/stdio.h#L100
+   *)
+  let tee in_channel out_channel_opt =
+    let buf_size = 8192 in
+    let buf = Bytes.create buf_size in
+    let string_buf = Buffer.create buf_size in
+    (* TODO do this concurrently; maybe Core_unix.select? *)
+    let rec tee_inner () =
+      let bytes_read = In_channel.input in_channel ~buf ~pos:0 ~len:buf_size in
+      if bytes_read = 0 then Buffer.contents string_buf
+      else (
+        Buffer.add_subbytes string_buf buf ~pos:0 ~len:bytes_read;
+        (match out_channel_opt with
+        | Some out_channel ->
+            Out_channel.output out_channel ~buf ~pos:0 ~len:bytes_read;
+            Out_channel.flush out_channel
+        | None -> ());
+        (tee_inner [@tailcall]) ())
+    in
+    tee_inner ()
   in
 
+  Core_unix.select
+
+  (* TODO check $Process.tee *)
   let stdout =
-    read_from_pipe (Buffer.create buf_size)
-    @@ Core_unix.in_channel_of_descr read_stdout
+    tee
+      (Core_unix.in_channel_of_descr read_stdout)
+      (Some (Core_unix.out_channel_of_descr original_stdout))
   in
   let stderr =
-    read_from_pipe (Buffer.create buf_size)
-    @@ Core_unix.in_channel_of_descr read_stderr
+    tee
+      (Core_unix.in_channel_of_descr read_stderr)
+      (Some (Core_unix.out_channel_of_descr original_stderr))
   in
 
   (* First is the last in the queue *)
