@@ -38,6 +38,7 @@ let exec_proc (proc : Runtime.process) =
 
           Core_unix.dup2 ~src:proc.stdin ~dst:Core_unix.stdin ();
           Core_unix.dup2 ~src:proc.stdout ~dst:Core_unix.stdout ();
+          Core_unix.dup2 ~src:proc.stderr ~dst:Core_unix.stderr ();
           let _ = Core_unix.exec ~use_path:true ~prog ~argv:proc.cmd () in
           failwith "Unreachable"
       | `In_the_parent pid ->
@@ -75,7 +76,9 @@ let exec_proc (proc : Runtime.process) =
     tee_inner ()
   in
 
-  Core_unix.select
+  (*
+  let foo = Core_unix.select ~read:([read_stdout; read_stderr]) () in
+*)
 
   (* TODO check $Process.tee *)
   let stdout =
