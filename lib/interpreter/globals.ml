@@ -53,44 +53,52 @@ let exec_proc (proc : Runtime.process) =
   Core_unix.close write_stdout;
   Core_unix.close write_stderr;
 
-  (*
-    https://github.com/bminor/glibc/blob/dbebe0c4188607991ff2f4deca5707b4afe254f3/libio/stdio.h#L100
-   *)
-  let tee in_channel out_channel_opt =
-    let buf_size = 8192 in
-    let buf = Bytes.create buf_size in
-    let string_buf = Buffer.create buf_size in
-    (* TODO do this concurrently; maybe Core_unix.select? *)
-    let rec tee_inner () =
-      let bytes_read = In_channel.input in_channel ~buf ~pos:0 ~len:buf_size in
-      if bytes_read = 0 then Buffer.contents string_buf
-      else (
-        Buffer.add_subbytes string_buf buf ~pos:0 ~len:bytes_read;
-        (match out_channel_opt with
-        | Some out_channel ->
-            Out_channel.output out_channel ~buf ~pos:0 ~len:bytes_read;
-            Out_channel.flush out_channel
-        | None -> ());
-        (tee_inner [@tailcall]) ())
-    in
-    tee_inner ()
-  in
+  (* See BUFSIZ in stdio.h *)
+  let bufsiz = 8192 in
 
-  (*
-  let foo = Core_unix.select ~read:([read_stdout; read_stderr]) () in
-*)
+  let stdout_buf = Buffer.create 16 in
+  let stderr_buf = Buffer.create 16 in
+  let rec select input_fds =
+    (* Should this even have a timeout? *)
+    let ready_fds =
+      (Core_unix.select
+         ~timeout:(`After (Time_ns.Span.create ~sec:10 ()))
+         ~except:[] ~write:[]
+         ~read:[ read_stdout; read_stderr ]
+         ())
+        .read
+    in
+    let buf = Bytes.create bufsiz in
+    let stdout_chan = Core_unix.out_channel_of_descr original_stdout in
+    let stderr_chan = Core_unix.out_channel_of_descr original_stderr in
+    let input_fds =
+      List.fold_left ~init:input_fds ready_fds ~f:(fun input_fds fd ->
+          let bytes_read = Core_unix.read ~pos:0 ~len:bufsiz ~buf fd in
+          if bytes_read = 0 then
+            let updated_fds =
+              List.filter input_fds ~f:(fun other_fd ->
+                  not @@ Core_unix.File_descr.equal other_fd fd)
+            in
+            updated_fds
+          else
+            let chan, string_buf =
+              let ( === ) = Core_unix.File_descr.equal in
+              if fd === read_stdout then (stdout_chan, stdout_buf)
+              else if fd === read_stderr then (stderr_chan, stderr_buf)
+              else failwith "Unreachable"
+            in
+            Out_channel.output chan ~buf ~pos:0 ~len:bytes_read;
+            Out_channel.flush chan;
+            Buffer.add_subbytes string_buf buf ~pos:0 ~len:bytes_read;
+            input_fds)
+    in
+    if List.is_empty input_fds then
+      (Buffer.contents stdout_buf, Buffer.contents stderr_buf)
+    else select input_fds
+  in
 
   (* TODO check $Process.tee *)
-  let stdout =
-    tee
-      (Core_unix.in_channel_of_descr read_stdout)
-      (Some (Core_unix.out_channel_of_descr original_stdout))
-  in
-  let stderr =
-    tee
-      (Core_unix.in_channel_of_descr read_stderr)
-      (Some (Core_unix.out_channel_of_descr original_stderr))
-  in
+  let stdout, stderr = select [ read_stdout; read_stderr ] in
 
   (* First is the last in the queue *)
   let last_pid = List.hd_exn pids in
