@@ -84,5 +84,5 @@ var_reference.sloth
       -n
       1))
     (instructions
-      (Stdout
-        foo))))
+      ((Stdout
+        var_reference.sloth)))))

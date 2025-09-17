@@ -24,15 +24,15 @@
 - [ ] Formatter
 - [ ] LSP server
 - [ ] Security policy
-- [ ] Have optimizer check that:
-    - `return` always occurs in a function definition
-    - `break` and `continue` always occur in loops
 
 ## Stretch goals
 - [ ] Unicode strings
 - [ ] Method syntax for hash maps
 - [ ] Pattern matching
 - [ ] Formatter
+- [ ] Have optimizer check that:
+    - `return` always occurs in a function definition
+    - `break` and `continue` always occur in loops
 
 # Done
 
@@ -75,4 +75,4 @@
 - [x] First class for loops
 - [x] Break and continue statements
 - [x] Context variables, with statements; $cwd
-- [ ] Mock out processes, files for unit tests
+- [x] Mock out processes, files for unit tests

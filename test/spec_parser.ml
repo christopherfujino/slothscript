@@ -18,6 +18,10 @@ let serialize path spec =
   print spec.program;
   print "";
 
+  print "### Processes";
+  print spec.proc_spec;
+  print "";
+
   print "### Ast";
   print spec.ast;
   print "";
@@ -28,10 +32,6 @@ let serialize path spec =
 
   print "### Failure";
   (match spec.failure with None -> () | Some f -> print f);
-  print "";
-
-  print "### Processes";
-  print spec.proc_spec;
 
   let chan = Out_channel.create path in
   Buffer.contents buf |> Out_channel.output_string chan;
