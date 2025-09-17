@@ -18,6 +18,7 @@
 - [ ] statically link readline
 - [ ] Regular expressions
 - [ ] Optional function parameters
+- [ ] JSON module
 
 ## v1.0
 - [ ] Test suite
@@ -33,6 +34,7 @@
 - [ ] Have optimizer check that:
     - `return` always occurs in a function definition
     - `break` and `continue` always occur in loops
+- [ ] Yaml module
 
 # Done
 

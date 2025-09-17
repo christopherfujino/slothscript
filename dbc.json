@@ -6,7 +6,8 @@
       "inputs": [
         "test/green_specs/fibonacci.sloth",
         "test/green_specs/var_reference.sloth",
-        "test/green_specs/first_class_func.sloth"
+        "test/green_specs/first_class_func.sloth",
+        "docs/context.md"
       ]
     },
     {

@@ -1,0 +1,8 @@
+### Name
+$scriptDir
+
+### Program
+
+with($cwd = $scriptDir) {
+  print($cwd)
+}
