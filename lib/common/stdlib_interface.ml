@@ -10,7 +10,7 @@ type t = { ids : string list; context_ids : string list; protos : class_t list }
 let globals =
   {
     ids = [ "print"; "assert" ];
-    context_ids = [ "$cwd" ];
+    context_ids = [ "$cwd"; "$scriptDir"; "$script" ];
     protos =
       [
         { name = "Process"; methods = []; static_members = [ "new" ] };

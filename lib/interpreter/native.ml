@@ -1,16 +1,18 @@
 open Core
 
-module type StdlibSig = sig
+module type Sig = sig
   val print_s : string -> unit
   val file_read_all : string -> string
   val file_write_all : string -> data:string -> unit
   val proc_exec : Runtime.process -> (Runtime.t, string) Result.t
+  val chdir : string -> unit
 end
 
-module Prod : StdlibSig = struct
+module Prod : Sig = struct
   let print_s = Printf.printf "%s%!"
   let file_read_all = In_channel.read_all
   let file_write_all = Out_channel.write_all
+  let chdir = Core_unix.chdir
 
   let proc_exec (proc : Runtime.process) =
     let read_stdout, write_stdout = Core_unix.pipe ~close_on_exec:true () in
@@ -112,18 +114,19 @@ module Prod : StdlibSig = struct
         Ok (Runtime.ProcessResult { code = 0; stdout; stderr })
 end
 
-module type TestStdlibSig = sig
-  include StdlibSig
+module type TestSig = sig
+  include Sig
 
   val stdout_buffer : string list ref
   val file_system : (string, string) Hashtbl.t
   val proc_expectations : Mock_process.spec option ref
 end
 
-module Make_test () : TestStdlibSig = struct
+module Make_test () : TestSig = struct
   let stdout_buffer : string list ref = ref []
   let file_system = Hashtbl.create (module String)
   let proc_expectations : Mock_process.spec option ref = ref None
+  let chdir _ = ()
 
   let file_write_all path ~data =
     (* TODO allow over-writing *)

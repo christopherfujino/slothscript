@@ -43,9 +43,11 @@ let make_test spec =
   let proc_spec = Interpreter.Mock_process.spec_of_string spec.proc_spec in
 
   (* Interpreter *)
-  let module Lib = Interpreter.Sloth_stdlib.Make_test () in
+  let module Lib = Interpreter.Native.Make_test () in
   Lib.proc_expectations := Some proc_spec;
-  let ctx = Interpreter.Globals.make_globals (module Lib) spec.program in
+  let ctx =
+    Interpreter.Globals.make_globals (module Lib) spec.program "/parent/unit_test.sloth"
+  in
   let _ = Interpreter.Interpret.interpret_prog ctx prog in
   let forward_buffer = List.rev !Lib.stdout_buffer in
   let catted_output_opt =
@@ -57,7 +59,9 @@ let make_test spec =
   (* Is STDOUT correct? *)
   (match catted_output_opt with
   | None -> assert_equal ~printer spec.stdout_expect ""
-  | Some s -> assert_equal ~printer spec.stdout_expect (String.strip s));
+  | Some s ->
+      assert_equal ~printer spec.stdout_expect (String.strip s)
+        ~msg:"STDOUT did not meet expectations");
 
   (* Is AST pretty? *)
   assert_equal ~pp_diff ~printer spec.ast
@@ -103,8 +107,12 @@ let make_failing_test spec =
     assert_equal ~pp_diff ~printer spec.ast (Optimizer.prog_to_str prog);
 
     (* Interpreter *)
-    let module Lib = Interpreter.Sloth_stdlib.Make_test () in
-    let ctx = Interpreter.Globals.make_globals (module Lib) spec.program in
+    let module Lib = Interpreter.Native.Make_test () in
+    let ctx =
+      Interpreter.Globals.make_globals
+        (module Lib)
+        spec.program "unit_test.sloth"
+    in
     let _ = Interpreter.Interpret.interpret_prog ctx prog in
     let cb =
      fun acc cur ->
