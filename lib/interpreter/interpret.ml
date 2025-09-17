@@ -323,7 +323,7 @@ and interpret_expr globals expr :
       | Bang -> (
           interpret_expr globals target >>= fun globals target ->
           let proc = cast_to_process ~globals ~pos target in
-          let module M = (val globals.l : Sloth_stdlib.StdlibSig) in
+          let module M = (val globals.l : Native.Sig) in
           match M.proc_exec proc with
           | Ok t' -> (globals, First t')
           | Error err -> failure ~globals pos err)
@@ -526,29 +526,41 @@ and interpret_expr globals expr :
               interpret_block temp_globals block) )
       >>= fun _ ret_val -> (globals, First ret_val)
   | WithExpr (assignments, block, pos) ->
+      let module M = (val globals.l) in
       let post_block_hook = ref None in
       let inner_globals =
         { globals with context_ids = Context.push_empty globals.context_ids }
       in
+      (* Process side effects for certain context variables *)
+      let middleware name prev next =
+        match name with
+        | "$cwd" ->
+            (* TODO: catch type error *)
+            Runtime.string_of_val next |> Option.value_exn |> M.chdir;
+            post_block_hook :=
+              Some
+                (fun () ->
+                  Runtime.string_of_val prev |> Option.value_exn |> M.chdir)
+        | _ -> ()
+      in
+
       let _, either =
         List.fold assignments ~init:(inner_globals, First ())
           ~f:(fun prev (name, expr) ->
             prev >>= fun globals () ->
             interpret_expr globals expr >>= fun globals v ->
+            let prev =
+              match Context.get globals.context_ids name with
+              | Some prev -> prev
+              | None ->
+                  Printf.sprintf "The context variable named %s is not defined"
+                    name
+                  |> failure ~globals pos
+            in
+            middleware name prev v;
             (match Context.reassign globals.context_ids name v with
             | Some () -> ()
-            | None ->
-                Printf.sprintf "The context variable named %s is not defined"
-                  name
-                |> failure ~globals pos);
-            (* Process side effects for certain context variables *)
-            (match name with
-            | "$cwd" ->
-                (* TODO: catch type error *)
-                let old_cwd = Sys_unix.getcwd () in
-                Runtime.string_of_val v |> Option.value_exn |> Core_unix.chdir;
-                post_block_hook := Some (fun () -> Core_unix.chdir old_cwd)
-            | _ -> ());
+            | None -> Sloth_common.Common.internal_failure __LOC__);
             (globals, First ()))
         >>= fun globals () -> (globals, interpret_block globals block)
       in
@@ -843,7 +855,7 @@ and cast_to_string ~globals ~pos t' =
   | String s -> s
   | ProcessResult { stdout; _ } -> stdout
   | Process proc -> (
-      let module M = (val globals.l : Sloth_stdlib.StdlibSig) in
+      let module M = (val globals.l : Native.Sig) in
       match M.proc_exec proc with
       | Ok t' -> (cast_to_string [@tailcall]) ~globals ~pos t'
       | Error err -> failure ~globals pos err)

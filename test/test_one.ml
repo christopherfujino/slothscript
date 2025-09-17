@@ -18,8 +18,8 @@ let () =
   in
   let globals =
     Interpreter.Globals.make_globals
-      (module Interpreter.Sloth_stdlib.Prod)
-      spec.program
+      (module Interpreter.Native.Prod)
+      spec.program test
   in
 
   let _, ir = Compiler.Main.parse env spec.program in

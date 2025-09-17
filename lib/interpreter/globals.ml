@@ -1,7 +1,7 @@
 open Core
 
 type t = {
-  l : (module Sloth_stdlib.StdlibSig);
+  l : (module Native.Sig);
   identifiers : Runtime.t Identifiers.t;
   context_ids : Context.t;
   (* We need to store these at the top level so that we can find these for
@@ -9,10 +9,11 @@ type t = {
    can invoke them explicitly. *)
   classes : Runtime.class_lookup;
   src : string;
+  script_path : string;
 }
 
-let make_globals m src =
-  let module M = (val m : Sloth_stdlib.StdlibSig) in
+let make_globals m src script_path =
+  let module M = (val m : Native.Sig) in
   let classes = Hashtbl.create (module String) in
   let identifiers = Identifiers.create () in
   let context_ids = Context.create () in
@@ -94,6 +95,13 @@ let make_globals m src =
         (* TODO does this need to be injected? *)
         let cwd = Sys_unix.getcwd () in
         Context.bind context_ids "$cwd" (Runtime.String cwd) |> Option.value_exn
+    | "$script" ->
+        Context.bind context_ids "$script" (Runtime.String script_path)
+        |> Option.value_exn
+    | "$scriptDir" ->
+        let script_dir = Filename.dirname script_path in
+        Context.bind context_ids "$scriptDir" (Runtime.String script_dir)
+        |> Option.value_exn
     | _ as name ->
         Printf.sprintf
           "TODO: You have not yet implemented the context var %s at %s" name
@@ -238,4 +246,4 @@ let make_globals m src =
       Identifiers.bind identifiers name (Runtime.Prototype { name })
       |> Option.value_exn);
 
-  { l = m; identifiers; src; classes; context_ids }
+  { l = m; identifiers; src; classes; context_ids; script_path }

@@ -67,3 +67,11 @@ print(counter())
 - `null` - `Null` literal singleton
 - `not` - prefix logical NOT operator; `assert(not false)`
 - `with` - bind new (dynamically-scoped) context variables
+
+### Context Variables
+
+|Variable | Type | Description |
+|--|--|--|
+|`$cwd` | `String` | The current working directory|
+|`$script` | `String` | The path to the currently running Sloth script|
+|`$scriptDir` | `String` | The path to the directory containing `$script`|

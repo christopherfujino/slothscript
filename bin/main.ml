@@ -1,8 +1,8 @@
 open Core
 open Interpreter
 
-let wrap_interpret ctx prog =
-  try Some (Interpret.interpret_prog ctx prog)
+let wrap_interpret globals prog =
+  try Some (Interpret.interpret_prog globals prog)
   with Common.Failure msg ->
     (* Ensure stdout is written before error handling *)
     Out_channel.flush stdout;
@@ -24,7 +24,7 @@ let repl () =
       let history_file = Printf.sprintf "%s/.sloth_repl.history" home in
       Readline.init ~history_file ());
 
-  let globals = Globals.make_globals (module Sloth_stdlib.Prod) "" in
+  let globals = Globals.make_globals (module Native.Prod) "" "REPL" in
   let env = Compiler.Environment.create "" |> Compiler.Environment.populate in
   let rec repl_inner globals env =
     let line =
@@ -62,7 +62,7 @@ let interpreter path =
   let env =
     Compiler.Environment.create program |> Compiler.Environment.populate
   in
-  let globals = Globals.make_globals (module Sloth_stdlib.Prod) program in
+  let globals = Globals.make_globals (module Native.Prod) program path in
 
   let opt_ir = wrap_parse env program in
   let code =

@@ -1,0 +1,60 @@
+### Name
+$scriptDir
+
+### Program
+with($cwd = $scriptDir) {
+  assert($script == "/parent/unit_test.sloth")
+  assert($scriptDir == "/parent")
+}
+
+### Processes
+()
+
+### Ast
+((StmtDecl
+  (ExprStmt
+    (WithExpr
+      (($cwd
+        (ContextId
+          $scriptDir
+          [POS])))
+      ((ExprStmt
+        (FuncInvoc
+          (IdRef
+            assert
+            [POS])
+          ((Equality
+            (ContextId
+              $script
+              [POS])
+            (String
+              ((FullString
+                /parent/unit_test.sloth
+                [POS]))
+              [POS])
+            true
+            [POS]))
+          [POS]))
+        (ExprStmt
+          (FuncInvoc
+            (IdRef
+              assert
+              [POS])
+            ((Equality
+              (ContextId
+                $scriptDir
+                [POS])
+              (String
+                ((FullString
+                  /parent
+                  [POS]))
+                [POS])
+              true
+              [POS]))
+            [POS])))
+      [POS]))))
+
+### Stdout
+
+
+### Failure
