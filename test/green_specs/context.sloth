@@ -71,4 +71,18 @@ var_reference.sloth
 ### Failure
 
 ### Processes
-()
+(((cmd
+  (ls))
+  (instructions
+    ()))
+  ((cmd
+    (sort))
+    (instructions
+      ()))
+  ((cmd
+    (tail
+      -n
+      1))
+    (instructions
+      (Stdout
+        foo))))

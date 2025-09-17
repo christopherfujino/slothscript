@@ -136,7 +136,11 @@ module Make_test () : TestStdlibSig = struct
 
   let print_s s = stdout_buffer := s :: !stdout_buffer
 
-  let proc_exec (proc : Runtime.process) =
+  let rec proc_exec (proc : Runtime.process) =
+    (* Start from the end of the list *)
+    (match proc.previous with
+    | Some prev -> let _ = proc_exec prev in ()
+    | None -> ());
     match !proc_expectations |> Option.value_exn with
     | [] ->
         Printf.sprintf "Unexpected proc: %s"

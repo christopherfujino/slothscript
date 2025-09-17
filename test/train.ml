@@ -10,7 +10,8 @@ let ast_needs_update spec canonical_ast =
   else [ "Ugly AST" ]
 
 let process_spec_needs_update spec pretty_proc_spec =
-  if String.equal pretty_proc_spec spec.ast then [] else [ "Ugly proc_spec" ]
+  if String.equal pretty_proc_spec spec.proc_spec then []
+  else [ "Ugly proc_spec" ]
 
 let f spec_dir i arg =
   if i = 0 then
