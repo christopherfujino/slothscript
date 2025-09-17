@@ -4,7 +4,7 @@ open Common
 type state = NotParsing | Parsing of string * string list
 
 let serialize path spec =
-  let buf = Buffer.create 100 in
+  let buf = Buffer.create 255 in
   let print s =
     Buffer.add_string buf s;
     Buffer.add_char buf '\n'
@@ -18,6 +18,10 @@ let serialize path spec =
   print spec.program;
   print "";
 
+  print "### Processes";
+  print spec.proc_spec;
+  print "";
+
   print "### Ast";
   print spec.ast;
   print "";
@@ -28,7 +32,6 @@ let serialize path spec =
 
   print "### Failure";
   (match spec.failure with None -> () | Some f -> print f);
-  print "\n";
 
   let chan = Out_channel.create path in
   Buffer.contents buf |> Out_channel.output_string chan;
@@ -74,6 +77,7 @@ let deserialize path =
   let program_opt_ref = ref None in
   let stdout_expect_opt_ref = ref None in
   let failure_opt_ref = ref None in
+  let processes_opt_ref = ref None in
   List.iter parts ~f:(fun part ->
       let title, lines = part in
       let buf = Buffer.create 2 in
@@ -89,7 +93,7 @@ let deserialize path =
           if String.equal body "" then failure_opt_ref := None
           else failure_opt_ref := Some body
       | "Stdout" -> stdout_expect_opt_ref := Some body
-      | "Foo" (* No-op *) -> ()
+      | "Processes" -> processes_opt_ref := Some body
       | _ -> Printf.sprintf "Huh? %s" title |> failwith);
 
   let ast = Option.value !ast_opt_ref ~default:"()" in
@@ -101,4 +105,5 @@ let deserialize path =
         ~message:(Printf.sprintf "%s is missing a \"program\" field" path);
     stdout_expect = Option.value !stdout_expect_opt_ref ~default:"";
     failure = !failure_opt_ref;
+    proc_spec = Option.value !processes_opt_ref ~default:"()";
   }

@@ -11,74 +11,6 @@ type t = {
   src : string;
 }
 
-let exec_proc (proc : Runtime.process) =
-  (* TODO check $echo *)
-  let read_stdout, write_stdout = Core_unix.pipe ~close_on_exec:true () in
-  let read_stderr, write_stderr = Core_unix.pipe ~close_on_exec:true () in
-  proc.stdout <- write_stdout;
-  proc.stderr <- write_stderr;
-  let rec get_pids proc =
-    let prev_pids =
-      match Runtime.(proc.previous) with
-      | Some prev -> get_pids prev
-      | None -> []
-    in
-    let prog = List.hd_exn Runtime.(proc.cmd) in
-
-    let this_pid =
-      match Core_unix.fork () with
-      | `In_the_child ->
-          Core_unix.close read_stdout;
-          Core_unix.close read_stderr;
-          if phys_equal write_stdout proc.stdout then ()
-          else Core_unix.close write_stdout;
-          if phys_equal write_stderr proc.stderr then ()
-          else Core_unix.close write_stderr;
-
-          Core_unix.dup2 ~src:proc.stdin ~dst:Core_unix.stdin ();
-          Core_unix.dup2 ~src:proc.stdout ~dst:Core_unix.stdout ();
-          let _ = Core_unix.exec ~use_path:true ~prog ~argv:proc.cmd () in
-          failwith "Unreachable"
-      | `In_the_parent pid ->
-          List.iter proc.pipes_to_collect ~f:(fun pipe -> Core_unix.close pipe);
-          pid
-    in
-    this_pid :: prev_pids
-  in
-
-  let pids = get_pids proc in
-
-  Core_unix.close write_stdout;
-  Core_unix.close write_stderr;
-
-  let buf_size = 2048 in
-  let buf = Bytes.create buf_size in
-  let rec read_from_pipe string_buf chan =
-    let bytes_read = In_channel.input chan ~buf ~pos:0 ~len:buf_size in
-    if bytes_read = 0 then Buffer.contents string_buf
-    else (
-      Buffer.add_subbytes string_buf buf ~pos:0 ~len:bytes_read;
-      (read_from_pipe [@tailcall]) string_buf chan)
-  in
-
-  let stdout =
-    read_from_pipe (Buffer.create buf_size)
-    @@ Core_unix.in_channel_of_descr read_stdout
-  in
-  let stderr =
-    read_from_pipe (Buffer.create buf_size)
-    @@ Core_unix.in_channel_of_descr read_stderr
-  in
-
-  (* First is the last in the queue *)
-  let last_pid = List.hd_exn pids in
-  (* TODO support non-zero exit codes *)
-  match Core_unix.waitpid last_pid with
-  | Error _ -> Error "Your subprocess failed with a mysterious(?) error"
-  | Ok () ->
-      (* TODO check all the other pids too *)
-      Ok (Runtime.ProcessResult { code = 0; stdout; stderr })
-
 let make_globals m src =
   let module M = (val m : Sloth_stdlib.StdlibSig) in
   let classes = Hashtbl.create (module String) in
@@ -268,7 +200,7 @@ let make_globals m src =
                         | None -> Sloth_common.Common.internal_failure __LOC__
                       in
                       (* Errors? *)
-                      let contents = In_channel.read_all path in
+                      let contents = M.file_read_all path in
                       Ok (Runtime.String contents))
               | _ ->
                   Printf.sprintf "`File` does not implement the method `%s`"

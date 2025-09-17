@@ -8,7 +8,33 @@ let result1 = "uname" | "tr x s"!
 # Is equivalent to the more verbose...
 let result2 = Process.new(["uname"]) | Process.new(["tr", "x", "s"])!
 
+print(result2.stdout())
+
 # Because the pipe operator has rules for implicit casts
+
+### Processes
+(((cmd
+  (uname))
+  (instructions
+    ()))
+  ((cmd
+    (tr
+      x
+      s))
+    (instructions
+      ((Stdout
+        Linus))))
+  ((cmd
+    (uname))
+    (instructions
+      ()))
+  ((cmd
+    (tr
+      x
+      s))
+    (instructions
+      ((Stdout
+        Linus)))))
 
 ### Ast
 ((StmtDecl
@@ -88,11 +114,25 @@ let result2 = Process.new(["uname"]) | Process.new(["tr", "x", "s"])!
             [POS])
           (operator
             Bang))
+        [POS])))
+  (StmtDecl
+    (ExprStmt
+      (FuncInvoc
+        (IdRef
+          print
+          [POS])
+        ((FuncInvoc
+          (ObjDeref
+            (IdRef
+              result2
+              [POS])
+            stdout
+            [POS])
+          ()
+          [POS]))
         [POS]))))
 
 ### Stdout
-
+Linus
 
 ### Failure
-
-

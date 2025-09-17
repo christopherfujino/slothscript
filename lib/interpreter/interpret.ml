@@ -323,7 +323,8 @@ and interpret_expr globals expr :
       | Bang -> (
           interpret_expr globals target >>= fun globals target ->
           let proc = cast_to_process ~globals ~pos target in
-          match Globals.exec_proc proc with
+          let module M = (val globals.l : Sloth_stdlib.StdlibSig) in
+          match M.proc_exec proc with
           | Ok t' -> (globals, First t')
           | Error err -> failure ~globals pos err)
       | LeftArrow -> (
@@ -829,7 +830,8 @@ and interpret_binary globals lhs rhs op pos =
       *)
       let left = cast_to_string ~globals ~pos lhs in
       let Runtime.{ path } = cast_to_file ~globals ~pos rhs in
-      Out_channel.write_all path ~data:left;
+      let module M = (val globals.l) in
+      M.file_write_all path ~data:left;
       (globals, Either.first @@ Runtime.String left)
   | Bang | Not | LeftArrow ->
       (* Not binary ops, unreachable *)
@@ -841,7 +843,8 @@ and cast_to_string ~globals ~pos t' =
   | String s -> s
   | ProcessResult { stdout; _ } -> stdout
   | Process proc -> (
-      match Globals.exec_proc proc with
+      let module M = (val globals.l : Sloth_stdlib.StdlibSig) in
+      match M.proc_exec proc with
       | Ok t' -> (cast_to_string [@tailcall]) ~globals ~pos t'
       | Error err -> failure ~globals pos err)
   | _ as t' ->
