@@ -6,7 +6,7 @@ type test_spec = {
   ast : string;
   stdout_expect : string;
   failure : string option;
-  proc_spec : string option;
+  proc_spec : string;
 }
 
 let find_child_specs dir_path =

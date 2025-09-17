@@ -40,9 +40,7 @@ let make_test spec =
   in
   let _, prog = Main.parse env spec.program in
 
-  let proc_spec = match spec.proc_spec with
-  | Some spec -> Interpreter.Mock_process.spec_of_string spec
-  | None -> Interpreter.Mock_process.empty_spec in
+  let proc_spec = Interpreter.Mock_process.spec_of_string spec.proc_spec in
 
   (* Interpreter *)
   let module Lib = Interpreter.Sloth_stdlib.Make_test () in

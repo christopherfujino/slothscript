@@ -4,7 +4,7 @@ open Common
 type state = NotParsing | Parsing of string * string list
 
 let serialize path spec =
-  let buf = Buffer.create 100 in
+  let buf = Buffer.create 255 in
   let print s =
     Buffer.add_string buf s;
     Buffer.add_char buf '\n'
@@ -28,7 +28,10 @@ let serialize path spec =
 
   print "### Failure";
   (match spec.failure with None -> () | Some f -> print f);
-  print "\n";
+  print "";
+
+  print "### Processes";
+  print spec.proc_spec;
 
   let chan = Out_channel.create path in
   Buffer.contents buf |> Out_channel.output_string chan;
@@ -102,5 +105,5 @@ let deserialize path =
         ~message:(Printf.sprintf "%s is missing a \"program\" field" path);
     stdout_expect = Option.value !stdout_expect_opt_ref ~default:"";
     failure = !failure_opt_ref;
-    proc_spec = !processes_opt_ref;
+    proc_spec = Option.value !processes_opt_ref ~default:"()";
   }
