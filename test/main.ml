@@ -40,8 +40,13 @@ let make_test spec =
   in
   let _, prog = Main.parse env spec.program in
 
+  let proc_spec = match spec.proc_spec with
+  | Some spec -> Interpreter.Mock_process.spec_of_string spec
+  | None -> Interpreter.Mock_process.empty_spec in
+
   (* Interpreter *)
   let module Lib = Interpreter.Sloth_stdlib.Make_test () in
+  Lib.proc_expectations := Some proc_spec;
   let ctx = Interpreter.Globals.make_globals (module Lib) spec.program in
   let _ = Interpreter.Interpret.interpret_prog ctx prog in
   let forward_buffer = List.rev !Lib.stdout_buffer in

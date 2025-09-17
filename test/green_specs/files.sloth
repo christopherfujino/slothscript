@@ -92,3 +92,12 @@ assert(contents == "Linux\n", contents)
 ### Failure
 
 
+### Processes
+(
+  (
+    (cmd (uname))
+    (instructions (
+      (Stdout "Linux\n")
+    ))
+  )
+)

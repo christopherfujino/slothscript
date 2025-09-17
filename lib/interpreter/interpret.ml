@@ -323,7 +323,8 @@ and interpret_expr globals expr :
       | Bang -> (
           interpret_expr globals target >>= fun globals target ->
           let proc = cast_to_process ~globals ~pos target in
-          match Globals.exec_proc proc with
+          let module M = (val globals.l : Sloth_stdlib.StdlibSig) in
+          match M.proc_exec proc with
           | Ok t' -> (globals, First t')
           | Error err -> failure ~globals pos err)
       | LeftArrow -> (
@@ -842,7 +843,8 @@ and cast_to_string ~globals ~pos t' =
   | String s -> s
   | ProcessResult { stdout; _ } -> stdout
   | Process proc -> (
-      match Globals.exec_proc proc with
+      let module M = (val globals.l : Sloth_stdlib.StdlibSig) in
+      match M.proc_exec proc with
       | Ok t' -> (cast_to_string [@tailcall]) ~globals ~pos t'
       | Error err -> failure ~globals pos err)
   | _ as t' ->
