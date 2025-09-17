@@ -14,6 +14,8 @@ print("} This should be a vanilla string literal");
 print("The answer is: ${f()}.");
 print("${one}, ${two}, ${three}.");
 
+Print("start ${ "middle" } end.")
+
 ### Ast
 ((FuncDecl
   (name
