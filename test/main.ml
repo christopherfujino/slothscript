@@ -46,7 +46,9 @@ let make_test spec =
   let module Lib = Interpreter.Native.Make_test () in
   Lib.proc_expectations := Some proc_spec;
   let ctx =
-    Interpreter.Globals.make_globals (module Lib) spec.program "/parent/unit_test.sloth"
+    Interpreter.Globals.make_globals
+      (module Lib)
+      spec.program "/parent/unit_test.sloth"
   in
   let _ = Interpreter.Interpret.interpret_prog ctx prog in
   let forward_buffer = List.rev !Lib.stdout_buffer in

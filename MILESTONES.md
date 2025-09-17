@@ -78,3 +78,4 @@
 - [x] Break and continue statements
 - [x] Context variables, with statements; $cwd
 - [x] Mock out processes, files for unit tests
+- [x] $script & $scriptDir
