@@ -14,7 +14,7 @@ print("} This should be a vanilla string literal");
 print("The answer is: ${f()}.");
 print("${one}, ${two}, ${three}.");
 
-print("start ${ "middle" } end.")
+print("nested ${ "string ${ "interpolation" }" }")
 
 ### Processes
 ()
@@ -131,16 +131,25 @@ print("start ${ "middle" } end.")
           [POS])
         ((String
           ((StartStringInterp
-            "start "
+            "nested "
             [POS])
             (ExpressionStringInterp
               (String
-                ((FullString
-                  middle
-                  [POS]))
+                ((StartStringInterp
+                  "string "
+                  [POS])
+                  (ExpressionStringInterp
+                    (String
+                      ((FullString
+                        interpolation
+                        [POS]))
+                      [POS]))
+                  (EndStringInterp
+                    ""
+                    [POS]))
                 [POS]))
             (EndStringInterp
-              " end."
+              ""
               [POS]))
           [POS]))
         [POS]))))
@@ -149,6 +158,6 @@ print("start ${ "middle" } end.")
 } This should be a vanilla string literal
 The answer is: 42.
 1, 2, 3.
-start middle end.
+nested string interpolation
 
 ### Failure
