@@ -54,4 +54,7 @@ message
 ### Failure
 
 ### Processes
-()
+((
+  (cmd (./configure))
+  (instructions ())
+  ))

@@ -43,8 +43,7 @@ let make_test spec =
   let proc_spec = Interpreter.Mock_process.spec_of_string spec.proc_spec in
 
   (* Interpreter *)
-  let module Lib = Interpreter.Native.Make_test () in
-  Lib.proc_expectations := Some proc_spec;
+  let module Lib = Interpreter.Native.make_test proc_spec in
   let ctx =
     Interpreter.Globals.make_globals
       (module Lib)

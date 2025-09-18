@@ -8,7 +8,7 @@ exception ParseError of string
 (* fka Optimizer.Failure *)
 exception CompileError of string
 
-exception RuntimeFailure of string
+exception RuntimeError of string
 
 let internal_failure loc =
   raise @@ InternalFailure (Printf.sprintf "Internal failure at %s" loc)
@@ -23,6 +23,6 @@ let wrap_error cb =
   | CompileError msg ->
     let msg = Printf.sprintf "CompileError:\n\n%s" msg in
     Error msg
-  | RuntimeFailure msg ->
+  | RuntimeError msg ->
     let msg = Printf.sprintf "RuntimeError:\n\n%s" msg in
     Error msg

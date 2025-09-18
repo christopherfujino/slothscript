@@ -28,6 +28,7 @@ type t =
   | ProcessResult of process_result
   | File of file
   | FileHandle
+  | Directory of string
 
 (* TODO make this hidden *)
 and function_t =
@@ -61,4 +62,5 @@ val process_result_of_val : t -> process_result option
 val func_of_val : t -> function_t option
 val method_of_val : t -> (t * function_t) option
 val file_of_val : t -> file option
+val directory_of_val : t -> string option
 val to_class_name : t -> string
