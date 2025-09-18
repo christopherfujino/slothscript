@@ -21,5 +21,6 @@ let globals =
           methods = [ "readString" ];
           static_members = [ "new" ];
         };
+        { name = "String"; methods = [ "trim" ]; static_members = [] };
       ];
   }

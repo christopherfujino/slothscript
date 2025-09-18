@@ -196,6 +196,20 @@ let make_globals m src script_path =
                   Printf.sprintf
                     "`ProcessResult` does not implement the method `%s`" meth
                   |> failwith)
+      | "String" ->
+          List.iter methods ~f:(fun meth ->
+              match meth with
+              | "trim" ->
+                  make_method meth 1 cl.instance_members (fun args ->
+                      let str = List.hd_exn args in
+                      let ocaml_string =
+                        Runtime.string_of_val str |> Option.value_exn
+                      in
+                      Ok (Runtime.String (String.strip ocaml_string)))
+              | _ ->
+                  Printf.sprintf
+                    "`ProcessResult` does not implement the method `%s`" meth
+                  |> failwith)
       | "File" ->
           List.iter methods ~f:(fun meth ->
               match meth with

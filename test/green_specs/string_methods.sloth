@@ -1,0 +1,41 @@
+### Name
+string methods
+
+### Program
+assert(" foo ".trim() == "foo")
+
+### Processes
+()
+
+### Ast
+((StmtDecl
+  (ExprStmt
+    (FuncInvoc
+      (IdRef
+        assert
+        [POS])
+      ((Equality
+        (FuncInvoc
+          (ObjDeref
+            (String
+              ((FullString
+                " foo "
+                [POS]))
+              [POS])
+            trim
+            [POS])
+          ()
+          [POS])
+        (String
+          ((FullString
+            foo
+            [POS]))
+          [POS])
+        true
+        [POS]))
+      [POS]))))
+
+### Stdout
+
+
+### Failure
