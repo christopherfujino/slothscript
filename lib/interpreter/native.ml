@@ -7,6 +7,7 @@ module type Sig = sig
   val proc_exec : Runtime.process -> (Runtime.t, string) Result.t
   val chdir : string -> unit
   val directory_exists : string -> bool
+  val mkdir : string -> unit
 end
 
 module Prod : Sig = struct
@@ -14,6 +15,7 @@ module Prod : Sig = struct
   let file_read_all = In_channel.read_all
   let file_write_all = Out_channel.write_all
   let chdir = Core_unix.chdir
+  let mkdir = Core_unix.mkdir ~perm:0o775
 
   let directory_exists path =
     match Sys_unix.is_directory ~follow_symlinks:true path with
@@ -138,6 +140,13 @@ module Make_test () : TestSig = struct
   let file_system = Hashtbl.create (module String)
   let proc_expectations : Mock_process.spec option ref = ref None
   let chdir _ = ()
+
+  let mkdir path =
+    match Hashtbl.add file_system ~key:path ~data:Directory with
+    | `Ok -> ()
+    | `Duplicate ->
+        Printf.sprintf "EEXIST: the directory %s already exists" path
+        |> failwith
 
   let directory_exists path =
     let entity_opt = Hashtbl.find file_system path in

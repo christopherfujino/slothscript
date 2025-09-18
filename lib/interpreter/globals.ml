@@ -234,6 +234,21 @@ let make_globals m src script_path =
                       in
                       let b = M.directory_exists path in
                       Ok (Runtime.Bool b))
+              | "create" ->
+                  make_method meth 1 cl.instance_members (fun args ->
+                      let path =
+                        List.hd_exn args |> Runtime.directory_of_val
+                        |> Option.value_exn
+                      in
+                      M.mkdir path;
+                      Ok (Runtime.Null))
+              | "path" ->
+                  make_method meth 1 cl.instance_members (fun args ->
+                      let path =
+                        List.hd_exn args |> Runtime.directory_of_val
+                        |> Option.value_exn
+                      in
+                      Ok (Runtime.String path))
               | _ ->
                   Printf.sprintf "`Directory does not implement the method `%s`"
                     meth

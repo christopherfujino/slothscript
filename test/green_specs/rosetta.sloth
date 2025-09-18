@@ -2,59 +2,132 @@
 rosetta program
 
 ### Program
-
 with ($cwd = $scriptDir) {
   "./configure"!
 
   let buildDir = Directory("${$cwd}/build")
   if not buildDir.exists() { buildDir.create() }
 
-  with ($cwd = buildDir) {
+  with ($cwd = buildDir.path()) {
     "cmake .."!
   }
 }
 
+### Processes
+(((cmd
+  (./configure))
+  (instructions
+    ()))
+  ((cmd
+    (cmake
+      ..))
+    (instructions
+      ())))
+
 ### Ast
 ((StmtDecl
   (ExprStmt
-    (FuncInvoc
-      (FuncExpr
-        (parameters
-          ((arg
-            [POS])))
-        (block
-          ((ExprStmt
-            (LetExpr
-              private
-              (IdRef
-                arg
-                [POS])
+    (WithExpr
+      (($cwd
+        (ContextId
+          $scriptDir
+          [POS])))
+      ((ExprStmt
+        (UnaryExpr
+          (target
+            (String
+              ((FullString
+                ./configure
+                [POS]))
               [POS]))
-            (ExprStmt
-              (FuncInvoc
-                (IdRef
-                  print
+          (pos
+            [POS])
+          (operator
+            Bang)))
+        (ExprStmt
+          (LetExpr
+            buildDir
+            (FuncInvoc
+              (IdRef
+                Directory
+                [POS])
+              ((String
+                ((StartStringInterp
+                  ""
                   [POS])
-                ((IdRef
-                  private
-                  [POS]))
-                [POS]))))
-        (pos
-          [POS]))
-      ((String
-        ((FullString
-          message
-          [POS]))
-        [POS]))
+                  (ExpressionStringInterp
+                    (ContextId
+                      $cwd
+                      [POS]))
+                  (EndStringInterp
+                    /build
+                    [POS]))
+                [POS]))
+              [POS])
+            [POS]))
+        (ExprStmt
+          (IfExpr
+            (IfCont
+              (conditional
+                (UnaryExpr
+                  (target
+                    (FuncInvoc
+                      (ObjDeref
+                        (IdRef
+                          buildDir
+                          [POS])
+                        exists
+                        [POS])
+                      ()
+                      [POS]))
+                  (pos
+                    [POS])
+                  (operator
+                    Not)))
+              (block
+                ((ExprStmt
+                  (FuncInvoc
+                    (ObjDeref
+                      (IdRef
+                        buildDir
+                        [POS])
+                      create
+                      [POS])
+                    ()
+                    [POS]))))
+              (continuation
+                ())
+              (pos
+                [POS]))
+            [POS]))
+        (ExprStmt
+          (WithExpr
+            (($cwd
+              (FuncInvoc
+                (ObjDeref
+                  (IdRef
+                    buildDir
+                    [POS])
+                  path
+                  [POS])
+                ()
+                [POS])))
+            ((ExprStmt
+              (UnaryExpr
+                (target
+                  (String
+                    ((FullString
+                      "cmake .."
+                      [POS]))
+                    [POS]))
+                (pos
+                  [POS])
+                (operator
+                  Bang))))
+            [POS])))
       [POS]))))
 
 ### Stdout
-message
+
 
 ### Failure
-
-### Processes
-((
-  (cmd (./configure))
-  (instructions ())
-  ))

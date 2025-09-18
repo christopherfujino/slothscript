@@ -7,6 +7,7 @@ module type Sig = sig
   val proc_exec : Runtime.process -> (Runtime.t, string) Result.t
   val chdir : string -> unit
   val directory_exists : string -> bool
+  val mkdir : string -> unit
 end
 
 module Prod : Sig

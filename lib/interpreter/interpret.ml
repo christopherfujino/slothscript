@@ -287,7 +287,8 @@ and interpret_expr globals expr :
               (* I think this is unreachable... *)
               Sloth_common.Common.internal_failure __LOC__)
       | Prototype { name } -> (
-          if not @@ phys_equal (List.length args) 1 then Printf.sprintf "TODO %s" __LOC__ |> failwith
+          if not @@ phys_equal (List.length args) 1 then
+            Printf.sprintf "TODO %s" __LOC__ |> failwith
           else
             let arg_expr = List.hd_exn args in
             interpret_expr globals arg_expr >>= fun globals arg ->
@@ -540,7 +541,14 @@ and interpret_expr globals expr :
         match name with
         | "$cwd" ->
             (* TODO: catch type error *)
-            Runtime.string_of_val next |> Option.value_exn |> M.chdir;
+            (match Runtime.string_of_val next with
+            | Some s -> M.chdir s
+            | None ->
+                failure ~globals pos
+                @@ Printf.sprintf
+                     "cannot assign %s to $cwd, it must be a String"
+                @@ Runtime.to_s next);
+
             post_block_hook :=
               Some
                 (fun () ->
