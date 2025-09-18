@@ -1,5 +1,3 @@
-exception Failure of string
-
 type decl = private
   | FuncDecl of {
       name : string;

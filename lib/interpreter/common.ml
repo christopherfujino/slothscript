@@ -1,7 +1,5 @@
 open Core
 
-exception Failure of string
-
 type quote_state = None | Single | Double
 
 let shell_like_escape input =

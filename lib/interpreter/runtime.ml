@@ -28,6 +28,7 @@ type t =
   | ProcessResult of process_result
   | File of file
   | FileHandle
+  | Directory of string
 
 (* TODO add positions for error messages *)
 and function_t =
@@ -64,6 +65,7 @@ let to_class_name = function
   | ProcessResult _ -> "ProcessResult"
   | File _ -> "File"
   | FileHandle -> "FileHandle"
+  | Directory _ -> "Directory"
 
 let rec to_s t' =
   let stringify_list l =
@@ -113,6 +115,7 @@ let rec to_s t' =
         stdout stderr
   | File { path } -> Printf.sprintf "File(path=%s)" path
   | FileHandle -> "FileHandle(TODO)"
+  | Directory path -> Printf.sprintf "Directory(path=%s)" path
 
 let num_of_val = function Num f -> Some f | _ -> None
 let string_of_val = function String s -> Some s | _ -> None
@@ -134,3 +137,4 @@ let method_of_val = function
   | _ -> None
 
 let file_of_val = function File f -> Some f | _ -> None
+let directory_of_val = function Directory p -> Some p | _ -> None

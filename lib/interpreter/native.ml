@@ -6,6 +6,8 @@ module type Sig = sig
   val file_write_all : string -> data:string -> unit
   val proc_exec : Runtime.process -> (Runtime.t, string) Result.t
   val chdir : string -> unit
+  val directory_exists : string -> bool
+  val mkdir : string -> unit
 end
 
 module Prod : Sig = struct
@@ -13,6 +15,13 @@ module Prod : Sig = struct
   let file_read_all = In_channel.read_all
   let file_write_all = Out_channel.write_all
   let chdir = Core_unix.chdir
+  let mkdir = Core_unix.mkdir ~perm:0o775
+
+  let directory_exists path =
+    match Sys_unix.is_directory ~follow_symlinks:true path with
+    | `Yes -> true
+    | `No -> false
+    | `Unknown -> false (* TODO? *)
 
   let proc_exec (proc : Runtime.process) =
     let read_stdout, write_stdout = Core_unix.pipe ~close_on_exec:true () in
@@ -117,25 +126,46 @@ end
 module type TestSig = sig
   include Sig
 
+  type fs_entity = File of string | Directory
+
   val stdout_buffer : string list ref
-  val file_system : (string, string) Hashtbl.t
+  val file_system : (string, fs_entity) Hashtbl.t
   val proc_expectations : Mock_process.spec option ref
 end
 
 module Make_test () : TestSig = struct
+  type fs_entity = File of string | Directory
+
   let stdout_buffer : string list ref = ref []
   let file_system = Hashtbl.create (module String)
   let proc_expectations : Mock_process.spec option ref = ref None
   let chdir _ = ()
 
+  let mkdir path =
+    match Hashtbl.add file_system ~key:path ~data:Directory with
+    | `Ok -> ()
+    | `Duplicate ->
+        Printf.sprintf "EEXIST: the directory %s already exists" path
+        |> failwith
+
+  let directory_exists path =
+    let entity_opt = Hashtbl.find file_system path in
+    match entity_opt with
+    | None -> false
+    | Some entity -> ( match entity with File _ -> false | Directory -> true)
+
   let file_write_all path ~data =
     (* TODO allow over-writing *)
-    Hashtbl.add_exn file_system ~key:path ~data
+    Hashtbl.add_exn file_system ~key:path ~data:(File data)
 
   let file_read_all path =
     (* TODO: resolve relative paths *)
-    Hashtbl.find file_system path
-    |> Option.value_exn ~message:(Printf.sprintf "Error no entity \"%s\"" path)
+    let file =
+      Hashtbl.find file_system path
+      |> Option.value_exn
+           ~message:(Printf.sprintf "Error no entity \"%s\"" path)
+    in
+    match file with File data -> data | _ -> failwith "TODO"
 
   let print_s s = stdout_buffer := s :: !stdout_buffer
 
@@ -174,3 +204,8 @@ module Make_test () : TestSig = struct
         | _ -> Error "TODO")
   (* TODO interpret the instructions *)
 end
+
+let make_test spec =
+  let module M = Make_test () in
+  M.proc_expectations := Some spec;
+  (module M : TestSig)

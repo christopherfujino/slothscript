@@ -9,15 +9,16 @@
   - `String` methods
   - `$Process.allowNonzero : Bool`
   - `$Process.mirror : Bool`
+  - `$env`
 - [ ] CLI args
 - [ ] Parser errors
 - [ ] string escapes
 
 ## v0.2 - initial pre-release
 - [ ] STDERR
+- [ ] Optional function parameters
 - [ ] statically link readline
 - [ ] Regular expressions
-- [ ] Optional function parameters
 - [ ] JSON module
 
 ## v1.0

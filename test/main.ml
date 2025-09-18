@@ -43,8 +43,8 @@ let make_test spec =
   let proc_spec = Interpreter.Mock_process.spec_of_string spec.proc_spec in
 
   (* Interpreter *)
-  let module Lib = Interpreter.Native.Make_test () in
-  Lib.proc_expectations := Some proc_spec;
+  let lib = Interpreter.Native.make_test proc_spec in
+  let module Lib = (val lib) in
   let ctx =
     Interpreter.Globals.make_globals
       (module Lib)
@@ -109,7 +109,9 @@ let make_failing_test spec =
     assert_equal ~pp_diff ~printer spec.ast (Optimizer.prog_to_str prog);
 
     (* Interpreter *)
-    let module Lib = Interpreter.Native.Make_test () in
+    let proc_spec = Interpreter.Mock_process.spec_of_string spec.proc_spec in
+    let lib = Interpreter.Native.make_test proc_spec in
+    let module Lib = (val lib) in
     let ctx =
       Interpreter.Globals.make_globals
         (module Lib)
@@ -130,11 +132,9 @@ let make_failing_test spec =
     in
     assert_failure msg
   with
-  | Optimizer.Failure msg -> handle_failure msg "Compiler.Optimizer.Failure"
-  | Interpreter.Common.Failure msg ->
-      handle_failure msg "Interpreter.Common.Failure"
-  | Compiler.Common.ParserFailure msg ->
-      handle_failure msg "Compiler.Common.ParserFailure"
+  | Sloth_common.Common.CompileError msg -> handle_failure msg "CompileError"
+  | Sloth_common.Common.RuntimeError msg -> handle_failure msg "RuntimeError"
+  | Sloth_common.Common.ParseError msg -> handle_failure msg "ParseError"
 
 let tests =
   "slothscript"

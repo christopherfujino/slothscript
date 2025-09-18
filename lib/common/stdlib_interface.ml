@@ -21,6 +21,11 @@ let globals =
           methods = [ "readString" ];
           static_members = [ "new" ];
         };
+        {
+          name = "Directory";
+          methods = [ "exists"; "create"; "path" ];
+          static_members = [];
+        };
         { name = "String"; methods = [ "trim" ]; static_members = [] };
       ];
   }

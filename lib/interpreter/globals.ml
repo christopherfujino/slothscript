@@ -195,6 +195,13 @@ let make_globals m src script_path =
               | _ ->
                   Printf.sprintf
                     "`ProcessResult` does not implement the method `%s`" meth
+                  |> failwith);
+          List.iter static_members ~f:(fun name ->
+              match name with
+              | _ ->
+                  Printf.sprintf
+                    "`ProcessResult` does not implement the static member `%s`"
+                    name
                   |> failwith)
       | "String" ->
           List.iter methods ~f:(fun meth ->
@@ -207,8 +214,50 @@ let make_globals m src script_path =
                       in
                       Ok (Runtime.String (String.strip ocaml_string)))
               | _ ->
+                  Printf.sprintf "`String` does not implement the method `%s`"
+                    meth
+                  |> failwith);
+          List.iter static_members ~f:(fun name ->
+              match name with
+              | _ ->
                   Printf.sprintf
-                    "`ProcessResult` does not implement the method `%s`" meth
+                    "`String` does not implement the static member `%s`" name
+                  |> failwith)
+      | "Directory" ->
+          List.iter methods ~f:(fun meth ->
+              match meth with
+              | "exists" ->
+                  make_method meth 1 cl.instance_members (fun args ->
+                      let path =
+                        List.hd_exn args |> Runtime.directory_of_val
+                        |> Option.value_exn
+                      in
+                      let b = M.directory_exists path in
+                      Ok (Runtime.Bool b))
+              | "create" ->
+                  make_method meth 1 cl.instance_members (fun args ->
+                      let path =
+                        List.hd_exn args |> Runtime.directory_of_val
+                        |> Option.value_exn
+                      in
+                      M.mkdir path;
+                      Ok Runtime.Null)
+              | "path" ->
+                  make_method meth 1 cl.instance_members (fun args ->
+                      let path =
+                        List.hd_exn args |> Runtime.directory_of_val
+                        |> Option.value_exn
+                      in
+                      Ok (Runtime.String path))
+              | _ ->
+                  Printf.sprintf "`Directory does not implement the method `%s`"
+                    meth
+                  |> failwith);
+          List.iter static_members ~f:(fun name ->
+              match name with
+              | _ ->
+                  Printf.sprintf
+                    "`Directory` does not implement the static member `%s`" name
                   |> failwith)
       | "File" ->
           List.iter methods ~f:(fun meth ->

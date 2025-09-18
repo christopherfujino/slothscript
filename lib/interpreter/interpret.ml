@@ -23,7 +23,7 @@ let failure ~globals pos msg =
         |> Stdlib.Printexc.raw_backtrace_to_string)
     else msg1
   in
-  raise (Failure msg2)
+  raise (Sloth_common.Common.RuntimeError msg2)
 
 let rec interpret_prog globals prog =
   match prog with
@@ -287,13 +287,18 @@ and interpret_expr globals expr :
               (* I think this is unreachable... *)
               Sloth_common.Common.internal_failure __LOC__)
       | Prototype { name } -> (
-          if not @@ phys_equal (List.length args) 1 then failwith "TODO"
+          if not @@ phys_equal (List.length args) 1 then
+            Printf.sprintf "TODO %s" __LOC__ |> failwith
           else
             let arg_expr = List.hd_exn args in
             interpret_expr globals arg_expr >>= fun globals arg ->
             match name with
             | "File" ->
                 (globals, First (Runtime.File (cast_to_file ~globals ~pos arg)))
+            | "Directory" ->
+                ( globals,
+                  First
+                    (Runtime.Directory (cast_to_directory ~globals ~pos arg)) )
             | _ -> Sloth_common.Common.internal_failure __LOC__)
       | _ as t ->
           Printf.sprintf "Tried to invoke %s, but it is not a function"
@@ -536,7 +541,14 @@ and interpret_expr globals expr :
         match name with
         | "$cwd" ->
             (* TODO: catch type error *)
-            Runtime.string_of_val next |> Option.value_exn |> M.chdir;
+            (match Runtime.string_of_val next with
+            | Some s -> M.chdir s
+            | None ->
+                failure ~globals pos
+                @@ Printf.sprintf
+                     "cannot assign %s to $cwd, it must be a String"
+                @@ Runtime.to_s next);
+
             post_block_hook :=
               Some
                 (fun () ->
@@ -706,13 +718,24 @@ and dereference_object globals receiver target pos =
           | Func func_t -> Method (receiver, func_t)
           | _ -> failure ~globals pos "TODO"))
 
+and cast_to_directory ~globals ~pos = function
+  | Runtime.String path -> path
+  | _ as t' ->
+      failure ~globals pos
+      @@ Printf.sprintf "There is no way to cast from a %s to a Directory"
+      @@ Runtime.to_s t'
+
 and cast_to_file ~globals ~pos = function
   | Runtime.File f -> f
-  | Runtime.String filename -> (
+  | Runtime.String path ->
+      { path }
+      (*
       let intermediate =
         dereference_object globals
           (Runtime.Prototype { name = "File" })
-          "new" pos
+          (* Make this "cast" *)
+          "new"
+          pos
       in
       let func_opt = Runtime.method_of_val intermediate in
       let receiver, constructor =
@@ -732,9 +755,10 @@ and cast_to_file ~globals ~pos = function
       match callback [ receiver; Runtime.String filename ] with
       | Ok file -> (cast_to_file [@tailcall]) ~globals ~pos file
       | Error err -> failure ~globals pos err)
+  *)
   | _ as t' ->
       failure ~globals pos
-      @@ Printf.sprintf "Expected a File but got a %s"
+      @@ Printf.sprintf "There is no way to cast from a %s to a File"
       @@ Runtime.to_s t'
 
 and cast_to_process ~globals ~pos = function

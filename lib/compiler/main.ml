@@ -10,23 +10,24 @@ let parse env line =
             (* TODO Interpolate lexer position *)
             (Printexc.get_backtrace ())
         in
-        raise (Common.ParserFailure msg)
+        raise (Sloth_common.Common.ParseError msg)
     | Lexer.SyntaxError (msg, pos) ->
         let pos = Sloth_common.Position.t_of_lexing_position pos in
         let msg =
           Printf.sprintf "Lexer error: Unknown token `%s`\n\n%s\n" msg
             (Sloth_common.Position.summarize pos line)
         in
-        raise (Common.ParserFailure msg)
+        raise (Sloth_common.Common.ParseError msg)
   in
   try Optimizer.optimize_prog env decls
-  with Optimizer.Failure msg ->
+  with Sloth_common.Common.CompileError msg ->
+    (* TODO is this needed? *)
     let msg =
       (* This has a summary, so it will already describe it as an
        "Optimizer error" *)
       Printf.sprintf "%s\n\n%s" msg (Printexc.get_backtrace ())
     in
-    raise (Common.ParserFailure msg)
+    raise (Sloth_common.Common.CompileError msg)
 
 (* TODO figure out how to derive this *)
 let to_s token =
