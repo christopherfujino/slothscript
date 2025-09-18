@@ -66,6 +66,7 @@ rule private_read last_token state =
         | _ -> (private_read [@tailcall]) last_token state lexbuf
     )
   }
+  (* TODO remove copy pasta setting last_token, we do that in the filter *)
   (* Literals *)
   | "true" { let token = TRUE lexbuf.lex_curr_p in last_token := Some token; token }
   | "false" { let token = FALSE lexbuf.lex_curr_p in last_token := Some token; token }
@@ -110,19 +111,22 @@ rule private_read last_token state =
   | '#' { read_comment lexbuf.lex_curr_p lexbuf }
   | '|' { let token = PIPE lexbuf.lex_curr_p in last_token := Some token; token }
   | '.' { let token = DOT lexbuf.lex_curr_p in last_token := Some token; token }
+
+  (* String literals *)
   | '\'' {
     let token = read_string '\'' (Buffer.create string_buffer_size) lexbuf.lex_curr_p state lexbuf in
     last_token := Some token;
     token
   }
   | '"' {
+    state := NotInterpolating :: !state;
     let token = read_string '"' (Buffer.create string_buffer_size) lexbuf.lex_curr_p state lexbuf in
     last_token := Some token;
     token
   }
   | '{' { let token = LCURLY lexbuf.lex_curr_p in last_token := Some token; token}
   | '}' {
-    let token = (match !state with
+    let token = (match List.hd !state with
     | NotInterpolating -> RCURLY lexbuf.lex_curr_p
     | Interpolating -> (read_string '"' (Buffer.create string_buffer_size) lexbuf.lex_curr_p state lexbuf)) in
     last_token := Some token;
@@ -174,21 +178,37 @@ and read_comment pos =
 and read_string delimiter buf pos state =
   (* TODO implement escapes *)
   parse
-  | '\'' as cur_char {
+  | '"' as cur_char {
     if cur_char = delimiter then
-      STRING_FULL (Buffer.contents buf, pos)
+      let hd = List.hd !state in
+      (* Pop off top of the stack *)
+      state := List.tl !state;
+      (match hd with
+      | NotInterpolating -> STRING_FULL (Buffer.contents buf, pos)
+      | Interpolating -> (
+        STRING_END (Buffer.contents buf, pos)
+      ))
     else
       (Buffer.add_char buf cur_char;
       (read_string[@tailcall]) delimiter buf pos state lexbuf)
   }
-  | '"' as cur_char {
+  | "${" {
+    if delimiter = '\'' then (
+      Buffer.add_string buf (Lexing.lexeme lexbuf);
+      (read_string[@tailcall]) delimiter buf pos state lexbuf)
+    else
+      let hd = List.hd !state in
+        (match hd with
+        | NotInterpolating -> (
+          (* Change HEAD value *)
+          state := (Interpolating :: List.tl !state);
+          STRING_START (Buffer.contents buf, pos)
+        )
+        | Interpolating -> STRING_MIDDLE (Buffer.contents buf, pos))
+  }
+  | '\'' as cur_char {
     if cur_char = delimiter then
-      (match !state with
-      | NotInterpolating -> STRING_FULL (Buffer.contents buf, pos)
-      | Interpolating -> (
-        state := NotInterpolating;
-        STRING_END (Buffer.contents buf, pos)
-      ))
+      STRING_FULL (Buffer.contents buf, pos)
     else
       (Buffer.add_char buf cur_char;
       (read_string[@tailcall]) delimiter buf pos state lexbuf)
@@ -238,14 +258,6 @@ and read_string delimiter buf pos state =
       (read_string[@tailcall]) delimiter buf pos state lexbuf
     )
   }
-  | "${" {
-    match !state with
-    | NotInterpolating -> (
-      state := Interpolating;
-      STRING_START (Buffer.contents buf, pos)
-    )
-    | Interpolating -> STRING_MIDDLE (Buffer.contents buf, pos)
-  }
   | '$' {
     Buffer.add_char buf '$';
     (read_string[@tailcall]) delimiter buf pos state lexbuf
@@ -264,7 +276,7 @@ and read_string delimiter buf pos state =
   let make_lex_filter () =
     let r = ref None in
     let last_token = ref None in
-    let state = ref NotInterpolating in
+    let state = ref [ NotInterpolating ] in
     let should_spit_eof = ref False in
     (* insert semicolon before EOF *)
     let rec filter = fun buf ->
