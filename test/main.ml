@@ -132,12 +132,9 @@ let make_failing_test spec =
     in
     assert_failure msg
   with
-  | Sloth_common.Common.CompileError msg ->
-      handle_failure msg "CompileError"
-  | Sloth_common.Common.RuntimeError msg ->
-      handle_failure msg "RuntimeError"
-  | Sloth_common.Common.ParseError msg ->
-      handle_failure msg "ParseError"
+  | Sloth_common.Common.CompileError msg -> handle_failure msg "CompileError"
+  | Sloth_common.Common.RuntimeError msg -> handle_failure msg "RuntimeError"
+  | Sloth_common.Common.ParseError msg -> handle_failure msg "ParseError"
 
 let tests =
   "slothscript"

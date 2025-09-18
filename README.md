@@ -11,11 +11,6 @@ func fib(n) {
 print(fib(20))
 ```
 
-## Features
-
-- built-in JSON parsing, including primitives for JSON objects (called
-`HashMap`), arrays (called `List`), numbers, booleans, and strings.
-
 ## Dependencies
 
 Only tested on Linux, should support macOS, but Windows is explicitly not

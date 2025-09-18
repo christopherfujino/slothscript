@@ -241,7 +241,7 @@ let make_globals m src script_path =
                         |> Option.value_exn
                       in
                       M.mkdir path;
-                      Ok (Runtime.Null))
+                      Ok Runtime.Null)
               | "path" ->
                   make_method meth 1 cl.instance_members (fun args ->
                       let path =
