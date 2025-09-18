@@ -2,11 +2,17 @@
 rosetta program
 
 ### Program
-(func(arg) {
-  let private = arg;
 
-  print(private);
-})("message");
+with ($cwd = $scriptDir) {
+  "./configure"!
+
+  let buildDir = Directory("${$cwd}/build")
+  if not buildDir.exists() { buildDir.create() }
+
+  with ($cwd = buildDir) {
+    "cmake .."!
+  }
+}
 
 ### Ast
 ((StmtDecl

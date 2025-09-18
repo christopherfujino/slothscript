@@ -130,10 +130,10 @@ let make_failing_test spec =
     in
     assert_failure msg
   with
-  | Optimizer.Failure msg -> handle_failure msg "Compiler.Optimizer.Failure"
-  | Interpreter.Common.Failure msg ->
-      handle_failure msg "Interpreter.Common.Failure"
-  | Compiler.Common.ParserFailure msg ->
+  | Sloth_common.Common.CompileError msg -> handle_failure msg "Compiler.Optimizer.Failure"
+  | Sloth_common.Common.RuntimeFailure msg ->
+      handle_failure msg "RuntimeFailure"
+  | Sloth_common.Common.ParseError msg ->
       handle_failure msg "Compiler.Common.ParserFailure"
 
 let tests =

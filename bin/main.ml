@@ -1,14 +1,20 @@
 open Core
 open Interpreter
+open Sloth_common.Common
 
+(*
 let wrap_interpret globals prog =
-  try Some (Interpret.interpret_prog globals prog)
-  with Common.Failure msg ->
-    (* Ensure stdout is written before error handling *)
-    Out_channel.flush stdout;
-    (* We probably don't need a stacktrace from Interpret.interpret_prog to here *)
-    Printf.fprintf stderr "\n%s%!" msg;
-    None
+  match
+    Sloth_common.Common.wrap_error (fun () ->
+        Interpret.interpret_prog globals prog)
+  with
+  | Ok v -> Some v
+  | Error msg ->
+      (* Ensure stdout is written before error handling *)
+      Out_channel.flush stdout;
+      (* We probably don't need a stacktrace from Interpret.interpret_prog to here *)
+      Printf.fprintf stderr "\n%s%!" msg;
+      None
 
 let wrap_parse env line =
   try Some (Compiler.Main.parse env line)
@@ -16,6 +22,9 @@ let wrap_parse env line =
     (* We probably don't need a stacktrace from Compiler.Main.parse to here *)
     Printf.fprintf stderr "%s%!" msg;
     None
+*)
+
+let ( let* ) r f = Result.bind r ~f
 
 let repl () =
   (match Sys.getenv "HOME" with
@@ -41,17 +50,21 @@ let repl () =
     let env = Compiler.Environment.update_src env line in
     let globals = Globals.{ globals with src = line } in
 
-    let ( let* ) o f = Option.bind o ~f in
-
-    let opt =
-      let* env, prog = wrap_parse env line in
-      let* globals, v = wrap_interpret globals prog in
-      Runtime.to_s v |> print_endline;
-      Option.return (globals, env)
+    let res =
+      let* env, prog = wrap_error (fun () -> Compiler.Main.parse env line) in
+      let* globals, v =
+        wrap_error (fun () -> Interpreter.Interpret.interpret_prog globals prog)
+      in
+      print_endline @@ Runtime.to_s v;
+      Result.return (globals, env)
     in
 
     let globals, env =
-      match opt with Some (ctx, env) -> (ctx, env) | None -> (globals, env)
+      match res with
+      | Ok (ctx, env) -> (ctx, env)
+      | Error msg ->
+          Printf.fprintf stderr "%s\n%!" msg;
+          (globals, env)
     in
     (repl_inner [@tailcall]) globals env
   in
@@ -64,13 +77,21 @@ let interpreter path =
   in
   let globals = Globals.make_globals (module Native.Prod) program path in
 
-  let opt_ir = wrap_parse env program in
+  let result =
+    let* _, prog = wrap_error (fun () -> Compiler.Main.parse env program) in
+    let* _ =
+      wrap_error (fun () -> Interpreter.Interpret.interpret_prog globals prog)
+    in
+    Result.return 0
+  in
+
   let code =
-    match opt_ir with
-    | None -> 1
-    | Some (_, ir) -> (
-        let opt = wrap_interpret globals ir in
-        match opt with Some _ -> 0 | None -> 1)
+    match result with
+    | Error msg ->
+        Out_channel.flush stdout;
+        Printf.eprintf "%s" msg;
+        1
+    | Ok code -> code
   in
   exit code
 

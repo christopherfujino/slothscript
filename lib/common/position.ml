@@ -23,7 +23,8 @@ let summarize t' src =
   let line = List.nth_exn lines (t'.pos_lnum - 1) in
   Buffer.add_string buffer line;
   Buffer.add_char buffer '\n';
-  indent_str buffer t'.pos_cnum "^";
+  let line_col = t'.pos_cnum - t'.pos_bol in
+  indent_str buffer line_col "^";
   Buffer.contents buffer
 
 let sexp_of_t _ = Sexp.Atom "[POS]"

@@ -1,7 +1,5 @@
 open Core
 
-exception Failure of string
-
 let failure ~env ~pos msg =
   let pos_msg = Sloth_common.Position.string_of_t pos in
   let msg2 =
@@ -9,7 +7,7 @@ let failure ~env ~pos msg =
       (Sloth_common.Position.summarize pos (Environment.src env))
       pos_msg msg
   in
-  raise (Failure msg2)
+  raise (Sloth_common.Common.CompileError msg2)
 
 type prog = decl list
 
