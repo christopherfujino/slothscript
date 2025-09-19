@@ -281,7 +281,7 @@ expr7:
     FuncInvoc (e, [], pos)
   }
   | s = subscript { s }
-  | e = expr8; pos = DOT; meth = ID {
+  | e = expr7; pos = DOT; meth = ID {
     let (name, _) = meth in
     let pos = Sloth_common.Position.t_of_lexing_position pos in
     ObjDeref (e, name, pos)

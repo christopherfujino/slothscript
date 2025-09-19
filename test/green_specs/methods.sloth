@@ -1,0 +1,56 @@
+### Name
+methods
+
+### Program
+let s = " foo ".trim().trim()
+assert(s == "foo")
+
+### Processes
+()
+
+### Ast
+((StmtDecl
+  (ExprStmt
+    (LetExpr
+      s
+      (FuncInvoc
+        (ObjDeref
+          (FuncInvoc
+            (ObjDeref
+              (String
+                ((FullString
+                  " foo "
+                  [POS]))
+                [POS])
+              trim
+              [POS])
+            ()
+            [POS])
+          trim
+          [POS])
+        ()
+        [POS])
+      [POS])))
+  (StmtDecl
+    (ExprStmt
+      (FuncInvoc
+        (IdRef
+          assert
+          [POS])
+        ((Equality
+          (IdRef
+            s
+            [POS])
+          (String
+            ((FullString
+              foo
+              [POS]))
+            [POS])
+          true
+          [POS]))
+        [POS]))))
+
+### Stdout
+
+
+### Failure
