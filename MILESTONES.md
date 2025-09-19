@@ -9,7 +9,6 @@
   - `String` methods
   - `$Process.allowNonzero : Bool`
   - `$Process.mirror : Bool`
-  - `$env`
 - [ ] CLI args
 - [ ] Parser errors
 - [ ] string escapes
@@ -80,3 +79,4 @@
 - [x] Context variables, with statements; $cwd
 - [x] Mock out processes, files for unit tests
 - [x] $script & $scriptDir
+- [x] $env
