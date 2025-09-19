@@ -32,7 +32,7 @@ get:
 
 .PHONY: list-errors
 list-errors:
-	menhir --list-errors lib/compiler/parser.mly
+	dune exec -- menhir --unused-token COMMENT --list-errors lib/compiler/parser.mly | less
 
 .PHONY: explain
 explain: clean
