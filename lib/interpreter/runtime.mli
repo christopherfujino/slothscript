@@ -64,3 +64,5 @@ val method_of_val : t -> (t * function_t) option
 val file_of_val : t -> file option
 val directory_of_val : t -> string option
 val to_class_name : t -> string
+val val_of_env : string array -> t
+val env_of_val : t -> string array option
