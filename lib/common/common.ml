@@ -3,6 +3,8 @@
 exception InternalFailure of string
 (** This exception denotes a bug, and should be reported by users. *)
 
+exception LexerError of string
+
 exception ParseError of string
 
 (* fka Optimizer.Failure *)
@@ -14,6 +16,9 @@ let internal_failure loc =
 
 let wrap_error cb =
   try Ok (cb ()) with
+  | LexerError msg ->
+      let msg = Printf.sprintf "LexerError:\n\n%s" msg in
+      Error msg
   | ParseError msg ->
       let msg = Printf.sprintf "ParseError:\n\n%s" msg in
       Error msg

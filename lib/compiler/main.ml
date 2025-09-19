@@ -17,7 +17,7 @@ let parse env line =
           Printf.sprintf "Lexer error: Unknown token `%s`\n\n%s\n" msg
             (Sloth_common.Position.summarize pos line)
         in
-        raise (Sloth_common.Common.ParseError msg)
+        raise (Sloth_common.Common.LexerError msg)
   in
   try Optimizer.optimize_prog env decls
   with Sloth_common.Common.CompileError msg ->
