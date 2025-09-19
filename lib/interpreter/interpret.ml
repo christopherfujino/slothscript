@@ -329,7 +329,12 @@ and interpret_expr globals expr :
           interpret_expr globals target >>= fun globals target ->
           let proc = cast_to_process ~globals ~pos target in
           let module M = (val globals.l : Native.Sig) in
-          match M.proc_exec proc with
+          (* TODO add error handling *)
+          let env =
+            Context.get globals.context_ids "$env"
+            |> Option.value_exn |> Runtime.env_of_val |> Option.value_exn
+          in
+          match M.proc_exec proc env with
           | Ok t' -> (globals, First t')
           | Error err -> failure ~globals pos err)
       | LeftArrow -> (
@@ -880,7 +885,17 @@ and cast_to_string ~globals ~pos t' =
   | ProcessResult { stdout; _ } -> stdout
   | Process proc -> (
       let module M = (val globals.l : Native.Sig) in
-      match M.proc_exec proc with
+      let env_val =
+        Context.get globals.context_ids "$env" |> Option.value_exn
+      in
+      let env =
+        match Runtime.env_of_val env_val with
+        | Some env -> env
+        | None ->
+            Printf.sprintf "$env is the wrong type: %s" @@ Runtime.to_s env_val
+            |> failure ~globals pos
+      in
+      match M.proc_exec proc env with
       | Ok t' -> (cast_to_string [@tailcall]) ~globals ~pos t'
       | Error err -> failure ~globals pos err)
   | _ as t' ->

@@ -25,7 +25,7 @@ let () =
         let m = Interpreter.Native.make_test proc_spec in
         let module M = (val m) in
         let globals =
-          Interpreter.Globals.make_globals (module M) spec.program test
+          Interpreter.Globals.make_globals (module M) spec.program test ~env:[|"UNIT_TEST=true"|]
         in
 
         let _, ir = Compiler.Main.parse env spec.program in

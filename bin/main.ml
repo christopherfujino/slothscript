@@ -2,28 +2,6 @@ open Core
 open Interpreter
 open Sloth_common.Common
 
-(*
-let wrap_interpret globals prog =
-  match
-    Sloth_common.Common.wrap_error (fun () ->
-        Interpret.interpret_prog globals prog)
-  with
-  | Ok v -> Some v
-  | Error msg ->
-      (* Ensure stdout is written before error handling *)
-      Out_channel.flush stdout;
-      (* We probably don't need a stacktrace from Interpret.interpret_prog to here *)
-      Printf.fprintf stderr "\n%s%!" msg;
-      None
-
-let wrap_parse env line =
-  try Some (Compiler.Main.parse env line)
-  with Compiler.Common.ParserFailure msg ->
-    (* We probably don't need a stacktrace from Compiler.Main.parse to here *)
-    Printf.fprintf stderr "%s%!" msg;
-    None
-*)
-
 let ( let* ) r f = Result.bind r ~f
 
 let repl () =
@@ -33,7 +11,7 @@ let repl () =
       let history_file = Printf.sprintf "%s/.sloth_repl.history" home in
       Readline.init ~history_file ());
 
-  let globals = Globals.make_globals (module Native.Prod) "" "REPL" in
+  let globals = Globals.make_globals (module Native.Prod) "" "REPL" ~env:(Core_unix.environment ()) in
   let env = Compiler.Environment.create "" |> Compiler.Environment.populate in
   let rec repl_inner globals env =
     let line =
@@ -75,7 +53,7 @@ let interpreter path =
   let env =
     Compiler.Environment.create program |> Compiler.Environment.populate
   in
-  let globals = Globals.make_globals (module Native.Prod) program path in
+  let globals = Globals.make_globals (module Native.Prod) program path ~env:(Core_unix.environment ()) in
 
   let result =
     let* _, prog = wrap_error (fun () -> Compiler.Main.parse env program) in

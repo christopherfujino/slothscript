@@ -97,11 +97,17 @@ let rec to_s t' =
   | Null -> "null"
   | Bool b -> if b then "true" else "false"
   | HashMap tbl ->
-      Stdlib.Hashtbl.fold
-        (fun key data acc ->
-          Printf.sprintf "%s%s: %s," acc (to_s key) (to_s data))
-        tbl "{"
-      ^ "}"
+      let s, _ =
+        Stdlib.Hashtbl.fold
+          (fun key data (acc, is_first) ->
+            let key = to_s key in
+            let data = to_s data in
+            ( (if is_first then Printf.sprintf "%s%s: %s" acc key data
+               else Printf.sprintf ", %s%s: %s" acc key data),
+              false ))
+          tbl ("{", true)
+      in
+      s ^ "}"
   | Func _ -> "Func(TODO)"
   | Method (receiver, _) -> Printf.sprintf "%s.Method" (to_s receiver)
   | Prototype { name } -> Printf.sprintf "Type(%s)" name
@@ -138,3 +144,36 @@ let method_of_val = function
 
 let file_of_val = function File f -> Some f | _ -> None
 let directory_of_val = function Directory p -> Some p | _ -> None
+
+let val_of_env strings =
+  let len = Array.length strings * 2 in
+  let map = Stdlib.Hashtbl.create len in
+  Array.iter strings ~f:(fun string ->
+      let parts = String.split string ~on:'=' in
+      match parts with
+      | key :: tail ->
+          let value = List.fold tail ~init:"" ~f:( ^ ) in
+          Stdlib.Hashtbl.add map (String key) (String value)
+      | _ ->
+          Printf.sprintf "failure to parse the env value \"%s\"" string
+          |> failwith);
+  HashMap map
+
+let env_of_val = function
+  | HashMap map ->
+      let len = Stdlib.Hashtbl.length map in
+      let arr = Array.create ~len "" in
+      let _ =
+        Stdlib.Hashtbl.fold
+          (fun key v i ->
+            let key = string_of_val key |> Option.value_exn in
+            (* TODO: user could have done this *)
+            let v = string_of_val v |> Option.value_exn in
+
+            let str = Printf.sprintf "%s=%s" key v in
+            Array.set arr i str;
+            i + 1)
+          map 0
+      in
+      Some arr
+  | _ -> None

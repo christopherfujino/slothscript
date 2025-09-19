@@ -4,7 +4,7 @@ module type Sig = sig
   val print_s : string -> unit
   val file_read_all : string -> string
   val file_write_all : string -> data:string -> unit
-  val proc_exec : Runtime.process -> (Runtime.t, string) Result.t
+  val proc_exec : Runtime.process -> string array -> (Runtime.t, string) Result.t
   val chdir : string -> unit
   val directory_exists : string -> bool
   val mkdir : string -> unit
@@ -23,7 +23,7 @@ module Prod : Sig = struct
     | `No -> false
     | `Unknown -> false (* TODO? *)
 
-  let proc_exec (proc : Runtime.process) =
+  let proc_exec (proc : Runtime.process) env =
     let read_stdout, write_stdout = Core_unix.pipe ~close_on_exec:true () in
     let read_stderr, write_stderr = Core_unix.pipe ~close_on_exec:true () in
     let original_stdout = proc.stdout in
@@ -51,7 +51,8 @@ module Prod : Sig = struct
             Core_unix.dup2 ~src:proc.stdin ~dst:Core_unix.stdin ();
             Core_unix.dup2 ~src:proc.stdout ~dst:Core_unix.stdout ();
             Core_unix.dup2 ~src:proc.stderr ~dst:Core_unix.stderr ();
-            let _ = Core_unix.exec ~use_path:true ~prog ~argv:proc.cmd () in
+            let env = List.of_array env in (* TODO delete *)
+            let _ = Core_unix.exec ~env:(`Replace_raw env) ~use_path:true ~prog ~argv:proc.cmd () in
             failwith "Unreachable"
         | `In_the_parent pid ->
             List.iter proc.pipes_to_collect ~f:(fun pipe ->
@@ -169,11 +170,11 @@ module Make_test () : TestSig = struct
 
   let print_s s = stdout_buffer := s :: !stdout_buffer
 
-  let rec proc_exec (proc : Runtime.process) =
+  let rec proc_exec (proc : Runtime.process) env =
     (* Start from the end of the list *)
     (match proc.previous with
     | Some prev ->
-        let _ = proc_exec prev in
+        let _ = proc_exec prev env in
         ()
     | None -> ());
     match !proc_expectations |> Option.value_exn with

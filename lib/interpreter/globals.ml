@@ -12,7 +12,7 @@ type t = {
   script_path : string;
 }
 
-let make_globals m src script_path =
+let make_globals m src script_path ~env =
   let module M = (val m : Native.Sig) in
   let classes = Hashtbl.create (module String) in
   let identifiers = Identifiers.create () in
@@ -95,6 +95,9 @@ let make_globals m src script_path =
         (* TODO does this need to be injected? *)
         let cwd = Sys_unix.getcwd () in
         Context.bind context_ids "$cwd" (Runtime.String cwd) |> Option.value_exn
+    | "$env" ->
+        Context.bind context_ids "$env" (Runtime.val_of_env env)
+        |> Option.value_exn
     | "$script" ->
         Context.bind context_ids "$script" (Runtime.String script_path)
         |> Option.value_exn
@@ -202,6 +205,41 @@ let make_globals m src script_path =
                   Printf.sprintf
                     "`ProcessResult` does not implement the static member `%s`"
                     name
+                  |> failwith)
+      | "HashMap" ->
+          List.iter methods ~f:(fun meth ->
+              match meth with
+              | "merge" ->
+                  make_method meth 2 cl.instance_members (fun args ->
+                      let left =
+                        List.hd_exn args |> Runtime.hashmap_of_val
+                        |> Option.value_exn
+                      in
+                      let right_v = List.nth_exn args 1 in
+                      let right =
+                        match Runtime.hashmap_of_val right_v with
+                        | Some right -> right
+                        | None ->
+                            Printf.sprintf
+                              "HashMap.merge() expects an argument of type \
+                               `HashMap`, but received %s"
+                              (Runtime.to_s right_v)
+                            |> failwith
+                      in
+                      let left_copy = Stdlib.Hashtbl.copy left in
+                      Stdlib.Hashtbl.iter
+                        (fun key v -> Stdlib.Hashtbl.add left_copy key v)
+                        right;
+                      Ok (Runtime.HashMap left_copy))
+              | _ ->
+                  Printf.sprintf "`HashMap` does not implement the method `%s`"
+                    meth
+                  |> failwith);
+          List.iter static_members ~f:(fun name ->
+              match name with
+              | _ ->
+                  Printf.sprintf
+                    "`HashMap` does not implement the static member `%s`" name
                   |> failwith)
       | "String" ->
           List.iter methods ~f:(fun meth ->
