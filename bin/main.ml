@@ -11,7 +11,11 @@ let repl () =
       let history_file = Printf.sprintf "%s/.sloth_repl.history" home in
       Readline.init ~history_file ());
 
-  let globals = Globals.make_globals (module Native.Prod) "" "REPL" ~env:(Core_unix.environment ()) in
+  let globals =
+    Globals.make_globals
+      (module Native.Prod)
+      "" "REPL" ~env:(Core_unix.environment ())
+  in
   let env = Compiler.Environment.create "" |> Compiler.Environment.populate in
   let rec repl_inner globals env =
     let line =
@@ -53,7 +57,11 @@ let interpreter path =
   let env =
     Compiler.Environment.create program |> Compiler.Environment.populate
   in
-  let globals = Globals.make_globals (module Native.Prod) program path ~env:(Core_unix.environment ()) in
+  let globals =
+    Globals.make_globals
+      (module Native.Prod)
+      program path ~env:(Core_unix.environment ())
+  in
 
   let result =
     let* _, prog = wrap_error (fun () -> Compiler.Main.parse env program) in
