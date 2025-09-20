@@ -1,0 +1,14 @@
+### Name
+Runtime type error
+
+### Program
+assert("true")
+
+### Ast
+((StmtDecl(ExprStmt(FuncInvoc(IdRef assert [POS])((String((FullString true [POS]))[POS]))[POS]))))
+
+### Failure
+[1:6] Runtime error: The first argument to assert() must be a Bool value, got true
+
+1 | assert("true")
+          ^

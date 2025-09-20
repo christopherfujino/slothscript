@@ -86,9 +86,9 @@ let make_test spec =
 let make_failing_test spec =
   let open Compiler in
   spec.name >:: fun _ ->
-  let handle_failure actual_msg actual_name : unit =
+  let handle_failure actual_msg : unit =
     match spec.failure with
-    | None -> assert_failure @@ Printf.sprintf "%s: %s" actual_name actual_msg
+    | None -> assert_failure @@ Printf.sprintf "%s" actual_msg
     | Some expectation ->
         if String.is_substring actual_msg ~substring:expectation then ()
         else
@@ -106,7 +106,8 @@ let make_failing_test spec =
       Compiler.Environment.create spec.program |> Compiler.Environment.populate
     in
     let _, prog = Main.parse env spec.program in
-    assert_equal ~pp_diff ~printer spec.ast (Optimizer.prog_to_str prog);
+    assert_equal ~msg:"Ast is wrong" ~pp_diff ~printer spec.ast
+      (Optimizer.prog_to_str prog);
 
     (* Interpreter *)
     let proc_spec = Interpreter.Mock_process.spec_of_string spec.proc_spec in
@@ -132,15 +133,15 @@ let make_failing_test spec =
     in
     assert_failure msg
   with
-  | Sloth_common.Common.CompileError msg -> handle_failure msg "CompileError"
-  | Sloth_common.Common.RuntimeError msg -> handle_failure msg "RuntimeError"
-  | Sloth_common.Common.ParseError msg -> handle_failure msg "ParseError"
+  | Sloth_common.Common.CompileError msg -> handle_failure msg
+  | Sloth_common.Common.RuntimeError msg -> handle_failure msg
+  | Sloth_common.Common.ParseError msg -> handle_failure msg
 
 let tests =
   "slothscript"
   >::: [
          "green" >::: List.map ~f:make_test (Specs.green ());
-         "red" >::: List.map ~f:make_failing_test Specs.red;
+         "red" >::: List.map ~f:make_failing_test (Specs.red ());
          "unit" >::: Unit_tests.get ();
        ]
 

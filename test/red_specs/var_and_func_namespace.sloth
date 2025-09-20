@@ -1,0 +1,13 @@
+### Name
+vars & funcs share namespace
+
+### Program
+let x = 1
+let y = 2
+func x() {}
+
+### Failure
+[3:5] Optimizer error: The name x has already been declared
+
+3 | func x() {}
+         ^

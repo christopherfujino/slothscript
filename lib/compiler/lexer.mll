@@ -68,34 +68,34 @@ rule private_read last_token state =
   }
   (* TODO remove copy pasta setting last_token, we do that in the filter *)
   (* Literals *)
-  | "true" { let token = TRUE lexbuf.lex_curr_p in last_token := Some token; token }
-  | "false" { let token = FALSE lexbuf.lex_curr_p in last_token := Some token; token }
-  | "null" { let token = NULL lexbuf.lex_curr_p in last_token := Some token; token }
+  | "true" { let token = TRUE lexbuf.lex_start_p in last_token := Some token; token }
+  | "false" { let token = FALSE lexbuf.lex_start_p in last_token := Some token; token }
+  | "null" { let token = NULL lexbuf.lex_start_p in last_token := Some token; token }
 
   (* Keywords *)
-  | "let" { let token = LET lexbuf.lex_curr_p in last_token := Some token; token }
-  | "func" { let token = FUNC lexbuf.lex_curr_p in last_token := Some token; token }
-  | "if" { let token = IF lexbuf.lex_curr_p in last_token := Some token; token }
-  | "else" { let token = ELSE lexbuf.lex_curr_p in last_token := Some token; token }
-  | "in" { let token = IN lexbuf.lex_curr_p in last_token := Some token; token }
-  | "do" { let token = DO lexbuf.lex_curr_p in last_token := Some token; token }
-  | "for" { let token = FOR lexbuf.lex_curr_p in last_token := Some token; token }
-  | "with" { let token = WITH lexbuf.lex_curr_p in last_token := Some token; token }
-  | "return" { let token = RETURN lexbuf.lex_curr_p in last_token := Some token; token }
-  | "break" { let token = BREAK lexbuf.lex_curr_p in last_token := Some token; token }
-  | "continue" { let token = CONTINUE lexbuf.lex_curr_p in last_token := Some token; token }
+  | "let" { let token = LET lexbuf.lex_start_p in last_token := Some token; token }
+  | "func" { let token = FUNC lexbuf.lex_start_p in last_token := Some token; token }
+  | "if" { let token = IF lexbuf.lex_start_p in last_token := Some token; token }
+  | "else" { let token = ELSE lexbuf.lex_start_p in last_token := Some token; token }
+  | "in" { let token = IN lexbuf.lex_start_p in last_token := Some token; token }
+  | "do" { let token = DO lexbuf.lex_start_p in last_token := Some token; token }
+  | "for" { let token = FOR lexbuf.lex_start_p in last_token := Some token; token }
+  | "with" { let token = WITH lexbuf.lex_start_p in last_token := Some token; token }
+  | "return" { let token = RETURN lexbuf.lex_start_p in last_token := Some token; token }
+  | "break" { let token = BREAK lexbuf.lex_start_p in last_token := Some token; token }
+  | "continue" { let token = CONTINUE lexbuf.lex_start_p in last_token := Some token; token }
 
   (* Operators *)
-  | '+' { let token = PLUS lexbuf.lex_curr_p in last_token := Some token; token }
-  | '-' { let token = MINUS lexbuf.lex_curr_p in last_token := Some token; token }
-  | '=' { let token = EQUALS lexbuf.lex_curr_p in last_token := Some token; token }
-  | '*' { let token = PRODUCT lexbuf.lex_curr_p in last_token := Some token; token }
-  | '/' { let token = DIVIDE lexbuf.lex_curr_p in last_token := Some token; token }
-  | '!' { let token = BANG lexbuf.lex_curr_p in last_token := Some token; token }
-  | "not" { let token = NOT lexbuf.lex_curr_p in last_token := Some token; token }
+  | '+' { let token = PLUS lexbuf.lex_start_p in last_token := Some token; token }
+  | '-' { let token = MINUS lexbuf.lex_start_p in last_token := Some token; token }
+  | '=' { let token = EQUALS lexbuf.lex_start_p in last_token := Some token; token }
+  | '*' { let token = PRODUCT lexbuf.lex_start_p in last_token := Some token; token }
+  | '/' { let token = DIVIDE lexbuf.lex_start_p in last_token := Some token; token }
+  | '!' { let token = BANG lexbuf.lex_start_p in last_token := Some token; token }
+  | "not" { let token = NOT lexbuf.lex_start_p in last_token := Some token; token }
   | ';' {
     let parse_semicolon () =
-      let token = SEMICOLON lexbuf.lex_curr_p in
+      let token = SEMICOLON lexbuf.lex_start_p in
       last_token := Some token;
       token
     in
@@ -107,50 +107,50 @@ rule private_read last_token state =
         | _ -> parse_semicolon ()
     )
   }
-  | ':' { let token = COLON lexbuf.lex_curr_p in last_token := Some token; token }
-  | '#' { read_comment lexbuf.lex_curr_p lexbuf }
-  | '|' { let token = PIPE lexbuf.lex_curr_p in last_token := Some token; token }
-  | '.' { let token = DOT lexbuf.lex_curr_p in last_token := Some token; token }
+  | ':' { let token = COLON lexbuf.lex_start_p in last_token := Some token; token }
+  | '#' { read_comment lexbuf.lex_start_p lexbuf }
+  | '|' { let token = PIPE lexbuf.lex_start_p in last_token := Some token; token }
+  | '.' { let token = DOT lexbuf.lex_start_p in last_token := Some token; token }
 
   (* String literals *)
   | '\'' {
-    let token = read_string '\'' (Buffer.create string_buffer_size) lexbuf.lex_curr_p state lexbuf in
+    let token = read_string '\'' (Buffer.create string_buffer_size) lexbuf.lex_start_p state lexbuf in
     last_token := Some token;
     token
   }
   | '"' {
     state := NotInterpolating :: !state;
-    let token = read_string '"' (Buffer.create string_buffer_size) lexbuf.lex_curr_p state lexbuf in
+    let token = read_string '"' (Buffer.create string_buffer_size) lexbuf.lex_start_p state lexbuf in
     last_token := Some token;
     token
   }
-  | '{' { let token = LCURLY lexbuf.lex_curr_p in last_token := Some token; token}
+  | '{' { let token = LCURLY lexbuf.lex_start_p in last_token := Some token; token}
   | '}' {
     let token = (match List.hd !state with
-    | NotInterpolating -> RCURLY lexbuf.lex_curr_p
-    | Interpolating -> (read_string '"' (Buffer.create string_buffer_size) lexbuf.lex_curr_p state lexbuf)) in
+    | NotInterpolating -> RCURLY lexbuf.lex_start_p
+    | Interpolating -> (read_string '"' (Buffer.create string_buffer_size) lexbuf.lex_start_p state lexbuf)) in
     last_token := Some token;
     token
   }
-  | '(' { let token = LPAREN lexbuf.lex_curr_p in last_token := Some token; token}
-  | ')' { let token = RPAREN lexbuf.lex_curr_p in last_token := Some token; token}
-  | ',' { let token = COMMA lexbuf.lex_curr_p in last_token := Some token; token}
-  | '<' { let token = LESS lexbuf.lex_curr_p in last_token := Some token; token}
-  | '>' { let token = GREATER lexbuf.lex_curr_p in last_token := Some token; token}
-  | "<=" { let token = LEQ lexbuf.lex_curr_p in last_token := Some token; token}
-  | ">=" { let token = GEQ lexbuf.lex_curr_p in last_token := Some token; token}
-  | "==" { let token = DOUBLE_EQUALS lexbuf.lex_curr_p in last_token := Some token; token }
-  | "!=" { let token = NOT_EQUALS lexbuf.lex_curr_p in last_token := Some token; token }
-  | "<-" { let token = LEFT_ARROW lexbuf.lex_curr_p in last_token := Some token; token }
-  | "->" { let token = RIGHT_ARROW lexbuf.lex_curr_p in last_token := Some token; token }
-  | '[' { let token = LBRACKET lexbuf.lex_curr_p in last_token := Some token; token}
-  | ']' { let token = RBRACKET lexbuf.lex_curr_p in last_token := Some token; token}
+  | '(' { let token = LPAREN lexbuf.lex_start_p in last_token := Some token; token}
+  | ')' { let token = RPAREN lexbuf.lex_start_p in last_token := Some token; token}
+  | ',' { let token = COMMA lexbuf.lex_start_p in last_token := Some token; token}
+  | '<' { let token = LESS lexbuf.lex_start_p in last_token := Some token; token}
+  | '>' { let token = GREATER lexbuf.lex_start_p in last_token := Some token; token}
+  | "<=" { let token = LEQ lexbuf.lex_start_p in last_token := Some token; token}
+  | ">=" { let token = GEQ lexbuf.lex_start_p in last_token := Some token; token}
+  | "==" { let token = DOUBLE_EQUALS lexbuf.lex_start_p in last_token := Some token; token }
+  | "!=" { let token = NOT_EQUALS lexbuf.lex_start_p in last_token := Some token; token }
+  | "<-" { let token = LEFT_ARROW lexbuf.lex_start_p in last_token := Some token; token }
+  | "->" { let token = RIGHT_ARROW lexbuf.lex_start_p in last_token := Some token; token }
+  | '[' { let token = LBRACKET lexbuf.lex_start_p in last_token := Some token; token}
+  | ']' { let token = RBRACKET lexbuf.lex_start_p in last_token := Some token; token}
   (* Lexing.lexeme means return the string that matched the pattern *)
   | id as lxm { let token = ID (lxm, lexbuf.lex_start_p) in last_token := Some token; token }
-  | context_id { let token = CONTEXT_ID (Lexing.lexeme lexbuf, lexbuf.lex_curr_p) in last_token := Some token; token }
-  | prototype { let token = PROTOTYPE (Lexing.lexeme lexbuf, lexbuf.lex_curr_p) in last_token := Some token; token }
-  | num { let token = NUM (float_of_string (Lexing.lexeme lexbuf), lexbuf.lex_curr_p) in last_token := Some token; token }
-  | _ { syntax_error (SyntaxError (Lexing.lexeme lexbuf, lexbuf.lex_curr_p))}
+  | context_id { let token = CONTEXT_ID (Lexing.lexeme lexbuf, lexbuf.lex_start_p) in last_token := Some token; token }
+  | prototype { let token = PROTOTYPE (Lexing.lexeme lexbuf, lexbuf.lex_start_p) in last_token := Some token; token }
+  | num { let token = NUM (float_of_string (Lexing.lexeme lexbuf), lexbuf.lex_start_p) in last_token := Some token; token }
+  | _ { syntax_error (SyntaxError (Lexing.lexeme lexbuf, lexbuf.lex_start_p))}
   (* Here `eof` is a special regex built into ocamllex *)
   | eof {
     (* Note: if needed, a semicolon will be inserted later in filtering

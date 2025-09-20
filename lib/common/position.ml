@@ -26,7 +26,7 @@ let summarize t' src =
   let line = List.nth_exn lines (t'.pos_lnum - 1) in
   Buffer.add_string buffer line;
   Buffer.add_char buffer '\n';
-  let line_col = t'.pos_cnum - t'.pos_bol - 1 + line_num_len in
+  let line_col = t'.pos_cnum - t'.pos_bol + line_num_len in
   indent_str buffer line_col "^";
   Buffer.contents buffer
 
@@ -36,4 +36,4 @@ let rec t_of_sexp _ = dummy
 and dummy = t_of_lexing_position Lexing.dummy_pos
 
 let string_of_t t' =
-  Printf.sprintf "%d:%d" t'.pos_lnum (t'.pos_cnum - t'.pos_bol - 1)
+  Printf.sprintf "%d:%d" t'.pos_lnum (t'.pos_cnum - t'.pos_bol)

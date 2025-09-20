@@ -6,7 +6,7 @@ let parse env line =
     try Parser.prog filter lexbuf with
     | Parser.Error i ->
         let pos =
-          Sloth_common.Position.t_of_lexing_position lexbuf.lex_curr_p
+          Sloth_common.Position.t_of_lexing_position lexbuf.lex_start_p
         in
         let pos_str = Sloth_common.Position.string_of_t pos in
         let msg = Parser_errors.message i |> String.strip in

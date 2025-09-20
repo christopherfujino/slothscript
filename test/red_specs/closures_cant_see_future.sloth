@@ -1,0 +1,17 @@
+### Name
+closures cannot capture future vars
+
+### Program
+func closure() {
+  # Although this works in JS, Python, and Perl, this seems like a mistake
+  # Go does not allow it
+  print(x)
+}
+let x = 1
+closure()
+
+### Failure
+[4:8] Optimizer error: Undeclared identifier x
+
+4 |   print(x)
+            ^

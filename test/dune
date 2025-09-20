@@ -1,10 +1,11 @@
-(data_only_dirs green_specs)
+(data_only_dirs *_specs)
 
 (test
  (name main)
  (libraries ounit2 sloth_script re core_unix)
  (deps
-  (source_tree green_specs))
+  (source_tree green_specs)
+  (source_tree red_specs))
  (modes byte))
 
 (executable
@@ -21,6 +22,8 @@
  (alias train)
  (deps
   (:specs
+   ; TODO: once generating AST precludes running optimizer checks
+   ; (source_tree red_specs)
    (source_tree green_specs))
   (file train.exe)
   ; Required to define a rule without any targets

@@ -1,9 +1,8 @@
 .PHONY: test
+# OUNIT_CI=true makes output prettier
+# --force makes all tests run
 test:
-	# OUNIT_CI=true makes output prettier
-	# --force makes all tests run
 	OUNIT_CI=true dune build @runtest --force
-	#OUNIT_CI=true dune build @runtest
 
 .PHONY: train
 train:
@@ -17,9 +16,9 @@ describe:
 repl:
 	dune exec repl
 
+# opam install utop
 .PHONY: utop
 utop: build
-	# opam install utop
 	dune utop lib/
 
 .PHONY: build
