@@ -146,7 +146,7 @@ rule private_read last_token state =
   | '[' { let token = LBRACKET lexbuf.lex_curr_p in last_token := Some token; token}
   | ']' { let token = RBRACKET lexbuf.lex_curr_p in last_token := Some token; token}
   (* Lexing.lexeme means return the string that matched the pattern *)
-  | id { let token = ID (Lexing.lexeme lexbuf, lexbuf.lex_curr_p) in last_token := Some token; token }
+  | id as lxm { let token = ID (lxm, lexbuf.lex_start_p) in last_token := Some token; token }
   | context_id { let token = CONTEXT_ID (Lexing.lexeme lexbuf, lexbuf.lex_curr_p) in last_token := Some token; token }
   | prototype { let token = PROTOTYPE (Lexing.lexeme lexbuf, lexbuf.lex_curr_p) in last_token := Some token; token }
   | num { let token = NUM (float_of_string (Lexing.lexeme lexbuf), lexbuf.lex_curr_p) in last_token := Some token; token }

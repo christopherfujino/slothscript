@@ -7,15 +7,14 @@ let ( >>= ) =
     ~second:(fun tuple -> (globals, Second tuple))
     ~first:(cb globals)
 
-let failure ~globals pos msg =
+let fail ~globals pos msg =
   let pos_s = Sloth_common.Position.string_of_t pos in
   let msg1 =
-    Printf.sprintf "%s\n\n[%s] Runtime error: %s"
+    Printf.sprintf "[%s] Runtime error: %s\n\n%s" pos_s msg
       (Sloth_common.Position.summarize pos Globals.(globals.src))
-      pos_s msg
   in
   let msg2 =
-    if Sloth_common.Config.print_internal_backtraces then
+    if Sloth_common.Common.debug_mode then
       let callstack_depth = 50 in
       Printf.sprintf "%s\n\n%s" msg1
         (* Core.Printexc does not implement .get_callstack *)
@@ -53,7 +52,7 @@ and interpret_decl (globals : Globals.t) decl =
       | Some () -> ()
       | None ->
           Printf.sprintf "A function named %s has already been declared" name
-          |> failure ~globals pos);
+          |> fail ~globals pos);
       (globals, f)
   | StmtDecl s ->
       let globals, either = interpret_stmt globals s in
@@ -102,7 +101,7 @@ and interpret_cond globals cond =
           Printf.sprintf
             "If-expressions must have a boolean expression, but you used %s"
             (Runtime.to_s condition)
-          |> failure ~globals pos)
+          |> fail ~globals pos)
   | Compiler.Optimizer.ElseCont (stmts, _) ->
       let inner_globals =
         {
@@ -179,9 +178,9 @@ and interpret_expr globals expr :
                 Printf.sprintf
                   "Lists can only be subscripted by integers, you used %s"
                   (Runtime.to_s subscript')
-                |> failure ~globals pos
+                |> fail ~globals pos
           | _ ->
-              failure ~globals pos
+              fail ~globals pos
                 (Runtime.to_s subscript'
                 |> Printf.sprintf
                      "Lists can only be subscripted by Numbers, you used %s"))
@@ -190,19 +189,19 @@ and interpret_expr globals expr :
       | _ ->
           Printf.sprintf "Cannot subscript the value %s"
             (Runtime.to_s receiver')
-          |> failure ~globals pos)
+          |> fail ~globals pos)
   | ContextId (i, pos) -> (
       match Context.get globals.context_ids i with
       | Some v -> (globals, First v)
       | None ->
           Printf.sprintf "The name %s has not been declared in this scope" i
-          |> failure ~globals pos)
+          |> fail ~globals pos)
   | IdRef (i, pos) -> (
       match Identifiers.get globals.identifiers i with
       | Some v -> (globals, First v)
       | None ->
           Printf.sprintf "The name %s has not been declared in this scope" i
-          |> failure ~globals pos)
+          |> fail ~globals pos)
   | Equality (lhs, rhs, is_equality, _) ->
       interpret_expr globals lhs >>= fun globals lhs ->
       interpret_expr globals rhs >>= fun globals rhs ->
@@ -232,7 +231,7 @@ and interpret_expr globals expr :
                   Printf.sprintf
                     "You passed %d arguments to a function that expected %d"
                     (List.length args) (List.length parameters)
-                  |> failure ~globals pos)
+                  |> fail ~globals pos)
               >>= fun globals () ->
               let temp_globals = { globals with identifiers = identifiers2 } in
               let rec traverse_stmts globals stmts =
@@ -266,7 +265,7 @@ and interpret_expr globals expr :
               | Ok v -> (globals, First v)
               | Error msg ->
                   (* TODO: should this return a `Some SlothError`? *)
-                  failure ~globals pos msg))
+                  fail ~globals pos msg))
       | Method (receiver, func_t) -> (
           match func_t with
           | Native { cb; parameters = _; identifiers = _ } -> (
@@ -282,7 +281,7 @@ and interpret_expr globals expr :
               | Ok v -> (globals, First v)
               | Error msg ->
                   (* TODO: should this return a `Some SlothError`? *)
-                  failure ~globals pos msg)
+                  fail ~globals pos msg)
           | User _ ->
               (* I think this is unreachable... *)
               Sloth_common.Common.internal_failure __LOC__)
@@ -299,6 +298,9 @@ and interpret_expr globals expr :
                 ( globals,
                   First
                     (Runtime.Directory (cast_to_directory ~globals ~pos arg)) )
+            | "Process" ->
+                ( globals,
+                  First (Runtime.Process (cast_to_process ~globals ~pos arg)) )
             | _ -> Sloth_common.Common.internal_failure __LOC__)
       | _ as t ->
           Printf.sprintf "Tried to invoke %s, but it is not a function"
@@ -323,7 +325,7 @@ and interpret_expr globals expr :
               |> Printf.sprintf
                    "The `not` operator must be applied to a Bool value, but \
                     got %s"
-              |> failure ~globals pos
+              |> fail ~globals pos
           | Some b -> (globals, First (Runtime.Bool (not b))))
       | Bang -> (
           interpret_expr globals target >>= fun globals target ->
@@ -336,7 +338,7 @@ and interpret_expr globals expr :
           in
           match M.proc_exec proc env with
           | Ok t' -> (globals, First t')
-          | Error err -> failure ~globals pos err)
+          | Error err -> fail ~globals pos err)
       | LeftArrow -> (
           interpret_expr globals target >>= fun globals target ->
           let file = cast_to_file ~globals ~pos target in
@@ -353,7 +355,7 @@ and interpret_expr globals expr :
             | Native { cb; _ } -> cb
           in
           match cb [ receiver; target ] with
-          | Error err -> failure ~globals pos err
+          | Error err -> fail ~globals pos err
           | Ok t' -> (globals, First t'))
       | Plus | Minus | Product | Divide | Pipe | Less | Greater | Leq | Geq
       | RightArrow ->
@@ -378,7 +380,7 @@ and interpret_expr globals expr :
             "The name %s has already been declared in this scope; did you mean \
              to assign to it?"
             id
-          |> failure ~globals pos);
+          |> fail ~globals pos);
       (globals, First v)
   | AssignExpr (id, e, pos) -> (
       interpret_expr globals e >>= fun globals v ->
@@ -388,7 +390,7 @@ and interpret_expr globals expr :
           Printf.sprintf
             "The name %s has not been declared yet; did you mean to declare it?"
             id
-          |> failure ~globals pos)
+          |> fail ~globals pos)
   | SubAssignExpr { subscript; value; pos = _ } -> (
       match subscript with
       | Subscript (receiver, subscript, pos) -> (
@@ -409,11 +411,11 @@ and interpret_expr globals expr :
                     "Lists can only be subscripted with Numbers, but you used \
                      %s"
                     (Runtime.to_s subscript')
-                  |> failure ~globals pos)
+                  |> fail ~globals pos)
           | _ ->
               Printf.sprintf "Assigning via subscript to %s not implemented"
                 (Runtime.to_s receiver')
-              |> failure ~globals pos)
+              |> fail ~globals pos)
       | _ -> Sloth_common.Common.internal_failure __LOC__)
   | ForLoop (init, cmp, inc, bl, pos) ->
       let _, either =
@@ -497,7 +499,7 @@ and interpret_expr globals expr :
                 "The comparison of a for loop must be a Boolean value, but you \
                  used %s"
                 (Runtime.to_s cmp_val)
-              |> failure ~globals pos
+              |> fail ~globals pos
         in
         let _, either = interpret_for_loop globals cmp inc bl Runtime.Null in
         (globals, either)
@@ -518,7 +520,7 @@ and interpret_expr globals expr :
         | _ ->
             Printf.sprintf "Cannot iterate over a %s"
               (Runtime.to_class_name iteratee)
-            |> failure ~globals pos
+            |> fail ~globals pos
       in
       ( globals,
         Array.fold iteratee_array ~init:(First Runtime.Null)
@@ -549,7 +551,7 @@ and interpret_expr globals expr :
             (match Runtime.string_of_val next with
             | Some s -> M.chdir s
             | None ->
-                failure ~globals pos
+                fail ~globals pos
                 @@ Printf.sprintf
                      "cannot assign %s to $cwd, it must be a String"
                 @@ Runtime.to_s next);
@@ -572,7 +574,7 @@ and interpret_expr globals expr :
               | None ->
                   Printf.sprintf "The context variable named %s is not defined"
                     name
-                  |> failure ~globals pos
+                  |> fail ~globals pos
             in
             middleware name prev v;
             (match Context.reassign globals.context_ids name v with
@@ -622,7 +624,7 @@ and interpret_method ~globals ~pos receiver args method_name =
   | None ->
       Printf.sprintf "The class %s does not have an instance field named %s"
         class_name method_name
-      |> failure ~globals pos
+      |> fail ~globals pos
   | Some func -> (
       match func with
       | Func func -> (
@@ -633,7 +635,7 @@ and interpret_method ~globals ~pos receiver args method_name =
               match cb args with
               | Ok v -> (globals, First v)
               | Error msg ->
-                  (* TODO propagate SlothError *) failure ~globals pos msg))
+                  (* TODO propagate SlothError *) fail ~globals pos msg))
       | _ ->
           Printf.sprintf "Internal error: %s\n\n%s"
             (Runtime.to_class_name func)
@@ -711,58 +713,30 @@ and dereference_object globals receiver target pos =
       Printf.sprintf
         "Internal error: could not find prototype for the %s class (%s)"
         class_name __LOC__
-      |> failure ~globals pos
+      |> fail ~globals pos
   | Some klass -> (
       match Hashtbl.find (table_thunk klass) target with
       | None ->
           Printf.sprintf "The class %s does not have a %s field named %s"
             class_name descriptor target
-          |> failure ~globals pos
+          |> fail ~globals pos
       | Some field -> (
           match field with
           | Func func_t -> Method (receiver, func_t)
-          | _ -> failure ~globals pos "TODO"))
+          | _ -> fail ~globals pos "TODO"))
 
 and cast_to_directory ~globals ~pos = function
   | Runtime.String path -> path
   | _ as t' ->
-      failure ~globals pos
+      fail ~globals pos
       @@ Printf.sprintf "There is no way to cast from a %s to a Directory"
       @@ Runtime.to_s t'
 
 and cast_to_file ~globals ~pos = function
   | Runtime.File f -> f
-  | Runtime.String path ->
-      { path }
-      (*
-      let intermediate =
-        dereference_object globals
-          (Runtime.Prototype { name = "File" })
-          (* Make this "cast" *)
-          "new"
-          pos
-      in
-      let func_opt = Runtime.method_of_val intermediate in
-      let receiver, constructor =
-        match func_opt with
-        | None ->
-            Printf.sprintf "[%s] While trying to retrieve File.new, got %s"
-              __LOC__
-              (Runtime.to_s intermediate)
-            |> Sloth_common.Common.internal_failure
-        | Some func -> func
-      in
-      let callback =
-        match constructor with
-        | Native { cb; _ } -> cb
-        | User _ -> Sloth_common.Common.internal_failure __LOC__
-      in
-      match callback [ receiver; Runtime.String filename ] with
-      | Ok file -> (cast_to_file [@tailcall]) ~globals ~pos file
-      | Error err -> failure ~globals pos err)
-  *)
+  | Runtime.String path -> { path }
   | _ as t' ->
-      failure ~globals pos
+      fail ~globals pos
       @@ Printf.sprintf "There is no way to cast from a %s to a File"
       @@ Runtime.to_s t'
 
@@ -788,7 +762,7 @@ and cast_to_process ~globals ~pos = function
       in
       let proc =
         match callback () with
-        | Error err -> failure ~globals pos err
+        | Error err -> fail ~globals pos err
         | Ok proc -> proc
       in
       (cast_to_process [@tailcall]) ~globals ~pos proc
@@ -800,7 +774,7 @@ and cast_to_process ~globals ~pos = function
       in
       (cast_to_process [@tailcall]) ~globals ~pos (Runtime.List list)
   | _ as t' ->
-      failure ~globals pos
+      fail ~globals pos
       @@ Printf.sprintf "Expected a Process, but got a %s"
       @@ Runtime.to_s t'
 
@@ -813,10 +787,10 @@ and interpret_binary globals lhs rhs op pos =
         match Float.of_string_opt s with
         | Some f -> f
         | None ->
-            failure ~globals pos
+            fail ~globals pos
             @@ Printf.sprintf "Expected a Number, but got the string \"%s\"" s)
     | _ as t' ->
-        failure ~globals pos
+        fail ~globals pos
         @@ Printf.sprintf "Expected a Number, but got a %s"
         @@ Runtime.to_s t'
   in
@@ -893,12 +867,12 @@ and cast_to_string ~globals ~pos t' =
         | Some env -> env
         | None ->
             Printf.sprintf "$env is the wrong type: %s" @@ Runtime.to_s env_val
-            |> failure ~globals pos
+            |> fail ~globals pos
       in
       match M.proc_exec proc env with
       | Ok t' -> (cast_to_string [@tailcall]) ~globals ~pos t'
-      | Error err -> failure ~globals pos err)
+      | Error err -> fail ~globals pos err)
   | _ as t' ->
-      failure ~globals pos
+      fail ~globals pos
       @@ Printf.sprintf "Expected a String, but got a %s"
       @@ Runtime.to_s t'

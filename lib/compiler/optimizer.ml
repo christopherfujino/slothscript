@@ -1,11 +1,10 @@
 open Core
 
-let failure ~env ~pos msg =
+let fail ~env ~pos msg =
   let pos_msg = Sloth_common.Position.string_of_t pos in
   let msg2 =
-    Printf.sprintf "%s\n\n[%s] Optimizer error: %s"
+    Printf.sprintf "[%s] Optimizer error: %s\n\n%s" pos_msg msg
       (Sloth_common.Position.summarize pos (Environment.src env))
-      pos_msg msg
   in
   raise (Sloth_common.Common.CompileError msg2)
 
@@ -112,7 +111,7 @@ and optimize_decl env decl : Environment.t * decl =
         match Environment.bind env name with
         | None ->
             Printf.sprintf "The name %s has already been declared" name
-            |> failure ~env ~pos
+            |> fail ~env ~pos
         | Some e -> e
       in
       let env3 = Environment.push_empty env2 in
@@ -123,7 +122,7 @@ and optimize_decl env decl : Environment.t * decl =
             | None ->
                 Printf.sprintf
                   "The name %s has already been declared in this scope" param
-                |> failure ~env ~pos
+                |> fail ~env ~pos
             | Some e -> e)
       in
       let block2 = optimize_block env4 block in
@@ -211,20 +210,20 @@ and optimize_expr (env : Environment.t) (e : Ast.expr) : Environment.t * expr =
       match name_opt with
       | None ->
           let msg = Printf.sprintf "Undeclared identifier %s" name in
-          failure ~env ~pos msg
+          fail ~env ~pos msg
       | Some _ -> (env, IdRef (name, pos)))
   | ContextId (name, pos) -> (
       let name_opt = Environment.find_ctx env name in
       match name_opt with
       | None ->
           let msg = Printf.sprintf "Undeclared identifier %s" name in
-          failure ~env ~pos msg
+          fail ~env ~pos msg
       | Some _ -> (env, ContextId (name, pos)))
   | ProtoRef (name, pos) -> (
       (* Validate this class name is defined by our STDLIB *)
       match Environment.find env name with
       | Some _ -> (env, IdRef (name, pos))
-      | None -> failure ~env ~pos @@ Printf.sprintf "Undeclared class %s" name)
+      | None -> fail ~env ~pos @@ Printf.sprintf "Undeclared class %s" name)
   | FuncExpr { parameters; block; pos } ->
       let parameters2 = List.rev parameters in
       let env2 = Environment.push_empty env in
@@ -234,7 +233,7 @@ and optimize_expr (env : Environment.t) (e : Ast.expr) : Environment.t * expr =
             match Environment.bind env param with
             | None ->
                 Printf.sprintf "Duplicate parameter named %s" param
-                |> failure ~env ~pos
+                |> fail ~env ~pos
             | Some e -> e)
       in
       let block2 = optimize_block env3 block in
@@ -267,7 +266,7 @@ and optimize_expr (env : Environment.t) (e : Ast.expr) : Environment.t * expr =
         | None ->
             Printf.sprintf "The name %s has already been declared in this scope"
               name
-            |> failure ~env ~pos
+            |> fail ~env ~pos
         | Some e -> e
       in
       (env, LetExpr (name, e, pos))

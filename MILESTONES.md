@@ -10,7 +10,6 @@
   - `$Process.allowNonzero : Bool`
   - `$Process.mirror : Bool`
 - [ ] CLI args
-- [ ] Parser errors
 - [ ] string escapes
 
 ## v0.2 - initial pre-release
@@ -80,3 +79,4 @@
 - [x] Mock out processes, files for unit tests
 - [x] $script & $scriptDir
 - [x] $env
+- [x] Parser errors
