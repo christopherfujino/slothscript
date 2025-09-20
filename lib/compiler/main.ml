@@ -5,11 +5,23 @@ let parse env line =
   let decls =
     try Parser.prog filter lexbuf with
     | Parser.Error i ->
-        let msg =
-          Printf.sprintf "Parser error (%d)\n\n%s" i
-            (* TODO Interpolate lexer position *)
-            (Printexc.get_backtrace ())
+        let pos =
+          Sloth_common.Position.t_of_lexing_position lexbuf.lex_curr_p
         in
+        let pos_str = Sloth_common.Position.string_of_t pos in
+        let msg = Parser_errors.message i |> String.strip in
+        let line_no = pos.pos_lnum in
+        let msg =
+          match msg with
+          | "<YOUR SYNTAX ERROR MESSAGE HERE>" ->
+              Printf.sprintf "[%s] Parser error (%d)\n\n%s" pos_str line_no
+                (Sloth_common.Position.summarize pos line)
+          | _ ->
+              Printf.sprintf "[%s] Parser error (%d): %s\n\n%s" pos_str line_no
+                msg
+                (Sloth_common.Position.summarize pos line)
+        in
+
         raise (Sloth_common.Common.ParseError msg)
     | Lexer.SyntaxError (msg, pos) ->
         let pos = Sloth_common.Position.t_of_lexing_position pos in
@@ -19,15 +31,7 @@ let parse env line =
         in
         raise (Sloth_common.Common.LexerError msg)
   in
-  try Optimizer.optimize_prog env decls
-  with Sloth_common.Common.CompileError msg ->
-    (* TODO is this needed? *)
-    let msg =
-      (* This has a summary, so it will already describe it as an
-       "Optimizer error" *)
-      Printf.sprintf "%s\n\n%s" msg (Printexc.get_backtrace ())
-    in
-    raise (Sloth_common.Common.CompileError msg)
+  Optimizer.optimize_prog env decls
 
 (* TODO figure out how to derive this *)
 let to_s token =

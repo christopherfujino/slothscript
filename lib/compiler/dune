@@ -17,3 +17,32 @@
   --explain))
 
 (ocamllex lexer)
+
+; Auto-generate messages file
+
+(rule
+ (with-stdout-to
+  .messages
+  (run menhir --unused-token COMMENT %{dep:parser.mly} --list-errors)))
+
+; Validate we've covered all possible messages
+
+(rule
+ (with-stdout-to
+  messages.check
+  (run
+   menhir
+   --unused-token
+   COMMENT
+   %{dep:parser.mly}
+   --compare-errors
+   %{dep:.messages}
+   --compare-errors
+   %{dep:parser.messages})))
+
+(rule
+ (deps messages.check)
+ (action
+  (with-stdout-to
+   parser_errors.ml
+   (run menhir --unused-token COMMENT %{dep:parser.mly} --compile-errors %{dep:parser.messages}))))
