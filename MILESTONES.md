@@ -79,4 +79,4 @@
 - [x] Mock out processes, files for unit tests
 - [x] $script & $scriptDir
 - [x] $env
-- [ ] Parser errors
+- [x] Parser errors
