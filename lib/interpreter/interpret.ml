@@ -185,7 +185,12 @@ and interpret_expr globals expr :
                 |> Printf.sprintf
                      "Lists can only be subscripted by Numbers, you used %s"))
       | Runtime.HashMap tbl ->
-          (globals, First (Stdlib.Hashtbl.find tbl subscript'))
+          let result =
+            match Stdlib.Hashtbl.find_opt tbl subscript' with
+            | Some v -> v
+            | None -> Runtime.Null
+          in
+          (globals, First result)
       | _ ->
           Printf.sprintf "Cannot subscript the value %s"
             (Runtime.to_s receiver')

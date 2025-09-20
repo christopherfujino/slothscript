@@ -16,6 +16,11 @@ print(h["foo"])
 
 h = {"on a": "single line"}
 
+assert(h["foo bar"] == null)
+
+### Processes
+()
+
 ### Ast
 ((StmtDecl
   (ExprStmt
@@ -141,6 +146,28 @@ h = {"on a": "single line"}
                 [POS]))
               [POS])))
           [POS])
+        [POS])))
+  (StmtDecl
+    (ExprStmt
+      (FuncInvoc
+        (IdRef
+          assert
+          [POS])
+        ((Equality
+          (Subscript
+            (IdRef
+              h
+              [POS])
+            (String
+              ((FullString
+                "foo bar"
+                [POS]))
+              [POS])
+            [POS])
+          (Null
+            [POS])
+          true
+          [POS]))
         [POS]))))
 
 ### Stdout
@@ -149,6 +176,3 @@ true
 bar
 
 ### Failure
-
-### Processes
-()
