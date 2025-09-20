@@ -45,4 +45,10 @@
  (action
   (with-stdout-to
    parser_errors.ml
-   (run menhir --unused-token COMMENT %{dep:parser.mly} --compile-errors %{dep:parser.messages}))))
+   (run
+    menhir
+    --unused-token
+    COMMENT
+    %{dep:parser.mly}
+    --compile-errors
+    %{dep:parser.messages}))))

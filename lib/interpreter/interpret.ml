@@ -10,8 +10,7 @@ let ( >>= ) =
 let fail ~globals pos msg =
   let pos_s = Sloth_common.Position.string_of_t pos in
   let msg1 =
-    Printf.sprintf "[%s] Runtime error: %s\n\n%s"
-      pos_s msg
+    Printf.sprintf "[%s] Runtime error: %s\n\n%s" pos_s msg
       (Sloth_common.Position.summarize pos Globals.(globals.src))
   in
   let msg2 =
@@ -735,8 +734,7 @@ and cast_to_directory ~globals ~pos = function
 
 and cast_to_file ~globals ~pos = function
   | Runtime.File f -> f
-  | Runtime.String path ->
-      { path }
+  | Runtime.String path -> { path }
   | _ as t' ->
       fail ~globals pos
       @@ Printf.sprintf "There is no way to cast from a %s to a File"

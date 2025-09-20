@@ -34,5 +34,6 @@ let red =
          f2)())))))(ExprStmt(FuncInvoc(IdRef f1)())))"
       ~stdout_expect:"1\n" ~failure:"Parser error (";
     (* Parser errors *)
-    make_spec "foo" ~program:"'foo'; }" ~ast:"()" ~stdout_expect:"" ~failure:"[1:7] Parser error (1)\n";
+    make_spec "foo" ~program:"'foo'; }" ~ast:"()" ~stdout_expect:""
+      ~failure:"[1:7] Parser error (1)\n";
   ]

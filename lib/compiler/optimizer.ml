@@ -3,8 +3,7 @@ open Core
 let fail ~env ~pos msg =
   let pos_msg = Sloth_common.Position.string_of_t pos in
   let msg2 =
-    Printf.sprintf "[%s] Optimizer error: %s\n\n%s"
-      pos_msg msg
+    Printf.sprintf "[%s] Optimizer error: %s\n\n%s" pos_msg msg
       (Sloth_common.Position.summarize pos (Environment.src env))
   in
   raise (Sloth_common.Common.CompileError msg2)
