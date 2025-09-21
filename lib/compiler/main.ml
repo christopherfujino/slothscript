@@ -14,12 +14,14 @@ let parse env line =
         let msg =
           match msg with
           | "<YOUR SYNTAX ERROR MESSAGE HERE>" ->
-              Printf.sprintf "[%s] Parser error (%d)\n\n%s" pos_str line_no
+              Printf.sprintf "[%s] Parser error (code #%d)\n\n%s" pos_str
+                i
                 (Sloth_common.Position.summarize pos line)
           | _ ->
-              Printf.sprintf "[%s] Parser error (%d): %s\n\n%s" pos_str line_no
-                msg
+              Printf.sprintf "[%s] Parser error (code #%d):\n\n%s\n%s" pos_str
+                line_no
                 (Sloth_common.Position.summarize pos line)
+                msg
         in
 
         raise (Sloth_common.Common.ParseError msg)

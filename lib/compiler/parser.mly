@@ -266,6 +266,10 @@ expr2:
     let pos = Sloth_common.Position.t_of_lexing_position pos in
     UnaryExpr { target = e; operator=Bang; pos}
   }
+  | pos = MINUS; e = expr2 {
+    let pos = Sloth_common.Position.t_of_lexing_position pos in
+    UnaryExpr { target = e; operator=Minus; pos}
+  }
  
   | e = expr7 { e }
 

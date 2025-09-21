@@ -8,7 +8,7 @@ prog: STRING_MIDDLE
 ##
 ##
 
-<YOUR SYNTAX ERROR MESSAGE HERE>
+This is an invalid way to start a statement
 
 prog: WITH WITH
 ##
@@ -21,7 +21,7 @@ prog: WITH WITH
 ## WITH
 ##
 
-<YOUR SYNTAX ERROR MESSAGE HERE>
+`with` expressions should be of the form: `with ($ctxVar = newVal) { ... }`
 
 prog: WITH LPAREN WITH
 ##
@@ -34,7 +34,7 @@ prog: WITH LPAREN WITH
 ## WITH LPAREN
 ##
 
-<YOUR SYNTAX ERROR MESSAGE HERE>
+Only context variables (starting with `$`) can be declared in a `with` expression
 
 prog: WITH LPAREN CONTEXT_ID WITH
 ##
@@ -46,7 +46,7 @@ prog: WITH LPAREN CONTEXT_ID WITH
 ## CONTEXT_ID
 ##
 
-<YOUR SYNTAX ERROR MESSAGE HERE>
+Only context variable assignments are allowed in `with` expressions
 
 prog: WITH LPAREN CONTEXT_ID EQUALS STRING_MIDDLE
 ##
@@ -58,7 +58,7 @@ prog: WITH LPAREN CONTEXT_ID EQUALS STRING_MIDDLE
 ## CONTEXT_ID EQUALS
 ##
 
-<YOUR SYNTAX ERROR MESSAGE HERE>
+This is not a valid expression for an assignment
 
 prog: STRING_START STRING_MIDDLE
 ##
@@ -85,9 +85,21 @@ prog: NOT WITH
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
 
-prog: LPAREN STRING_MIDDLE
+prog: MINUS WITH
 ##
 ## Ends in an error in state: 12.
+##
+## expr2 -> MINUS . expr2 [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RIGHT_ARROW RCURLY RBRACKET PRODUCT PLUS PIPE NOT_EQUALS MINUS LESS LEQ LCURLY GREATER GEQ DOUBLE_EQUALS DIVIDE COMMA COLON BANG ]
+##
+## The known suffix of the stack is as follows:
+## MINUS
+##
+
+A unary `-` operator expects to be followed by a `Number`
+
+prog: LPAREN STRING_MIDDLE
+##
+## Ends in an error in state: 13.
 ##
 ## expr8 -> LPAREN . expr1 RPAREN [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RIGHT_ARROW RCURLY RBRACKET PRODUCT PLUS PIPE NOT_EQUALS MINUS LPAREN LESS LEQ LCURLY LBRACKET GREATER GEQ DOUBLE_EQUALS DOT DIVIDE COMMA COLON BANG ]
 ##
@@ -99,7 +111,7 @@ prog: LPAREN STRING_MIDDLE
 
 prog: LET WITH
 ##
-## Ends in an error in state: 13.
+## Ends in an error in state: 14.
 ##
 ## expr1 -> LET . ID EQUALS expr1 [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RCURLY RBRACKET LCURLY COMMA COLON ]
 ##
@@ -111,7 +123,7 @@ prog: LET WITH
 
 prog: LET ID WITH
 ##
-## Ends in an error in state: 14.
+## Ends in an error in state: 15.
 ##
 ## expr1 -> LET ID . EQUALS expr1 [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RCURLY RBRACKET LCURLY COMMA COLON ]
 ##
@@ -123,7 +135,7 @@ prog: LET ID WITH
 
 prog: LET ID EQUALS STRING_MIDDLE
 ##
-## Ends in an error in state: 15.
+## Ends in an error in state: 16.
 ##
 ## expr1 -> LET ID EQUALS . expr1 [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RCURLY RBRACKET LCURLY COMMA COLON ]
 ##
@@ -135,7 +147,7 @@ prog: LET ID EQUALS STRING_MIDDLE
 
 prog: LEFT_ARROW WITH
 ##
-## Ends in an error in state: 16.
+## Ends in an error in state: 17.
 ##
 ## expr2 -> LEFT_ARROW . expr2 [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RIGHT_ARROW RCURLY RBRACKET PRODUCT PLUS PIPE NOT_EQUALS MINUS LESS LEQ LCURLY GREATER GEQ DOUBLE_EQUALS DIVIDE COMMA COLON BANG ]
 ##
@@ -147,7 +159,7 @@ prog: LEFT_ARROW WITH
 
 prog: LCURLY STRING_MIDDLE
 ##
-## Ends in an error in state: 17.
+## Ends in an error in state: 18.
 ##
 ## hash_literals -> LCURLY . RCURLY [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RIGHT_ARROW RCURLY RBRACKET PRODUCT PLUS PIPE NOT_EQUALS MINUS LPAREN LESS LEQ LCURLY LBRACKET GREATER GEQ DOUBLE_EQUALS DOT DIVIDE COMMA COLON BANG ]
 ## hash_literals -> LCURLY . expr1 COLON expr1 RCURLY [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RIGHT_ARROW RCURLY RBRACKET PRODUCT PLUS PIPE NOT_EQUALS MINUS LPAREN LESS LEQ LCURLY LBRACKET GREATER GEQ DOUBLE_EQUALS DOT DIVIDE COMMA COLON BANG ]
@@ -161,7 +173,7 @@ prog: LCURLY STRING_MIDDLE
 
 prog: LBRACKET STRING_MIDDLE
 ##
-## Ends in an error in state: 19.
+## Ends in an error in state: 20.
 ##
 ## list_literal -> LBRACKET . RBRACKET [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RIGHT_ARROW RCURLY RBRACKET PRODUCT PLUS PIPE NOT_EQUALS MINUS LPAREN LESS LEQ LCURLY LBRACKET GREATER GEQ DOUBLE_EQUALS DOT DIVIDE COMMA COLON BANG ]
 ## list_literal -> LBRACKET . expr_list COMMA RBRACKET [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RIGHT_ARROW RCURLY RBRACKET PRODUCT PLUS PIPE NOT_EQUALS MINUS LPAREN LESS LEQ LCURLY LBRACKET GREATER GEQ DOUBLE_EQUALS DOT DIVIDE COMMA COLON BANG ]
@@ -175,7 +187,7 @@ prog: LBRACKET STRING_MIDDLE
 
 prog: IF WITH
 ##
-## Ends in an error in state: 21.
+## Ends in an error in state: 22.
 ##
 ## expr1 -> IF . expr2 block conditional_continuation [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RCURLY RBRACKET LCURLY COMMA COLON ]
 ## expr1 -> IF . expr2 block [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RCURLY RBRACKET LCURLY COMMA COLON ]
@@ -188,7 +200,7 @@ prog: IF WITH
 
 prog: BREAK FUNC WITH
 ##
-## Ends in an error in state: 23.
+## Ends in an error in state: 24.
 ##
 ## expr8 -> FUNC . LPAREN RPAREN block [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RIGHT_ARROW RCURLY RBRACKET PRODUCT PLUS PIPE NOT_EQUALS MINUS LPAREN LESS LEQ LCURLY LBRACKET GREATER GEQ DOUBLE_EQUALS DOT DIVIDE COMMA COLON BANG ]
 ## expr8 -> FUNC . LPAREN parameter_list RPAREN block [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RIGHT_ARROW RCURLY RBRACKET PRODUCT PLUS PIPE NOT_EQUALS MINUS LPAREN LESS LEQ LCURLY LBRACKET GREATER GEQ DOUBLE_EQUALS DOT DIVIDE COMMA COLON BANG ]
@@ -201,7 +213,7 @@ prog: BREAK FUNC WITH
 
 prog: FUNC LPAREN WITH
 ##
-## Ends in an error in state: 24.
+## Ends in an error in state: 25.
 ##
 ## expr8 -> FUNC LPAREN . RPAREN block [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RIGHT_ARROW RCURLY RBRACKET PRODUCT PLUS PIPE NOT_EQUALS MINUS LPAREN LESS LEQ LCURLY LBRACKET GREATER GEQ DOUBLE_EQUALS DOT DIVIDE COMMA COLON BANG ]
 ## expr8 -> FUNC LPAREN . parameter_list RPAREN block [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RIGHT_ARROW RCURLY RBRACKET PRODUCT PLUS PIPE NOT_EQUALS MINUS LPAREN LESS LEQ LCURLY LBRACKET GREATER GEQ DOUBLE_EQUALS DOT DIVIDE COMMA COLON BANG ]
@@ -214,7 +226,7 @@ prog: FUNC LPAREN WITH
 
 prog: FUNC LPAREN RPAREN WITH
 ##
-## Ends in an error in state: 25.
+## Ends in an error in state: 26.
 ##
 ## expr8 -> FUNC LPAREN RPAREN . block [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RIGHT_ARROW RCURLY RBRACKET PRODUCT PLUS PIPE NOT_EQUALS MINUS LPAREN LESS LEQ LCURLY LBRACKET GREATER GEQ DOUBLE_EQUALS DOT DIVIDE COMMA COLON BANG ]
 ##
@@ -226,7 +238,7 @@ prog: FUNC LPAREN RPAREN WITH
 
 prog: DO LCURLY STRING_MIDDLE
 ##
-## Ends in an error in state: 26.
+## Ends in an error in state: 27.
 ##
 ## block -> LCURLY . RCURLY [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RIGHT_ARROW RCURLY RBRACKET PRODUCT PLUS PIPE NOT_EQUALS MINUS LPAREN LESS LEQ LCURLY LBRACKET GREATER GEQ ELSE DOUBLE_EQUALS DOT DIVIDE COMMA COLON BANG ]
 ## block -> LCURLY . stmts RCURLY [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RIGHT_ARROW RCURLY RBRACKET PRODUCT PLUS PIPE NOT_EQUALS MINUS LPAREN LESS LEQ LCURLY LBRACKET GREATER GEQ ELSE DOUBLE_EQUALS DOT DIVIDE COMMA COLON BANG ]
@@ -240,7 +252,7 @@ prog: DO LCURLY STRING_MIDDLE
 
 prog: RETURN STRING_MIDDLE
 ##
-## Ends in an error in state: 27.
+## Ends in an error in state: 28.
 ##
 ## stmt_sans_semicolon -> RETURN . expr1 [ SEMICOLON RCURLY ]
 ## stmt_sans_semicolon -> RETURN . [ SEMICOLON RCURLY ]
@@ -253,7 +265,7 @@ prog: RETURN STRING_MIDDLE
 
 prog: ID WITH
 ##
-## Ends in an error in state: 28.
+## Ends in an error in state: 29.
 ##
 ## expr1 -> ID . EQUALS expr1 [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RCURLY RBRACKET LCURLY COMMA COLON ]
 ## expr8 -> ID . [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RIGHT_ARROW RCURLY RBRACKET PRODUCT PLUS PIPE NOT_EQUALS MINUS LPAREN LESS LEQ LCURLY LBRACKET GREATER GEQ DOUBLE_EQUALS DOT DIVIDE COMMA COLON BANG ]
@@ -266,7 +278,7 @@ prog: ID WITH
 
 prog: ID EQUALS STRING_MIDDLE
 ##
-## Ends in an error in state: 29.
+## Ends in an error in state: 30.
 ##
 ## expr1 -> ID EQUALS . expr1 [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RCURLY RBRACKET LCURLY COMMA COLON ]
 ##
@@ -278,7 +290,7 @@ prog: ID EQUALS STRING_MIDDLE
 
 prog: FOR STRING_MIDDLE
 ##
-## Ends in an error in state: 30.
+## Ends in an error in state: 31.
 ##
 ## expr1 -> FOR . expr1 SEMICOLON expr1 SEMICOLON expr1 block [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RCURLY RBRACKET LCURLY COMMA COLON ]
 ## expr1 -> FOR . ID IN expr1 block [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RCURLY RBRACKET LCURLY COMMA COLON ]
@@ -291,7 +303,7 @@ prog: FOR STRING_MIDDLE
 
 prog: FOR ID WITH
 ##
-## Ends in an error in state: 31.
+## Ends in an error in state: 32.
 ##
 ## expr1 -> FOR ID . IN expr1 block [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RCURLY RBRACKET LCURLY COMMA COLON ]
 ## expr1 -> ID . EQUALS expr1 [ SEMICOLON ]
@@ -305,7 +317,7 @@ prog: FOR ID WITH
 
 prog: FOR ID IN STRING_MIDDLE
 ##
-## Ends in an error in state: 32.
+## Ends in an error in state: 33.
 ##
 ## expr1 -> FOR ID IN . expr1 block [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RCURLY RBRACKET LCURLY COMMA COLON ]
 ##
@@ -317,7 +329,7 @@ prog: FOR ID IN STRING_MIDDLE
 
 prog: DO WITH
 ##
-## Ends in an error in state: 34.
+## Ends in an error in state: 35.
 ##
 ## expr8 -> DO . block [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RIGHT_ARROW RCURLY RBRACKET PRODUCT PLUS PIPE NOT_EQUALS MINUS LPAREN LESS LEQ LCURLY LBRACKET GREATER GEQ DOUBLE_EQUALS DOT DIVIDE COMMA COLON BANG ]
 ##
@@ -329,7 +341,7 @@ prog: DO WITH
 
 prog: CONTEXT_ID LBRACKET CONTEXT_ID RBRACKET WITH
 ##
-## Ends in an error in state: 37.
+## Ends in an error in state: 38.
 ##
 ## expr1 -> subscript . EQUALS expr1 [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RCURLY RBRACKET LCURLY COMMA COLON ]
 ## expr7 -> subscript . [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RIGHT_ARROW RCURLY RBRACKET PRODUCT PLUS PIPE NOT_EQUALS MINUS LPAREN LESS LEQ LCURLY LBRACKET GREATER GEQ DOUBLE_EQUALS DOT DIVIDE COMMA COLON BANG ]
@@ -342,7 +354,7 @@ prog: CONTEXT_ID LBRACKET CONTEXT_ID RBRACKET WITH
 
 prog: CONTEXT_ID LBRACKET CONTEXT_ID RBRACKET EQUALS STRING_MIDDLE
 ##
-## Ends in an error in state: 38.
+## Ends in an error in state: 39.
 ##
 ## expr1 -> subscript EQUALS . expr1 [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RCURLY RBRACKET LCURLY COMMA COLON ]
 ##
@@ -354,7 +366,7 @@ prog: CONTEXT_ID LBRACKET CONTEXT_ID RBRACKET EQUALS STRING_MIDDLE
 
 prog: CONTEXT_ID WITH
 ##
-## Ends in an error in state: 42.
+## Ends in an error in state: 43.
 ##
 ## expr2 -> expr7 . [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RIGHT_ARROW RCURLY RBRACKET PRODUCT PLUS PIPE NOT_EQUALS MINUS LESS LEQ LCURLY GREATER GEQ DOUBLE_EQUALS DIVIDE COMMA COLON BANG ]
 ## expr7 -> expr7 . LPAREN expr_list RPAREN [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RIGHT_ARROW RCURLY RBRACKET PRODUCT PLUS PIPE NOT_EQUALS MINUS LPAREN LESS LEQ LCURLY LBRACKET GREATER GEQ DOUBLE_EQUALS DOT DIVIDE COMMA COLON BANG ]
@@ -370,7 +382,7 @@ prog: CONTEXT_ID WITH
 
 prog: CONTEXT_ID LPAREN STRING_MIDDLE
 ##
-## Ends in an error in state: 43.
+## Ends in an error in state: 44.
 ##
 ## expr7 -> expr7 LPAREN . expr_list RPAREN [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RIGHT_ARROW RCURLY RBRACKET PRODUCT PLUS PIPE NOT_EQUALS MINUS LPAREN LESS LEQ LCURLY LBRACKET GREATER GEQ DOUBLE_EQUALS DOT DIVIDE COMMA COLON BANG ]
 ## expr7 -> expr7 LPAREN . RPAREN [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RIGHT_ARROW RCURLY RBRACKET PRODUCT PLUS PIPE NOT_EQUALS MINUS LPAREN LESS LEQ LCURLY LBRACKET GREATER GEQ DOUBLE_EQUALS DOT DIVIDE COMMA COLON BANG ]
@@ -383,7 +395,7 @@ prog: CONTEXT_ID LPAREN STRING_MIDDLE
 
 prog: CONTEXT_ID LPAREN CONTEXT_ID STRING_MIDDLE
 ##
-## Ends in an error in state: 45.
+## Ends in an error in state: 46.
 ##
 ## expr7 -> expr7 LPAREN expr_list . RPAREN [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RIGHT_ARROW RCURLY RBRACKET PRODUCT PLUS PIPE NOT_EQUALS MINUS LPAREN LESS LEQ LCURLY LBRACKET GREATER GEQ DOUBLE_EQUALS DOT DIVIDE COMMA COLON BANG ]
 ## expr_list -> expr_list . COMMA expr1 [ RPAREN COMMA ]
@@ -395,16 +407,16 @@ prog: CONTEXT_ID LPAREN CONTEXT_ID STRING_MIDDLE
 ## This implies that, although the LR(1) items shown above provide an
 ## accurate view of the past (what has been recognized so far), they
 ## may provide an INCOMPLETE view of the future (what was expected next).
-## In state 42, spurious reduction of production expr2 -> expr7
-## In state 48, spurious reduction of production expr1 -> expr2
-## In state 76, spurious reduction of production expr_list -> expr1
+## In state 43, spurious reduction of production expr2 -> expr7
+## In state 49, spurious reduction of production expr1 -> expr2
+## In state 77, spurious reduction of production expr_list -> expr1
 ##
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
 
 prog: CONTEXT_ID LPAREN CONTEXT_ID COMMA STRING_MIDDLE
 ##
-## Ends in an error in state: 47.
+## Ends in an error in state: 48.
 ##
 ## expr_list -> expr_list COMMA . expr1 [ RPAREN COMMA ]
 ##
@@ -416,7 +428,7 @@ prog: CONTEXT_ID LPAREN CONTEXT_ID COMMA STRING_MIDDLE
 
 prog: CONTEXT_ID BANG WITH
 ##
-## Ends in an error in state: 48.
+## Ends in an error in state: 49.
 ##
 ## expr1 -> expr2 . [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RCURLY RBRACKET LCURLY COMMA COLON ]
 ## expr2 -> expr2 . DOUBLE_EQUALS expr2 [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RIGHT_ARROW RCURLY RBRACKET PRODUCT PLUS PIPE NOT_EQUALS MINUS LESS LEQ LCURLY GREATER GEQ DOUBLE_EQUALS DIVIDE COMMA COLON BANG ]
@@ -441,7 +453,7 @@ prog: CONTEXT_ID BANG WITH
 
 prog: CONTEXT_ID RIGHT_ARROW WITH
 ##
-## Ends in an error in state: 49.
+## Ends in an error in state: 50.
 ##
 ## expr2 -> expr2 RIGHT_ARROW . expr2 [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RIGHT_ARROW RCURLY RBRACKET PRODUCT PLUS PIPE NOT_EQUALS MINUS LESS LEQ LCURLY GREATER GEQ DOUBLE_EQUALS DIVIDE COMMA COLON BANG ]
 ##
@@ -453,7 +465,7 @@ prog: CONTEXT_ID RIGHT_ARROW WITH
 
 prog: CONTEXT_ID PRODUCT WITH
 ##
-## Ends in an error in state: 52.
+## Ends in an error in state: 53.
 ##
 ## expr2 -> expr2 PRODUCT . expr2 [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RIGHT_ARROW RCURLY RBRACKET PRODUCT PLUS PIPE NOT_EQUALS MINUS LESS LEQ LCURLY GREATER GEQ DOUBLE_EQUALS DIVIDE COMMA COLON BANG ]
 ##
@@ -465,7 +477,7 @@ prog: CONTEXT_ID PRODUCT WITH
 
 prog: CONTEXT_ID PLUS WITH
 ##
-## Ends in an error in state: 54.
+## Ends in an error in state: 55.
 ##
 ## expr2 -> expr2 PLUS . expr2 [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RIGHT_ARROW RCURLY RBRACKET PRODUCT PLUS PIPE NOT_EQUALS MINUS LESS LEQ LCURLY GREATER GEQ DOUBLE_EQUALS DIVIDE COMMA COLON BANG ]
 ##
@@ -473,11 +485,11 @@ prog: CONTEXT_ID PLUS WITH
 ## expr2 PLUS
 ##
 
-<YOUR SYNTAX ERROR MESSAGE HERE>
+The operator `+` expects `Number`s on both sides
 
 prog: CONTEXT_ID DIVIDE WITH
 ##
-## Ends in an error in state: 56.
+## Ends in an error in state: 57.
 ##
 ## expr2 -> expr2 DIVIDE . expr2 [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RIGHT_ARROW RCURLY RBRACKET PRODUCT PLUS PIPE NOT_EQUALS MINUS LESS LEQ LCURLY GREATER GEQ DOUBLE_EQUALS DIVIDE COMMA COLON BANG ]
 ##
@@ -489,7 +501,7 @@ prog: CONTEXT_ID DIVIDE WITH
 
 prog: CONTEXT_ID PIPE WITH
 ##
-## Ends in an error in state: 58.
+## Ends in an error in state: 59.
 ##
 ## expr2 -> expr2 PIPE . expr2 [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RIGHT_ARROW RCURLY RBRACKET PRODUCT PLUS PIPE NOT_EQUALS MINUS LESS LEQ LCURLY GREATER GEQ DOUBLE_EQUALS DIVIDE COMMA COLON BANG ]
 ##
@@ -501,7 +513,7 @@ prog: CONTEXT_ID PIPE WITH
 
 prog: CONTEXT_ID NOT_EQUALS WITH
 ##
-## Ends in an error in state: 60.
+## Ends in an error in state: 61.
 ##
 ## expr2 -> expr2 NOT_EQUALS . expr2 [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RIGHT_ARROW RCURLY RBRACKET PRODUCT PLUS PIPE NOT_EQUALS MINUS LESS LEQ LCURLY GREATER GEQ DOUBLE_EQUALS DIVIDE COMMA COLON BANG ]
 ##
@@ -513,7 +525,7 @@ prog: CONTEXT_ID NOT_EQUALS WITH
 
 prog: CONTEXT_ID MINUS WITH
 ##
-## Ends in an error in state: 62.
+## Ends in an error in state: 63.
 ##
 ## expr2 -> expr2 MINUS . expr2 [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RIGHT_ARROW RCURLY RBRACKET PRODUCT PLUS PIPE NOT_EQUALS MINUS LESS LEQ LCURLY GREATER GEQ DOUBLE_EQUALS DIVIDE COMMA COLON BANG ]
 ##
@@ -525,7 +537,7 @@ prog: CONTEXT_ID MINUS WITH
 
 prog: CONTEXT_ID LESS WITH
 ##
-## Ends in an error in state: 64.
+## Ends in an error in state: 65.
 ##
 ## expr2 -> expr2 LESS . expr2 [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RIGHT_ARROW RCURLY RBRACKET PRODUCT PLUS PIPE NOT_EQUALS MINUS LESS LEQ LCURLY GREATER GEQ DOUBLE_EQUALS DIVIDE COMMA COLON BANG ]
 ##
@@ -537,7 +549,7 @@ prog: CONTEXT_ID LESS WITH
 
 prog: CONTEXT_ID LEQ WITH
 ##
-## Ends in an error in state: 66.
+## Ends in an error in state: 67.
 ##
 ## expr2 -> expr2 LEQ . expr2 [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RIGHT_ARROW RCURLY RBRACKET PRODUCT PLUS PIPE NOT_EQUALS MINUS LESS LEQ LCURLY GREATER GEQ DOUBLE_EQUALS DIVIDE COMMA COLON BANG ]
 ##
@@ -549,7 +561,7 @@ prog: CONTEXT_ID LEQ WITH
 
 prog: CONTEXT_ID GREATER WITH
 ##
-## Ends in an error in state: 68.
+## Ends in an error in state: 69.
 ##
 ## expr2 -> expr2 GREATER . expr2 [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RIGHT_ARROW RCURLY RBRACKET PRODUCT PLUS PIPE NOT_EQUALS MINUS LESS LEQ LCURLY GREATER GEQ DOUBLE_EQUALS DIVIDE COMMA COLON BANG ]
 ##
@@ -561,7 +573,7 @@ prog: CONTEXT_ID GREATER WITH
 
 prog: CONTEXT_ID GEQ WITH
 ##
-## Ends in an error in state: 70.
+## Ends in an error in state: 71.
 ##
 ## expr2 -> expr2 GEQ . expr2 [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RIGHT_ARROW RCURLY RBRACKET PRODUCT PLUS PIPE NOT_EQUALS MINUS LESS LEQ LCURLY GREATER GEQ DOUBLE_EQUALS DIVIDE COMMA COLON BANG ]
 ##
@@ -573,7 +585,7 @@ prog: CONTEXT_ID GEQ WITH
 
 prog: CONTEXT_ID DOUBLE_EQUALS WITH
 ##
-## Ends in an error in state: 72.
+## Ends in an error in state: 73.
 ##
 ## expr2 -> expr2 DOUBLE_EQUALS . expr2 [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RIGHT_ARROW RCURLY RBRACKET PRODUCT PLUS PIPE NOT_EQUALS MINUS LESS LEQ LCURLY GREATER GEQ DOUBLE_EQUALS DIVIDE COMMA COLON BANG ]
 ##
@@ -585,7 +597,7 @@ prog: CONTEXT_ID DOUBLE_EQUALS WITH
 
 prog: CONTEXT_ID LBRACKET STRING_MIDDLE
 ##
-## Ends in an error in state: 77.
+## Ends in an error in state: 78.
 ##
 ## subscript -> expr7 LBRACKET . expr1 RBRACKET [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RIGHT_ARROW RCURLY RBRACKET PRODUCT PLUS PIPE NOT_EQUALS MINUS LPAREN LESS LEQ LCURLY LBRACKET GREATER GEQ EQUALS DOUBLE_EQUALS DOT DIVIDE COMMA COLON BANG ]
 ##
@@ -597,7 +609,7 @@ prog: CONTEXT_ID LBRACKET STRING_MIDDLE
 
 prog: CONTEXT_ID LBRACKET CONTEXT_ID STRING_MIDDLE
 ##
-## Ends in an error in state: 78.
+## Ends in an error in state: 79.
 ##
 ## subscript -> expr7 LBRACKET expr1 . RBRACKET [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RIGHT_ARROW RCURLY RBRACKET PRODUCT PLUS PIPE NOT_EQUALS MINUS LPAREN LESS LEQ LCURLY LBRACKET GREATER GEQ EQUALS DOUBLE_EQUALS DOT DIVIDE COMMA COLON BANG ]
 ##
@@ -608,15 +620,15 @@ prog: CONTEXT_ID LBRACKET CONTEXT_ID STRING_MIDDLE
 ## This implies that, although the LR(1) items shown above provide an
 ## accurate view of the past (what has been recognized so far), they
 ## may provide an INCOMPLETE view of the future (what was expected next).
-## In state 42, spurious reduction of production expr2 -> expr7
-## In state 48, spurious reduction of production expr1 -> expr2
+## In state 43, spurious reduction of production expr2 -> expr7
+## In state 49, spurious reduction of production expr1 -> expr2
 ##
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
 
 prog: CONTEXT_ID DOT WITH
 ##
-## Ends in an error in state: 80.
+## Ends in an error in state: 81.
 ##
 ## expr7 -> expr7 DOT . ID [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RIGHT_ARROW RCURLY RBRACKET PRODUCT PLUS PIPE NOT_EQUALS MINUS LPAREN LESS LEQ LCURLY LBRACKET GREATER GEQ DOUBLE_EQUALS DOT DIVIDE COMMA COLON BANG ]
 ##
@@ -628,7 +640,7 @@ prog: CONTEXT_ID DOT WITH
 
 prog: FOR ID IN CONTEXT_ID STRING_MIDDLE
 ##
-## Ends in an error in state: 83.
+## Ends in an error in state: 84.
 ##
 ## expr1 -> FOR ID IN expr1 . block [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RCURLY RBRACKET LCURLY COMMA COLON ]
 ##
@@ -639,15 +651,15 @@ prog: FOR ID IN CONTEXT_ID STRING_MIDDLE
 ## This implies that, although the LR(1) items shown above provide an
 ## accurate view of the past (what has been recognized so far), they
 ## may provide an INCOMPLETE view of the future (what was expected next).
-## In state 42, spurious reduction of production expr2 -> expr7
-## In state 48, spurious reduction of production expr1 -> expr2
+## In state 43, spurious reduction of production expr2 -> expr7
+## In state 49, spurious reduction of production expr1 -> expr2
 ##
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
 
 prog: FOR CONTEXT_ID STRING_MIDDLE
 ##
-## Ends in an error in state: 85.
+## Ends in an error in state: 86.
 ##
 ## expr1 -> FOR expr1 . SEMICOLON expr1 SEMICOLON expr1 block [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RCURLY RBRACKET LCURLY COMMA COLON ]
 ##
@@ -658,15 +670,15 @@ prog: FOR CONTEXT_ID STRING_MIDDLE
 ## This implies that, although the LR(1) items shown above provide an
 ## accurate view of the past (what has been recognized so far), they
 ## may provide an INCOMPLETE view of the future (what was expected next).
-## In state 42, spurious reduction of production expr2 -> expr7
-## In state 48, spurious reduction of production expr1 -> expr2
+## In state 43, spurious reduction of production expr2 -> expr7
+## In state 49, spurious reduction of production expr1 -> expr2
 ##
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
 
 prog: FOR CONTEXT_ID SEMICOLON STRING_MIDDLE
 ##
-## Ends in an error in state: 86.
+## Ends in an error in state: 87.
 ##
 ## expr1 -> FOR expr1 SEMICOLON . expr1 SEMICOLON expr1 block [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RCURLY RBRACKET LCURLY COMMA COLON ]
 ##
@@ -678,7 +690,7 @@ prog: FOR CONTEXT_ID SEMICOLON STRING_MIDDLE
 
 prog: FOR CONTEXT_ID SEMICOLON CONTEXT_ID STRING_MIDDLE
 ##
-## Ends in an error in state: 87.
+## Ends in an error in state: 88.
 ##
 ## expr1 -> FOR expr1 SEMICOLON expr1 . SEMICOLON expr1 block [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RCURLY RBRACKET LCURLY COMMA COLON ]
 ##
@@ -689,15 +701,15 @@ prog: FOR CONTEXT_ID SEMICOLON CONTEXT_ID STRING_MIDDLE
 ## This implies that, although the LR(1) items shown above provide an
 ## accurate view of the past (what has been recognized so far), they
 ## may provide an INCOMPLETE view of the future (what was expected next).
-## In state 42, spurious reduction of production expr2 -> expr7
-## In state 48, spurious reduction of production expr1 -> expr2
+## In state 43, spurious reduction of production expr2 -> expr7
+## In state 49, spurious reduction of production expr1 -> expr2
 ##
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
 
 prog: FOR CONTEXT_ID SEMICOLON CONTEXT_ID SEMICOLON STRING_MIDDLE
 ##
-## Ends in an error in state: 88.
+## Ends in an error in state: 89.
 ##
 ## expr1 -> FOR expr1 SEMICOLON expr1 SEMICOLON . expr1 block [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RCURLY RBRACKET LCURLY COMMA COLON ]
 ##
@@ -709,7 +721,7 @@ prog: FOR CONTEXT_ID SEMICOLON CONTEXT_ID SEMICOLON STRING_MIDDLE
 
 prog: FOR CONTEXT_ID SEMICOLON CONTEXT_ID SEMICOLON CONTEXT_ID STRING_MIDDLE
 ##
-## Ends in an error in state: 89.
+## Ends in an error in state: 90.
 ##
 ## expr1 -> FOR expr1 SEMICOLON expr1 SEMICOLON expr1 . block [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RCURLY RBRACKET LCURLY COMMA COLON ]
 ##
@@ -720,15 +732,15 @@ prog: FOR CONTEXT_ID SEMICOLON CONTEXT_ID SEMICOLON CONTEXT_ID STRING_MIDDLE
 ## This implies that, although the LR(1) items shown above provide an
 ## accurate view of the past (what has been recognized so far), they
 ## may provide an INCOMPLETE view of the future (what was expected next).
-## In state 42, spurious reduction of production expr2 -> expr7
-## In state 48, spurious reduction of production expr1 -> expr2
+## In state 43, spurious reduction of production expr2 -> expr7
+## In state 49, spurious reduction of production expr1 -> expr2
 ##
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
 
 prog: CONTINUE STRING_MIDDLE
 ##
-## Ends in an error in state: 94.
+## Ends in an error in state: 95.
 ##
 ## stmt_sans_semicolon -> CONTINUE . expr1 [ SEMICOLON RCURLY ]
 ## stmt_sans_semicolon -> CONTINUE . [ SEMICOLON RCURLY ]
@@ -741,7 +753,7 @@ prog: CONTINUE STRING_MIDDLE
 
 prog: BREAK STRING_MIDDLE
 ##
-## Ends in an error in state: 96.
+## Ends in an error in state: 97.
 ##
 ## stmt_sans_semicolon -> BREAK . expr1 [ SEMICOLON RCURLY ]
 ## stmt_sans_semicolon -> BREAK . [ SEMICOLON RCURLY ]
@@ -754,10 +766,10 @@ prog: BREAK STRING_MIDDLE
 
 prog: DO LCURLY CONTEXT_ID SEMICOLON STRING_MIDDLE
 ##
-## Ends in an error in state: 98.
+## Ends in an error in state: 99.
 ##
 ## block -> LCURLY stmts . RCURLY [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RIGHT_ARROW RCURLY RBRACKET PRODUCT PLUS PIPE NOT_EQUALS MINUS LPAREN LESS LEQ LCURLY LBRACKET GREATER GEQ ELSE DOUBLE_EQUALS DOT DIVIDE COMMA COLON BANG ]
-## stmts -> stmts . stmt [ WITH TRUE STRING_START STRING_FULL RETURN RCURLY PROTOTYPE NUM NULL NOT LPAREN LET LEFT_ARROW LCURLY LBRACKET IF ID FUNC FOR FALSE DO CONTINUE CONTEXT_ID BREAK ]
+## stmts -> stmts . stmt [ WITH TRUE STRING_START STRING_FULL RETURN RCURLY PROTOTYPE NUM NULL NOT MINUS LPAREN LET LEFT_ARROW LCURLY LBRACKET IF ID FUNC FOR FALSE DO CONTINUE CONTEXT_ID BREAK ]
 ##
 ## The known suffix of the stack is as follows:
 ## LCURLY stmts
@@ -767,9 +779,9 @@ prog: DO LCURLY CONTEXT_ID SEMICOLON STRING_MIDDLE
 
 prog: CONTEXT_ID RCURLY
 ##
-## Ends in an error in state: 100.
+## Ends in an error in state: 101.
 ##
-## stmt -> stmt_sans_semicolon . SEMICOLON [ WITH TRUE STRING_START STRING_FULL RETURN RCURLY PROTOTYPE NUM NULL NOT LPAREN LET LEFT_ARROW LCURLY LBRACKET IF ID FUNC FOR FALSE EOF DO CONTINUE CONTEXT_ID BREAK ]
+## stmt -> stmt_sans_semicolon . SEMICOLON [ WITH TRUE STRING_START STRING_FULL RETURN RCURLY PROTOTYPE NUM NULL NOT MINUS LPAREN LET LEFT_ARROW LCURLY LBRACKET IF ID FUNC FOR FALSE EOF DO CONTINUE CONTEXT_ID BREAK ]
 ##
 ## The known suffix of the stack is as follows:
 ## stmt_sans_semicolon
@@ -778,19 +790,19 @@ prog: CONTEXT_ID RCURLY
 ## This implies that, although the LR(1) items shown above provide an
 ## accurate view of the past (what has been recognized so far), they
 ## may provide an INCOMPLETE view of the future (what was expected next).
-## In state 42, spurious reduction of production expr2 -> expr7
-## In state 48, spurious reduction of production expr1 -> expr2
-## In state 103, spurious reduction of production stmt_sans_semicolon -> expr1
+## In state 43, spurious reduction of production expr2 -> expr7
+## In state 49, spurious reduction of production expr1 -> expr2
+## In state 104, spurious reduction of production stmt_sans_semicolon -> expr1
 ##
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
 
 prog: DO LCURLY CONTEXT_ID STRING_MIDDLE
 ##
-## Ends in an error in state: 104.
+## Ends in an error in state: 105.
 ##
 ## block -> LCURLY stmt_sans_semicolon . RCURLY [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RIGHT_ARROW RCURLY RBRACKET PRODUCT PLUS PIPE NOT_EQUALS MINUS LPAREN LESS LEQ LCURLY LBRACKET GREATER GEQ ELSE DOUBLE_EQUALS DOT DIVIDE COMMA COLON BANG ]
-## stmt -> stmt_sans_semicolon . SEMICOLON [ WITH TRUE STRING_START STRING_FULL RETURN RCURLY PROTOTYPE NUM NULL NOT LPAREN LET LEFT_ARROW LCURLY LBRACKET IF ID FUNC FOR FALSE DO CONTINUE CONTEXT_ID BREAK ]
+## stmt -> stmt_sans_semicolon . SEMICOLON [ WITH TRUE STRING_START STRING_FULL RETURN RCURLY PROTOTYPE NUM NULL NOT MINUS LPAREN LET LEFT_ARROW LCURLY LBRACKET IF ID FUNC FOR FALSE DO CONTINUE CONTEXT_ID BREAK ]
 ##
 ## The known suffix of the stack is as follows:
 ## LCURLY stmt_sans_semicolon
@@ -799,16 +811,16 @@ prog: DO LCURLY CONTEXT_ID STRING_MIDDLE
 ## This implies that, although the LR(1) items shown above provide an
 ## accurate view of the past (what has been recognized so far), they
 ## may provide an INCOMPLETE view of the future (what was expected next).
-## In state 42, spurious reduction of production expr2 -> expr7
-## In state 48, spurious reduction of production expr1 -> expr2
-## In state 103, spurious reduction of production stmt_sans_semicolon -> expr1
+## In state 43, spurious reduction of production expr2 -> expr7
+## In state 49, spurious reduction of production expr1 -> expr2
+## In state 104, spurious reduction of production stmt_sans_semicolon -> expr1
 ##
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
 
 prog: FUNC LPAREN ID WITH
 ##
-## Ends in an error in state: 109.
+## Ends in an error in state: 110.
 ##
 ## expr8 -> FUNC LPAREN parameter_list . RPAREN block [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RIGHT_ARROW RCURLY RBRACKET PRODUCT PLUS PIPE NOT_EQUALS MINUS LPAREN LESS LEQ LCURLY LBRACKET GREATER GEQ DOUBLE_EQUALS DOT DIVIDE COMMA COLON BANG ]
 ## parameter_list -> parameter_list . COMMA ID [ RPAREN COMMA ]
@@ -821,7 +833,7 @@ prog: FUNC LPAREN ID WITH
 
 prog: FUNC LPAREN ID RPAREN WITH
 ##
-## Ends in an error in state: 110.
+## Ends in an error in state: 111.
 ##
 ## expr8 -> FUNC LPAREN parameter_list RPAREN . block [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RIGHT_ARROW RCURLY RBRACKET PRODUCT PLUS PIPE NOT_EQUALS MINUS LPAREN LESS LEQ LCURLY LBRACKET GREATER GEQ DOUBLE_EQUALS DOT DIVIDE COMMA COLON BANG ]
 ##
@@ -833,7 +845,7 @@ prog: FUNC LPAREN ID RPAREN WITH
 
 prog: FUNC LPAREN ID COMMA WITH
 ##
-## Ends in an error in state: 112.
+## Ends in an error in state: 113.
 ##
 ## parameter_list -> parameter_list COMMA . ID [ RPAREN COMMA ]
 ##
@@ -845,7 +857,7 @@ prog: FUNC LPAREN ID COMMA WITH
 
 prog: IF CONTEXT_ID SEMICOLON
 ##
-## Ends in an error in state: 114.
+## Ends in an error in state: 115.
 ##
 ## expr1 -> IF expr2 . block conditional_continuation [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RCURLY RBRACKET LCURLY COMMA COLON ]
 ## expr1 -> IF expr2 . block [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RCURLY RBRACKET LCURLY COMMA COLON ]
@@ -870,14 +882,14 @@ prog: IF CONTEXT_ID SEMICOLON
 ## This implies that, although the LR(1) items shown above provide an
 ## accurate view of the past (what has been recognized so far), they
 ## may provide an INCOMPLETE view of the future (what was expected next).
-## In state 42, spurious reduction of production expr2 -> expr7
+## In state 43, spurious reduction of production expr2 -> expr7
 ##
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
 
 prog: IF CONTEXT_ID LCURLY RCURLY WITH
 ##
-## Ends in an error in state: 115.
+## Ends in an error in state: 116.
 ##
 ## expr1 -> IF expr2 block . conditional_continuation [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RCURLY RBRACKET LCURLY COMMA COLON ]
 ## expr1 -> IF expr2 block . [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RCURLY RBRACKET LCURLY COMMA COLON ]
@@ -890,7 +902,7 @@ prog: IF CONTEXT_ID LCURLY RCURLY WITH
 
 prog: IF CONTEXT_ID LCURLY RCURLY ELSE WITH
 ##
-## Ends in an error in state: 116.
+## Ends in an error in state: 117.
 ##
 ## conditional_continuation -> ELSE . block [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RCURLY RBRACKET LCURLY COMMA COLON ]
 ## elif -> ELSE . IF expr2 block [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RCURLY RBRACKET LCURLY ELSE COMMA COLON ]
@@ -903,7 +915,7 @@ prog: IF CONTEXT_ID LCURLY RCURLY ELSE WITH
 
 prog: IF CONTEXT_ID LCURLY RCURLY ELSE IF WITH
 ##
-## Ends in an error in state: 117.
+## Ends in an error in state: 118.
 ##
 ## elif -> ELSE IF . expr2 block [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RCURLY RBRACKET LCURLY ELSE COMMA COLON ]
 ##
@@ -915,7 +927,7 @@ prog: IF CONTEXT_ID LCURLY RCURLY ELSE IF WITH
 
 prog: IF CONTEXT_ID LCURLY RCURLY ELSE IF CONTEXT_ID SEMICOLON
 ##
-## Ends in an error in state: 118.
+## Ends in an error in state: 119.
 ##
 ## elif -> ELSE IF expr2 . block [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RCURLY RBRACKET LCURLY ELSE COMMA COLON ]
 ## expr2 -> expr2 . DOUBLE_EQUALS expr2 [ RIGHT_ARROW PRODUCT PLUS PIPE NOT_EQUALS MINUS LESS LEQ LCURLY GREATER GEQ DOUBLE_EQUALS DIVIDE BANG ]
@@ -939,14 +951,14 @@ prog: IF CONTEXT_ID LCURLY RCURLY ELSE IF CONTEXT_ID SEMICOLON
 ## This implies that, although the LR(1) items shown above provide an
 ## accurate view of the past (what has been recognized so far), they
 ## may provide an INCOMPLETE view of the future (what was expected next).
-## In state 42, spurious reduction of production expr2 -> expr7
+## In state 43, spurious reduction of production expr2 -> expr7
 ##
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
 
 prog: IF CONTEXT_ID LCURLY RCURLY ELSE IF CONTEXT_ID LCURLY RCURLY WITH
 ##
-## Ends in an error in state: 121.
+## Ends in an error in state: 122.
 ##
 ## conditional_continuation -> elif . ELSE block [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RCURLY RBRACKET LCURLY COMMA COLON ]
 ## conditional_continuation -> elif . [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RCURLY RBRACKET LCURLY COMMA COLON ]
@@ -960,7 +972,7 @@ prog: IF CONTEXT_ID LCURLY RCURLY ELSE IF CONTEXT_ID LCURLY RCURLY WITH
 
 prog: IF CONTEXT_ID LCURLY RCURLY ELSE IF CONTEXT_ID LCURLY RCURLY ELSE WITH
 ##
-## Ends in an error in state: 122.
+## Ends in an error in state: 123.
 ##
 ## conditional_continuation -> elif ELSE . block [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RCURLY RBRACKET LCURLY COMMA COLON ]
 ## elif -> elif ELSE . IF expr2 block [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RCURLY RBRACKET LCURLY ELSE COMMA COLON ]
@@ -973,7 +985,7 @@ prog: IF CONTEXT_ID LCURLY RCURLY ELSE IF CONTEXT_ID LCURLY RCURLY ELSE WITH
 
 prog: IF CONTEXT_ID LCURLY RCURLY ELSE IF CONTEXT_ID LCURLY RCURLY ELSE IF WITH
 ##
-## Ends in an error in state: 123.
+## Ends in an error in state: 124.
 ##
 ## elif -> elif ELSE IF . expr2 block [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RCURLY RBRACKET LCURLY ELSE COMMA COLON ]
 ##
@@ -985,7 +997,7 @@ prog: IF CONTEXT_ID LCURLY RCURLY ELSE IF CONTEXT_ID LCURLY RCURLY ELSE IF WITH
 
 prog: IF CONTEXT_ID LCURLY RCURLY ELSE IF CONTEXT_ID LCURLY RCURLY ELSE IF CONTEXT_ID SEMICOLON
 ##
-## Ends in an error in state: 124.
+## Ends in an error in state: 125.
 ##
 ## elif -> elif ELSE IF expr2 . block [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RCURLY RBRACKET LCURLY ELSE COMMA COLON ]
 ## expr2 -> expr2 . DOUBLE_EQUALS expr2 [ RIGHT_ARROW PRODUCT PLUS PIPE NOT_EQUALS MINUS LESS LEQ LCURLY GREATER GEQ DOUBLE_EQUALS DIVIDE BANG ]
@@ -1009,14 +1021,14 @@ prog: IF CONTEXT_ID LCURLY RCURLY ELSE IF CONTEXT_ID LCURLY RCURLY ELSE IF CONTE
 ## This implies that, although the LR(1) items shown above provide an
 ## accurate view of the past (what has been recognized so far), they
 ## may provide an INCOMPLETE view of the future (what was expected next).
-## In state 42, spurious reduction of production expr2 -> expr7
+## In state 43, spurious reduction of production expr2 -> expr7
 ##
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
 
 prog: LBRACKET CONTEXT_ID STRING_MIDDLE
 ##
-## Ends in an error in state: 128.
+## Ends in an error in state: 129.
 ##
 ## expr_list -> expr_list . COMMA expr1 [ RBRACKET COMMA ]
 ## list_literal -> LBRACKET expr_list . COMMA RBRACKET [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RIGHT_ARROW RCURLY RBRACKET PRODUCT PLUS PIPE NOT_EQUALS MINUS LPAREN LESS LEQ LCURLY LBRACKET GREATER GEQ DOUBLE_EQUALS DOT DIVIDE COMMA COLON BANG ]
@@ -1029,16 +1041,16 @@ prog: LBRACKET CONTEXT_ID STRING_MIDDLE
 ## This implies that, although the LR(1) items shown above provide an
 ## accurate view of the past (what has been recognized so far), they
 ## may provide an INCOMPLETE view of the future (what was expected next).
-## In state 42, spurious reduction of production expr2 -> expr7
-## In state 48, spurious reduction of production expr1 -> expr2
-## In state 76, spurious reduction of production expr_list -> expr1
+## In state 43, spurious reduction of production expr2 -> expr7
+## In state 49, spurious reduction of production expr1 -> expr2
+## In state 77, spurious reduction of production expr_list -> expr1
 ##
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
 
 prog: LBRACKET CONTEXT_ID COMMA STRING_MIDDLE
 ##
-## Ends in an error in state: 130.
+## Ends in an error in state: 131.
 ##
 ## expr_list -> expr_list COMMA . expr1 [ RBRACKET COMMA ]
 ## list_literal -> LBRACKET expr_list COMMA . RBRACKET [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RIGHT_ARROW RCURLY RBRACKET PRODUCT PLUS PIPE NOT_EQUALS MINUS LPAREN LESS LEQ LCURLY LBRACKET GREATER GEQ DOUBLE_EQUALS DOT DIVIDE COMMA COLON BANG ]
@@ -1051,9 +1063,9 @@ prog: LBRACKET CONTEXT_ID COMMA STRING_MIDDLE
 
 prog: LCURLY CONTEXT_ID COLON CONTEXT_ID COMMA STRING_MIDDLE
 ##
-## Ends in an error in state: 132.
+## Ends in an error in state: 133.
 ##
-## hash_literal_pair -> hash_literal_pair . expr1 COLON expr1 COMMA [ WITH TRUE STRING_START STRING_FULL RCURLY PROTOTYPE NUM NULL NOT LPAREN LET LEFT_ARROW LCURLY LBRACKET IF ID FUNC FOR FALSE DO CONTEXT_ID ]
+## hash_literal_pair -> hash_literal_pair . expr1 COLON expr1 COMMA [ WITH TRUE STRING_START STRING_FULL RCURLY PROTOTYPE NUM NULL NOT MINUS LPAREN LET LEFT_ARROW LCURLY LBRACKET IF ID FUNC FOR FALSE DO CONTEXT_ID ]
 ## hash_literals -> LCURLY hash_literal_pair . RCURLY [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RIGHT_ARROW RCURLY RBRACKET PRODUCT PLUS PIPE NOT_EQUALS MINUS LPAREN LESS LEQ LCURLY LBRACKET GREATER GEQ DOUBLE_EQUALS DOT DIVIDE COMMA COLON BANG ]
 ##
 ## The known suffix of the stack is as follows:
@@ -1064,9 +1076,9 @@ prog: LCURLY CONTEXT_ID COLON CONTEXT_ID COMMA STRING_MIDDLE
 
 prog: LCURLY CONTEXT_ID COLON CONTEXT_ID COMMA CONTEXT_ID STRING_MIDDLE
 ##
-## Ends in an error in state: 134.
+## Ends in an error in state: 135.
 ##
-## hash_literal_pair -> hash_literal_pair expr1 . COLON expr1 COMMA [ WITH TRUE STRING_START STRING_FULL RCURLY PROTOTYPE NUM NULL NOT LPAREN LET LEFT_ARROW LCURLY LBRACKET IF ID FUNC FOR FALSE DO CONTEXT_ID ]
+## hash_literal_pair -> hash_literal_pair expr1 . COLON expr1 COMMA [ WITH TRUE STRING_START STRING_FULL RCURLY PROTOTYPE NUM NULL NOT MINUS LPAREN LET LEFT_ARROW LCURLY LBRACKET IF ID FUNC FOR FALSE DO CONTEXT_ID ]
 ##
 ## The known suffix of the stack is as follows:
 ## hash_literal_pair expr1
@@ -1075,17 +1087,17 @@ prog: LCURLY CONTEXT_ID COLON CONTEXT_ID COMMA CONTEXT_ID STRING_MIDDLE
 ## This implies that, although the LR(1) items shown above provide an
 ## accurate view of the past (what has been recognized so far), they
 ## may provide an INCOMPLETE view of the future (what was expected next).
-## In state 42, spurious reduction of production expr2 -> expr7
-## In state 48, spurious reduction of production expr1 -> expr2
+## In state 43, spurious reduction of production expr2 -> expr7
+## In state 49, spurious reduction of production expr1 -> expr2
 ##
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
 
 prog: LCURLY CONTEXT_ID COLON CONTEXT_ID COMMA CONTEXT_ID COLON STRING_MIDDLE
 ##
-## Ends in an error in state: 135.
+## Ends in an error in state: 136.
 ##
-## hash_literal_pair -> hash_literal_pair expr1 COLON . expr1 COMMA [ WITH TRUE STRING_START STRING_FULL RCURLY PROTOTYPE NUM NULL NOT LPAREN LET LEFT_ARROW LCURLY LBRACKET IF ID FUNC FOR FALSE DO CONTEXT_ID ]
+## hash_literal_pair -> hash_literal_pair expr1 COLON . expr1 COMMA [ WITH TRUE STRING_START STRING_FULL RCURLY PROTOTYPE NUM NULL NOT MINUS LPAREN LET LEFT_ARROW LCURLY LBRACKET IF ID FUNC FOR FALSE DO CONTEXT_ID ]
 ##
 ## The known suffix of the stack is as follows:
 ## hash_literal_pair expr1 COLON
@@ -1095,9 +1107,9 @@ prog: LCURLY CONTEXT_ID COLON CONTEXT_ID COMMA CONTEXT_ID COLON STRING_MIDDLE
 
 prog: LCURLY CONTEXT_ID COLON CONTEXT_ID COMMA CONTEXT_ID COLON CONTEXT_ID STRING_MIDDLE
 ##
-## Ends in an error in state: 136.
+## Ends in an error in state: 137.
 ##
-## hash_literal_pair -> hash_literal_pair expr1 COLON expr1 . COMMA [ WITH TRUE STRING_START STRING_FULL RCURLY PROTOTYPE NUM NULL NOT LPAREN LET LEFT_ARROW LCURLY LBRACKET IF ID FUNC FOR FALSE DO CONTEXT_ID ]
+## hash_literal_pair -> hash_literal_pair expr1 COLON expr1 . COMMA [ WITH TRUE STRING_START STRING_FULL RCURLY PROTOTYPE NUM NULL NOT MINUS LPAREN LET LEFT_ARROW LCURLY LBRACKET IF ID FUNC FOR FALSE DO CONTEXT_ID ]
 ##
 ## The known suffix of the stack is as follows:
 ## hash_literal_pair expr1 COLON expr1
@@ -1106,17 +1118,17 @@ prog: LCURLY CONTEXT_ID COLON CONTEXT_ID COMMA CONTEXT_ID COLON CONTEXT_ID STRIN
 ## This implies that, although the LR(1) items shown above provide an
 ## accurate view of the past (what has been recognized so far), they
 ## may provide an INCOMPLETE view of the future (what was expected next).
-## In state 42, spurious reduction of production expr2 -> expr7
-## In state 48, spurious reduction of production expr1 -> expr2
+## In state 43, spurious reduction of production expr2 -> expr7
+## In state 49, spurious reduction of production expr1 -> expr2
 ##
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
 
 prog: LCURLY CONTEXT_ID STRING_MIDDLE
 ##
-## Ends in an error in state: 138.
+## Ends in an error in state: 139.
 ##
-## hash_literal_pair -> expr1 . COLON expr1 COMMA [ WITH TRUE STRING_START STRING_FULL RCURLY PROTOTYPE NUM NULL NOT LPAREN LET LEFT_ARROW LCURLY LBRACKET IF ID FUNC FOR FALSE DO CONTEXT_ID ]
+## hash_literal_pair -> expr1 . COLON expr1 COMMA [ WITH TRUE STRING_START STRING_FULL RCURLY PROTOTYPE NUM NULL NOT MINUS LPAREN LET LEFT_ARROW LCURLY LBRACKET IF ID FUNC FOR FALSE DO CONTEXT_ID ]
 ## hash_literals -> LCURLY expr1 . COLON expr1 RCURLY [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RIGHT_ARROW RCURLY RBRACKET PRODUCT PLUS PIPE NOT_EQUALS MINUS LPAREN LESS LEQ LCURLY LBRACKET GREATER GEQ DOUBLE_EQUALS DOT DIVIDE COMMA COLON BANG ]
 ##
 ## The known suffix of the stack is as follows:
@@ -1126,17 +1138,17 @@ prog: LCURLY CONTEXT_ID STRING_MIDDLE
 ## This implies that, although the LR(1) items shown above provide an
 ## accurate view of the past (what has been recognized so far), they
 ## may provide an INCOMPLETE view of the future (what was expected next).
-## In state 42, spurious reduction of production expr2 -> expr7
-## In state 48, spurious reduction of production expr1 -> expr2
+## In state 43, spurious reduction of production expr2 -> expr7
+## In state 49, spurious reduction of production expr1 -> expr2
 ##
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
 
 prog: LCURLY CONTEXT_ID COLON STRING_MIDDLE
 ##
-## Ends in an error in state: 139.
+## Ends in an error in state: 140.
 ##
-## hash_literal_pair -> expr1 COLON . expr1 COMMA [ WITH TRUE STRING_START STRING_FULL RCURLY PROTOTYPE NUM NULL NOT LPAREN LET LEFT_ARROW LCURLY LBRACKET IF ID FUNC FOR FALSE DO CONTEXT_ID ]
+## hash_literal_pair -> expr1 COLON . expr1 COMMA [ WITH TRUE STRING_START STRING_FULL RCURLY PROTOTYPE NUM NULL NOT MINUS LPAREN LET LEFT_ARROW LCURLY LBRACKET IF ID FUNC FOR FALSE DO CONTEXT_ID ]
 ## hash_literals -> LCURLY expr1 COLON . expr1 RCURLY [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RIGHT_ARROW RCURLY RBRACKET PRODUCT PLUS PIPE NOT_EQUALS MINUS LPAREN LESS LEQ LCURLY LBRACKET GREATER GEQ DOUBLE_EQUALS DOT DIVIDE COMMA COLON BANG ]
 ##
 ## The known suffix of the stack is as follows:
@@ -1147,9 +1159,9 @@ prog: LCURLY CONTEXT_ID COLON STRING_MIDDLE
 
 prog: LCURLY CONTEXT_ID COLON CONTEXT_ID STRING_MIDDLE
 ##
-## Ends in an error in state: 140.
+## Ends in an error in state: 141.
 ##
-## hash_literal_pair -> expr1 COLON expr1 . COMMA [ WITH TRUE STRING_START STRING_FULL RCURLY PROTOTYPE NUM NULL NOT LPAREN LET LEFT_ARROW LCURLY LBRACKET IF ID FUNC FOR FALSE DO CONTEXT_ID ]
+## hash_literal_pair -> expr1 COLON expr1 . COMMA [ WITH TRUE STRING_START STRING_FULL RCURLY PROTOTYPE NUM NULL NOT MINUS LPAREN LET LEFT_ARROW LCURLY LBRACKET IF ID FUNC FOR FALSE DO CONTEXT_ID ]
 ## hash_literals -> LCURLY expr1 COLON expr1 . RCURLY [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RIGHT_ARROW RCURLY RBRACKET PRODUCT PLUS PIPE NOT_EQUALS MINUS LPAREN LESS LEQ LCURLY LBRACKET GREATER GEQ DOUBLE_EQUALS DOT DIVIDE COMMA COLON BANG ]
 ##
 ## The known suffix of the stack is as follows:
@@ -1159,15 +1171,15 @@ prog: LCURLY CONTEXT_ID COLON CONTEXT_ID STRING_MIDDLE
 ## This implies that, although the LR(1) items shown above provide an
 ## accurate view of the past (what has been recognized so far), they
 ## may provide an INCOMPLETE view of the future (what was expected next).
-## In state 42, spurious reduction of production expr2 -> expr7
-## In state 48, spurious reduction of production expr1 -> expr2
+## In state 43, spurious reduction of production expr2 -> expr7
+## In state 49, spurious reduction of production expr1 -> expr2
 ##
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
 
 prog: LPAREN CONTEXT_ID STRING_MIDDLE
 ##
-## Ends in an error in state: 145.
+## Ends in an error in state: 146.
 ##
 ## expr8 -> LPAREN expr1 . RPAREN [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RIGHT_ARROW RCURLY RBRACKET PRODUCT PLUS PIPE NOT_EQUALS MINUS LPAREN LESS LEQ LCURLY LBRACKET GREATER GEQ DOUBLE_EQUALS DOT DIVIDE COMMA COLON BANG ]
 ##
@@ -1178,18 +1190,18 @@ prog: LPAREN CONTEXT_ID STRING_MIDDLE
 ## This implies that, although the LR(1) items shown above provide an
 ## accurate view of the past (what has been recognized so far), they
 ## may provide an INCOMPLETE view of the future (what was expected next).
-## In state 42, spurious reduction of production expr2 -> expr7
-## In state 48, spurious reduction of production expr1 -> expr2
+## In state 43, spurious reduction of production expr2 -> expr7
+## In state 49, spurious reduction of production expr1 -> expr2
 ##
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
 
 prog: STRING_START CONTEXT_ID STRING_MIDDLE STRING_MIDDLE
 ##
-## Ends in an error in state: 148.
+## Ends in an error in state: 150.
 ##
 ## expr8 -> STRING_START string_middle . expr1 STRING_END [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RIGHT_ARROW RCURLY RBRACKET PRODUCT PLUS PIPE NOT_EQUALS MINUS LPAREN LESS LEQ LCURLY LBRACKET GREATER GEQ DOUBLE_EQUALS DOT DIVIDE COMMA COLON BANG ]
-## string_middle -> string_middle . expr1 STRING_MIDDLE [ WITH TRUE STRING_START STRING_FULL PROTOTYPE NUM NULL NOT LPAREN LET LEFT_ARROW LCURLY LBRACKET IF ID FUNC FOR FALSE DO CONTEXT_ID ]
+## string_middle -> string_middle . expr1 STRING_MIDDLE [ WITH TRUE STRING_START STRING_FULL PROTOTYPE NUM NULL NOT MINUS LPAREN LET LEFT_ARROW LCURLY LBRACKET IF ID FUNC FOR FALSE DO CONTEXT_ID ]
 ##
 ## The known suffix of the stack is as follows:
 ## STRING_START string_middle
@@ -1199,10 +1211,10 @@ prog: STRING_START CONTEXT_ID STRING_MIDDLE STRING_MIDDLE
 
 prog: STRING_START CONTEXT_ID STRING_MIDDLE CONTEXT_ID RPAREN
 ##
-## Ends in an error in state: 149.
+## Ends in an error in state: 151.
 ##
 ## expr8 -> STRING_START string_middle expr1 . STRING_END [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RIGHT_ARROW RCURLY RBRACKET PRODUCT PLUS PIPE NOT_EQUALS MINUS LPAREN LESS LEQ LCURLY LBRACKET GREATER GEQ DOUBLE_EQUALS DOT DIVIDE COMMA COLON BANG ]
-## string_middle -> string_middle expr1 . STRING_MIDDLE [ WITH TRUE STRING_START STRING_FULL PROTOTYPE NUM NULL NOT LPAREN LET LEFT_ARROW LCURLY LBRACKET IF ID FUNC FOR FALSE DO CONTEXT_ID ]
+## string_middle -> string_middle expr1 . STRING_MIDDLE [ WITH TRUE STRING_START STRING_FULL PROTOTYPE NUM NULL NOT MINUS LPAREN LET LEFT_ARROW LCURLY LBRACKET IF ID FUNC FOR FALSE DO CONTEXT_ID ]
 ##
 ## The known suffix of the stack is as follows:
 ## STRING_START string_middle expr1
@@ -1211,18 +1223,18 @@ prog: STRING_START CONTEXT_ID STRING_MIDDLE CONTEXT_ID RPAREN
 ## This implies that, although the LR(1) items shown above provide an
 ## accurate view of the past (what has been recognized so far), they
 ## may provide an INCOMPLETE view of the future (what was expected next).
-## In state 42, spurious reduction of production expr2 -> expr7
-## In state 48, spurious reduction of production expr1 -> expr2
+## In state 43, spurious reduction of production expr2 -> expr7
+## In state 49, spurious reduction of production expr1 -> expr2
 ##
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
 
 prog: STRING_START CONTEXT_ID RPAREN
 ##
-## Ends in an error in state: 152.
+## Ends in an error in state: 154.
 ##
 ## expr8 -> STRING_START expr1 . STRING_END [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RIGHT_ARROW RCURLY RBRACKET PRODUCT PLUS PIPE NOT_EQUALS MINUS LPAREN LESS LEQ LCURLY LBRACKET GREATER GEQ DOUBLE_EQUALS DOT DIVIDE COMMA COLON BANG ]
-## string_middle -> expr1 . STRING_MIDDLE [ WITH TRUE STRING_START STRING_FULL PROTOTYPE NUM NULL NOT LPAREN LET LEFT_ARROW LCURLY LBRACKET IF ID FUNC FOR FALSE DO CONTEXT_ID ]
+## string_middle -> expr1 . STRING_MIDDLE [ WITH TRUE STRING_START STRING_FULL PROTOTYPE NUM NULL NOT MINUS LPAREN LET LEFT_ARROW LCURLY LBRACKET IF ID FUNC FOR FALSE DO CONTEXT_ID ]
 ##
 ## The known suffix of the stack is as follows:
 ## STRING_START expr1
@@ -1231,15 +1243,15 @@ prog: STRING_START CONTEXT_ID RPAREN
 ## This implies that, although the LR(1) items shown above provide an
 ## accurate view of the past (what has been recognized so far), they
 ## may provide an INCOMPLETE view of the future (what was expected next).
-## In state 42, spurious reduction of production expr2 -> expr7
-## In state 48, spurious reduction of production expr1 -> expr2
+## In state 43, spurious reduction of production expr2 -> expr7
+## In state 49, spurious reduction of production expr1 -> expr2
 ##
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
 
 prog: WITH LPAREN CONTEXT_ID EQUALS CONTEXT_ID STRING_MIDDLE
 ##
-## Ends in an error in state: 156.
+## Ends in an error in state: 158.
 ##
 ## assignment_list -> assignment_list . COMMA CONTEXT_ID EQUALS expr1 [ RPAREN COMMA ]
 ## expr1 -> WITH LPAREN assignment_list . COMMA RPAREN block [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RCURLY RBRACKET LCURLY COMMA COLON ]
@@ -1252,16 +1264,16 @@ prog: WITH LPAREN CONTEXT_ID EQUALS CONTEXT_ID STRING_MIDDLE
 ## This implies that, although the LR(1) items shown above provide an
 ## accurate view of the past (what has been recognized so far), they
 ## may provide an INCOMPLETE view of the future (what was expected next).
-## In state 42, spurious reduction of production expr2 -> expr7
-## In state 48, spurious reduction of production expr1 -> expr2
-## In state 155, spurious reduction of production assignment_list -> CONTEXT_ID EQUALS expr1
+## In state 43, spurious reduction of production expr2 -> expr7
+## In state 49, spurious reduction of production expr1 -> expr2
+## In state 157, spurious reduction of production assignment_list -> CONTEXT_ID EQUALS expr1
 ##
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
 
 prog: WITH LPAREN CONTEXT_ID EQUALS CONTEXT_ID RPAREN WITH
 ##
-## Ends in an error in state: 157.
+## Ends in an error in state: 159.
 ##
 ## expr1 -> WITH LPAREN assignment_list RPAREN . block [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RCURLY RBRACKET LCURLY COMMA COLON ]
 ##
@@ -1273,7 +1285,7 @@ prog: WITH LPAREN CONTEXT_ID EQUALS CONTEXT_ID RPAREN WITH
 
 prog: WITH LPAREN CONTEXT_ID EQUALS CONTEXT_ID COMMA WITH
 ##
-## Ends in an error in state: 159.
+## Ends in an error in state: 161.
 ##
 ## assignment_list -> assignment_list COMMA . CONTEXT_ID EQUALS expr1 [ RPAREN COMMA ]
 ## expr1 -> WITH LPAREN assignment_list COMMA . RPAREN block [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RCURLY RBRACKET LCURLY COMMA COLON ]
@@ -1286,7 +1298,7 @@ prog: WITH LPAREN CONTEXT_ID EQUALS CONTEXT_ID COMMA WITH
 
 prog: WITH LPAREN CONTEXT_ID EQUALS CONTEXT_ID COMMA RPAREN WITH
 ##
-## Ends in an error in state: 160.
+## Ends in an error in state: 162.
 ##
 ## expr1 -> WITH LPAREN assignment_list COMMA RPAREN . block [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RCURLY RBRACKET LCURLY COMMA COLON ]
 ##
@@ -1298,7 +1310,7 @@ prog: WITH LPAREN CONTEXT_ID EQUALS CONTEXT_ID COMMA RPAREN WITH
 
 prog: WITH LPAREN CONTEXT_ID EQUALS CONTEXT_ID COMMA CONTEXT_ID WITH
 ##
-## Ends in an error in state: 162.
+## Ends in an error in state: 164.
 ##
 ## assignment_list -> assignment_list COMMA CONTEXT_ID . EQUALS expr1 [ RPAREN COMMA ]
 ##
@@ -1310,7 +1322,7 @@ prog: WITH LPAREN CONTEXT_ID EQUALS CONTEXT_ID COMMA CONTEXT_ID WITH
 
 prog: WITH LPAREN CONTEXT_ID EQUALS CONTEXT_ID COMMA CONTEXT_ID EQUALS STRING_MIDDLE
 ##
-## Ends in an error in state: 163.
+## Ends in an error in state: 165.
 ##
 ## assignment_list -> assignment_list COMMA CONTEXT_ID EQUALS . expr1 [ RPAREN COMMA ]
 ##
@@ -1322,10 +1334,10 @@ prog: WITH LPAREN CONTEXT_ID EQUALS CONTEXT_ID COMMA CONTEXT_ID EQUALS STRING_MI
 
 prog: FUNC WITH
 ##
-## Ends in an error in state: 165.
+## Ends in an error in state: 167.
 ##
-## decl -> FUNC . ID LPAREN RPAREN block SEMICOLON [ WITH TRUE STRING_START STRING_FULL RETURN PROTOTYPE NUM NULL NOT LPAREN LET LEFT_ARROW LCURLY LBRACKET IF ID FUNC FOR FALSE EOF DO CONTINUE CONTEXT_ID BREAK ]
-## decl -> FUNC . ID LPAREN parameter_list RPAREN block SEMICOLON [ WITH TRUE STRING_START STRING_FULL RETURN PROTOTYPE NUM NULL NOT LPAREN LET LEFT_ARROW LCURLY LBRACKET IF ID FUNC FOR FALSE EOF DO CONTINUE CONTEXT_ID BREAK ]
+## decl -> FUNC . ID LPAREN RPAREN block SEMICOLON [ WITH TRUE STRING_START STRING_FULL RETURN PROTOTYPE NUM NULL NOT MINUS LPAREN LET LEFT_ARROW LCURLY LBRACKET IF ID FUNC FOR FALSE EOF DO CONTINUE CONTEXT_ID BREAK ]
+## decl -> FUNC . ID LPAREN parameter_list RPAREN block SEMICOLON [ WITH TRUE STRING_START STRING_FULL RETURN PROTOTYPE NUM NULL NOT MINUS LPAREN LET LEFT_ARROW LCURLY LBRACKET IF ID FUNC FOR FALSE EOF DO CONTINUE CONTEXT_ID BREAK ]
 ## expr8 -> FUNC . LPAREN RPAREN block [ SEMICOLON RIGHT_ARROW PRODUCT PLUS PIPE NOT_EQUALS MINUS LPAREN LESS LEQ LBRACKET GREATER GEQ DOUBLE_EQUALS DOT DIVIDE BANG ]
 ## expr8 -> FUNC . LPAREN parameter_list RPAREN block [ SEMICOLON RIGHT_ARROW PRODUCT PLUS PIPE NOT_EQUALS MINUS LPAREN LESS LEQ LBRACKET GREATER GEQ DOUBLE_EQUALS DOT DIVIDE BANG ]
 ##
@@ -1337,10 +1349,10 @@ prog: FUNC WITH
 
 prog: FUNC ID WITH
 ##
-## Ends in an error in state: 166.
+## Ends in an error in state: 168.
 ##
-## decl -> FUNC ID . LPAREN RPAREN block SEMICOLON [ WITH TRUE STRING_START STRING_FULL RETURN PROTOTYPE NUM NULL NOT LPAREN LET LEFT_ARROW LCURLY LBRACKET IF ID FUNC FOR FALSE EOF DO CONTINUE CONTEXT_ID BREAK ]
-## decl -> FUNC ID . LPAREN parameter_list RPAREN block SEMICOLON [ WITH TRUE STRING_START STRING_FULL RETURN PROTOTYPE NUM NULL NOT LPAREN LET LEFT_ARROW LCURLY LBRACKET IF ID FUNC FOR FALSE EOF DO CONTINUE CONTEXT_ID BREAK ]
+## decl -> FUNC ID . LPAREN RPAREN block SEMICOLON [ WITH TRUE STRING_START STRING_FULL RETURN PROTOTYPE NUM NULL NOT MINUS LPAREN LET LEFT_ARROW LCURLY LBRACKET IF ID FUNC FOR FALSE EOF DO CONTINUE CONTEXT_ID BREAK ]
+## decl -> FUNC ID . LPAREN parameter_list RPAREN block SEMICOLON [ WITH TRUE STRING_START STRING_FULL RETURN PROTOTYPE NUM NULL NOT MINUS LPAREN LET LEFT_ARROW LCURLY LBRACKET IF ID FUNC FOR FALSE EOF DO CONTINUE CONTEXT_ID BREAK ]
 ##
 ## The known suffix of the stack is as follows:
 ## FUNC ID
@@ -1350,10 +1362,10 @@ prog: FUNC ID WITH
 
 prog: FUNC ID LPAREN WITH
 ##
-## Ends in an error in state: 167.
+## Ends in an error in state: 169.
 ##
-## decl -> FUNC ID LPAREN . RPAREN block SEMICOLON [ WITH TRUE STRING_START STRING_FULL RETURN PROTOTYPE NUM NULL NOT LPAREN LET LEFT_ARROW LCURLY LBRACKET IF ID FUNC FOR FALSE EOF DO CONTINUE CONTEXT_ID BREAK ]
-## decl -> FUNC ID LPAREN . parameter_list RPAREN block SEMICOLON [ WITH TRUE STRING_START STRING_FULL RETURN PROTOTYPE NUM NULL NOT LPAREN LET LEFT_ARROW LCURLY LBRACKET IF ID FUNC FOR FALSE EOF DO CONTINUE CONTEXT_ID BREAK ]
+## decl -> FUNC ID LPAREN . RPAREN block SEMICOLON [ WITH TRUE STRING_START STRING_FULL RETURN PROTOTYPE NUM NULL NOT MINUS LPAREN LET LEFT_ARROW LCURLY LBRACKET IF ID FUNC FOR FALSE EOF DO CONTINUE CONTEXT_ID BREAK ]
+## decl -> FUNC ID LPAREN . parameter_list RPAREN block SEMICOLON [ WITH TRUE STRING_START STRING_FULL RETURN PROTOTYPE NUM NULL NOT MINUS LPAREN LET LEFT_ARROW LCURLY LBRACKET IF ID FUNC FOR FALSE EOF DO CONTINUE CONTEXT_ID BREAK ]
 ##
 ## The known suffix of the stack is as follows:
 ## FUNC ID LPAREN
@@ -1363,9 +1375,9 @@ prog: FUNC ID LPAREN WITH
 
 prog: FUNC ID LPAREN RPAREN WITH
 ##
-## Ends in an error in state: 168.
+## Ends in an error in state: 170.
 ##
-## decl -> FUNC ID LPAREN RPAREN . block SEMICOLON [ WITH TRUE STRING_START STRING_FULL RETURN PROTOTYPE NUM NULL NOT LPAREN LET LEFT_ARROW LCURLY LBRACKET IF ID FUNC FOR FALSE EOF DO CONTINUE CONTEXT_ID BREAK ]
+## decl -> FUNC ID LPAREN RPAREN . block SEMICOLON [ WITH TRUE STRING_START STRING_FULL RETURN PROTOTYPE NUM NULL NOT MINUS LPAREN LET LEFT_ARROW LCURLY LBRACKET IF ID FUNC FOR FALSE EOF DO CONTINUE CONTEXT_ID BREAK ]
 ##
 ## The known suffix of the stack is as follows:
 ## FUNC ID LPAREN RPAREN
@@ -1375,9 +1387,9 @@ prog: FUNC ID LPAREN RPAREN WITH
 
 prog: FUNC ID LPAREN RPAREN LCURLY RCURLY WITH
 ##
-## Ends in an error in state: 169.
+## Ends in an error in state: 171.
 ##
-## decl -> FUNC ID LPAREN RPAREN block . SEMICOLON [ WITH TRUE STRING_START STRING_FULL RETURN PROTOTYPE NUM NULL NOT LPAREN LET LEFT_ARROW LCURLY LBRACKET IF ID FUNC FOR FALSE EOF DO CONTINUE CONTEXT_ID BREAK ]
+## decl -> FUNC ID LPAREN RPAREN block . SEMICOLON [ WITH TRUE STRING_START STRING_FULL RETURN PROTOTYPE NUM NULL NOT MINUS LPAREN LET LEFT_ARROW LCURLY LBRACKET IF ID FUNC FOR FALSE EOF DO CONTINUE CONTEXT_ID BREAK ]
 ##
 ## The known suffix of the stack is as follows:
 ## FUNC ID LPAREN RPAREN block
@@ -1387,9 +1399,9 @@ prog: FUNC ID LPAREN RPAREN LCURLY RCURLY WITH
 
 prog: FUNC ID LPAREN ID WITH
 ##
-## Ends in an error in state: 171.
+## Ends in an error in state: 173.
 ##
-## decl -> FUNC ID LPAREN parameter_list . RPAREN block SEMICOLON [ WITH TRUE STRING_START STRING_FULL RETURN PROTOTYPE NUM NULL NOT LPAREN LET LEFT_ARROW LCURLY LBRACKET IF ID FUNC FOR FALSE EOF DO CONTINUE CONTEXT_ID BREAK ]
+## decl -> FUNC ID LPAREN parameter_list . RPAREN block SEMICOLON [ WITH TRUE STRING_START STRING_FULL RETURN PROTOTYPE NUM NULL NOT MINUS LPAREN LET LEFT_ARROW LCURLY LBRACKET IF ID FUNC FOR FALSE EOF DO CONTINUE CONTEXT_ID BREAK ]
 ## parameter_list -> parameter_list . COMMA ID [ RPAREN COMMA ]
 ##
 ## The known suffix of the stack is as follows:
@@ -1400,9 +1412,9 @@ prog: FUNC ID LPAREN ID WITH
 
 prog: FUNC ID LPAREN ID RPAREN WITH
 ##
-## Ends in an error in state: 172.
+## Ends in an error in state: 174.
 ##
-## decl -> FUNC ID LPAREN parameter_list RPAREN . block SEMICOLON [ WITH TRUE STRING_START STRING_FULL RETURN PROTOTYPE NUM NULL NOT LPAREN LET LEFT_ARROW LCURLY LBRACKET IF ID FUNC FOR FALSE EOF DO CONTINUE CONTEXT_ID BREAK ]
+## decl -> FUNC ID LPAREN parameter_list RPAREN . block SEMICOLON [ WITH TRUE STRING_START STRING_FULL RETURN PROTOTYPE NUM NULL NOT MINUS LPAREN LET LEFT_ARROW LCURLY LBRACKET IF ID FUNC FOR FALSE EOF DO CONTINUE CONTEXT_ID BREAK ]
 ##
 ## The known suffix of the stack is as follows:
 ## FUNC ID LPAREN parameter_list RPAREN
@@ -1412,9 +1424,9 @@ prog: FUNC ID LPAREN ID RPAREN WITH
 
 prog: FUNC ID LPAREN ID RPAREN LCURLY RCURLY WITH
 ##
-## Ends in an error in state: 173.
+## Ends in an error in state: 175.
 ##
-## decl -> FUNC ID LPAREN parameter_list RPAREN block . SEMICOLON [ WITH TRUE STRING_START STRING_FULL RETURN PROTOTYPE NUM NULL NOT LPAREN LET LEFT_ARROW LCURLY LBRACKET IF ID FUNC FOR FALSE EOF DO CONTINUE CONTEXT_ID BREAK ]
+## decl -> FUNC ID LPAREN parameter_list RPAREN block . SEMICOLON [ WITH TRUE STRING_START STRING_FULL RETURN PROTOTYPE NUM NULL NOT MINUS LPAREN LET LEFT_ARROW LCURLY LBRACKET IF ID FUNC FOR FALSE EOF DO CONTINUE CONTEXT_ID BREAK ]
 ##
 ## The known suffix of the stack is as follows:
 ## FUNC ID LPAREN parameter_list RPAREN block
@@ -1424,9 +1436,9 @@ prog: FUNC ID LPAREN ID RPAREN LCURLY RCURLY WITH
 
 prog: CONTEXT_ID SEMICOLON STRING_MIDDLE
 ##
-## Ends in an error in state: 178.
+## Ends in an error in state: 180.
 ##
-## declarations -> declarations . decl [ WITH TRUE STRING_START STRING_FULL RETURN PROTOTYPE NUM NULL NOT LPAREN LET LEFT_ARROW LCURLY LBRACKET IF ID FUNC FOR FALSE EOF DO CONTINUE CONTEXT_ID BREAK ]
+## declarations -> declarations . decl [ WITH TRUE STRING_START STRING_FULL RETURN PROTOTYPE NUM NULL NOT MINUS LPAREN LET LEFT_ARROW LCURLY LBRACKET IF ID FUNC FOR FALSE EOF DO CONTINUE CONTEXT_ID BREAK ]
 ## prog -> declarations . EOF [ # ]
 ##
 ## The known suffix of the stack is as follows:

@@ -16,9 +16,15 @@ num literal
       [POS])))
   (StmtDecl
     (ExprStmt
-      (Num
-        -3.5
-        [POS]))))
+      (UnaryExpr
+        (target
+          (Num
+            3.5
+            [POS]))
+        (pos
+          [POS])
+        (operator
+          Minus)))))
 
 ### Stdout
 
