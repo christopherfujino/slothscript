@@ -5,17 +5,22 @@ num literal
 11
 -3.5
 
+### Processes
+()
+
 ### Ast
 ((StmtDecl
   (ExprStmt
     (Num
       11
-      [POS]))))
+      [POS])))
+  (StmtDecl
+    (ExprStmt
+      (Num
+        -3.5
+        [POS]))))
 
 ### Stdout
 
 
 ### Failure
-
-### Processes
-()
