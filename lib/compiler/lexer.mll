@@ -16,7 +16,7 @@ let string_buffer_size = 33
 
 (* identifiers *)
 let white = [' ' '\t']+
-let num = ('0'|(['1'-'9']['0'-'9']*)) ('.' ['0'-'9']+)?
+let num = ('-')? ('0'|(['1'-'9']['0'-'9']*)) ('.' ['0'-'9']+)?
 let letter = ['a'-'z' 'A'-'Z']
 
 (* IDs cannot start with a capital letter *)

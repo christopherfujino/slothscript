@@ -2,7 +2,8 @@
 num literal
 
 ### Program
-11;
+11
+-3.5
 
 ### Ast
 ((StmtDecl

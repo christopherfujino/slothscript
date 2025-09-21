@@ -75,7 +75,7 @@ let interpreter path =
     match result with
     | Error msg ->
         Out_channel.flush stdout;
-        Printf.eprintf "%s" msg;
+        Printf.eprintf "%s\n" msg;
         1
     | Ok code -> code
   in
