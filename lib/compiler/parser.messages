@@ -71,7 +71,7 @@ prog: STRING_START STRING_MIDDLE
 ## STRING_START
 ##
 
-<YOUR SYNTAX ERROR MESSAGE HERE>
+[UNREACHABLE]
 
 prog: NOT WITH
 ##
@@ -83,7 +83,7 @@ prog: NOT WITH
 ## NOT
 ##
 
-<YOUR SYNTAX ERROR MESSAGE HERE>
+The `not` operator should be followed by a `Bool` expression
 
 prog: MINUS WITH
 ##
@@ -95,7 +95,7 @@ prog: MINUS WITH
 ## MINUS
 ##
 
-A unary `-` operator expects to be followed by a `Number`
+The `-` operator expects to be followed by a `Number`
 
 prog: LPAREN STRING_MIDDLE
 ##
@@ -107,7 +107,7 @@ prog: LPAREN STRING_MIDDLE
 ## LPAREN
 ##
 
-<YOUR SYNTAX ERROR MESSAGE HERE>
+You have an unclosed parenthesis in the middle of string interpolation
 
 prog: LET WITH
 ##
@@ -119,7 +119,7 @@ prog: LET WITH
 ## LET
 ##
 
-<YOUR SYNTAX ERROR MESSAGE HERE>
+The `let` keyword must be followed by a valid identifier name
 
 prog: LET ID WITH
 ##
@@ -131,7 +131,7 @@ prog: LET ID WITH
 ## LET ID
 ##
 
-<YOUR SYNTAX ERROR MESSAGE HERE>
+Expected an `=` to complete the `let` expression
 
 prog: LET ID EQUALS STRING_MIDDLE
 ##
@@ -143,7 +143,7 @@ prog: LET ID EQUALS STRING_MIDDLE
 ## LET ID EQUALS
 ##
 
-<YOUR SYNTAX ERROR MESSAGE HERE>
+[UNREACHABLE]
 
 prog: LEFT_ARROW WITH
 ##
@@ -155,7 +155,7 @@ prog: LEFT_ARROW WITH
 ## LEFT_ARROW
 ##
 
-<YOUR SYNTAX ERROR MESSAGE HERE>
+A `File` expression was expected here
 
 prog: LCURLY STRING_MIDDLE
 ##
@@ -185,18 +185,18 @@ prog: LBRACKET STRING_MIDDLE
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
 
-prog: IF WITH
+prog: IF STRING_MIDDLE
 ##
 ## Ends in an error in state: 22.
 ##
-## expr1 -> IF . expr2 block conditional_continuation [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RCURLY RBRACKET LCURLY COMMA COLON ]
-## expr1 -> IF . expr2 block [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RCURLY RBRACKET LCURLY COMMA COLON ]
+## expr1 -> IF . expr1 block conditional_continuation [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RCURLY RBRACKET LCURLY COMMA COLON ]
+## expr1 -> IF . expr1 block [ STRING_MIDDLE STRING_END SEMICOLON RPAREN RCURLY RBRACKET LCURLY COMMA COLON ]
 ##
 ## The known suffix of the stack is as follows:
 ## IF
 ##
 
-<YOUR SYNTAX ERROR MESSAGE HERE>
+[UNREACHABLE]
 
 prog: BREAK FUNC WITH
 ##
@@ -209,7 +209,7 @@ prog: BREAK FUNC WITH
 ## FUNC
 ##
 
-<YOUR SYNTAX ERROR MESSAGE HERE>
+An expression was expected here; function expressions should be unnamed (e.g. `let f = func(x) {x + 1}`)
 
 prog: FUNC LPAREN WITH
 ##

@@ -174,7 +174,7 @@ expr1:
     SubAssignExpr {subscript; value=rhs; pos }
   }
 
-  | pos = IF; e1 = expr2; b = block; cont = conditional_continuation {
+  | pos = IF; e1 = expr1; b = block; cont = conditional_continuation {
     let pos = Sloth_common.Position.t_of_lexing_position pos in
     IfExpr (
       IfCont ({
@@ -184,7 +184,7 @@ expr1:
         pos;
       }), pos)
   }
-  | pos = IF; e1 = expr2; b = block {
+  | pos = IF; e1 = expr1; b = block {
     let pos = Sloth_common.Position.t_of_lexing_position pos in
     IfExpr (IfCont { conditional = e1; block = b; continuation = None; pos}, pos)
   }
