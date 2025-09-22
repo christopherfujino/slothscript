@@ -71,7 +71,7 @@ prog: STRING_START STRING_MIDDLE
 ## STRING_START
 ##
 
-[UNREACHABLE]
+String interpolation was started but never finished
 
 prog: NOT WITH
 ##
@@ -1247,7 +1247,7 @@ prog: STRING_START CONTEXT_ID RPAREN
 ## In state 49, spurious reduction of production expr1 -> expr2
 ##
 
-<YOUR SYNTAX ERROR MESSAGE HERE>
+String interpolation was started but never finished
 
 prog: WITH LPAREN CONTEXT_ID EQUALS CONTEXT_ID STRING_MIDDLE
 ##
