@@ -93,6 +93,8 @@ rule private_read last_token state =
   | '/' { let token = DIVIDE lexbuf.lex_start_p in last_token := Some token; token }
   | '!' { let token = BANG lexbuf.lex_start_p in last_token := Some token; token }
   | "not" { let token = NOT lexbuf.lex_start_p in last_token := Some token; token }
+  | "and" { let token = AND lexbuf.lex_start_p in last_token := Some token; token }
+  | "or" { let token = OR lexbuf.lex_start_p in last_token := Some token; token }
   | ';' {
     let parse_semicolon () =
       let token = SEMICOLON lexbuf.lex_start_p in

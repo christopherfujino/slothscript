@@ -50,6 +50,8 @@
 %token <Lexing.position> GREATER
 %token <Lexing.position> BANG
 %token <Lexing.position> NOT
+%token <Lexing.position> AND
+%token <Lexing.position> OR
 %token <Lexing.position> LEFT_ARROW
 %token <Lexing.position> RIGHT_ARROW
 
@@ -76,7 +78,8 @@
    These are ordered, from high to low precedence.
    *)
 
-%left BANG (* Postfix *)
+%left OR BANG (* Postfix *)
+%left AND
 %left LEFT_ARROW (* Prefix *) RIGHT_ARROW (* Postfix *)
 %left NOT_EQUALS DOUBLE_EQUALS GEQ LEQ LESS GREATER
 %left MINUS PLUS PIPE
@@ -234,6 +237,14 @@ expr2:
   | e1 = expr2; pos = DIVIDE; e2 = expr2 {
     let pos = Sloth_common.Position.t_of_lexing_position pos in
     Binary ( e1, e2, Divide, pos)
+  }
+  | e1 = expr2; pos = AND; e2 = expr2 {
+    let pos = Sloth_common.Position.t_of_lexing_position pos in
+    Binary ( e1, e2, And, pos)
+  }
+  | e1 = expr2; pos = OR; e2 = expr2 {
+    let pos = Sloth_common.Position.t_of_lexing_position pos in
+    Binary ( e1, e2, Or, pos)
   }
 
   | e1 = expr2; pos = RIGHT_ARROW; e2 = expr2 {

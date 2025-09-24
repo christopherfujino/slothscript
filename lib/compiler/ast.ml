@@ -102,6 +102,8 @@ and operator =
   | Leq
   | Geq
   | Bang
+  | And
+  | Or
   | Not
   | LeftArrow
   | RightArrow

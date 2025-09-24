@@ -377,7 +377,7 @@ and interpret_expr globals expr :
           in
           (globals, First (Runtime.Num (Float.neg f)))
       | Plus | Product | Divide | Pipe | Less | Greater | Leq | Geq | RightArrow
-        ->
+      | And | Or ->
           (* Unreachable *) Sloth_common.Common.internal_failure __LOC__)
   | DoBlock (block, _) ->
       let inner_globals =
@@ -799,7 +799,6 @@ and cast_to_process ~globals ~pos = function
 
 and interpret_binary globals lhs rhs op pos =
   interpret_expr globals lhs >>= fun globals lhs ->
-  interpret_expr globals rhs >>= fun globals rhs ->
   let cast_to_number = function
     | Runtime.Num f -> f
     | Runtime.String s -> (
@@ -815,6 +814,7 @@ and interpret_binary globals lhs rhs op pos =
   in
   match op with
   | Pipe ->
+      interpret_expr globals rhs >>= fun globals rhs ->
       let left = cast_to_process ~globals ~pos lhs in
       let right = cast_to_process ~globals ~pos rhs in
       let read, write = Core_unix.pipe () in
@@ -825,34 +825,74 @@ and interpret_binary globals lhs rhs op pos =
       let right = { right with previous = Some left } in
       (globals, Either.first @@ Runtime.Process right)
   | Plus ->
+      interpret_expr globals rhs >>= fun globals rhs ->
       let left = cast_to_number lhs in
       let right = cast_to_number rhs in
       (globals, Either.first @@ Runtime.Num (left +. right))
   | Minus ->
+      interpret_expr globals rhs >>= fun globals rhs ->
       let left = cast_to_number lhs in
       let right = cast_to_number rhs in
       (globals, Either.first @@ Runtime.Num (left -. right))
   | Divide ->
+      interpret_expr globals rhs >>= fun globals rhs ->
       let left = cast_to_number lhs in
       let right = cast_to_number rhs in
       (globals, Either.first @@ Runtime.Num (left /. right))
   | Product ->
+      interpret_expr globals rhs >>= fun globals rhs ->
       let left = cast_to_number lhs in
       let right = cast_to_number rhs in
       (globals, Either.first @@ Runtime.Num (left *. right))
+  | And -> (
+      let left =
+        match Runtime.bool_of_val lhs with
+        | None ->
+            Printf.sprintf "Expected a `Bool`, but got %s" (Runtime.to_s lhs)
+            |> fail ~globals pos
+        | Some b -> b
+      in
+      if Bool.(left = false) then (globals, Either.first @@ Runtime.Bool false)
+      else
+        interpret_expr globals rhs >>= fun globals rhs ->
+        match Runtime.bool_of_val rhs with
+        | None ->
+            Printf.sprintf "Expected a `Bool`, but got %s" (Runtime.to_s rhs)
+            |> fail ~globals pos
+        | Some b -> (globals, Either.first @@ Runtime.Bool b))
+  | Or -> (
+      let left =
+        match Runtime.bool_of_val lhs with
+        | None ->
+            Printf.sprintf "Expected a `Bool`, but got %s" (Runtime.to_s lhs)
+            |> fail ~globals pos
+        | Some b -> b
+      in
+      if Bool.(left = true) then (globals, Either.first @@ Runtime.Bool true)
+      else
+        interpret_expr globals rhs >>= fun globals rhs ->
+        match Runtime.bool_of_val rhs with
+        | None ->
+            Printf.sprintf "Expected a `Bool`, but got %s" (Runtime.to_s rhs)
+            |> fail ~globals pos
+        | Some b -> (globals, Either.first @@ Runtime.Bool b))
   | Leq ->
+      interpret_expr globals rhs >>= fun globals rhs ->
       let left = cast_to_number lhs in
       let right = cast_to_number rhs in
       (globals, Either.first @@ Runtime.Bool Float.(left <= right))
   | Geq ->
+      interpret_expr globals rhs >>= fun globals rhs ->
       let left = cast_to_number lhs in
       let right = cast_to_number rhs in
       (globals, Either.first @@ Runtime.Bool Float.(left >= right))
   | Less ->
+      interpret_expr globals rhs >>= fun globals rhs ->
       let left = cast_to_number lhs in
       let right = cast_to_number rhs in
       (globals, Either.first @@ Runtime.Bool Float.(left < right))
   | Greater ->
+      interpret_expr globals rhs >>= fun globals rhs ->
       let left = cast_to_number lhs in
       let right = cast_to_number rhs in
       (globals, Either.first @@ Runtime.Bool Float.(left > right))
@@ -863,6 +903,7 @@ and interpret_binary globals lhs rhs op pos =
           - write output of a proc: `Process.new("uname") -> "os.txt"` (this should be optimized)
       *)
       let left = cast_to_string ~globals ~pos lhs in
+      interpret_expr globals rhs >>= fun globals rhs ->
       let Runtime.{ path } = cast_to_file ~globals ~pos rhs in
       let module M = (val globals.l) in
       M.file_write_all path ~data:left;

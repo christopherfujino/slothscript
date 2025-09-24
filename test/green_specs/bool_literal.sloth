@@ -1,20 +1,138 @@
 ### Name
-bool literal
+booleans
 
 ### Program
-true;
+assert(true)
+assert(true and true)
+assert(false or true)
+assert(true or false)
+assert(not (false or false))
+# Short-circuiting
+func fail() {assert(false)}
+assert(true or fail())
+
+### Processes
+()
 
 ### Ast
 ((StmtDecl
   (ExprStmt
-    (Bool
-      true
-      [POS]))))
+    (FuncInvoc
+      (IdRef
+        assert
+        [POS])
+      ((Bool
+        true
+        [POS]))
+      [POS])))
+  (StmtDecl
+    (ExprStmt
+      (FuncInvoc
+        (IdRef
+          assert
+          [POS])
+        ((Binary
+          (Bool
+            true
+            [POS])
+          (Bool
+            true
+            [POS])
+          And
+          [POS]))
+        [POS])))
+  (StmtDecl
+    (ExprStmt
+      (FuncInvoc
+        (IdRef
+          assert
+          [POS])
+        ((Binary
+          (Bool
+            false
+            [POS])
+          (Bool
+            true
+            [POS])
+          Or
+          [POS]))
+        [POS])))
+  (StmtDecl
+    (ExprStmt
+      (FuncInvoc
+        (IdRef
+          assert
+          [POS])
+        ((Binary
+          (Bool
+            true
+            [POS])
+          (Bool
+            false
+            [POS])
+          Or
+          [POS]))
+        [POS])))
+  (StmtDecl
+    (ExprStmt
+      (FuncInvoc
+        (IdRef
+          assert
+          [POS])
+        ((UnaryExpr
+          (target
+            (Binary
+              (Bool
+                false
+                [POS])
+              (Bool
+                false
+                [POS])
+              Or
+              [POS]))
+          (pos
+            [POS])
+          (operator
+            Not)))
+        [POS])))
+  (FuncDecl
+    (name
+      fail)
+    (parameters
+      ())
+    (block
+      ((ExprStmt
+        (FuncInvoc
+          (IdRef
+            assert
+            [POS])
+          ((Bool
+            false
+            [POS]))
+          [POS]))))
+    (pos
+      [POS]))
+  (StmtDecl
+    (ExprStmt
+      (FuncInvoc
+        (IdRef
+          assert
+          [POS])
+        ((Binary
+          (Bool
+            true
+            [POS])
+          (FuncInvoc
+            (IdRef
+              fail
+              [POS])
+            ()
+            [POS])
+          Or
+          [POS]))
+        [POS]))))
 
 ### Stdout
 
 
 ### Failure
-
-### Processes
-()

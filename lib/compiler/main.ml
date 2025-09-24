@@ -48,6 +48,8 @@ let to_s token =
   | LEFT_ARROW _ -> "LEFT_ARROW"
   | RIGHT_ARROW _ -> "RIGHT_ARROW"
   | NOT _ -> "NOT"
+  | AND _ -> "AND"
+  | OR _ -> "OR"
   | DOT _ -> "DOT"
   | PIPE _ -> "PIPE"
   | COLON _ -> "COLON"
