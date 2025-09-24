@@ -37,5 +37,6 @@ let () =
   match res with
   | Ok () -> ()
   | Error msg ->
-      Printf.eprintf "%s" msg;
+      Out_channel.flush stdout;
+      Printf.eprintf "%s\n" msg;
       exit 1

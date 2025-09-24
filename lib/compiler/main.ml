@@ -10,16 +10,23 @@ let parse env line =
         in
         let pos_str = Sloth_common.Position.string_of_t pos in
         let msg = Parser_errors.message i |> String.strip in
-        let line_no = pos.pos_lnum in
         let msg =
           match msg with
           | "<YOUR SYNTAX ERROR MESSAGE HERE>" ->
-              Printf.sprintf "[%s] Parser error (%d)\n\n%s" pos_str line_no
+              Printf.sprintf "[%s] Parser error (code #%d)\n\n%s" pos_str i
                 (Sloth_common.Position.summarize pos line)
-          | _ ->
-              Printf.sprintf "[%s] Parser error (%d): %s\n\n%s" pos_str line_no
+          | "[UNREACHABLE]" ->
+              let msg =
+                "This should be unreachable; please file a bug on \
+                 https://github.com/christopherfujino/slothscript/issues/new"
+              in
+              Printf.sprintf "[%s] Parser error (code #%d)\n\n%s\n%s" pos_str i
+                (Sloth_common.Position.summarize pos line)
                 msg
+          | _ ->
+              Printf.sprintf "[%s] Parser error (code #%d)\n\n%s\n%s" pos_str i
                 (Sloth_common.Position.summarize pos line)
+                msg
         in
 
         raise (Sloth_common.Common.ParseError msg)

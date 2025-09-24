@@ -11,7 +11,8 @@ let x = 1
 closure()
 
 ### Failure
-[4:8] Optimizer error: Undeclared identifier x
+[4:8] Optimizer error
 
 4 |   print(x)
             ^
+Undeclared identifier x

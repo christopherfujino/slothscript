@@ -2,19 +2,31 @@
 num literal
 
 ### Program
-11;
+11
+-3.5
+
+### Processes
+()
 
 ### Ast
 ((StmtDecl
   (ExprStmt
     (Num
       11
-      [POS]))))
+      [POS])))
+  (StmtDecl
+    (ExprStmt
+      (UnaryExpr
+        (target
+          (Num
+            3.5
+            [POS]))
+        (pos
+          [POS])
+        (operator
+          Minus)))))
 
 ### Stdout
 
 
 ### Failure
-
-### Processes
-()

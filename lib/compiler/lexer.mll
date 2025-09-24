@@ -267,6 +267,7 @@ and read_string delimiter buf pos state =
     Buffer.add_string buf chunk;
     (read_string[@tailcall]) delimiter buf pos state lexbuf
   }
+  | eof { EOF lexbuf.lex_curr_p }
 
 (* Footer *)
 {

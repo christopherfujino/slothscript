@@ -13,7 +13,8 @@ func f1() {
 f1()
 
 ### Failure
-[3:7] Parser error (3)
+[3:7] Parser error (code #25)
 
 3 |   func f2() {
            ^
+An expression was expected here; function expressions should be unnamed

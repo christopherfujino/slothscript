@@ -174,20 +174,6 @@ expr1:
     SubAssignExpr {subscript; value=rhs; pos }
   }
 
-  | pos = IF; e1 = expr2; b = block; cont = conditional_continuation {
-    let pos = Sloth_common.Position.t_of_lexing_position pos in
-    IfExpr (
-      IfCont ({
-        conditional = e1;
-        block = b;
-        continuation = Some cont;
-        pos;
-      }), pos)
-  }
-  | pos = IF; e1 = expr2; b = block {
-    let pos = Sloth_common.Position.t_of_lexing_position pos in
-    IfExpr (IfCont { conditional = e1; block = b; continuation = None; pos}, pos)
-  }
   (* assignment_list never has trailing comma *)
   | pos = WITH; LPAREN; assignments = assignment_list; COMMA; RPAREN; b = block {
     let pos = Sloth_common.Position.t_of_lexing_position pos in
@@ -265,6 +251,10 @@ expr2:
   | e = expr2; pos = BANG {
     let pos = Sloth_common.Position.t_of_lexing_position pos in
     UnaryExpr { target = e; operator=Bang; pos}
+  }
+  | pos = MINUS; e = expr2 {
+    let pos = Sloth_common.Position.t_of_lexing_position pos in
+    UnaryExpr { target = e; operator=Minus; pos}
   }
  
   | e = expr7 { e }
@@ -365,6 +355,20 @@ expr8:
   }
   | LPAREN; e = expr1; RPAREN { e }
   | h = hash_literals { h }
+  | pos = IF; e1 = expr1; b = block; cont = conditional_continuation {
+    let pos = Sloth_common.Position.t_of_lexing_position pos in
+    IfExpr (
+      IfCont ({
+        conditional = e1;
+        block = b;
+        continuation = Some cont;
+        pos;
+      }), pos)
+  }
+  | pos = IF; e1 = expr1; b = block {
+    let pos = Sloth_common.Position.t_of_lexing_position pos in
+    IfExpr (IfCont { conditional = e1; block = b; continuation = None; pos}, pos)
+  }
   ;
 
 assignment_list:

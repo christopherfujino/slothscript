@@ -10,8 +10,9 @@ let ( >>= ) =
 let fail ~globals pos msg =
   let pos_s = Sloth_common.Position.string_of_t pos in
   let msg1 =
-    Printf.sprintf "[%s] Runtime error: %s\n\n%s" pos_s msg
+    Printf.sprintf "[%s] Runtime error\n\n%s\n%s" pos_s
       (Sloth_common.Position.summarize pos Globals.(globals.src))
+      msg
   in
   let msg2 =
     if Sloth_common.Common.debug_mode then
@@ -99,7 +100,7 @@ and interpret_cond globals cond =
             | Some cond -> (interpret_cond [@tailcall]) globals cond)
       | None ->
           Printf.sprintf
-            "If-expressions must have a boolean expression, but you used %s"
+            "If-expressions must have a boolean expression, instead received %s"
             (Runtime.to_s condition)
           |> fail ~globals pos)
   | Compiler.Optimizer.ElseCont (stmts, _) ->
@@ -362,8 +363,21 @@ and interpret_expr globals expr :
           match cb [ receiver; target ] with
           | Error err -> fail ~globals pos err
           | Ok t' -> (globals, First t'))
-      | Plus | Minus | Product | Divide | Pipe | Less | Greater | Leq | Geq
-      | RightArrow ->
+      | Minus ->
+          interpret_expr globals target >>= fun globals target ->
+          let f_opt = Runtime.num_of_val target in
+          let f =
+            match f_opt with
+            | Some f -> f
+            | None ->
+                Printf.sprintf
+                  "Unary `-` must be used with a `Number`, received %s"
+                  (Runtime.to_s target)
+                |> fail ~globals pos
+          in
+          (globals, First (Runtime.Num (Float.neg f)))
+      | Plus | Product | Divide | Pipe | Less | Greater | Leq | Geq | RightArrow
+        ->
           (* Unreachable *) Sloth_common.Common.internal_failure __LOC__)
   | DoBlock (block, _) ->
       let inner_globals =
@@ -413,8 +427,8 @@ and interpret_expr globals expr :
                   (globals, First receiver')
               | None ->
                   Printf.sprintf
-                    "Lists can only be subscripted with Numbers, but you used \
-                     %s"
+                    "Lists can only be subscripted with Numbers, instead \
+                     received %s"
                     (Runtime.to_s subscript')
                   |> fail ~globals pos)
           | _ ->
@@ -501,8 +515,8 @@ and interpret_expr globals expr :
                     | Continue -> recurse break_val))
           | None ->
               Printf.sprintf
-                "The comparison of a for loop must be a Boolean value, but you \
-                 used %s"
+                "The comparison of a for loop must be a Boolean value, instead \
+                 received %s"
                 (Runtime.to_s cmp_val)
               |> fail ~globals pos
         in
