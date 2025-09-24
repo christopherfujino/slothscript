@@ -1,7 +1,7 @@
 open Core
 
-let parse env line =
-  let filter, lexbuf = Lexer.bootstrap line in
+let parse env src =
+  let filter, lexbuf = Lexer.bootstrap src in
   let decls =
     try Parser.prog filter lexbuf with
     | Parser.Error i ->
@@ -14,18 +14,18 @@ let parse env line =
           match msg with
           | "<YOUR SYNTAX ERROR MESSAGE HERE>" ->
               Printf.sprintf "[%s] Parser error (code #%d)\n\n%s" pos_str i
-                (Sloth_common.Position.summarize pos line)
+                (Sloth_common.Position.summarize pos src)
           | "[UNREACHABLE]" ->
               let msg =
                 "This should be unreachable; please file a bug on \
                  https://github.com/christopherfujino/slothscript/issues/new"
               in
               Printf.sprintf "[%s] Parser error (code #%d)\n\n%s\n%s" pos_str i
-                (Sloth_common.Position.summarize pos line)
+                (Sloth_common.Position.summarize pos src)
                 msg
           | _ ->
               Printf.sprintf "[%s] Parser error (code #%d)\n\n%s\n%s" pos_str i
-                (Sloth_common.Position.summarize pos line)
+                (Sloth_common.Position.summarize pos src)
                 msg
         in
 
@@ -33,8 +33,21 @@ let parse env line =
     | Lexer.SyntaxError (msg, pos) ->
         let pos = Sloth_common.Position.t_of_lexing_position pos in
         let msg =
-          Printf.sprintf "Lexer error: Unknown token `%s`\n\n%s\n" msg
-            (Sloth_common.Position.summarize pos line)
+          Printf.sprintf "[%s] Lexer error\n\n%s\nUnknown token `%s`"
+            (Sloth_common.Position.string_of_t pos)
+            (Sloth_common.Position.summarize pos src)
+            msg
+        in
+        raise (Sloth_common.Common.LexerError msg)
+    | Sloth_common.Common.LexerError msg ->
+        let pos =
+          Sloth_common.Position.t_of_lexing_position lexbuf.lex_curr_p
+        in
+        let msg =
+          Printf.sprintf "[%s] Lexer error\n\n%s\n%s"
+            (Sloth_common.Position.string_of_t pos)
+            (Sloth_common.Position.summarize pos src)
+            msg
         in
         raise (Sloth_common.Common.LexerError msg)
   in

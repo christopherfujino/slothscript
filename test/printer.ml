@@ -20,6 +20,8 @@ let rec sexp_formatter_inner parent_indent indent buffer (s : Sexp.t) =
             | '\r' -> true
             | '\n' -> true
             | '"' -> true
+            | '(' -> true
+            | ')' -> true
             | _ -> false)
       in
       match whitespace_opt with

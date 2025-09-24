@@ -260,6 +260,11 @@ and read_string delimiter buf pos state =
       (read_string[@tailcall]) delimiter buf pos state lexbuf
     )
   }
+  | '\\' _ {
+    let chunk = (Lexing.lexeme lexbuf) in
+    Buffer.add_string buf chunk;
+    (read_string[@tailcall]) delimiter buf pos state lexbuf
+  }
   | '$' {
     Buffer.add_char buf '$';
     (read_string[@tailcall]) delimiter buf pos state lexbuf
@@ -287,7 +292,11 @@ and read_string delimiter buf pos state =
       match !should_spit_eof with
       | True pos -> EOF pos
       | False -> (
-          let token = private_read r state buf in
+          let token = try
+            private_read r state buf
+          with
+          | Failure msg -> raise @@ Sloth_common.Common.LexerError msg
+          in
           match token with
           | EOF pos -> (
               match !last_token with
