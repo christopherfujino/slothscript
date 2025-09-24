@@ -22,26 +22,42 @@
 
 (rule
  (with-stdout-to
-  .messages
+  parser.messages.auto
   (run menhir --unused-token COMMENT %{dep:parser.mly} --list-errors)))
 
-; Validate we've covered all possible messages
+;; Validate we've covered all possible messages
+;
+;(rule
+; (with-stdout-to
+;  messages.check
+;  (run
+;   menhir
+;   --unused-token
+;   COMMENT
+;   %{dep:parser.mly}
+;   --compare-errors
+;   %{dep:.messages}
+;   --compare-errors
+;   %{dep:parser.messages})))
 
 (rule
- (with-stdout-to
-  messages.check
-  (run
-   menhir
-   --unused-token
-   COMMENT
-   %{dep:parser.mly}
-   --compare-errors
-   %{dep:.messages}
-   --compare-errors
-   %{dep:parser.messages})))
+ (action
+  (with-stdout-to
+   parser-merged.messages
+   (run
+    menhir
+    --unused-token
+    COMMENT
+    %{dep:parser.mly}
+    --merge-errors
+    %{dep:parser.messages.auto}
+    --merge-errors
+    %{dep:parser.messages})))
+ (mode
+  (promote (until-clean))))
 
 (rule
- (deps messages.check)
+ ;(deps messages.check)
  (action
   (with-stdout-to
    parser_errors.ml
@@ -51,4 +67,4 @@
     COMMENT
     %{dep:parser.mly}
     --compile-errors
-    %{dep:parser.messages}))))
+    %{dep:parser-merged.messages}))))

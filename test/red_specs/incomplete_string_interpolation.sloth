@@ -2,4 +2,11 @@
 incomplete string interpolation
 
 ### Program
-"start ${ do {}
+"start ${ 1
+
+### Failure
+[1:11] Parser error (code #154)
+
+1 | "start ${ 1
+               ^
+String interpolation was started but never finished
