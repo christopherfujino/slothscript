@@ -56,7 +56,8 @@ let make_test spec =
   | Second (bt, _) -> (
       match bt with
       | Exit _ -> ()
-      | Error msg -> assert_failure @@ Printf.sprintf "Uncaught exception:\n\n%s" msg
+      | Error msg ->
+          assert_failure @@ Printf.sprintf "Uncaught exception:\n\n%s" msg
       | Return | Break | Continue -> failwith "Unreachable"));
   let forward_buffer = List.rev !Lib.stdout_buffer in
   let catted_output_opt =

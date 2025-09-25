@@ -26,11 +26,9 @@ let failure_obj ~globals ~pos msg =
   let msg = failure_msg ~globals ~pos msg in
   Second (Compiler.Ast.Error msg, Runtime.Null)
 
-(**
-   For error cases that could potentially become compiler errors.
+(** For error cases that could potentially become compiler errors.
 
-   These should not be recoverable, you need to fix your code.
-*)
+    These should not be recoverable, you need to fix your code. *)
 let fail ~globals pos msg =
   let msg = failure_msg ~globals ~pos msg in
   raise (Sloth_common.Common.RuntimeError msg)
