@@ -37,8 +37,20 @@ let repl () =
       let* globals, v =
         wrap_error (fun () -> Interpreter.Interpret.interpret_prog globals prog)
       in
-      print_endline @@ Runtime.to_s v;
-      Result.return (globals, env)
+      match v with
+      | First v ->
+          print_endline @@ Runtime.to_s v;
+          Result.return (globals, env)
+      | Second (bt, v) -> (
+          match bt with
+          | Error ->
+              let str = Runtime.string_of_val v |> Option.value_exn in
+              Result.Error str
+          | Exit ->
+              let code = Runtime.int_of_val v |> Option.value_exn in
+              exit code
+          | Return | Break | Continue ->
+              Sloth_common.Common.internal_failure __LOC__)
     in
 
     let globals, env =

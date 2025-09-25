@@ -17,17 +17,25 @@ let make_globals m src script_path ~env =
   let classes = Hashtbl.create (module String) in
   let identifiers = Identifiers.create () in
   let context_ids = Context.create () in
-  let make_method name arity methods cb =
-    let cb =
+  let make_method name arity methods
+      (cb :
+        Runtime.t list ->
+        (Runtime.t, Compiler.Ast.breaking_type * Runtime.t) Either.t) =
+    let cb :
+        Runtime.t list ->
+        (Runtime.t, Compiler.Ast.breaking_type * Runtime.t) Either.t =
      fun args ->
       let arg_len = List.length args in
       if not (Int.equal arg_len arity) then
-        Error
-          (Printf.sprintf
-             "You passed %d arguments (%s) to %s but %d were expected" arg_len
-             (List.fold_left args ~init:"" ~f:(fun msg arg ->
-                  msg ^ Runtime.to_s arg ^ ", "))
-             name arity)
+        Second
+          ( Compiler.Ast.Error,
+            Runtime.ArgumentError
+              (Printf.sprintf
+                 "You passed %d arguments (%s) to %s but %d were expected"
+                 arg_len
+                 (List.fold_left args ~init:"" ~f:(fun msg arg ->
+                      msg ^ Runtime.to_s arg ^ ", "))
+                 name arity) )
       else cb args
     in
     let native =
@@ -37,15 +45,19 @@ let make_globals m src script_path ~env =
     Hashtbl.add_exn methods ~key:name ~data:(Runtime.Func native)
   in
   let make_func name ?arity identifiers cb =
-    let cb =
+    let (cb
+          : Runtime.t list ->
+            (Runtime.t, Compiler.Ast.breaking_type * Runtime.t) Either.t) =
      fun args ->
       let arg_len = List.length args in
       if
         Option.is_some arity && not (Int.equal arg_len (Option.value_exn arity))
       then
-        Error
-          (Printf.sprintf "You passed %d arguments but %d were expected" arg_len
-             (Option.value_exn arity))
+        Second
+          ( Compiler.Ast.Error,
+            Runtime.ArgumentError
+              (Printf.sprintf "You passed %d arguments but %d were expected"
+                 arg_len (Option.value_exn arity)) )
       else cb args
     in
     Identifiers.bind identifiers name
@@ -59,33 +71,39 @@ let make_globals m src script_path ~env =
               let arg = List.hd_exn args in
               Runtime.to_s arg |> M.print_s;
               M.print_s "\n";
-              Ok Runtime.Null)
+              First Runtime.Null)
       | "assert" ->
           make_func "assert" identifiers (fun args ->
               let arg = List.hd_exn args in
               let second_arg = List.nth args 1 in
-              (match second_arg with
-              | Some msg -> (
-                  match Runtime.string_of_val msg with
-                  | None ->
-                      Error
-                        (Printf.sprintf
-                           "The second argument to assert() must be a String, \
-                            got %s"
-                        @@ Runtime.to_s msg)
-                  | Some msg -> Ok (Printf.sprintf "Assertion failed: %s" msg))
-              | None -> Ok "Assertion failed")
-              |> Result.bind ~f:(fun err_msg ->
-                     match Runtime.bool_of_val arg with
-                     | Some condition ->
-                         if condition then Ok (Runtime.Bool true)
-                         else Error err_msg
-                     | None ->
-                         Error
-                           (Printf.sprintf
-                              "The first argument to assert() must be a Bool \
-                               value, got %s"
-                           @@ Runtime.to_s arg)))
+              let res =
+                (match second_arg with
+                | Some msg -> (
+                    match Runtime.string_of_val msg with
+                    | None ->
+                        let msg =
+                          Printf.sprintf
+                            "The second argument to assert() must be a String, \
+                             got %s"
+                          @@ Runtime.to_s msg
+                        in
+                        Error (Runtime.ArgumentError msg)
+                    | Some msg -> Ok (Printf.sprintf "Assertion failed: %s" msg)
+                    )
+                | None -> Ok "Assertion failed")
+                |> Result.bind ~f:(fun err_msg ->
+                       match Runtime.bool_of_val arg with
+                       | Some condition ->
+                           if condition then Ok (Runtime.Bool true)
+                           else Error err_msg
+                       | None ->
+                           Error
+                             (Printf.sprintf
+                                "The first argument to assert() must be a Bool \
+                                 value, got %s"
+                             @@ Runtime.to_s arg))
+              in
+              match res with Ok v -> First v | Error err -> Second (Error, err))
       | _ ->
           Printf.sprintf "TODO: You have not yet implemented %s at %s" name
             __LOC__

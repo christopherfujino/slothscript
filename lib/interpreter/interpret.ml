@@ -27,14 +27,15 @@ let fail ~globals pos msg =
 
 let rec interpret_prog globals prog =
   match prog with
-  | [] -> (globals, Runtime.Null)
+  | [] -> (globals, First Runtime.Null)
   | hd :: tl -> (
-      let new_globals, v = interpret_decl globals hd in
+      interpret_decl globals hd >>= fun new_globals v ->
       match tl with
-      | [] -> (globals, v) (* TODO is this right? *)
+      | [] -> (globals, First v) (* TODO is this right? *)
       | _ -> (interpret_prog [@tailcall]) new_globals tl)
 
-and interpret_decl (globals : Globals.t) decl =
+and interpret_decl (globals : Globals.t) decl :
+    Globals.t * (Runtime.t, Compiler.Ast.breaking_type * Runtime.t) Either.t =
   let open Compiler.Optimizer in
   match decl with
   | FuncDecl { name; parameters; block; pos } ->
@@ -54,19 +55,18 @@ and interpret_decl (globals : Globals.t) decl =
       | None ->
           Printf.sprintf "A function named %s has already been declared" name
           |> fail ~globals pos);
-      (globals, f)
+      (globals, First f)
   | StmtDecl s ->
       let globals, either = interpret_stmt globals s in
-      let v =
-        match either with
-        | First v -> v
-        | Second (bt, _) -> (
-            match bt with
-            | Break | Continue | Return ->
-                (* TODO: This should be caught by optimizer *)
-                Sloth_common.Common.internal_failure __LOC__)
-      in
-      (globals, v)
+      (match either with
+      | First _ -> ()
+      | Second (bt, _) -> (
+          match bt with
+          | Break | Continue | Return ->
+              (* TODO: This should be caught by optimizer *)
+              Sloth_common.Common.internal_failure __LOC__
+          | Exit | Error -> ()));
+      (globals, either)
 
 and interpret_stmt (globals : Globals.t) stmt :
     Globals.t * (Runtime.t, Compiler.Ast.breaking_type * Runtime.t) Either.t =
@@ -444,11 +444,12 @@ and interpret_expr globals expr :
         (match either with
         | Second (bt, _) -> (
             match bt with
+            | Exit | Error -> ()
             | Continue | Break | Return ->
                 (* TODO optimizer should check for this *)
                 Sloth_common.Common.internal_failure __LOC__)
-        | First _ -> (globals'', Either.First Runtime.Null))
-        >>= fun globals _ ->
+        | First _ -> ());
+        (globals'', either) >>= fun globals _ ->
         let rec interpret_for_loop globals cmp inc bl (last_val : Runtime.t) =
           let globals, bt_either = interpret_expr globals cmp in
           ( globals,
@@ -512,7 +513,8 @@ and interpret_expr globals expr :
                     | Break ->
                         (* Done with loop, return break_val *)
                         (globals, First break_val)
-                    | Continue -> recurse break_val))
+                    | Continue -> recurse break_val
+                    | Error | Exit -> (globals, either)))
           | None ->
               Printf.sprintf
                 "The comparison of a for loop must be a Boolean value, instead \

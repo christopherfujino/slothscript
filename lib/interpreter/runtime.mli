@@ -29,12 +29,15 @@ type t =
   | File of file
   | FileHandle
   | Directory of string
+  (* Errors *)
+  | ArgumentError of string (* Should these be types? How should the user pattern match on error types? *)
+  | AssertionError of string
 
 (* TODO make this hidden *)
 and function_t =
   | Native of {
       parameters : string list;
-      cb : t list -> (t, string) Result.t;
+      cb : t list -> (t, Compiler.Ast.breaking_type * t) Either.t;
       identifiers : t Identifiers.t;
     }
   | User of {

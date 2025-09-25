@@ -15,27 +15,34 @@ type process_result = { code : int; stdout : string; stderr : string }
 type file = { path : string }
 
 type t =
+  (* Primitives *)
   | String of string
   | Bool of bool
   | Num of float
+  | Null
+  (* Collections *)
   | List of t Array.t
   | HashMap of (t, t) Stdlib.Hashtbl.t
-  | Null
+  (* Functions *)
   | Func of function_t
   | Method of t * function_t  (** This is created by Object de-referencing *)
+  (* Type *)
   | Prototype of prototype
+  (* Stdlib Types *)
   | Process of process
   | ProcessResult of process_result
   | File of file
   | FileHandle
   | Directory of string
+  (* Errors *)
+  | ArgumentError of string
 
 (* TODO add positions for error messages *)
 and function_t =
   (* TODO this prob doesn't need params or identifiers *)
   | Native of {
       parameters : string list;
-      cb : t list -> (t, string) Result.t;
+      cb : t list -> (t, Compiler.Ast.breaking_type * t) Either.t;
       identifiers : t Identifiers.t;
     }
   | User of {
@@ -66,6 +73,7 @@ let to_class_name = function
   | File _ -> "File"
   | FileHandle -> "FileHandle"
   | Directory _ -> "Directory"
+  | ArgumentError _ -> "ArgumentError"
 
 let rec to_s t' =
   let stringify_list l =
@@ -122,6 +130,7 @@ let rec to_s t' =
   | File { path } -> Printf.sprintf "File(path=%s)" path
   | FileHandle -> "FileHandle(TODO)"
   | Directory path -> Printf.sprintf "Directory(path=%s)" path
+  | ArgumentError msg -> Printf.sprintf "ArgumentError(msg=%s)" msg
 
 let num_of_val = function Num f -> Some f | _ -> None
 let string_of_val = function String s -> Some s | _ -> None
