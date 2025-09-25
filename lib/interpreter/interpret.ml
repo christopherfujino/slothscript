@@ -31,7 +31,7 @@ let invoke_native_func cb args =
   | First _ as first -> first
   | Second (bt, _) as second -> (
       match bt with
-      | Compiler.Ast.Return () | Break | Continue ->
+      | Compiler.Ast.Return | Break | Continue ->
           Sloth_common.Common.internal_failure __LOC__
       | Exit _ | Error _ -> second)
 
@@ -72,7 +72,7 @@ and interpret_decl (globals : Globals.t) decl :
       | First _ -> ()
       | Second (bt, _) -> (
           match bt with
-          | Break | Continue | Return () ->
+          | Break | Continue | Return ->
               (* TODO: This should be caught by optimizer *)
               Sloth_common.Common.internal_failure __LOC__
           | Exit _ | Error _ -> ()));
@@ -261,7 +261,7 @@ and interpret_expr globals expr :
                         else (traverse_stmts [@tailrec]) globals tl
                     | Second (bt, return_val) as either -> (
                         match bt with
-                        | Return () -> (globals, First return_val)
+                        | Return -> (globals, First return_val)
                         | _ -> (globals, either)))
               in
               (* discard context *)
@@ -457,7 +457,7 @@ and interpret_expr globals expr :
         | Second (bt, _) -> (
             match bt with
             | Exit _ | Error _ -> ()
-            | Continue | Break | Return () ->
+            | Continue | Break | Return ->
                 (* TODO optimizer should check for this *)
                 Sloth_common.Common.internal_failure __LOC__)
         | First _ -> ());
@@ -469,7 +469,7 @@ and interpret_expr globals expr :
             | First _ -> bt_either
             | Second (bt, _) -> (
                 match bt with
-                | Return () ->
+                | Return ->
                     (* This is reachable if the expression was a do block with
                        a return statement in it *)
                     bt_either
@@ -502,7 +502,7 @@ and interpret_expr globals expr :
                         ret_val
                   | Second (bt, _) -> (
                       match bt with
-                      | Return () ->
+                      | Return ->
                           (* This is reachable if the expression was a do block *)
                           (globals, either)
                       | _ ->
@@ -519,7 +519,7 @@ and interpret_expr globals expr :
                     recurse v
                 | Second (bt, break_val) as either -> (
                     match bt with
-                    | Return () ->
+                    | Return ->
                         (* let returns bubble up *)
                         (globals, either)
                     | Break ->

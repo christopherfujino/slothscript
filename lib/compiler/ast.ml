@@ -23,7 +23,7 @@ and stmt =
 [@@deriving sexp]
 
 and breaking_type =
-  | Return of unit (* TODO delete this *)
+  | Return
   | Break
   | Continue
   | Error of string (* TODO add an enum type *)

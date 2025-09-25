@@ -127,11 +127,11 @@ stmt:
 stmt_sans_semicolon:
   | pos = RETURN; e = expr1 {
     let pos = Sloth_common.Position.t_of_lexing_position pos in
-    BreakingStmt (Return (), Some e, pos)
+    BreakingStmt (Return, Some e, pos)
   }
   | pos = RETURN {
     let pos = Sloth_common.Position.t_of_lexing_position pos in
-    BreakingStmt (Return (), None, pos)
+    BreakingStmt (Return, None, pos)
   }
   | pos = BREAK; e = expr1 {
     let pos = Sloth_common.Position.t_of_lexing_position pos in
