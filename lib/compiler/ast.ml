@@ -22,7 +22,14 @@ and stmt =
   | BreakingStmt of breaking_type * expr option * Sloth_common.Position.t
 [@@deriving sexp]
 
-and breaking_type = Return | Break | Continue | Error | Exit [@@deriving sexp]
+and breaking_type =
+  | Return of unit (* TODO delete this *)
+  | Break
+  | Continue
+  | Error of string (* TODO add an enum type *)
+  | Exit of int
+[@@deriving sexp]
+(* TODO make an interpreter type to store the runtime data *)
 
 and expr =
   | Num of float * Sloth_common.Position.t

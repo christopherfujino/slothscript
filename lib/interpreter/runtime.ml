@@ -34,8 +34,6 @@ type t =
   | File of file
   | FileHandle
   | Directory of string
-  (* Errors *)
-  | ArgumentError of string
 
 (* TODO add positions for error messages *)
 and function_t =
@@ -73,7 +71,6 @@ let to_class_name = function
   | File _ -> "File"
   | FileHandle -> "FileHandle"
   | Directory _ -> "Directory"
-  | ArgumentError _ -> "ArgumentError"
 
 let rec to_s t' =
   let stringify_list l =
@@ -130,7 +127,6 @@ let rec to_s t' =
   | File { path } -> Printf.sprintf "File(path=%s)" path
   | FileHandle -> "FileHandle(TODO)"
   | Directory path -> Printf.sprintf "Directory(path=%s)" path
-  | ArgumentError msg -> Printf.sprintf "ArgumentError(msg=%s)" msg
 
 let num_of_val = function Num f -> Some f | _ -> None
 let string_of_val = function String s -> Some s | _ -> None

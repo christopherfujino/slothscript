@@ -18,9 +18,9 @@ type t =
   | String of string
   | Bool of bool
   | Num of float
+  | Null
   | List of t Array.t
   | HashMap of (t, t) Stdlib.Hashtbl.t
-  | Null
   | Func of function_t
   | Method of t * function_t
   | Prototype of prototype
@@ -29,9 +29,6 @@ type t =
   | File of file
   | FileHandle
   | Directory of string
-  (* Errors *)
-  | ArgumentError of string (* Should these be types? How should the user pattern match on error types? *)
-  | AssertionError of string
 
 (* TODO make this hidden *)
 and function_t =

@@ -28,14 +28,14 @@ let make_globals m src script_path ~env =
       let arg_len = List.length args in
       if not (Int.equal arg_len arity) then
         Second
-          ( Compiler.Ast.Error,
-            Runtime.ArgumentError
+          ( Compiler.Ast.Error
               (Printf.sprintf
                  "You passed %d arguments (%s) to %s but %d were expected"
                  arg_len
                  (List.fold_left args ~init:"" ~f:(fun msg arg ->
                       msg ^ Runtime.to_s arg ^ ", "))
-                 name arity) )
+                 name arity),
+            Runtime.Null )
       else cb args
     in
     let native =
@@ -54,10 +54,10 @@ let make_globals m src script_path ~env =
         Option.is_some arity && not (Int.equal arg_len (Option.value_exn arity))
       then
         Second
-          ( Compiler.Ast.Error,
-            Runtime.ArgumentError
+          ( Compiler.Ast.Error
               (Printf.sprintf "You passed %d arguments but %d were expected"
-                 arg_len (Option.value_exn arity)) )
+                 arg_len (Option.value_exn arity)),
+            Runtime.Null )
       else cb args
     in
     Identifiers.bind identifiers name
@@ -87,7 +87,7 @@ let make_globals m src script_path ~env =
                              got %s"
                           @@ Runtime.to_s msg
                         in
-                        Error (Runtime.ArgumentError msg)
+                        Error msg
                     | Some msg -> Ok (Printf.sprintf "Assertion failed: %s" msg)
                     )
                 | None -> Ok "Assertion failed")
@@ -103,7 +103,9 @@ let make_globals m src script_path ~env =
                                  value, got %s"
                              @@ Runtime.to_s arg))
               in
-              match res with Ok v -> First v | Error err -> Second (Error, err))
+              match res with
+              | Ok v -> First v
+              | Error err -> Second (Error err, Runtime.Null))
       | _ ->
           Printf.sprintf "TODO: You have not yet implemented %s at %s" name
             __LOC__
@@ -160,33 +162,38 @@ let make_globals m src script_path ~env =
                       let arg = List.nth_exn args 1 in
                       match Runtime.list_of_val arg with
                       | None ->
-                          Error
-                            (Printf.sprintf
-                               "Expected the first argument to `Process.new` \
-                                to be a List[String] but got `%s`"
-                            @@ Runtime.to_s arg)
+                          let err_msg =
+                            Printf.sprintf
+                              "Expected the first argument to `Process.new` to \
+                               be a List[String] but got `%s`"
+                            @@ Runtime.to_s arg
+                          in
+                          Second (Compiler.Ast.Error err_msg, Runtime.Null)
                       | Some arr ->
-                          let cmd_res =
+                          let cmd_either =
                             List.of_array arr
                             (* Not efficient *)
-                            |> List.fold_right ~init:(Ok []) ~f:(fun t acc ->
+                            |> List.fold_right ~init:(First []) ~f:(fun t acc ->
                                    match acc with
-                                   | Ok prev -> (
+                                   | First prev -> (
                                        let string_opt =
                                          Runtime.string_of_val t
                                        in
                                        match string_opt with
-                                       | Some s -> Ok (s :: prev)
+                                       | Some s -> First (s :: prev)
                                        | None ->
-                                           Error
-                                             (Printf.sprintf
-                                                "Expected the first argument \
-                                                 to `Process.new` to be a \
-                                                 List[String], but got a \
-                                                 non-String element"))
-                                   | Error _ -> acc)
+                                           Second
+                                             ( Compiler.Ast.Error
+                                                 (Printf.sprintf
+                                                    "Expected the first \
+                                                     argument to `Process.new` \
+                                                     to be a List[String], but \
+                                                     got a non-String element"),
+                                               Runtime.Null ))
+                                   | Second _ as sec -> sec)
                           in
-                          Result.map cmd_res ~f:(fun cmd ->
+                          Either.map cmd_either ~second:Fun.id
+                            ~first:(fun cmd ->
                               let proc =
                                 Runtime.
                                   {
@@ -212,7 +219,7 @@ let make_globals m src script_path ~env =
                       let result =
                         Runtime.process_result_of_val proc |> Option.value_exn
                       in
-                      Ok (Runtime.String result.stdout))
+                      First (Runtime.String result.stdout))
               | _ ->
                   Printf.sprintf
                     "`ProcessResult` does not implement the method `%s`" meth
@@ -248,7 +255,7 @@ let make_globals m src script_path ~env =
                       Stdlib.Hashtbl.iter
                         (fun key v -> Stdlib.Hashtbl.add left_copy key v)
                         right;
-                      Ok (Runtime.HashMap left_copy))
+                      First (Runtime.HashMap left_copy))
               | _ ->
                   Printf.sprintf "`HashMap` does not implement the method `%s`"
                     meth
@@ -268,7 +275,7 @@ let make_globals m src script_path ~env =
                       let ocaml_string =
                         Runtime.string_of_val str |> Option.value_exn
                       in
-                      Ok (Runtime.String (String.strip ocaml_string)))
+                      First (Runtime.String (String.strip ocaml_string)))
               | _ ->
                   Printf.sprintf "`String` does not implement the method `%s`"
                     meth
@@ -289,7 +296,7 @@ let make_globals m src script_path ~env =
                         |> Option.value_exn
                       in
                       let b = M.directory_exists path in
-                      Ok (Runtime.Bool b))
+                      First (Runtime.Bool b))
               | "create" ->
                   make_method meth 1 cl.instance_members (fun args ->
                       let path =
@@ -297,14 +304,14 @@ let make_globals m src script_path ~env =
                         |> Option.value_exn
                       in
                       M.mkdir path;
-                      Ok Runtime.Null)
+                      First Runtime.Null)
               | "path" ->
                   make_method meth 1 cl.instance_members (fun args ->
                       let path =
                         List.hd_exn args |> Runtime.directory_of_val
                         |> Option.value_exn
                       in
-                      Ok (Runtime.String path))
+                      First (Runtime.String path))
               | _ ->
                   Printf.sprintf "`Directory does not implement the method `%s`"
                     meth
@@ -328,7 +335,7 @@ let make_globals m src script_path ~env =
                       in
                       (* Errors? *)
                       let contents = M.file_read_all path in
-                      Ok (Runtime.String contents))
+                      First (Runtime.String contents))
               | _ ->
                   Printf.sprintf "`File` does not implement the method `%s`"
                     meth
@@ -340,13 +347,16 @@ let make_globals m src script_path ~env =
                       let first_arg = List.nth_exn args 1 in
                       (match Runtime.string_of_val first_arg with
                       | None ->
-                          Error
-                            (Printf.sprintf
-                               "You must pass a String to File.new(), but got \
-                                a %s"
-                            @@ Runtime.to_s first_arg)
-                      | Some str -> Ok str)
-                      |> Result.bind ~f:(fun path -> Ok (Runtime.File { path })))
+                          Second
+                            ( Compiler.Ast.Error
+                                (Printf.sprintf
+                                   "You must pass a String to File.new(), but \
+                                    got a %s"
+                                @@ Runtime.to_s first_arg),
+                              Runtime.Null )
+                      | Some str -> First str)
+                      |> Either.map ~second:Fun.id ~first:(fun path ->
+                             Runtime.File { path }))
               | _ ->
                   Printf.sprintf
                     "`File` does not implement the static member `%s`" name
