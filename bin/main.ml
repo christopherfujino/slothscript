@@ -41,13 +41,11 @@ let repl () =
       | First v ->
           print_endline @@ Runtime.to_s v;
           Result.return (globals, env)
-      | Second (bt, v) -> (
+      | Second (bt, _) -> (
           match bt with
-          | Error ->
-              let str = Runtime.string_of_val v |> Option.value_exn in
-              Result.Error str
-          | Exit ->
-              let code = Runtime.int_of_val v |> Option.value_exn in
+          | Error msg ->
+              Result.Error msg
+          | Exit code ->
               exit code
           | Return | Break | Continue ->
               Sloth_common.Common.internal_failure __LOC__)

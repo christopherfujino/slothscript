@@ -50,7 +50,14 @@ let make_test spec =
       (module Lib)
       spec.program "/parent/unit_test.sloth" ~env:[| "UNIT_TEST=true" |]
   in
-  let _ = Interpreter.Interpret.interpret_prog ctx prog in
+  let _, either = Interpreter.Interpret.interpret_prog ctx prog in
+  (match either with
+  | First _ -> ()
+  | Second (bt, _) -> (
+      match bt with
+      | Exit _ -> ()
+      | Error msg -> assert_failure @@ Printf.sprintf "Uncaught exception:\n\n%s" msg
+      | Return | Break | Continue -> failwith "Unreachable"));
   let forward_buffer = List.rev !Lib.stdout_buffer in
   let catted_output_opt =
     List.fold_left forward_buffer
@@ -118,20 +125,36 @@ let make_failing_test spec =
         (module Lib)
         spec.program "unit_test.sloth" ~env:[||]
     in
-    let _ = Interpreter.Interpret.interpret_prog ctx prog in
-    let cb =
-     fun acc cur ->
-      match acc with None -> Some cur | Some acc -> Some (acc ^ ", " ^ cur)
-    in
-    let buf_s =
-      List.fold_left ~f:cb ~init:None !Lib.stdout_buffer |> Option.value_exn
-    in
-    let msg =
-      Printf.sprintf
-        "test did not throw a runtime error as expected\nstdout_buffer is = %s"
-        buf_s
-    in
-    assert_failure msg
+    let _, either = Interpreter.Interpret.interpret_prog ctx prog in
+    match either with
+    | First _ ->
+        let buf_s =
+          List.fold_left
+            ~f:(fun acc cur ->
+              match acc with
+              | None -> Some cur
+              | Some acc -> Some (acc ^ ", " ^ cur))
+            ~init:None !Lib.stdout_buffer
+          |> Option.value ~default:""
+        in
+        let msg =
+          Printf.sprintf
+            "test did not throw a runtime error as expected\n\
+             stdout_buffer is = %s"
+            buf_s
+        in
+        assert_failure msg
+    | Second (bt, _) -> (
+        match bt with
+        | Return | Break | Continue ->
+            Sloth_common.Common.internal_failure __LOC__
+        | Error msg -> handle_failure msg
+        | Exit code ->
+            assert_failure
+            @@ Printf.sprintf
+                 "test did not throw a runtime error as expected, but exited \
+                  with code %d"
+                 code)
   with
   | Sloth_common.Common.CompileError msg -> handle_failure msg
   | Sloth_common.Common.RuntimeError msg -> handle_failure msg

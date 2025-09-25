@@ -72,6 +72,15 @@ let make_globals m src script_path ~env =
               Runtime.to_s arg |> M.print_s;
               M.print_s "\n";
               First Runtime.Null)
+      | "exit" ->
+          make_func "exit" ~arity:1 identifiers (fun args ->
+            let arg = List.hd_exn args in
+            match Runtime.int_of_val arg with
+            | Some code -> Second ((Compiler.Ast.Exit code), Runtime.Null)
+            | None ->
+                let msg = Printf.sprintf "The argument passed to `exit()` must be an integer, got %s" @@ Runtime.to_s arg in
+                Second ((Compiler.Ast.Error msg), Runtime.Null)
+          )
       | "assert" ->
           make_func "assert" identifiers (fun args ->
               let arg = List.hd_exn args in

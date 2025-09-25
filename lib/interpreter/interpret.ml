@@ -7,25 +7,35 @@ let ( >>= ) =
     ~second:(fun tuple -> (globals, Second tuple))
     ~first:(cb globals)
 
-let fail ~globals pos msg =
+let failure_msg ~globals ~pos msg =
   let pos_s = Sloth_common.Position.string_of_t pos in
-  let msg1 =
+  let msg =
     Printf.sprintf "[%s] Runtime error\n\n%s\n%s" pos_s
       (Sloth_common.Position.summarize pos Globals.(globals.src))
       msg
   in
-  let msg2 =
-    if Sloth_common.Common.debug_mode then
-      let callstack_depth = 50 in
-      Printf.sprintf "%s\n\n%s" msg1
-        (* Core.Printexc does not implement .get_callstack *)
-        (Stdlib.Printexc.get_callstack callstack_depth
-        |> Stdlib.Printexc.raw_backtrace_to_string)
-    else msg1
-  in
-  raise (Sloth_common.Common.RuntimeError msg2)
+  if Sloth_common.Common.debug_mode then
+    let callstack_depth = 50 in
+    Printf.sprintf "%s\n\n%s" msg
+      (* Core.Printexc does not implement .get_callstack *)
+      (Stdlib.Printexc.get_callstack callstack_depth
+      |> Stdlib.Printexc.raw_backtrace_to_string)
+  else msg
 
-let invoke_native_func cb args =
+let failure_obj ~globals ~pos msg =
+  let msg = failure_msg ~globals ~pos msg in
+  Second (Compiler.Ast.Error msg, Runtime.Null)
+
+(**
+   For error cases that could potentially become compiler errors.
+
+   These should not be recoverable, you need to fix your code.
+*)
+let fail ~globals pos msg =
+  let msg = failure_msg ~globals ~pos msg in
+  raise (Sloth_common.Common.RuntimeError msg)
+
+let invoke_native_func ~globals ~pos cb args =
   let either = cb args in
   match either with
   | First _ as first -> first
@@ -33,7 +43,8 @@ let invoke_native_func cb args =
       match bt with
       | Compiler.Ast.Return | Break | Continue ->
           Sloth_common.Common.internal_failure __LOC__
-      | Exit _ | Error _ -> second)
+      | Exit _ -> second
+      | Error msg -> failure_obj ~globals ~pos msg)
 
 let rec interpret_prog globals prog =
   match prog with
@@ -48,7 +59,7 @@ and interpret_decl (globals : Globals.t) decl :
     Globals.t * (Runtime.t, Compiler.Ast.breaking_type * Runtime.t) Either.t =
   let open Compiler.Optimizer in
   match decl with
-  | FuncDecl { name; parameters; block; pos } ->
+  | FuncDecl { name; parameters; block; pos = _ } ->
       let parameters = List.map parameters ~f:(fun (name, _) -> name) in
       let f =
         Runtime.Func
@@ -63,8 +74,8 @@ and interpret_decl (globals : Globals.t) decl :
       (match Identifiers.bind globals.identifiers name f with
       | Some () -> ()
       | None ->
-          Printf.sprintf "A function named %s has already been declared" name
-          |> fail ~globals pos);
+          (* This should be caught by optimizer *)
+          Sloth_common.Common.internal_failure __LOC__);
       (globals, First f)
   | StmtDecl s ->
       let globals, either = interpret_stmt globals s in
@@ -277,7 +288,7 @@ and interpret_expr globals expr :
               >>= fun globals reversed_args ->
               let args = List.rev reversed_args in
 
-              (globals, invoke_native_func cb args))
+              (globals, invoke_native_func ~globals ~pos cb args))
       | Method (receiver, func_t) -> (
           match func_t with
           | Native { cb; parameters = _; identifiers = _ } ->
@@ -289,7 +300,7 @@ and interpret_expr globals expr :
               >>= fun globals reversed_args ->
               let args = List.rev reversed_args in
 
-              (globals, invoke_native_func cb (receiver :: args))
+              (globals, invoke_native_func ~globals ~pos cb (receiver :: args))
           | User _ ->
               (* I think this is unreachable... *)
               Sloth_common.Common.internal_failure __LOC__)
@@ -374,7 +385,7 @@ and interpret_expr globals expr :
             | User _ -> Sloth_common.Common.internal_failure __LOC__
             | Native { cb; _ } -> cb
           in
-          (globals, invoke_native_func cb [ receiver; target ])
+          (globals, invoke_native_func ~globals ~pos cb [ receiver; target ])
       | Minus ->
           interpret_expr globals target >>= fun globals target ->
           let f_opt = Runtime.num_of_val target in
@@ -665,7 +676,7 @@ and interpret_method ~globals ~pos receiver args method_name =
           | User _ -> Sloth_common.Common.internal_failure __LOC__
           | Native { cb; _ } ->
               let args = receiver :: args in
-              (globals, invoke_native_func cb args))
+              (globals, invoke_native_func ~globals ~pos cb args))
       | _ ->
           Printf.sprintf "Internal error: %s\n\n%s"
             (Runtime.to_class_name func)
@@ -784,13 +795,14 @@ and cast_to_process ~globals ~pos v :
         match constructor with
         | Func func_t -> (
             match func_t with
-            | Native { cb; _ } -> fun () -> invoke_native_func cb [ l ]
+            | Native { cb; _ } ->
+                fun () -> invoke_native_func ~globals ~pos cb [ l ]
             | User _ -> Sloth_common.Common.internal_failure __LOC__)
         | Method (receiver, func_t) -> (
             match func_t with
             | User _ -> Sloth_common.Common.internal_failure __LOC__
             | Native { cb; _ } ->
-                fun () -> invoke_native_func cb [ receiver; l ])
+                fun () -> invoke_native_func ~globals ~pos cb [ receiver; l ])
         | _ -> Sloth_common.Common.internal_failure __LOC__
       in
       match callback () with
