@@ -37,8 +37,16 @@ let repl () =
       let* globals, v =
         wrap_error (fun () -> Interpreter.Interpret.interpret_prog globals prog)
       in
-      print_endline @@ Runtime.to_s v;
-      Result.return (globals, env)
+      match v with
+      | First v ->
+          print_endline @@ Runtime.to_s v;
+          Result.return (globals, env)
+      | Second (bt, _) -> (
+          match bt with
+          | Error msg -> Result.Error msg
+          | Exit code -> exit code
+          | Return | Break | Continue ->
+              Sloth_common.Common.internal_failure __LOC__)
     in
 
     let globals, env =
@@ -65,10 +73,17 @@ let interpreter path =
 
   let result =
     let* _, prog = wrap_error (fun () -> Compiler.Main.parse env program) in
-    let* _ =
+    let* _, either =
       wrap_error (fun () -> Interpreter.Interpret.interpret_prog globals prog)
     in
-    Result.return 0
+    match either with
+    | First _ -> Ok 0
+    | Second (bt, _) -> (
+        match bt with
+        | Exit code -> Ok code
+        | Error msg -> Error msg
+        | Return | Break | Continue ->
+            Sloth_common.Common.internal_failure __LOC__)
   in
 
   let code =

@@ -18,9 +18,9 @@ type t =
   | String of string
   | Bool of bool
   | Num of float
+  | Null
   | List of t Array.t
   | HashMap of (t, t) Stdlib.Hashtbl.t
-  | Null
   | Func of function_t
   | Method of t * function_t
   | Prototype of prototype
@@ -34,7 +34,7 @@ type t =
 and function_t =
   | Native of {
       parameters : string list;
-      cb : t list -> (t, string) Result.t;
+      cb : t list -> (t, Compiler.Ast.breaking_type * t) Either.t;
       identifiers : t Identifiers.t;
     }
   | User of {

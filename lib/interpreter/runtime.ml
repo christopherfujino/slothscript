@@ -15,15 +15,20 @@ type process_result = { code : int; stdout : string; stderr : string }
 type file = { path : string }
 
 type t =
+  (* Primitives *)
   | String of string
   | Bool of bool
   | Num of float
+  | Null
+  (* Collections *)
   | List of t Array.t
   | HashMap of (t, t) Stdlib.Hashtbl.t
-  | Null
+  (* Functions *)
   | Func of function_t
   | Method of t * function_t  (** This is created by Object de-referencing *)
+  (* Type *)
   | Prototype of prototype
+  (* Stdlib Types *)
   | Process of process
   | ProcessResult of process_result
   | File of file
@@ -35,7 +40,7 @@ and function_t =
   (* TODO this prob doesn't need params or identifiers *)
   | Native of {
       parameters : string list;
-      cb : t list -> (t, string) Result.t;
+      cb : t list -> (t, Compiler.Ast.breaking_type * t) Either.t;
       identifiers : t Identifiers.t;
     }
   | User of {

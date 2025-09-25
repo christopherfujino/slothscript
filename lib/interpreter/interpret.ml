@@ -7,37 +7,57 @@ let ( >>= ) =
     ~second:(fun tuple -> (globals, Second tuple))
     ~first:(cb globals)
 
-let fail ~globals pos msg =
+let failure_msg ~globals ~pos msg =
   let pos_s = Sloth_common.Position.string_of_t pos in
-  let msg1 =
+  let msg =
     Printf.sprintf "[%s] Runtime error\n\n%s\n%s" pos_s
       (Sloth_common.Position.summarize pos Globals.(globals.src))
       msg
   in
-  let msg2 =
-    if Sloth_common.Common.debug_mode then
-      let callstack_depth = 50 in
-      Printf.sprintf "%s\n\n%s" msg1
-        (* Core.Printexc does not implement .get_callstack *)
-        (Stdlib.Printexc.get_callstack callstack_depth
-        |> Stdlib.Printexc.raw_backtrace_to_string)
-    else msg1
-  in
-  raise (Sloth_common.Common.RuntimeError msg2)
+  if Sloth_common.Common.debug_mode then
+    let callstack_depth = 50 in
+    Printf.sprintf "%s\n\n%s" msg
+      (* Core.Printexc does not implement .get_callstack *)
+      (Stdlib.Printexc.get_callstack callstack_depth
+      |> Stdlib.Printexc.raw_backtrace_to_string)
+  else msg
+
+let failure_obj ~globals ~pos msg =
+  let msg = failure_msg ~globals ~pos msg in
+  Second (Compiler.Ast.Error msg, Runtime.Null)
+
+(** For error cases that could potentially become compiler errors.
+
+    These should not be recoverable, you need to fix your code. *)
+let fail ~globals pos msg =
+  let msg = failure_msg ~globals ~pos msg in
+  raise (Sloth_common.Common.RuntimeError msg)
+
+let invoke_native_func ~globals ~pos cb args =
+  let either = cb args in
+  match either with
+  | First _ as first -> first
+  | Second (bt, _) as second -> (
+      match bt with
+      | Compiler.Ast.Return | Break | Continue ->
+          Sloth_common.Common.internal_failure __LOC__
+      | Exit _ -> second
+      | Error msg -> failure_obj ~globals ~pos msg)
 
 let rec interpret_prog globals prog =
   match prog with
-  | [] -> (globals, Runtime.Null)
+  | [] -> (globals, First Runtime.Null)
   | hd :: tl -> (
-      let new_globals, v = interpret_decl globals hd in
+      interpret_decl globals hd >>= fun new_globals v ->
       match tl with
-      | [] -> (globals, v) (* TODO is this right? *)
+      | [] -> (globals, First v) (* TODO is this right? *)
       | _ -> (interpret_prog [@tailcall]) new_globals tl)
 
-and interpret_decl (globals : Globals.t) decl =
+and interpret_decl (globals : Globals.t) decl :
+    Globals.t * (Runtime.t, Compiler.Ast.breaking_type * Runtime.t) Either.t =
   let open Compiler.Optimizer in
   match decl with
-  | FuncDecl { name; parameters; block; pos } ->
+  | FuncDecl { name; parameters; block; pos = _ } ->
       let parameters = List.map parameters ~f:(fun (name, _) -> name) in
       let f =
         Runtime.Func
@@ -52,21 +72,20 @@ and interpret_decl (globals : Globals.t) decl =
       (match Identifiers.bind globals.identifiers name f with
       | Some () -> ()
       | None ->
-          Printf.sprintf "A function named %s has already been declared" name
-          |> fail ~globals pos);
-      (globals, f)
+          (* This should be caught by optimizer *)
+          Sloth_common.Common.internal_failure __LOC__);
+      (globals, First f)
   | StmtDecl s ->
       let globals, either = interpret_stmt globals s in
-      let v =
-        match either with
-        | First v -> v
-        | Second (bt, _) -> (
-            match bt with
-            | Break | Continue | Return ->
-                (* TODO: This should be caught by optimizer *)
-                Sloth_common.Common.internal_failure __LOC__)
-      in
-      (globals, v)
+      (match either with
+      | First _ -> ()
+      | Second (bt, _) -> (
+          match bt with
+          | Break | Continue | Return ->
+              (* TODO: This should be caught by optimizer *)
+              Sloth_common.Common.internal_failure __LOC__
+          | Exit _ | Error _ -> ()));
+      (globals, either)
 
 and interpret_stmt (globals : Globals.t) stmt :
     Globals.t * (Runtime.t, Compiler.Ast.breaking_type * Runtime.t) Either.t =
@@ -258,7 +277,7 @@ and interpret_expr globals expr :
               (* Note, Return has already been unwrapped *)
               let _, either = traverse_stmts temp_globals block in
               (globals, either)
-          | Native { cb; parameters = _; identifiers = _ } -> (
+          | Native { cb; parameters = _; identifiers = _ } ->
               List.fold args ~init:(globals, First []) ~f:(fun acc arg ->
                   acc >>= fun globals prev ->
                   interpret_expr globals arg >>= fun globals arg ->
@@ -267,14 +286,10 @@ and interpret_expr globals expr :
               >>= fun globals reversed_args ->
               let args = List.rev reversed_args in
 
-              match cb args with
-              | Ok v -> (globals, First v)
-              | Error msg ->
-                  (* TODO: should this return a `Some SlothError`? *)
-                  fail ~globals pos msg))
+              (globals, invoke_native_func ~globals ~pos cb args))
       | Method (receiver, func_t) -> (
           match func_t with
-          | Native { cb; parameters = _; identifiers = _ } -> (
+          | Native { cb; parameters = _; identifiers = _ } ->
               List.fold args ~init:(globals, First []) ~f:(fun acc arg ->
                   acc >>= fun globals prev ->
                   interpret_expr globals arg >>= fun globals arg ->
@@ -283,11 +298,7 @@ and interpret_expr globals expr :
               >>= fun globals reversed_args ->
               let args = List.rev reversed_args in
 
-              match cb (receiver :: args) with
-              | Ok v -> (globals, First v)
-              | Error msg ->
-                  (* TODO: should this return a `Some SlothError`? *)
-                  fail ~globals pos msg)
+              (globals, invoke_native_func ~globals ~pos cb (receiver :: args))
           | User _ ->
               (* I think this is unreachable... *)
               Sloth_common.Common.internal_failure __LOC__)
@@ -305,8 +316,13 @@ and interpret_expr globals expr :
                   First
                     (Runtime.Directory (cast_to_directory ~globals ~pos arg)) )
             | "Process" ->
-                ( globals,
-                  First (Runtime.Process (cast_to_process ~globals ~pos arg)) )
+                let either =
+                  cast_to_process ~globals ~pos arg
+                  |> Either.map
+                       ~first:(fun proc -> Runtime.Process proc)
+                       ~second:Fun.id
+                in
+                (globals, either)
             | _ -> Sloth_common.Common.internal_failure __LOC__)
       | _ as t ->
           Printf.sprintf "Tried to invoke %s, but it is not a function"
@@ -333,19 +349,26 @@ and interpret_expr globals expr :
                     got %s"
               |> fail ~globals pos
           | Some b -> (globals, First (Runtime.Bool (not b))))
-      | Bang -> (
+      | Bang ->
           interpret_expr globals target >>= fun globals target ->
-          let proc = cast_to_process ~globals ~pos target in
-          let module M = (val globals.l : Native.Sig) in
-          (* TODO add error handling *)
-          let env =
-            Context.get globals.context_ids "$env"
-            |> Option.value_exn |> Runtime.env_of_val |> Option.value_exn
+          let either =
+            cast_to_process ~globals ~pos target
+            |> Either.map
+                 ~first:(fun proc ->
+                   let module M = (val globals.l : Native.Sig) in
+                   (* TODO add error handling *)
+                   let env =
+                     Context.get globals.context_ids "$env"
+                     |> Option.value_exn |> Runtime.env_of_val
+                     |> Option.value_exn
+                   in
+                   match M.proc_exec proc env with
+                   | Ok t' -> t'
+                   | Error err -> fail ~globals pos err)
+                 ~second:Fun.id
           in
-          match M.proc_exec proc env with
-          | Ok t' -> (globals, First t')
-          | Error err -> fail ~globals pos err)
-      | LeftArrow -> (
+          (globals, either)
+      | LeftArrow ->
           interpret_expr globals target >>= fun globals target ->
           let file = cast_to_file ~globals ~pos target in
           let target = Runtime.File file in
@@ -360,9 +383,7 @@ and interpret_expr globals expr :
             | User _ -> Sloth_common.Common.internal_failure __LOC__
             | Native { cb; _ } -> cb
           in
-          match cb [ receiver; target ] with
-          | Error err -> fail ~globals pos err
-          | Ok t' -> (globals, First t'))
+          (globals, invoke_native_func ~globals ~pos cb [ receiver; target ])
       | Minus ->
           interpret_expr globals target >>= fun globals target ->
           let f_opt = Runtime.num_of_val target in
@@ -444,11 +465,12 @@ and interpret_expr globals expr :
         (match either with
         | Second (bt, _) -> (
             match bt with
+            | Exit _ | Error _ -> ()
             | Continue | Break | Return ->
                 (* TODO optimizer should check for this *)
                 Sloth_common.Common.internal_failure __LOC__)
-        | First _ -> (globals'', Either.First Runtime.Null))
-        >>= fun globals _ ->
+        | First _ -> ());
+        (globals'', either) >>= fun globals _ ->
         let rec interpret_for_loop globals cmp inc bl (last_val : Runtime.t) =
           let globals, bt_either = interpret_expr globals cmp in
           ( globals,
@@ -512,7 +534,8 @@ and interpret_expr globals expr :
                     | Break ->
                         (* Done with loop, return break_val *)
                         (globals, First break_val)
-                    | Continue -> recurse break_val))
+                    | Continue -> recurse break_val
+                    | Error _ | Exit _ -> (globals, either)))
           | None ->
               Printf.sprintf
                 "The comparison of a for loop must be a Boolean value, instead \
@@ -649,12 +672,9 @@ and interpret_method ~globals ~pos receiver args method_name =
       | Func func -> (
           match func with
           | User _ -> Sloth_common.Common.internal_failure __LOC__
-          | Native { cb; _ } -> (
+          | Native { cb; _ } ->
               let args = receiver :: args in
-              match cb args with
-              | Ok v -> (globals, First v)
-              | Error msg ->
-                  (* TODO propagate SlothError *) fail ~globals pos msg))
+              (globals, invoke_native_func ~globals ~pos cb args))
       | _ ->
           Printf.sprintf "Internal error: %s\n\n%s"
             (Runtime.to_class_name func)
@@ -759,9 +779,11 @@ and cast_to_file ~globals ~pos = function
       @@ Printf.sprintf "There is no way to cast from a %s to a File"
       @@ Runtime.to_s t'
 
-and cast_to_process ~globals ~pos = function
-  | Runtime.Process p -> p
-  | Runtime.List _ as l ->
+and cast_to_process ~globals ~pos v :
+    (Runtime.process, Compiler.Ast.breaking_type * Runtime.t) Either.t =
+  match v with
+  | Runtime.Process p -> First p
+  | Runtime.List _ as l -> (
       let constructor =
         dereference_object globals
           (Runtime.Prototype { name = "Process" })
@@ -771,20 +793,19 @@ and cast_to_process ~globals ~pos = function
         match constructor with
         | Func func_t -> (
             match func_t with
-            | Native { cb; _ } -> fun () -> cb [ l ]
+            | Native { cb; _ } ->
+                fun () -> invoke_native_func ~globals ~pos cb [ l ]
             | User _ -> Sloth_common.Common.internal_failure __LOC__)
         | Method (receiver, func_t) -> (
             match func_t with
             | User _ -> Sloth_common.Common.internal_failure __LOC__
-            | Native { cb; _ } -> fun () -> cb [ receiver; l ])
+            | Native { cb; _ } ->
+                fun () -> invoke_native_func ~globals ~pos cb [ receiver; l ])
         | _ -> Sloth_common.Common.internal_failure __LOC__
       in
-      let proc =
-        match callback () with
-        | Error err -> fail ~globals pos err
-        | Ok proc -> proc
-      in
-      (cast_to_process [@tailcall]) ~globals ~pos proc
+      match callback () with
+      | Second _ as second -> second
+      | First proc -> (cast_to_process [@tailcall]) ~globals ~pos proc)
   | Runtime.String s ->
       let list =
         shell_like_escape s
@@ -814,9 +835,14 @@ and interpret_binary globals lhs rhs op pos =
   in
   match op with
   | Pipe ->
+      let ( >>- ) (globals, either) callback =
+        match either with
+        | Second _ as second -> (globals, second)
+        | First t -> callback t
+      in
       interpret_expr globals rhs >>= fun globals rhs ->
-      let left = cast_to_process ~globals ~pos lhs in
-      let right = cast_to_process ~globals ~pos rhs in
+      (globals, cast_to_process ~globals ~pos lhs) >>- fun left ->
+      (globals, cast_to_process ~globals ~pos rhs) >>- fun right ->
       let read, write = Core_unix.pipe () in
       left.stdout <- write;
       left.pipes_to_collect <- write :: left.pipes_to_collect;

@@ -1,0 +1,36 @@
+### Name
+exit
+
+### Program
+exit(0)
+assert(false)
+
+### Processes
+()
+
+### Ast
+((StmtDecl
+  (ExprStmt
+    (FuncInvoc
+      (IdRef
+        exit
+        [POS])
+      ((Num
+        0
+        [POS]))
+      [POS])))
+  (StmtDecl
+    (ExprStmt
+      (FuncInvoc
+        (IdRef
+          assert
+          [POS])
+        ((Bool
+          false
+          [POS]))
+        [POS]))))
+
+### Stdout
+
+
+### Failure
