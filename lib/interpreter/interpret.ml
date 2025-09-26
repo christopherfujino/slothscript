@@ -1,16 +1,16 @@
 open Core
 open Common
 
-let ( >>= ) =
- fun (globals, either) cb ->
-  Either.value_map either
-    ~second:(fun tuple -> (globals, Second tuple))
-    ~first:(cb globals)
-
-let ( >>- ) (globals, either) callback =
+(** Bind an either and globals where globals need to be passed. *)
+let ( >>= ) (globals, either) cb =
   match either with
+  | First t -> cb globals t
   | Second _ as second -> (globals, second)
-  | First t -> callback t
+
+(** Bind an either and globals where the callback does not require or produce
+    globals *)
+let ( >>- ) either cb =
+  match either with First t -> cb t | Second _ as second -> second
 
 let failure_msg ~globals ~pos msg =
   let pos_s = Sloth_common.Position.string_of_t pos in
@@ -844,15 +844,18 @@ and interpret_binary globals lhs rhs op pos =
   match op with
   | Pipe ->
       interpret_expr globals rhs >>= fun globals rhs ->
-      (globals, cast_to_process ~globals ~pos lhs) >>- fun left ->
-      (globals, cast_to_process ~globals ~pos rhs) >>- fun right ->
-      let read, write = Core_unix.pipe () in
-      left.stdout <- write;
-      left.pipes_to_collect <- write :: left.pipes_to_collect;
-      right.stdin <- read;
-      right.pipes_to_collect <- read :: right.pipes_to_collect;
-      let right = { right with previous = Some left } in
-      (globals, Either.first @@ Runtime.Process right)
+      let either =
+        cast_to_process ~globals ~pos lhs >>- fun left ->
+        cast_to_process ~globals ~pos rhs >>- fun right ->
+        let read, write = Core_unix.pipe () in
+        left.stdout <- write;
+        left.pipes_to_collect <- write :: left.pipes_to_collect;
+        right.stdin <- read;
+        right.pipes_to_collect <- read :: right.pipes_to_collect;
+        let right = { right with previous = Some left } in
+        Either.first @@ Runtime.Process right
+      in
+      (globals, either)
   | Plus ->
       interpret_expr globals rhs >>= fun globals rhs ->
       let left = cast_to_number lhs in
@@ -877,22 +880,22 @@ and interpret_binary globals lhs rhs op pos =
       interpret_expr globals rhs >>= fun globals rhs ->
       let left = cast_to_number lhs in
       let right = cast_to_number rhs in
-      let (), either =
-        if Float.is_integer left then ((), Either.first @@ Float.to_int left)
+      let either =
+        if Float.is_integer left then Either.first @@ Float.to_int left
         else
           let msg =
             Printf.sprintf "Modulo (`%%`) can only operate on integers, got %f"
               left
           in
-          ((), failure_obj ~globals ~pos msg) >>- fun left ->
-          if Float.is_integer right then ((), Either.first @@ Float.to_int right)
+          failure_obj ~globals ~pos msg >>- fun left ->
+          if Float.is_integer right then Either.first @@ Float.to_int right
           else
             let msg =
               Printf.sprintf
                 "Modulo (`%%`) can only operate on integers, got %f" right
             in
-            ((), failure_obj ~globals ~pos msg) >>- fun right ->
-            ((), Either.first @@ (left mod right))
+            failure_obj ~globals ~pos msg >>- fun right ->
+            Either.first @@ (left mod right)
       in
       ( globals,
         Either.map either
