@@ -880,29 +880,32 @@ and interpret_binary globals lhs rhs op pos =
       interpret_expr globals rhs >>= fun globals rhs ->
       let left = cast_to_number lhs in
       let right = cast_to_number rhs in
-      let either =
-        if Float.is_integer left then Either.first @@ Float.to_int left
-        else
-          let msg =
-            Printf.sprintf "Modulo (`%%`) can only operate on integers, got %f"
-              left
-          in
-          failure_obj ~globals ~pos msg >>- fun left ->
-          if Float.is_integer right then Either.first @@ Float.to_int right
+      let either : (Runtime.t, Compiler.Ast.breaking_type * Runtime.t) Either.t
+          =
+        let left_either =
+          if Float.is_integer left then Either.first @@ Float.to_int left
+          else
+            let msg =
+              Printf.sprintf
+                "Modulo (`%%`) can only operate on integers, got %f" left
+            in
+            failure_obj ~globals ~pos msg
+        in
+
+        let left_and_right_either =
+          left_either >>- fun left ->
+          if Float.is_integer right then Either.first (left, Float.to_int right)
           else
             let msg =
               Printf.sprintf
                 "Modulo (`%%`) can only operate on integers, got %f" right
             in
-            failure_obj ~globals ~pos msg >>- fun right ->
-            Either.first @@ (left mod right)
+            failure_obj ~globals ~pos msg
+        in
+        left_and_right_either >>- fun (left, right) ->
+        Either.first @@ Runtime.Num (Float.of_int (left mod right))
       in
-      ( globals,
-        Either.map either
-          ~first:(fun i ->
-            let f = Float.of_int i in
-            Runtime.Num f)
-          ~second:Fun.id )
+      (globals, either)
   | And -> (
       let left =
         match Runtime.bool_of_val lhs with
