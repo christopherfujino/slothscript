@@ -29,130 +29,130 @@ print("nested ${ "string ${ "interpolation" }" }")
     ((ExprStmt
       (Num
         42
-        [POS]))))
+        <opaque>))))
   (pos
-    [POS]))
+    <opaque>))
   (StmtDecl
     (ExprStmt
       (LetExpr
         one
         (Num
           1
-          [POS])
-        [POS])))
+          <opaque>)
+        <opaque>)))
   (StmtDecl
     (ExprStmt
       (LetExpr
         two
         (Num
           2
-          [POS])
-        [POS])))
+          <opaque>)
+        <opaque>)))
   (StmtDecl
     (ExprStmt
       (LetExpr
         three
         (Num
           3
-          [POS])
-        [POS])))
+          <opaque>)
+        <opaque>)))
   (StmtDecl
     (ExprStmt
       (FuncInvoc
         (IdRef
           print
-          [POS])
+          <opaque>)
         ((String
           ((FullString
             "} This should be a vanilla string literal"
-            [POS]))
-          [POS]))
-        [POS])))
+            <opaque>))
+          <opaque>))
+        <opaque>)))
   (StmtDecl
     (ExprStmt
       (FuncInvoc
         (IdRef
           print
-          [POS])
+          <opaque>)
         ((String
           ((StartStringInterp
             "The answer is: "
-            [POS])
+            <opaque>)
             (ExpressionStringInterp
               (FuncInvoc
                 (IdRef
                   f
-                  [POS])
+                  <opaque>)
                 ()
-                [POS]))
+                <opaque>))
             (EndStringInterp
               .
-              [POS]))
-          [POS]))
-        [POS])))
+              <opaque>))
+          <opaque>))
+        <opaque>)))
   (StmtDecl
     (ExprStmt
       (FuncInvoc
         (IdRef
           print
-          [POS])
+          <opaque>)
         ((String
           ((StartStringInterp
             ""
-            [POS])
+            <opaque>)
             (ExpressionStringInterp
               (IdRef
                 one
-                [POS]))
+                <opaque>))
             (MiddleStringInterp
               ", "
-              [POS])
+              <opaque>)
             (ExpressionStringInterp
               (IdRef
                 two
-                [POS]))
+                <opaque>))
             (MiddleStringInterp
               ", "
-              [POS])
+              <opaque>)
             (ExpressionStringInterp
               (IdRef
                 three
-                [POS]))
+                <opaque>))
             (EndStringInterp
               .
-              [POS]))
-          [POS]))
-        [POS])))
+              <opaque>))
+          <opaque>))
+        <opaque>)))
   (StmtDecl
     (ExprStmt
       (FuncInvoc
         (IdRef
           print
-          [POS])
+          <opaque>)
         ((String
           ((StartStringInterp
             "nested "
-            [POS])
+            <opaque>)
             (ExpressionStringInterp
               (String
                 ((StartStringInterp
                   "string "
-                  [POS])
+                  <opaque>)
                   (ExpressionStringInterp
                     (String
                       ((FullString
                         interpolation
-                        [POS]))
-                      [POS]))
+                        <opaque>))
+                      <opaque>))
                   (EndStringInterp
                     ""
-                    [POS]))
-                [POS]))
+                    <opaque>))
+                <opaque>))
             (EndStringInterp
               ""
-              [POS]))
-          [POS]))
-        [POS]))))
+              <opaque>))
+          <opaque>))
+        <opaque>))))
 
 ### Stdout
 } This should be a vanilla string literal

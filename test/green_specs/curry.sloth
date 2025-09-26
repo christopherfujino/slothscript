@@ -10,59 +10,59 @@ func a(x) {
 
 print(a(1)(2))
 
+### Processes
+()
+
 ### Ast
 ((FuncDecl
   (name
     a)
   (parameters
     ((x
-      [POS])))
+      <opaque>)))
   (block
     ((ExprStmt
       (FuncExpr
         (parameters
           ((y
-            [POS])))
+            <opaque>)))
         (block
           ((ExprStmt
             (Binary
               (IdRef
                 x
-                [POS])
+                <opaque>)
               (IdRef
                 y
-                [POS])
+                <opaque>)
               Plus
-              [POS]))))
+              <opaque>))))
         (pos
-          [POS])))))
+          <opaque>)))))
   (pos
-    [POS]))
+    <opaque>))
   (StmtDecl
     (ExprStmt
       (FuncInvoc
         (IdRef
           print
-          [POS])
+          <opaque>)
         ((FuncInvoc
           (FuncInvoc
             (IdRef
               a
-              [POS])
+              <opaque>)
             ((Num
               1
-              [POS]))
-            [POS])
+              <opaque>))
+            <opaque>)
           ((Num
             2
-            [POS]))
-          [POS]))
-        [POS]))))
+            <opaque>))
+          <opaque>))
+        <opaque>))))
 
 ### Stdout
 3
 
 ### Failure
-
-### Processes
-()

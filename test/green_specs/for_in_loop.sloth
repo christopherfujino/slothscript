@@ -8,6 +8,9 @@ for album in l {
   print("${album} was a great album.")
 }
 
+### Processes
+()
+
 ### Ast
 ((StmtDecl
   (ExprStmt
@@ -17,20 +20,20 @@ for album in l {
         ((String
           ((FullString
             "Rubber Soul"
-            [POS]))
-          [POS])
+            <opaque>))
+          <opaque>)
           (String
             ((FullString
               Revolver
-              [POS]))
-            [POS])
+              <opaque>))
+            <opaque>)
           (String
             ((FullString
               "Sgt. Pepper's Lonely Hearts Club Band"
-              [POS]))
-            [POS]))
-        [POS])
-      [POS])))
+              <opaque>))
+            <opaque>))
+        <opaque>)
+      <opaque>)))
   (StmtDecl
     (ExprStmt
       (ForInLoop
@@ -39,28 +42,28 @@ for album in l {
         (iteratee
           (IdRef
             l
-            [POS]))
+            <opaque>))
         (block
           ((ExprStmt
             (FuncInvoc
               (IdRef
                 print
-                [POS])
+                <opaque>)
               ((String
                 ((StartStringInterp
                   ""
-                  [POS])
+                  <opaque>)
                   (ExpressionStringInterp
                     (IdRef
                       album
-                      [POS]))
+                      <opaque>))
                   (EndStringInterp
                     " was a great album."
-                    [POS]))
-                [POS]))
-              [POS]))))
+                    <opaque>))
+                <opaque>))
+              <opaque>))))
         (pos
-          [POS])))))
+          <opaque>)))))
 
 ### Stdout
 Rubber Soul was a great album.
@@ -68,6 +71,3 @@ Revolver was a great album.
 Sgt. Pepper's Lonely Hearts Club Band was a great album.
 
 ### Failure
-
-### Processes
-()

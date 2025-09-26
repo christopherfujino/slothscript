@@ -4,34 +4,34 @@ addition
 ### Program
 assert(1 + 1 == 2);
 
+### Processes
+()
+
 ### Ast
 ((StmtDecl
   (ExprStmt
     (FuncInvoc
       (IdRef
         assert
-        [POS])
+        <opaque>)
       ((Equality
         (Binary
           (Num
             1
-            [POS])
+            <opaque>)
           (Num
             1
-            [POS])
+            <opaque>)
           Plus
-          [POS])
+          <opaque>)
         (Num
           2
-          [POS])
+          <opaque>)
         true
-        [POS]))
-      [POS]))))
+        <opaque>))
+      <opaque>))))
 
 ### Stdout
 
 
 ### Failure
-
-### Processes
-()

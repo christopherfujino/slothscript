@@ -6,6 +6,9 @@ let x = 0
 x = 1
 print(x);
 
+### Processes
+()
+
 ### Ast
 ((StmtDecl
   (ExprStmt
@@ -13,31 +16,28 @@ print(x);
       x
       (Num
         0
-        [POS])
-      [POS])))
+        <opaque>)
+      <opaque>)))
   (StmtDecl
     (ExprStmt
       (AssignExpr
         x
         (Num
           1
-          [POS])
-        [POS])))
+          <opaque>)
+        <opaque>)))
   (StmtDecl
     (ExprStmt
       (FuncInvoc
         (IdRef
           print
-          [POS])
+          <opaque>)
         ((IdRef
           x
-          [POS]))
-        [POS]))))
+          <opaque>))
+        <opaque>))))
 
 ### Stdout
 1
 
 ### Failure
-
-### Processes
-()

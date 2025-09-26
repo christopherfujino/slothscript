@@ -9,13 +9,16 @@ func fib(n) {
 
 print(fib(20))
 
+### Processes
+()
+
 ### Ast
 ((FuncDecl
   (name
     fib)
   (parameters
     ((n
-      [POS])))
+      <opaque>)))
   (block
     ((ExprStmt
       (IfExpr
@@ -24,78 +27,75 @@ print(fib(20))
             (Binary
               (IdRef
                 n
-                [POS])
+                <opaque>)
               (Num
                 1
-                [POS])
+                <opaque>)
               Leq
-              [POS]))
+              <opaque>))
           (block
             ((BreakingStmt
               Return
               ((IdRef
                 n
-                [POS]))
-              [POS])))
+                <opaque>))
+              <opaque>)))
           (continuation
             ())
           (pos
-            [POS]))
-        [POS]))
+            <opaque>))
+        <opaque>))
       (ExprStmt
         (Binary
           (FuncInvoc
             (IdRef
               fib
-              [POS])
+              <opaque>)
             ((Binary
               (IdRef
                 n
-                [POS])
+                <opaque>)
               (Num
                 1
-                [POS])
+                <opaque>)
               Minus
-              [POS]))
-            [POS])
+              <opaque>))
+            <opaque>)
           (FuncInvoc
             (IdRef
               fib
-              [POS])
+              <opaque>)
             ((Binary
               (IdRef
                 n
-                [POS])
+                <opaque>)
               (Num
                 2
-                [POS])
+                <opaque>)
               Minus
-              [POS]))
-            [POS])
+              <opaque>))
+            <opaque>)
           Plus
-          [POS]))))
+          <opaque>))))
   (pos
-    [POS]))
+    <opaque>))
   (StmtDecl
     (ExprStmt
       (FuncInvoc
         (IdRef
           print
-          [POS])
+          <opaque>)
         ((FuncInvoc
           (IdRef
             fib
-            [POS])
+            <opaque>)
           ((Num
             20
-            [POS]))
-          [POS]))
-        [POS]))))
+            <opaque>))
+          <opaque>))
+        <opaque>))))
 
 ### Stdout
 6765
 
 ### Failure
-
-### Processes
-()

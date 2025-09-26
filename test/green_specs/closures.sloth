@@ -9,6 +9,9 @@ func f() {
 x = 1
 f()
 
+### Processes
+()
+
 ### Ast
 ((StmtDecl
   (ExprStmt
@@ -16,8 +19,8 @@ f()
       x
       (Num
         0
-        [POS])
-      [POS])))
+        <opaque>)
+      <opaque>)))
   (FuncDecl
     (name
       f)
@@ -28,34 +31,31 @@ f()
         (FuncInvoc
           (IdRef
             print
-            [POS])
+            <opaque>)
           ((IdRef
             x
-            [POS]))
-          [POS]))))
+            <opaque>))
+          <opaque>))))
     (pos
-      [POS]))
+      <opaque>))
   (StmtDecl
     (ExprStmt
       (AssignExpr
         x
         (Num
           1
-          [POS])
-        [POS])))
+          <opaque>)
+        <opaque>)))
   (StmtDecl
     (ExprStmt
       (FuncInvoc
         (IdRef
           f
-          [POS])
+          <opaque>)
         ()
-        [POS]))))
+        <opaque>))))
 
 ### Stdout
 1
 
 ### Failure
-
-### Processes
-()

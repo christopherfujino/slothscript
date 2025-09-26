@@ -4,23 +4,23 @@ subtraction
 ### Program
 1-1;
 
+### Processes
+()
+
 ### Ast
 ((StmtDecl
   (ExprStmt
     (Binary
       (Num
         1
-        [POS])
+        <opaque>)
       (Num
         1
-        [POS])
+        <opaque>)
       Minus
-      [POS]))))
+      <opaque>))))
 
 ### Stdout
 
 
 ### Failure
-
-### Processes
-()

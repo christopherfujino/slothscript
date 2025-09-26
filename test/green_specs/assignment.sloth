@@ -4,6 +4,9 @@ assignment
 ### Program
 let x = 1 + 1;
 
+### Processes
+()
+
 ### Ast
 ((StmtDecl
   (ExprStmt
@@ -12,18 +15,15 @@ let x = 1 + 1;
       (Binary
         (Num
           1
-          [POS])
+          <opaque>)
         (Num
           1
-          [POS])
+          <opaque>)
         Plus
-        [POS])
-      [POS]))))
+        <opaque>)
+      <opaque>))))
 
 ### Stdout
 
 
 ### Failure
-
-### Processes
-()

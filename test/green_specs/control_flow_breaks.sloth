@@ -25,6 +25,9 @@ let y = for let i = 0; i < 10; i = i + 1 {
 
 assert(y == 10, "y = ${y}")
 
+### Processes
+()
+
 ### Ast
 ((FuncDecl
   (name
@@ -36,32 +39,32 @@ assert(y == 10, "y = ${y}")
       Return
       ((Bool
         true
-        [POS]))
-      [POS])
+        <opaque>))
+      <opaque>)
       (ExprStmt
         (FuncInvoc
           (IdRef
             assert
-            [POS])
+            <opaque>)
           ((Bool
             false
-            [POS]))
-          [POS]))))
+            <opaque>))
+          <opaque>))))
   (pos
-    [POS]))
+    <opaque>))
   (StmtDecl
     (ExprStmt
       (FuncInvoc
         (IdRef
           assert
-          [POS])
+          <opaque>)
         ((FuncInvoc
           (IdRef
             earlyReturn
-            [POS])
+            <opaque>)
           ()
-          [POS]))
-        [POS])))
+          <opaque>))
+        <opaque>)))
   (StmtDecl
     (ExprStmt
       (LetExpr
@@ -71,29 +74,29 @@ assert(y == 10, "y = ${y}")
             i
             (Num
               0
-              [POS])
-            [POS])
+              <opaque>)
+            <opaque>)
           (Binary
             (IdRef
               i
-              [POS])
+              <opaque>)
             (Num
               10
-              [POS])
+              <opaque>)
             Less
-            [POS])
+            <opaque>)
           (AssignExpr
             i
             (Binary
               (IdRef
                 i
-                [POS])
+                <opaque>)
               (Num
                 1
-                [POS])
+                <opaque>)
               Plus
-              [POS])
-            [POS])
+              <opaque>)
+            <opaque>)
           ((ExprStmt
             (IfExpr
               (IfCont
@@ -101,50 +104,50 @@ assert(y == 10, "y = ${y}")
                   (Equality
                     (IdRef
                       i
-                      [POS])
+                      <opaque>)
                     (Num
                       4
-                      [POS])
+                      <opaque>)
                     true
-                    [POS]))
+                    <opaque>))
                 (block
                   ((BreakingStmt
                     Break
                     ((IdRef
                       i
-                      [POS]))
-                    [POS])))
+                      <opaque>))
+                    <opaque>)))
                 (continuation
                   ())
                 (pos
-                  [POS]))
-              [POS])))
-          [POS])
-        [POS])))
+                  <opaque>))
+              <opaque>)))
+          <opaque>)
+        <opaque>)))
   (StmtDecl
     (ExprStmt
       (FuncInvoc
         (IdRef
           assert
-          [POS])
+          <opaque>)
         ((Equality
           (IdRef
             i
-            [POS])
+            <opaque>)
           (Num
             4
-            [POS])
+            <opaque>)
           true
-          [POS]))
-        [POS])))
+          <opaque>))
+        <opaque>)))
   (StmtDecl
     (ExprStmt
       (LetExpr
         x
         (Num
           0
-          [POS])
-        [POS])))
+          <opaque>)
+        <opaque>)))
   (StmtDecl
     (ExprStmt
       (LetExpr
@@ -154,83 +157,80 @@ assert(y == 10, "y = ${y}")
             i
             (Num
               0
-              [POS])
-            [POS])
+              <opaque>)
+            <opaque>)
           (Binary
             (IdRef
               i
-              [POS])
+              <opaque>)
             (Num
               10
-              [POS])
+              <opaque>)
             Less
-            [POS])
+            <opaque>)
           (AssignExpr
             i
             (Binary
               (IdRef
                 i
-                [POS])
+                <opaque>)
               (Num
                 1
-                [POS])
+                <opaque>)
               Plus
-              [POS])
-            [POS])
+              <opaque>)
+            <opaque>)
           ((ExprStmt
             (AssignExpr
               x
               (Binary
                 (IdRef
                   x
-                  [POS])
+                  <opaque>)
                 (Num
                   1
-                  [POS])
+                  <opaque>)
                 Plus
-                [POS])
-              [POS]))
+                <opaque>)
+              <opaque>))
             (BreakingStmt
               Continue
               ((IdRef
                 x
-                [POS]))
-              [POS]))
-          [POS])
-        [POS])))
+                <opaque>))
+              <opaque>))
+          <opaque>)
+        <opaque>)))
   (StmtDecl
     (ExprStmt
       (FuncInvoc
         (IdRef
           assert
-          [POS])
+          <opaque>)
         ((Equality
           (IdRef
             y
-            [POS])
+            <opaque>)
           (Num
             10
-            [POS])
+            <opaque>)
           true
-          [POS])
+          <opaque>)
           (String
             ((StartStringInterp
               "y = "
-              [POS])
+              <opaque>)
               (ExpressionStringInterp
                 (IdRef
                   y
-                  [POS]))
+                  <opaque>))
               (EndStringInterp
                 ""
-                [POS]))
-            [POS]))
-        [POS]))))
+                <opaque>))
+            <opaque>))
+        <opaque>))))
 
 ### Stdout
 
 
 ### Failure
-
-### Processes
-()

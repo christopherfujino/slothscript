@@ -4,6 +4,9 @@ lexical scope
 ### Program
 let x=1;func f() {print(x);};func g() {let x=2;f();};g();
 
+### Processes
+()
+
 ### Ast
 ((StmtDecl
   (ExprStmt
@@ -11,8 +14,8 @@ let x=1;func f() {print(x);};func g() {let x=2;f();};g();
       x
       (Num
         1
-        [POS])
-      [POS])))
+        <opaque>)
+      <opaque>)))
   (FuncDecl
     (name
       f)
@@ -23,13 +26,13 @@ let x=1;func f() {print(x);};func g() {let x=2;f();};g();
         (FuncInvoc
           (IdRef
             print
-            [POS])
+            <opaque>)
           ((IdRef
             x
-            [POS]))
-          [POS]))))
+            <opaque>))
+          <opaque>))))
     (pos
-      [POS]))
+      <opaque>))
   (FuncDecl
     (name
       g)
@@ -41,30 +44,27 @@ let x=1;func f() {print(x);};func g() {let x=2;f();};g();
           x
           (Num
             2
-            [POS])
-          [POS]))
+            <opaque>)
+          <opaque>))
         (ExprStmt
           (FuncInvoc
             (IdRef
               f
-              [POS])
+              <opaque>)
             ()
-            [POS]))))
+            <opaque>))))
     (pos
-      [POS]))
+      <opaque>))
   (StmtDecl
     (ExprStmt
       (FuncInvoc
         (IdRef
           g
-          [POS])
+          <opaque>)
         ()
-        [POS]))))
+        <opaque>))))
 
 ### Stdout
 1
 
 ### Failure
-
-### Processes
-()

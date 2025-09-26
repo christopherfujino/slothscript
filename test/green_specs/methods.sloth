@@ -20,35 +20,35 @@ assert(s == "foo")
               (String
                 ((FullString
                   " foo "
-                  [POS]))
-                [POS])
+                  <opaque>))
+                <opaque>)
               trim
-              [POS])
+              <opaque>)
             ()
-            [POS])
+            <opaque>)
           trim
-          [POS])
+          <opaque>)
         ()
-        [POS])
-      [POS])))
+        <opaque>)
+      <opaque>)))
   (StmtDecl
     (ExprStmt
       (FuncInvoc
         (IdRef
           assert
-          [POS])
+          <opaque>)
         ((Equality
           (IdRef
             s
-            [POS])
+            <opaque>)
           (String
             ((FullString
               foo
-              [POS]))
-            [POS])
+              <opaque>))
+            <opaque>)
           true
-          [POS]))
-        [POS]))))
+          <opaque>))
+        <opaque>))))
 
 ### Stdout
 

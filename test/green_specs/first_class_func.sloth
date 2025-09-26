@@ -14,6 +14,9 @@ let counter = makeCounter()
 print(counter())
 print(counter())
 
+### Processes
+()
+
 ### Ast
 ((FuncDecl
   (name
@@ -26,8 +29,8 @@ print(counter())
         x
         (Num
           0
-          [POS])
-        [POS]))
+          <opaque>)
+        <opaque>))
       (ExprStmt
         (FuncExpr
           (parameters
@@ -39,21 +42,21 @@ print(counter())
                 (Binary
                   (IdRef
                     x
-                    [POS])
+                    <opaque>)
                   (Num
                     1
-                    [POS])
+                    <opaque>)
                   Plus
-                  [POS])
-                [POS]))
+                  <opaque>)
+                <opaque>))
               (ExprStmt
                 (IdRef
                   x
-                  [POS]))))
+                  <opaque>))))
           (pos
-            [POS])))))
+            <opaque>)))))
   (pos
-    [POS]))
+    <opaque>))
   (StmtDecl
     (ExprStmt
       (LetExpr
@@ -61,42 +64,39 @@ print(counter())
         (FuncInvoc
           (IdRef
             makeCounter
-            [POS])
+            <opaque>)
           ()
-          [POS])
-        [POS])))
+          <opaque>)
+        <opaque>)))
   (StmtDecl
     (ExprStmt
       (FuncInvoc
         (IdRef
           print
-          [POS])
+          <opaque>)
         ((FuncInvoc
           (IdRef
             counter
-            [POS])
+            <opaque>)
           ()
-          [POS]))
-        [POS])))
+          <opaque>))
+        <opaque>)))
   (StmtDecl
     (ExprStmt
       (FuncInvoc
         (IdRef
           print
-          [POS])
+          <opaque>)
         ((FuncInvoc
           (IdRef
             counter
-            [POS])
+            <opaque>)
           ()
-          [POS]))
-        [POS]))))
+          <opaque>))
+        <opaque>))))
 
 ### Stdout
 1
 2
 
 ### Failure
-
-### Processes
-()

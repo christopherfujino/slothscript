@@ -7,6 +7,9 @@ func fn() { 1 }
 let n = fn();
 print(n);
 
+### Processes
+()
+
 ### Ast
 ((FuncDecl
   (name
@@ -17,9 +20,9 @@ print(n);
     ((ExprStmt
       (Num
         1
-        [POS]))))
+        <opaque>))))
   (pos
-    [POS]))
+    <opaque>))
   (StmtDecl
     (ExprStmt
       (LetExpr
@@ -27,25 +30,22 @@ print(n);
         (FuncInvoc
           (IdRef
             fn
-            [POS])
+            <opaque>)
           ()
-          [POS])
-        [POS])))
+          <opaque>)
+        <opaque>)))
   (StmtDecl
     (ExprStmt
       (FuncInvoc
         (IdRef
           print
-          [POS])
+          <opaque>)
         ((IdRef
           n
-          [POS]))
-        [POS]))))
+          <opaque>))
+        <opaque>))))
 
 ### Stdout
 1
 
 ### Failure
-
-### Processes
-()

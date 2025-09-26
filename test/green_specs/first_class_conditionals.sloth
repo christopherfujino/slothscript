@@ -18,6 +18,9 @@ if (let x = false) {
 # x is bound here; is this right?
 assert(x == false)
 
+### Processes
+()
+
 ### Ast
 ((StmtDecl
   (ExprStmt
@@ -25,8 +28,8 @@ assert(x == false)
       b
       (Bool
         false
-        [POS])
-      [POS])))
+        <opaque>)
+      <opaque>)))
   (StmtDecl
     (ExprStmt
       (LetExpr
@@ -36,33 +39,33 @@ assert(x == false)
             (conditional
               (IdRef
                 b
-                [POS]))
+                <opaque>))
             (block
               ((ExprStmt
                 (Num
                   1
-                  [POS]))))
+                  <opaque>))))
             (continuation
               ((ElseCont
                 ((ExprStmt
                   (Num
                     2
-                    [POS])))
-                [POS])))
+                    <opaque>)))
+                <opaque>)))
             (pos
-              [POS]))
-          [POS])
-        [POS])))
+              <opaque>))
+          <opaque>)
+        <opaque>)))
   (StmtDecl
     (ExprStmt
       (FuncInvoc
         (IdRef
           print
-          [POS])
+          <opaque>)
         ((IdRef
           v
-          [POS]))
-        [POS])))
+          <opaque>))
+        <opaque>)))
   (StmtDecl
     (ExprStmt
       (IfExpr
@@ -72,44 +75,41 @@ assert(x == false)
               x
               (Bool
                 false
-                [POS])
-              [POS]))
+                <opaque>)
+              <opaque>))
           (block
             ((ExprStmt
               (FuncInvoc
                 (IdRef
                   assert
-                  [POS])
+                  <opaque>)
                 ((Bool
                   false
-                  [POS]))
-                [POS]))))
+                  <opaque>))
+                <opaque>))))
           (continuation
             ())
           (pos
-            [POS]))
-        [POS])))
+            <opaque>))
+        <opaque>)))
   (StmtDecl
     (ExprStmt
       (FuncInvoc
         (IdRef
           assert
-          [POS])
+          <opaque>)
         ((Equality
           (IdRef
             x
-            [POS])
+            <opaque>)
           (Bool
             false
-            [POS])
+            <opaque>)
           true
-          [POS]))
-        [POS]))))
+          <opaque>))
+        <opaque>))))
 
 ### Stdout
 2
 
 ### Failure
-
-### Processes
-()

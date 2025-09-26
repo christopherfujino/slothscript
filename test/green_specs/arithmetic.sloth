@@ -6,6 +6,9 @@ let value = 2 + 3 * 4 / 5 - 6;
 
 print(value);
 
+### Processes
+()
+
 ### Ast
 ((StmtDecl
   (ExprStmt
@@ -15,45 +18,42 @@ print(value);
         (Binary
           (Num
             2
-            [POS])
+            <opaque>)
           (Binary
             (Binary
               (Num
                 3
-                [POS])
+                <opaque>)
               (Num
                 4
-                [POS])
+                <opaque>)
               Product
-              [POS])
+              <opaque>)
             (Num
               5
-              [POS])
+              <opaque>)
             Divide
-            [POS])
+            <opaque>)
           Plus
-          [POS])
+          <opaque>)
         (Num
           6
-          [POS])
+          <opaque>)
         Minus
-        [POS])
-      [POS])))
+        <opaque>)
+      <opaque>)))
   (StmtDecl
     (ExprStmt
       (FuncInvoc
         (IdRef
           print
-          [POS])
+          <opaque>)
         ((IdRef
           value
-          [POS]))
-        [POS]))))
+          <opaque>))
+        <opaque>))))
 
 ### Stdout
 -1.5999999999999996
 
 ### Failure
-
-### Processes
-()

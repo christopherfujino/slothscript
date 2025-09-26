@@ -4,22 +4,22 @@ print num
 ### Program
 print(11);
 
+### Processes
+()
+
 ### Ast
 ((StmtDecl
   (ExprStmt
     (FuncInvoc
       (IdRef
         print
-        [POS])
+        <opaque>)
       ((Num
         11
-        [POS]))
-      [POS]))))
+        <opaque>))
+      <opaque>))))
 
 ### Stdout
 11
 
 ### Failure
-
-### Processes
-()

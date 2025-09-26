@@ -26,6 +26,9 @@ for arr in matrix {
 assert(null == null)
 assert(not (null != null))
 
+### Processes
+()
+
 ### Ast
 ((StmtDecl
   (ExprStmt
@@ -35,99 +38,99 @@ assert(not (null != null))
         ((List
           ((Num
             1
-            [POS])
+            <opaque>)
             (Num
               2
-              [POS])
+              <opaque>)
             (String
               ((FullString
                 Number
-                [POS]))
-              [POS]))
-          [POS])
+                <opaque>))
+              <opaque>))
+          <opaque>)
           (List
             ((String
               ((FullString
                 string
-                [POS]))
-              [POS])
+                <opaque>))
+              <opaque>)
               (String
                 ((FullString
                   "a different string"
-                  [POS]))
-                [POS])
+                  <opaque>))
+                <opaque>)
               (String
                 ((FullString
                   String
-                  [POS]))
-                [POS]))
-            [POS])
+                  <opaque>))
+                <opaque>))
+            <opaque>)
           (List
             ((Bool
               true
-              [POS])
+              <opaque>)
               (Bool
                 false
-                [POS])
+                <opaque>)
               (String
                 ((FullString
                   Bool
-                  [POS]))
-                [POS]))
-            [POS])
+                  <opaque>))
+                <opaque>))
+            <opaque>)
           (List
             ((List
               ((Num
                 1
-                [POS]))
-              [POS])
+                <opaque>))
+              <opaque>)
               (List
                 ((Num
                   1
-                  [POS])
+                  <opaque>)
                   (Num
                     2
-                    [POS]))
-                [POS])
+                    <opaque>))
+                <opaque>)
               (String
                 ((FullString
                   List
-                  [POS]))
-                [POS]))
-            [POS])
+                  <opaque>))
+                <opaque>))
+            <opaque>)
           (List
             ((HashMap
               (((String
                 ((FullString
                   key
-                  [POS]))
-                [POS])
+                  <opaque>))
+                <opaque>)
                 (String
                   ((FullString
                     value
-                    [POS]))
-                  [POS])))
-              [POS])
+                    <opaque>))
+                  <opaque>)))
+              <opaque>)
               (HashMap
                 (((String
                   ((FullString
                     key
-                    [POS]))
-                  [POS])
+                    <opaque>))
+                  <opaque>)
                   (String
                     ((FullString
                       value2
-                      [POS]))
-                    [POS])))
-                [POS])
+                      <opaque>))
+                    <opaque>)))
+                <opaque>)
               (String
                 ((FullString
                   HashMap
-                  [POS]))
-                [POS]))
-            [POS]))
-        [POS])
-      [POS])))
+                  <opaque>))
+                <opaque>))
+            <opaque>))
+        <opaque>)
+      <opaque>)))
   (StmtDecl
     (ExprStmt
       (ForInLoop
@@ -136,7 +139,7 @@ assert(not (null != null))
         (iteratee
           (IdRef
             matrix
-            [POS]))
+            <opaque>))
         (block
           ((ExprStmt
             (LetExpr
@@ -144,178 +147,175 @@ assert(not (null != null))
               (Subscript
                 (IdRef
                   arr
-                  [POS])
+                  <opaque>)
                 (Num
                   0
-                  [POS])
-                [POS])
-              [POS]))
+                  <opaque>)
+                <opaque>)
+              <opaque>))
             (ExprStmt
               (LetExpr
                 second
                 (Subscript
                   (IdRef
                     arr
-                    [POS])
+                    <opaque>)
                   (Num
                     1
-                    [POS])
-                  [POS])
-                [POS]))
+                    <opaque>)
+                  <opaque>)
+                <opaque>))
             (ExprStmt
               (LetExpr
                 name
                 (Subscript
                   (IdRef
                     arr
-                    [POS])
+                    <opaque>)
                   (Num
                     2
-                    [POS])
-                  [POS])
-                [POS]))
+                    <opaque>)
+                  <opaque>)
+                <opaque>))
             (ExprStmt
               (FuncInvoc
                 (IdRef
                   assert
-                  [POS])
+                  <opaque>)
                 ((Equality
                   (IdRef
                     first
-                    [POS])
+                    <opaque>)
                   (IdRef
                     first
-                    [POS])
+                    <opaque>)
                   true
-                  [POS])
+                  <opaque>)
                   (IdRef
                     name
-                    [POS]))
-                [POS]))
+                    <opaque>))
+                <opaque>))
             (ExprStmt
               (FuncInvoc
                 (IdRef
                   assert
-                  [POS])
+                  <opaque>)
                 ((UnaryExpr
                   (target
                     (Equality
                       (IdRef
                         first
-                        [POS])
+                        <opaque>)
                       (IdRef
                         second
-                        [POS])
+                        <opaque>)
                       true
-                      [POS]))
+                      <opaque>))
                   (pos
-                    [POS])
+                    <opaque>)
                   (operator
                     Not))
                   (IdRef
                     name
-                    [POS]))
-                [POS]))
+                    <opaque>))
+                <opaque>))
             (ExprStmt
               (FuncInvoc
                 (IdRef
                   assert
-                  [POS])
+                  <opaque>)
                 ((Equality
                   (IdRef
                     first
-                    [POS])
+                    <opaque>)
                   (IdRef
                     second
-                    [POS])
+                    <opaque>)
                   false
-                  [POS])
+                  <opaque>)
                   (IdRef
                     name
-                    [POS]))
-                [POS]))
+                    <opaque>))
+                <opaque>))
             (ExprStmt
               (FuncInvoc
                 (IdRef
                   assert
-                  [POS])
+                  <opaque>)
                 ((UnaryExpr
                   (target
                     (Equality
                       (IdRef
                         first
-                        [POS])
+                        <opaque>)
                       (IdRef
                         first
-                        [POS])
+                        <opaque>)
                       false
-                      [POS]))
+                      <opaque>))
                   (pos
-                    [POS])
+                    <opaque>)
                   (operator
                     Not))
                   (IdRef
                     name
-                    [POS]))
-                [POS]))
+                    <opaque>))
+                <opaque>))
             (ExprStmt
               (FuncInvoc
                 (IdRef
                   assert
-                  [POS])
+                  <opaque>)
                 ((Equality
                   (IdRef
                     first
-                    [POS])
+                    <opaque>)
                   (Null
-                    [POS])
+                    <opaque>)
                   false
-                  [POS])
+                  <opaque>)
                   (IdRef
                     name
-                    [POS]))
-                [POS]))))
+                    <opaque>))
+                <opaque>))))
         (pos
-          [POS]))))
+          <opaque>))))
   (StmtDecl
     (ExprStmt
       (FuncInvoc
         (IdRef
           assert
-          [POS])
+          <opaque>)
         ((Equality
           (Null
-            [POS])
+            <opaque>)
           (Null
-            [POS])
+            <opaque>)
           true
-          [POS]))
-        [POS])))
+          <opaque>))
+        <opaque>)))
   (StmtDecl
     (ExprStmt
       (FuncInvoc
         (IdRef
           assert
-          [POS])
+          <opaque>)
         ((UnaryExpr
           (target
             (Equality
               (Null
-                [POS])
+                <opaque>)
               (Null
-                [POS])
+                <opaque>)
               false
-              [POS]))
+              <opaque>))
           (pos
-            [POS])
+            <opaque>)
           (operator
             Not)))
-        [POS]))))
+        <opaque>))))
 
 ### Stdout
 
 
 ### Failure
-
-### Processes
-()

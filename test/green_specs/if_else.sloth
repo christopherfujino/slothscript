@@ -4,6 +4,9 @@ if/else
 ### Program
 if false {print(true);} else {print("else");};
 
+### Processes
+()
+
 ### Ast
 ((StmtDecl
   (ExprStmt
@@ -12,39 +15,36 @@ if false {print(true);} else {print("else");};
         (conditional
           (Bool
             false
-            [POS]))
+            <opaque>))
         (block
           ((ExprStmt
             (FuncInvoc
               (IdRef
                 print
-                [POS])
+                <opaque>)
               ((Bool
                 true
-                [POS]))
-              [POS]))))
+                <opaque>))
+              <opaque>))))
         (continuation
           ((ElseCont
             ((ExprStmt
               (FuncInvoc
                 (IdRef
                   print
-                  [POS])
+                  <opaque>)
                 ((String
                   ((FullString
                     else
-                    [POS]))
-                  [POS]))
-                [POS])))
-            [POS])))
+                    <opaque>))
+                  <opaque>))
+                <opaque>)))
+            <opaque>)))
         (pos
-          [POS]))
-      [POS]))))
+          <opaque>))
+      <opaque>))))
 
 ### Stdout
 else
 
 ### Failure
-
-### Processes
-()

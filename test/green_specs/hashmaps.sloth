@@ -30,21 +30,21 @@ assert(h["foo bar"] == null)
         (((String
           ((FullString
             foo
-            [POS]))
-          [POS])
+            <opaque>))
+          <opaque>)
           (String
             ((FullString
               bar
-              [POS]))
-            [POS]))
+              <opaque>))
+            <opaque>))
           ((Num
             3
-            [POS])
+            <opaque>)
             (Num
               4
-              [POS])))
-        [POS])
-      [POS])))
+              <opaque>)))
+        <opaque>)
+      <opaque>)))
   (StmtDecl
     (ExprStmt
       (SubAssignExpr
@@ -52,19 +52,19 @@ assert(h["foo bar"] == null)
           (Subscript
             (IdRef
               h
-              [POS])
+              <opaque>)
             (Bool
               true
-              [POS])
-            [POS]))
+              <opaque>)
+            <opaque>))
         (value
           (String
             ((FullString
               true
-              [POS]))
-            [POS]))
+              <opaque>))
+            <opaque>))
         (pos
-          [POS]))))
+          <opaque>))))
   (StmtDecl
     (ExprStmt
       (SubAssignExpr
@@ -72,64 +72,64 @@ assert(h["foo bar"] == null)
           (Subscript
             (IdRef
               h
-              [POS])
+              <opaque>)
             (Num
               1
-              [POS])
-            [POS]))
+              <opaque>)
+            <opaque>))
         (value
           (Num
             2
-            [POS]))
+            <opaque>))
         (pos
-          [POS]))))
+          <opaque>))))
   (StmtDecl
     (ExprStmt
       (FuncInvoc
         (IdRef
           print
-          [POS])
+          <opaque>)
         ((Subscript
           (IdRef
             h
-            [POS])
+            <opaque>)
           (Num
             1
-            [POS])
-          [POS]))
-        [POS])))
+            <opaque>)
+          <opaque>))
+        <opaque>)))
   (StmtDecl
     (ExprStmt
       (FuncInvoc
         (IdRef
           print
-          [POS])
+          <opaque>)
         ((Subscript
           (IdRef
             h
-            [POS])
+            <opaque>)
           (Bool
             true
-            [POS])
-          [POS]))
-        [POS])))
+            <opaque>)
+          <opaque>))
+        <opaque>)))
   (StmtDecl
     (ExprStmt
       (FuncInvoc
         (IdRef
           print
-          [POS])
+          <opaque>)
         ((Subscript
           (IdRef
             h
-            [POS])
+            <opaque>)
           (String
             ((FullString
               foo
-              [POS]))
-            [POS])
-          [POS]))
-        [POS])))
+              <opaque>))
+            <opaque>)
+          <opaque>))
+        <opaque>)))
   (StmtDecl
     (ExprStmt
       (AssignExpr
@@ -138,37 +138,37 @@ assert(h["foo bar"] == null)
           (((String
             ((FullString
               "on a"
-              [POS]))
-            [POS])
+              <opaque>))
+            <opaque>)
             (String
               ((FullString
                 "single line"
-                [POS]))
-              [POS])))
-          [POS])
-        [POS])))
+                <opaque>))
+              <opaque>)))
+          <opaque>)
+        <opaque>)))
   (StmtDecl
     (ExprStmt
       (FuncInvoc
         (IdRef
           assert
-          [POS])
+          <opaque>)
         ((Equality
           (Subscript
             (IdRef
               h
-              [POS])
+              <opaque>)
             (String
               ((FullString
                 "foo bar"
-                [POS]))
-              [POS])
-            [POS])
+                <opaque>))
+              <opaque>)
+            <opaque>)
           (Null
-            [POS])
+            <opaque>)
           true
-          [POS]))
-        [POS]))))
+          <opaque>))
+        <opaque>))))
 
 ### Stdout
 2
