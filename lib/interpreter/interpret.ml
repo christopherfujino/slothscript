@@ -7,6 +7,11 @@ let ( >>= ) =
     ~second:(fun tuple -> (globals, Second tuple))
     ~first:(cb globals)
 
+let ( >>- ) (globals, either) callback =
+  match either with
+  | Second _ as second -> (globals, second)
+  | First t -> callback t
+
 let failure_msg ~globals ~pos msg =
   let pos_s = Sloth_common.Position.string_of_t pos in
   let msg =
@@ -838,11 +843,6 @@ and interpret_binary globals lhs rhs op pos =
   in
   match op with
   | Pipe ->
-      let ( >>- ) (globals, either) callback =
-        match either with
-        | Second _ as second -> (globals, second)
-        | First t -> callback t
-      in
       interpret_expr globals rhs >>= fun globals rhs ->
       (globals, cast_to_process ~globals ~pos lhs) >>- fun left ->
       (globals, cast_to_process ~globals ~pos rhs) >>- fun right ->
@@ -874,28 +874,25 @@ and interpret_binary globals lhs rhs op pos =
       let right = cast_to_number rhs in
       (globals, Either.first @@ Runtime.Num (left *. right))
   | Modulo ->
-      let ( >>- ) either callback =
-        match either with Second _ as second -> second | First t -> callback t
-      in
-      interpret_expr globals rhs >>= fun _ rhs ->
+      interpret_expr globals rhs >>= fun globals rhs ->
       let left = cast_to_number lhs in
       let right = cast_to_number rhs in
-      let either =
-        if Float.is_integer left then Either.first @@ Float.to_int left
+      let (), either =
+        if Float.is_integer left then ((), Either.first @@ Float.to_int left)
         else
           let msg =
             Printf.sprintf "Modulo (`%%`) can only operate on integers, got %f"
               left
           in
-          failure_obj ~globals ~pos msg >>- fun left ->
-          if Float.is_integer right then Either.first @@ Float.to_int right
+          ((), failure_obj ~globals ~pos msg) >>- fun left ->
+          if Float.is_integer right then ((), Either.first @@ Float.to_int right)
           else
             let msg =
               Printf.sprintf
                 "Modulo (`%%`) can only operate on integers, got %f" right
             in
-            failure_obj ~globals ~pos msg >>- fun right ->
-            Either.first @@ (left mod right)
+            ((), failure_obj ~globals ~pos msg) >>- fun right ->
+            ((), Either.first @@ (left mod right))
       in
       ( globals,
         Either.map either
