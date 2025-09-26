@@ -3,7 +3,6 @@
 (* header *)
 %{
   open Ast
-  open Sloth_common.Position
 %}
 
 (* Declarations *)
@@ -105,12 +104,10 @@ declarations:
 decl:
   | FUNC; i = ID; LPAREN; RPAREN; b = block; SEMICOLON {
     let i, pos = i in
-    let pos = Sloth_common.Position.t_of_lexing_position pos in
     FuncDecl {name = i; parameters = []; block = b; pos}
   }
   | FUNC; i = ID; LPAREN; p = parameter_list ; RPAREN; b = block; SEMICOLON {
     let i, pos = i in
-    let pos = Sloth_common.Position.t_of_lexing_position pos in
     FuncDecl {name = i; parameters = p; block = b; pos} }
   | s = stmt { StmtDecl s }
   ;
@@ -127,27 +124,21 @@ stmt:
 (* Used in single statement blocks *)
 stmt_sans_semicolon:
   | pos = RETURN; e = expr1 {
-    let pos = Sloth_common.Position.t_of_lexing_position pos in
     BreakingStmt (Return, Some e, pos)
   }
   | pos = RETURN {
-    let pos = Sloth_common.Position.t_of_lexing_position pos in
     BreakingStmt (Return, None, pos)
   }
   | pos = BREAK; e = expr1 {
-    let pos = Sloth_common.Position.t_of_lexing_position pos in
     BreakingStmt (Break, Some e, pos)
   }
   | pos = BREAK {
-    let pos = Sloth_common.Position.t_of_lexing_position pos in
     BreakingStmt (Break, None, pos)
   }
   | pos = CONTINUE; e = expr1 {
-    let pos = Sloth_common.Position.t_of_lexing_position pos in
     BreakingStmt (Continue, Some e, pos)
   }
   | pos = CONTINUE {
-    let pos = Sloth_common.Position.t_of_lexing_position pos in
     BreakingStmt (Continue, None, pos)
   }
   | e1 = expr1 { ExprStmt e1 }
@@ -156,35 +147,28 @@ stmt_sans_semicolon:
 (* Conditionals *)
 expr1:
   | pos = FOR; init = expr1; SEMICOLON; comp = expr1; SEMICOLON; inc = expr1; bl = block {
-    let pos = Sloth_common.Position.t_of_lexing_position pos in
     ForLoop (init, comp, inc, bl, pos)
   }
   | pos = FOR; i = ID; IN; iteratee = expr1; block = block {
     let (iterator_name, _) = i in
-    let pos = Sloth_common.Position.t_of_lexing_position pos in
     ForInLoop {iterator_name; iteratee; block; pos}
   }
   | LET; id = ID; EQUALS; e1 = expr1 {
     let (id, pos) = id in
-    let pos = Sloth_common.Position.t_of_lexing_position pos in
     LetExpr (id, e1, pos)
   }
   | id = ID; EQUALS; e1 = expr1 {
     let (id, pos) = id in
-    let pos = Sloth_common.Position.t_of_lexing_position pos in
     AssignExpr (id, e1, pos) }
   | subscript = subscript; pos = EQUALS; rhs = expr1 {
-    let pos = Sloth_common.Position.t_of_lexing_position pos in
     SubAssignExpr {subscript; value=rhs; pos }
   }
 
   (* assignment_list never has trailing comma *)
   | pos = WITH; LPAREN; assignments = assignment_list; COMMA; RPAREN; b = block {
-    let pos = Sloth_common.Position.t_of_lexing_position pos in
     WithExpr (assignments, b, pos)
   }
   | pos = WITH; LPAREN; assignments = assignment_list; RPAREN; b = block {
-    let pos = Sloth_common.Position.t_of_lexing_position pos in
     WithExpr (assignments, b, pos)
   }
   | e = expr2 { e }
@@ -193,82 +177,63 @@ expr1:
 expr2:
   (* Highest *)
   | e1 = expr2; pos = DOUBLE_EQUALS; e2 = expr2 {
-    let pos = Sloth_common.Position.t_of_lexing_position pos in
     Equality (e1, e2, true, pos)
   }
   | e1 = expr2; pos = NOT_EQUALS; e2 = expr2 {
-    let pos = Sloth_common.Position.t_of_lexing_position pos in
     Equality (e1, e2, false, pos)
   }
   | e1 = expr2; pos = LESS; e2 = expr2 {
-    let pos = Sloth_common.Position.t_of_lexing_position pos in
     Binary ( e1, e2, Less, pos)
   }
   | e1 = expr2; pos = GREATER; e2 = expr2 {
-    let pos = Sloth_common.Position.t_of_lexing_position pos in
     Binary ( e1, e2, Greater, pos)
   }
   | e1 = expr2; pos = LEQ; e2 = expr2 {
-    let pos = Sloth_common.Position.t_of_lexing_position pos in
     Binary ( e1, e2, Leq, pos)
   }
   | e1 = expr2; pos = GEQ; e2 = expr2 {
-    let pos = Sloth_common.Position.t_of_lexing_position pos in
     Binary ( e1, e2, Geq, pos)
   }
 
   | e1 = expr2; pos = PLUS; e2 = expr2 {
-    let pos = Sloth_common.Position.t_of_lexing_position pos in
     Binary ( e1, e2, Plus, pos)
   }
   | e1 = expr2; pos = MINUS; e2 = expr2 {
-    let pos = Sloth_common.Position.t_of_lexing_position pos in
     Binary ( e1, e2, Minus, pos)
   }
   | e1 = expr2; pos = PIPE; e2 = expr2 {
-    let pos = Sloth_common.Position.t_of_lexing_position pos in
     Binary ( e1, e2, Pipe, pos)
   }
 
   | e1 = expr2; pos = PRODUCT; e2 = expr2 {
-    let pos = Sloth_common.Position.t_of_lexing_position pos in
     Binary ( e1, e2, Product, pos)
   }
   | e1 = expr2; pos = DIVIDE; e2 = expr2 {
-    let pos = Sloth_common.Position.t_of_lexing_position pos in
     Binary ( e1, e2, Divide, pos)
   }
   | e1 = expr2; pos = MODULO; e2 = expr2 {
-    let pos = Sloth_common.Position.t_of_lexing_position pos in
     Binary ( e1, e2, Modulo, pos)
   }
   | e1 = expr2; pos = AND; e2 = expr2 {
-    let pos = Sloth_common.Position.t_of_lexing_position pos in
     Binary ( e1, e2, And, pos)
   }
   | e1 = expr2; pos = OR; e2 = expr2 {
-    let pos = Sloth_common.Position.t_of_lexing_position pos in
     Binary ( e1, e2, Or, pos)
   }
 
   | e1 = expr2; pos = RIGHT_ARROW; e2 = expr2 {
-    let pos = Sloth_common.Position.t_of_lexing_position pos in
     Binary ( e1, e2, RightArrow, pos)
   }
   | pos = LEFT_ARROW; e = expr2 {
-    let pos = Sloth_common.Position.t_of_lexing_position pos in
     UnaryExpr { target=e; operator=LeftArrow; pos}
   }
   | pos = NOT; e = expr2 {
-    let pos = Sloth_common.Position.t_of_lexing_position pos in
     UnaryExpr { target=e; operator=Not; pos}
   }
   | e = expr2; pos = BANG {
-    let pos = Sloth_common.Position.t_of_lexing_position pos in
     UnaryExpr { target = e; operator=Bang; pos}
   }
   | pos = MINUS; e = expr2 {
-    let pos = Sloth_common.Position.t_of_lexing_position pos in
     UnaryExpr { target = e; operator=Minus; pos}
   }
  
@@ -278,17 +243,14 @@ expr2:
 (* function invocation *)
 expr7:
   | e = expr7; pos = LPAREN; a = expr_list; RPAREN {
-    let pos = Sloth_common.Position.t_of_lexing_position pos in
     FuncInvoc (e, a, pos)
   }
   | e = expr7; pos = LPAREN; RPAREN {
-    let pos = Sloth_common.Position.t_of_lexing_position pos in
     FuncInvoc (e, [], pos)
   }
   | s = subscript { s }
   | e = expr7; pos = DOT; meth = ID {
     let (name, _) = meth in
-    let pos = Sloth_common.Position.t_of_lexing_position pos in
     ObjDeref (e, name, pos)
   }
   | e = expr8 { e }
@@ -298,80 +260,64 @@ expr7:
 (* Primary - literals or grouping *)
 expr8:
   | pos = DO; block = block {
-    let pos = Sloth_common.Position.t_of_lexing_position pos in
     DoBlock (block, pos)
   }
   | pos = FUNC; LPAREN; RPAREN; b = block {
-    let pos = Sloth_common.Position.t_of_lexing_position pos in
     FuncExpr {parameters = []; block = b; pos}
   }
   | pos = FUNC; LPAREN; p = parameter_list; RPAREN; b = block {
-    let pos = Sloth_common.Position.t_of_lexing_position pos in
     FuncExpr {parameters = p; block = b; pos}
   }
   | l = list_literal { l }
-  | f = NUM { let f, pos = f in Num (f, t_of_lexing_position pos) }
+  | f = NUM { let f, pos = f in Num (f, pos) }
   | pos = TRUE {
-    let pos = Sloth_common.Position.t_of_lexing_position pos in
     Bool (true, pos)
   }
   | pos = FALSE {
-    let pos = Sloth_common.Position.t_of_lexing_position pos in
     Bool (false, pos)
   }
   | pos = NULL {
-    let pos = t_of_lexing_position pos in
     Null pos
   }
   (* TODO implement the rest of the string parts *)
   | ss = STRING_START; e = expr1; se = STRING_END {
     let (se, se_pos) = se in
-    let se_pos = t_of_lexing_position se_pos in
     let end_part = EndStringInterp (e, se, se_pos) in
     let (ss, ss_pos) = ss in
-    let ss_pos = t_of_lexing_position ss_pos in
     String (StartStringInterp (ss, end_part, ss_pos), ss_pos)
   }
   | ss = STRING_START; cont = string_middle; e = expr1; se = STRING_END {
     let (string_end_s, string_end_pos) = se in
-    let string_end_pos = t_of_lexing_position string_end_pos in
     let end_part = EndStringInterp (e, string_end_s, string_end_pos) in
     (* We are iterating from back to front... *)
     let cont2_opt = List.fold_left (fun acc cur -> (
       let (e, s, pos) = cur in
-      let pos = t_of_lexing_position pos in
       match acc with
       | None -> Some (MiddleStringInterp (e, s, end_part, pos))
       | Some prev -> Some (MiddleStringInterp (e, s, prev, pos))
     )) None cont in
     let (ss, ss_pos) = ss in
-    let ss_pos = t_of_lexing_position ss_pos in
     String (StartStringInterp (ss, Option.get cont2_opt, ss_pos), ss_pos)
   }
   | s = STRING_FULL {
     let (s, pos) = s in
-    let pos = Sloth_common.Position.t_of_lexing_position pos in
     String (FullString (s, pos), pos)
   }
   | i = ID {
     let (i, pos) = i in
-    let pos = Sloth_common.Position.t_of_lexing_position pos in
     IdRef (i, pos)
   }
   | i = CONTEXT_ID {
     let (i, pos) = i in
-    let pos = Sloth_common.Position.t_of_lexing_position pos in
     ContextId (i, pos)
   }
   | i = PROTOTYPE {
     let (i, pos) = i in
-    let pos = Sloth_common.Position.t_of_lexing_position pos in
     ProtoRef (i, pos)
   }
   | LPAREN; e = expr1; RPAREN { e }
   | h = hash_literals { h }
   | pos = IF; e1 = expr1; b = block; cont = conditional_continuation {
-    let pos = Sloth_common.Position.t_of_lexing_position pos in
     IfExpr (
       IfCont ({
         conditional = e1;
@@ -381,7 +327,6 @@ expr8:
       }), pos)
   }
   | pos = IF; e1 = expr1; b = block {
-    let pos = Sloth_common.Position.t_of_lexing_position pos in
     IfExpr (IfCont { conditional = e1; block = b; continuation = None; pos}, pos)
   }
   ;
@@ -409,32 +354,26 @@ string_middle:
 
 list_literal:
   | pos = LBRACKET; RBRACKET {
-    let pos = Sloth_common.Position.t_of_lexing_position pos in
     List ([], pos)
   }
   (* expr_list will never end in COMMA *)
   | pos = LBRACKET; l = expr_list ; COMMA; RBRACKET {
-    let pos = Sloth_common.Position.t_of_lexing_position pos in
     List (l, pos)
   }
   | pos = LBRACKET; l = expr_list ; RBRACKET {
-    let pos = Sloth_common.Position.t_of_lexing_position pos in
     List (l, pos)
   }
   ;
 
 hash_literals:
   | pos = LCURLY; RCURLY {
-    let pos = Sloth_common.Position.t_of_lexing_position pos in
     HashMap ([], pos)
   }
   (* Allow single line literal without trailing comma *)
   | pos = LCURLY; k = expr1; COLON; v = expr1; RCURLY {
-    let pos = Sloth_common.Position.t_of_lexing_position pos in
     HashMap ([(k, v)], pos)
   }
   | pos = LCURLY; p = hash_literal_pair; RCURLY {
-    let pos = Sloth_common.Position.t_of_lexing_position pos in
     HashMap (p, pos)
   }
   ;
@@ -449,14 +388,12 @@ hash_literal_pair:
 (* Could be expr or stmt for assignment *)
 subscript:
   | e = expr7; pos = LBRACKET; sub = expr1 ; RBRACKET {
-    let pos = Sloth_common.Position.t_of_lexing_position pos in
     Subscript (e, sub, pos)
   }
   ;
 
 conditional_continuation:
   | e = elif; pos = ELSE; b = block {
-      let pos = Sloth_common.Position.t_of_lexing_position pos in
       let else_cont = ElseCont (b, pos) in
       match e with
       | IfCont {conditional; block; continuation=_; pos} -> IfCont { conditional; block; continuation=(Some else_cont); pos }
@@ -464,21 +401,18 @@ conditional_continuation:
   }
   | e = elif { e }
   | pos = ELSE; b = block {
-      let pos = Sloth_common.Position.t_of_lexing_position pos in
       ElseCont (b, pos)
   }
   ;
 
 elif:
   | prev = elif; pos = ELSE; IF; conditional = expr2; block = block {
-    let pos = Sloth_common.Position.t_of_lexing_position pos in
     let cur = IfCont {conditional; block; continuation=None; pos} in
     match prev with
     | IfCont {conditional; block; continuation=_; pos} -> IfCont {conditional; block; continuation=(Some cur); pos}
     | _ -> failwith "Unreachable"
   }
   | pos = ELSE; IF; conditional = expr2; block = block {
-    let pos = Sloth_common.Position.t_of_lexing_position pos in
     IfCont {conditional; block; continuation=None; pos}
   }
 
@@ -499,13 +433,11 @@ parameter_list:
   | i = ID {
     let (i, pos) = i in
     let i : string = i in
-    let pos : Sloth_common.Position.t = Sloth_common.Position.t_of_lexing_position pos in
     let tuple = (i, pos) in
     [tuple]
   }
   | tl = parameter_list; COMMA; hd = ID {
     let (i, pos) = hd in
-    let pos = Sloth_common.Position.t_of_lexing_position pos in
     (i, pos) :: tl
   }
 
