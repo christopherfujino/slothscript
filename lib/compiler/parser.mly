@@ -43,6 +43,7 @@
 %token <Lexing.position> NOT_EQUALS
 %token <Lexing.position> PRODUCT
 %token <Lexing.position> DIVIDE
+%token <Lexing.position> MODULO
 %token <Lexing.position> PIPE
 %token <Lexing.position> LEQ
 %token <Lexing.position> GEQ
@@ -83,8 +84,8 @@
 %left LEFT_ARROW (* Prefix *) RIGHT_ARROW (* Postfix *)
 %left NOT_EQUALS DOUBLE_EQUALS GEQ LEQ LESS GREATER
 %left MINUS PLUS PIPE
-%left PRODUCT DIVIDE
-%left NOT (* Does precedence matter?! *)
+%left PRODUCT DIVIDE MODULO
+%left NOT (* Does associativity matter?! *)
 
 (* Declare the starting point for parsing (root of AST) *)
 %start <Ast.decl list> prog
@@ -229,7 +230,6 @@ expr2:
     Binary ( e1, e2, Pipe, pos)
   }
 
-  (* operators *, /; TODO add % *)
   | e1 = expr2; pos = PRODUCT; e2 = expr2 {
     let pos = Sloth_common.Position.t_of_lexing_position pos in
     Binary ( e1, e2, Product, pos)
@@ -237,6 +237,10 @@ expr2:
   | e1 = expr2; pos = DIVIDE; e2 = expr2 {
     let pos = Sloth_common.Position.t_of_lexing_position pos in
     Binary ( e1, e2, Divide, pos)
+  }
+  | e1 = expr2; pos = MODULO; e2 = expr2 {
+    let pos = Sloth_common.Position.t_of_lexing_position pos in
+    Binary ( e1, e2, Modulo, pos)
   }
   | e1 = expr2; pos = AND; e2 = expr2 {
     let pos = Sloth_common.Position.t_of_lexing_position pos in

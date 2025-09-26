@@ -24,6 +24,7 @@
 - [ ] Formatter
 - [ ] LSP server
 - [ ] Security policy
+- [ ] Binary builds
 
 ## Stretch goals
 - [ ] Unicode strings

@@ -22,6 +22,8 @@ let failure_msg ~globals ~pos msg =
       |> Stdlib.Printexc.raw_backtrace_to_string)
   else msg
 
+(* TODO make this a private type so we don't accidentally create error
+   messages without source summaries *)
 let failure_obj ~globals ~pos msg =
   let msg = failure_msg ~globals ~pos msg in
   Second (Compiler.Ast.Error msg, Runtime.Null)
@@ -397,9 +399,10 @@ and interpret_expr globals expr :
                 |> fail ~globals pos
           in
           (globals, First (Runtime.Num (Float.neg f)))
-      | Plus | Product | Divide | Pipe | Less | Greater | Leq | Geq | RightArrow
-      | And | Or ->
-          (* Unreachable *) Sloth_common.Common.internal_failure __LOC__)
+      | Plus | Product | Divide | Modulo | Pipe | Less | Greater | Leq | Geq
+      | RightArrow | And | Or ->
+          (* Not unary operators *) Sloth_common.Common.internal_failure __LOC__
+      )
   | DoBlock (block, _) ->
       let inner_globals =
         {
@@ -870,6 +873,36 @@ and interpret_binary globals lhs rhs op pos =
       let left = cast_to_number lhs in
       let right = cast_to_number rhs in
       (globals, Either.first @@ Runtime.Num (left *. right))
+  | Modulo ->
+      let ( >>- ) either callback =
+        match either with Second _ as second -> second | First t -> callback t
+      in
+      interpret_expr globals rhs >>= fun _ rhs ->
+      let left = cast_to_number lhs in
+      let right = cast_to_number rhs in
+      let either =
+        if Float.is_integer left then Either.first @@ Float.to_int left
+        else
+          let msg =
+            Printf.sprintf "Modulo (`%%`) can only operate on integers, got %f"
+              left
+          in
+          failure_obj ~globals ~pos msg >>- fun left ->
+          if Float.is_integer right then Either.first @@ Float.to_int right
+          else
+            let msg =
+              Printf.sprintf
+                "Modulo (`%%`) can only operate on integers, got %f" right
+            in
+            failure_obj ~globals ~pos msg >>- fun right ->
+            Either.first @@ (left mod right)
+      in
+      ( globals,
+        Either.map either
+          ~first:(fun i ->
+            let f = Float.of_int i in
+            Runtime.Num f)
+          ~second:Fun.id )
   | And -> (
       let left =
         match Runtime.bool_of_val lhs with

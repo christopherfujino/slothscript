@@ -72,6 +72,7 @@ let to_s token =
   | RCURLY _ -> "RCURLY"
   | RBRACKET _ -> "RBRACKET"
   | PRODUCT _ -> "PRODUCT"
+  | MODULO _ -> "MODULO"
   | PLUS _ -> "PLUS"
   | NULL _ -> "NULL"
   | MINUS _ -> "MINUS"

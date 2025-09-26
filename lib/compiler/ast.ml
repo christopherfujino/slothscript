@@ -103,6 +103,7 @@ and operator =
   | Minus
   | Product
   | Divide
+  | Modulo
   | Pipe
   | Less
   | Greater

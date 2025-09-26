@@ -11,12 +11,18 @@ func fib(n) {
 print(fib(20))
 ```
 
-## Dependencies
+## Installation
 
-Only tested on Linux, should support macOS, but Windows is explicitly not
-supported.
+Note that:
 
-The runtime dependency is `readline(3)`.
+1. This product is licensed under the [BSD-3 license](./LICENSE), meaning that
+there is no warranty provided for it. Use at your own risk.
+1. Sloth is currently in pre-alpha state, meaning it is not expected to be
+generally useful.
+1. The *goal* of the project is to only support Unix-like systems (currently
+only Linux is tested). Windows support is an explicit *non-goal*.
+1. There will not be pre-compiled builds of the interpreter until a future
+release. Compiling the interpreter will require an Ocaml toolchain.
 
 ## Tour
 
@@ -57,11 +63,13 @@ print(counter())
 - `else` - conditional branching keyword
 - `do` - keyword for do-block expressions; `let s = do {let s = "init ${getString()}"; s = "${s}${getString()}"; s}`
 - `return` - early return from a function block
+- `break` - early return from a loop
+- `continue` - skip to the next iteration of a loop
+- `with` - bind new (dynamically-scoped) context variables
 - `true` - `Bool` literal
 - `false` - `Bool` literal
 - `null` - `Null` literal singleton
 - `not` - prefix logical NOT operator; `assert(not false)`
-- `with` - bind new (dynamically-scoped) context variables
 
 ### Context Variables
 

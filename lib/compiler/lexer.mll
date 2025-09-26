@@ -91,6 +91,7 @@ rule private_read last_token state =
   | '=' { let token = EQUALS lexbuf.lex_start_p in last_token := Some token; token }
   | '*' { let token = PRODUCT lexbuf.lex_start_p in last_token := Some token; token }
   | '/' { let token = DIVIDE lexbuf.lex_start_p in last_token := Some token; token }
+  | '%' { let token = MODULO lexbuf.lex_start_p in last_token := Some token; token }
   | '!' { let token = BANG lexbuf.lex_start_p in last_token := Some token; token }
   | "not" { let token = NOT lexbuf.lex_start_p in last_token := Some token; token }
   | "and" { let token = AND lexbuf.lex_start_p in last_token := Some token; token }

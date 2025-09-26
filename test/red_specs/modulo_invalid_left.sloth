@@ -1,0 +1,15 @@
+### Name
+modulo invalid left
+
+### Program
+5.5 % 5
+
+### Failure
+[1:4] Runtime error
+
+1 | 5.5 % 5
+        ^
+Modulo (`%`) can only operate on integers, got 5.500000
+
+### Ast
+((StmtDecl(ExprStmt(Binary(Num 5.5 [POS])(Num 5 [POS])Modulo [POS]))))
