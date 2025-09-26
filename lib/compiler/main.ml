@@ -5,10 +5,8 @@ let parse env src =
   let decls =
     try Parser.prog filter lexbuf with
     | Parser.Error i ->
-        let pos =
-          Sloth_common.Position.t_of_lexing_position lexbuf.lex_start_p
-        in
-        let pos_str = Sloth_common.Position.string_of_t pos in
+        let pos = lexbuf.lex_start_p in
+        let pos_str = Sloth_common.Position.string_of_t lexbuf.lex_start_p in
         let msg = Parser_errors.message i |> String.strip in
         let msg =
           match msg with
@@ -31,7 +29,6 @@ let parse env src =
 
         raise (Sloth_common.Common.ParseError msg)
     | Lexer.SyntaxError (msg, pos) ->
-        let pos = Sloth_common.Position.t_of_lexing_position pos in
         let msg =
           Printf.sprintf "[%s] Lexer error\n\n%s\nUnknown token `%s`"
             (Sloth_common.Position.string_of_t pos)
@@ -40,9 +37,7 @@ let parse env src =
         in
         raise (Sloth_common.Common.LexerError msg)
     | Sloth_common.Common.LexerError msg ->
-        let pos =
-          Sloth_common.Position.t_of_lexing_position lexbuf.lex_curr_p
-        in
+        let pos = lexbuf.lex_curr_p in
         let msg =
           Printf.sprintf "[%s] Lexer error\n\n%s\n%s"
             (Sloth_common.Position.string_of_t pos)
