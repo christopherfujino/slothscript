@@ -4,13 +4,16 @@ recurse once
 ### Program
 func rec(b) {if b {b;} else {rec(true);};};print(rec(false));
 
+### Processes
+()
+
 ### Ast
 ((FuncDecl
   (name
     rec)
   (parameters
     ((b
-      [POS])))
+      <opaque>)))
   (block
     ((ExprStmt
       (IfExpr
@@ -18,49 +21,46 @@ func rec(b) {if b {b;} else {rec(true);};};print(rec(false));
           (conditional
             (IdRef
               b
-              [POS]))
+              <opaque>))
           (block
             ((ExprStmt
               (IdRef
                 b
-                [POS]))))
+                <opaque>))))
           (continuation
             ((ElseCont
               ((ExprStmt
                 (FuncInvoc
                   (IdRef
                     rec
-                    [POS])
+                    <opaque>)
                   ((Bool
                     true
-                    [POS]))
-                  [POS])))
-              [POS])))
+                    <opaque>))
+                  <opaque>)))
+              <opaque>)))
           (pos
-            [POS]))
-        [POS]))))
+            <opaque>))
+        <opaque>))))
   (pos
-    [POS]))
+    <opaque>))
   (StmtDecl
     (ExprStmt
       (FuncInvoc
         (IdRef
           print
-          [POS])
+          <opaque>)
         ((FuncInvoc
           (IdRef
             rec
-            [POS])
+            <opaque>)
           ((Bool
             false
-            [POS]))
-          [POS]))
-        [POS]))))
+            <opaque>))
+          <opaque>))
+        <opaque>))))
 
 ### Stdout
 true
 
 ### Failure
-
-### Processes
-()

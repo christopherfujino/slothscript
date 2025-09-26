@@ -11,6 +11,13 @@ Process.new(["uname"]) -> file
 let contents = <- file
 assert(contents == "Linux\n", contents)
 
+### Processes
+(((cmd
+  (uname))
+  (instructions
+    ((Stdout
+      "Linux\n")))))
+
 ### Ast
 ((StmtDecl
   (ExprStmt
@@ -19,14 +26,14 @@ assert(contents == "Linux\n", contents)
       (FuncInvoc
         (IdRef
           File
-          [POS])
+          <opaque>)
         ((String
           ((FullString
             foo
-            [POS]))
-          [POS]))
-        [POS])
-      [POS])))
+            <opaque>))
+          <opaque>))
+        <opaque>)
+      <opaque>)))
   (StmtDecl
     (ExprStmt
       (Binary
@@ -34,22 +41,22 @@ assert(contents == "Linux\n", contents)
           (ObjDeref
             (IdRef
               Process
-              [POS])
+              <opaque>)
             new
-            [POS])
+            <opaque>)
           ((List
             ((String
               ((FullString
                 uname
-                [POS]))
-              [POS]))
-            [POS]))
-          [POS])
+                <opaque>))
+              <opaque>))
+            <opaque>))
+          <opaque>)
         (IdRef
           file
-          [POS])
+          <opaque>)
         RightArrow
-        [POS])))
+        <opaque>)))
   (StmtDecl
     (ExprStmt
       (LetExpr
@@ -58,42 +65,35 @@ assert(contents == "Linux\n", contents)
           (target
             (IdRef
               file
-              [POS]))
+              <opaque>))
           (pos
-            [POS])
+            <opaque>)
           (operator
             LeftArrow))
-        [POS])))
+        <opaque>)))
   (StmtDecl
     (ExprStmt
       (FuncInvoc
         (IdRef
           assert
-          [POS])
+          <opaque>)
         ((Equality
           (IdRef
             contents
-            [POS])
+            <opaque>)
           (String
             ((FullString
               "Linux\n"
-              [POS]))
-            [POS])
+              <opaque>))
+            <opaque>)
           true
-          [POS])
+          <opaque>)
           (IdRef
             contents
-            [POS]))
-        [POS]))))
+            <opaque>))
+        <opaque>))))
 
 ### Stdout
 
 
 ### Failure
-
-### Processes
-(((cmd
-  (uname))
-  (instructions
-    ((Stdout
-      "Linux\n")))))

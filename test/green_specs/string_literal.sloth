@@ -20,95 +20,95 @@ print("Hello 'world'!")
     (String
       ((FullString
         "awk $"
-        [POS]))
-      [POS])))
+        <opaque>))
+      <opaque>)))
   (StmtDecl
     (ExprStmt
       (FuncInvoc
         (IdRef
           assert
-          [POS])
+          <opaque>)
         ((Equality
           (String
             ((FullString
               Hello
-              [POS]))
-            [POS])
+              <opaque>))
+            <opaque>)
           (String
             ((FullString
               Hello
-              [POS]))
-            [POS])
+              <opaque>))
+            <opaque>)
           true
-          [POS]))
-        [POS])))
+          <opaque>))
+        <opaque>)))
   (StmtDecl
     (ExprStmt
       (FuncInvoc
         (IdRef
           print
-          [POS])
+          <opaque>)
         ((String
           ((FullString
             "Hello\nworld"
-            [POS]))
-          [POS]))
-        [POS])))
+            <opaque>))
+          <opaque>))
+        <opaque>)))
   (StmtDecl
     (ExprStmt
       (FuncInvoc
         (IdRef
           print
-          [POS])
+          <opaque>)
         ((String
           ((FullString
             Hello\nworld
-            [POS]))
-          [POS]))
-        [POS])))
+            <opaque>))
+          <opaque>))
+        <opaque>)))
   (StmtDecl
     (ExprStmt
       (FuncInvoc
         (IdRef
           print
-          [POS])
+          <opaque>)
         ((String
           ((FullString
             "Hello\tworld"
-            [POS]))
-          [POS]))
-        [POS])))
+            <opaque>))
+          <opaque>))
+        <opaque>)))
   (StmtDecl
     (ExprStmt
       (FuncInvoc
         (IdRef
           print
-          [POS])
+          <opaque>)
         ((String
           ((FullString
             "\"Hello, world!\""
-            [POS]))
-          [POS]))
-        [POS])))
+            <opaque>))
+          <opaque>))
+        <opaque>)))
   (StmtDecl
     (ExprStmt
       (FuncInvoc
         (IdRef
           print
-          [POS])
+          <opaque>)
         ((String
           ((FullString
             "Hello 'world'!"
-            [POS]))
-          [POS]))
-        [POS])))
+            <opaque>))
+          <opaque>))
+        <opaque>)))
   (StmtDecl
     (ExprStmt
       (String
         ((FullString
           "\\("
-          [POS]))
-        [POS]))))
+          <opaque>))
+        <opaque>))))
 
 ### Stdout
 Hello

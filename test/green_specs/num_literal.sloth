@@ -13,16 +13,16 @@ num literal
   (ExprStmt
     (Num
       11
-      [POS])))
+      <opaque>)))
   (StmtDecl
     (ExprStmt
       (UnaryExpr
         (target
           (Num
             3.5
-            [POS]))
+            <opaque>))
         (pos
-          [POS])
+          <opaque>)
         (operator
           Minus)))))
 

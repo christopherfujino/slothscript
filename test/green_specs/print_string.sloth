@@ -4,24 +4,24 @@ print string
 ### Program
 print("Hello");
 
+### Processes
+()
+
 ### Ast
 ((StmtDecl
   (ExprStmt
     (FuncInvoc
       (IdRef
         print
-        [POS])
+        <opaque>)
       ((String
         ((FullString
           Hello
-          [POS]))
-        [POS]))
-      [POS]))))
+          <opaque>))
+        <opaque>))
+      <opaque>))))
 
 ### Stdout
 Hello
 
 ### Failure
-
-### Processes
-()

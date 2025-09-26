@@ -6,6 +6,9 @@ for let i = 1; i <= 10; i = i + 1 {
   print(i);
 }
 
+### Processes
+()
+
 ### Ast
 ((StmtDecl
   (ExprStmt
@@ -14,39 +17,39 @@ for let i = 1; i <= 10; i = i + 1 {
         i
         (Num
           1
-          [POS])
-        [POS])
+          <opaque>)
+        <opaque>)
       (Binary
         (IdRef
           i
-          [POS])
+          <opaque>)
         (Num
           10
-          [POS])
+          <opaque>)
         Leq
-        [POS])
+        <opaque>)
       (AssignExpr
         i
         (Binary
           (IdRef
             i
-            [POS])
+            <opaque>)
           (Num
             1
-            [POS])
+            <opaque>)
           Plus
-          [POS])
-        [POS])
+          <opaque>)
+        <opaque>)
       ((ExprStmt
         (FuncInvoc
           (IdRef
             print
-            [POS])
+            <opaque>)
           ((IdRef
             i
-            [POS]))
-          [POS])))
-      [POS]))))
+            <opaque>))
+          <opaque>)))
+      <opaque>))))
 
 ### Stdout
 1
@@ -61,6 +64,3 @@ for let i = 1; i <= 10; i = i + 1 {
 10
 
 ### Failure
-
-### Processes
-()

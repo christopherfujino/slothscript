@@ -13,27 +13,27 @@ assert(" foo ".trim() == "foo")
     (FuncInvoc
       (IdRef
         assert
-        [POS])
+        <opaque>)
       ((Equality
         (FuncInvoc
           (ObjDeref
             (String
               ((FullString
                 " foo "
-                [POS]))
-              [POS])
+                <opaque>))
+              <opaque>)
             trim
-            [POS])
+            <opaque>)
           ()
-          [POS])
+          <opaque>)
         (String
           ((FullString
             foo
-            [POS]))
-          [POS])
+            <opaque>))
+          <opaque>)
         true
-        [POS]))
-      [POS]))))
+        <opaque>))
+      <opaque>))))
 
 ### Stdout
 

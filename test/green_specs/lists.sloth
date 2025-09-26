@@ -12,6 +12,9 @@ print(l[2 + 3]);
 l[1] = 2.5;
 print(l);
 
+### Processes
+()
+
 ### Ast
 ((FuncDecl
   (name
@@ -22,9 +25,9 @@ print(l);
     ((ExprStmt
       (Num
         2
-        [POS]))))
+        <opaque>))))
   (pos
-    [POS]))
+    <opaque>))
   (StmtDecl
     (ExprStmt
       (LetExpr
@@ -32,63 +35,63 @@ print(l);
         (List
           ((Num
             2
-            [POS])
+            <opaque>)
             (Num
               3
-              [POS])
+              <opaque>)
             (Num
               5
-              [POS])
+              <opaque>)
             (Num
               7
-              [POS])
+              <opaque>)
             (Num
               11
-              [POS])
+              <opaque>)
             (Num
               13
-              [POS]))
-          [POS])
-        [POS])))
+              <opaque>))
+          <opaque>)
+        <opaque>)))
   (StmtDecl
     (ExprStmt
       (FuncInvoc
         (IdRef
           print
-          [POS])
+          <opaque>)
         ((Subscript
           (IdRef
             l
-            [POS])
+            <opaque>)
           (FuncInvoc
             (IdRef
               getTwo
-              [POS])
+              <opaque>)
             ()
-            [POS])
-          [POS]))
-        [POS])))
+            <opaque>)
+          <opaque>))
+        <opaque>)))
   (StmtDecl
     (ExprStmt
       (FuncInvoc
         (IdRef
           print
-          [POS])
+          <opaque>)
         ((Subscript
           (IdRef
             l
-            [POS])
+            <opaque>)
           (Binary
             (Num
               2
-              [POS])
+              <opaque>)
             (Num
               3
-              [POS])
+              <opaque>)
             Plus
-            [POS])
-          [POS]))
-        [POS])))
+            <opaque>)
+          <opaque>))
+        <opaque>)))
   (StmtDecl
     (ExprStmt
       (SubAssignExpr
@@ -96,27 +99,27 @@ print(l);
           (Subscript
             (IdRef
               l
-              [POS])
+              <opaque>)
             (Num
               1
-              [POS])
-            [POS]))
+              <opaque>)
+            <opaque>))
         (value
           (Num
             2.5
-            [POS]))
+            <opaque>))
         (pos
-          [POS]))))
+          <opaque>))))
   (StmtDecl
     (ExprStmt
       (FuncInvoc
         (IdRef
           print
-          [POS])
+          <opaque>)
         ((IdRef
           l
-          [POS]))
-        [POS]))))
+          <opaque>))
+        <opaque>))))
 
 ### Stdout
 5
@@ -124,6 +127,3 @@ print(l);
 [2, 2.5, 5, 7, 11, 13]
 
 ### Failure
-
-### Processes
-()

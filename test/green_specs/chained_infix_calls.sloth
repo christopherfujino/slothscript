@@ -4,6 +4,9 @@ chained infix calls
 ### Program
 1 + 2 + 3;
 
+### Processes
+()
+
 ### Ast
 ((StmtDecl
   (ExprStmt
@@ -11,22 +14,19 @@ chained infix calls
       (Binary
         (Num
           1
-          [POS])
+          <opaque>)
         (Num
           2
-          [POS])
+          <opaque>)
         Plus
-        [POS])
+        <opaque>)
       (Num
         3
-        [POS])
+        <opaque>)
       Plus
-      [POS]))))
+      <opaque>))))
 
 ### Stdout
 
 
 ### Failure
-
-### Processes
-()

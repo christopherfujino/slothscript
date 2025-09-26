@@ -4,6 +4,9 @@ func definition
 ### Program
 func m() {};
 
+### Processes
+()
+
 ### Ast
 ((FuncDecl
   (name
@@ -13,12 +16,9 @@ func m() {};
   (block
     ())
   (pos
-    [POS])))
+    <opaque>)))
 
 ### Stdout
 
 
 ### Failure
-
-### Processes
-()

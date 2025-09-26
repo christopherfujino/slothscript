@@ -9,55 +9,55 @@ func f(x, y) {
 
 f(1, 2)
 
+### Processes
+()
+
 ### Ast
 ((FuncDecl
   (name
     f)
   (parameters
     ((x
-      [POS])
+      <opaque>)
       (y
-        [POS])))
+        <opaque>)))
   (block
     ((ExprStmt
       (FuncInvoc
         (IdRef
           print
-          [POS])
+          <opaque>)
         ((IdRef
           x
-          [POS]))
-        [POS]))
+          <opaque>))
+        <opaque>))
       (ExprStmt
         (FuncInvoc
           (IdRef
             print
-            [POS])
+            <opaque>)
           ((IdRef
             y
-            [POS]))
-          [POS]))))
+            <opaque>))
+          <opaque>))))
   (pos
-    [POS]))
+    <opaque>))
   (StmtDecl
     (ExprStmt
       (FuncInvoc
         (IdRef
           f
-          [POS])
+          <opaque>)
         ((Num
           1
-          [POS])
+          <opaque>)
           (Num
             2
-            [POS]))
-        [POS]))))
+            <opaque>))
+        <opaque>))))
 
 ### Stdout
 1
 2
 
 ### Failure
-
-### Processes
-()

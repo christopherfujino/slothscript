@@ -6,6 +6,9 @@ func m() {1;2;3;}
 
 print(m());
 
+### Processes
+()
+
 ### Ast
 ((FuncDecl
   (name
@@ -16,35 +19,32 @@ print(m());
     ((ExprStmt
       (Num
         1
-        [POS]))
+        <opaque>))
       (ExprStmt
         (Num
           2
-          [POS]))
+          <opaque>))
       (ExprStmt
         (Num
           3
-          [POS]))))
+          <opaque>))))
   (pos
-    [POS]))
+    <opaque>))
   (StmtDecl
     (ExprStmt
       (FuncInvoc
         (IdRef
           print
-          [POS])
+          <opaque>)
         ((FuncInvoc
           (IdRef
             m
-            [POS])
+            <opaque>)
           ()
-          [POS]))
-        [POS]))))
+          <opaque>))
+        <opaque>))))
 
 ### Stdout
 3
 
 ### Failure
-
-### Processes
-()

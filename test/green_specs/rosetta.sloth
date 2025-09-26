@@ -31,17 +31,17 @@ with ($cwd = $scriptDir) {
       (($cwd
         (ContextId
           $scriptDir
-          [POS])))
+          <opaque>)))
       ((ExprStmt
         (UnaryExpr
           (target
             (String
               ((FullString
                 ./configure
-                [POS]))
-              [POS]))
+                <opaque>))
+              <opaque>))
           (pos
-            [POS])
+            <opaque>)
           (operator
             Bang)))
         (ExprStmt
@@ -50,21 +50,21 @@ with ($cwd = $scriptDir) {
             (FuncInvoc
               (IdRef
                 Directory
-                [POS])
+                <opaque>)
               ((String
                 ((StartStringInterp
                   ""
-                  [POS])
+                  <opaque>)
                   (ExpressionStringInterp
                     (ContextId
                       $cwd
-                      [POS]))
+                      <opaque>))
                   (EndStringInterp
                     /build
-                    [POS]))
-                [POS]))
-              [POS])
-            [POS]))
+                    <opaque>))
+                <opaque>))
+              <opaque>)
+            <opaque>))
         (ExprStmt
           (IfExpr
             (IfCont
@@ -75,13 +75,13 @@ with ($cwd = $scriptDir) {
                       (ObjDeref
                         (IdRef
                           buildDir
-                          [POS])
+                          <opaque>)
                         exists
-                        [POS])
+                        <opaque>)
                       ()
-                      [POS]))
+                      <opaque>))
                   (pos
-                    [POS])
+                    <opaque>)
                   (operator
                     Not)))
               (block
@@ -90,16 +90,16 @@ with ($cwd = $scriptDir) {
                     (ObjDeref
                       (IdRef
                         buildDir
-                        [POS])
+                        <opaque>)
                       create
-                      [POS])
+                      <opaque>)
                     ()
-                    [POS]))))
+                    <opaque>))))
               (continuation
                 ())
               (pos
-                [POS]))
-            [POS]))
+                <opaque>))
+            <opaque>))
         (ExprStmt
           (WithExpr
             (($cwd
@@ -107,25 +107,25 @@ with ($cwd = $scriptDir) {
                 (ObjDeref
                   (IdRef
                     buildDir
-                    [POS])
+                    <opaque>)
                   path
-                  [POS])
+                  <opaque>)
                 ()
-                [POS])))
+                <opaque>)))
             ((ExprStmt
               (UnaryExpr
                 (target
                   (String
                     ((FullString
                       "cmake .."
-                      [POS]))
-                    [POS]))
+                      <opaque>))
+                    <opaque>))
                 (pos
-                  [POS])
+                  <opaque>)
                 (operator
                   Bang))))
-            [POS])))
-      [POS]))))
+            <opaque>)))
+      <opaque>))))
 
 ### Stdout
 

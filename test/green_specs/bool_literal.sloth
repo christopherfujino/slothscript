@@ -20,81 +20,81 @@ assert(true or fail())
     (FuncInvoc
       (IdRef
         assert
-        [POS])
+        <opaque>)
       ((Bool
         true
-        [POS]))
-      [POS])))
+        <opaque>))
+      <opaque>)))
   (StmtDecl
     (ExprStmt
       (FuncInvoc
         (IdRef
           assert
-          [POS])
+          <opaque>)
         ((Binary
           (Bool
             true
-            [POS])
+            <opaque>)
           (Bool
             true
-            [POS])
+            <opaque>)
           And
-          [POS]))
-        [POS])))
+          <opaque>))
+        <opaque>)))
   (StmtDecl
     (ExprStmt
       (FuncInvoc
         (IdRef
           assert
-          [POS])
+          <opaque>)
         ((Binary
           (Bool
             false
-            [POS])
+            <opaque>)
           (Bool
             true
-            [POS])
+            <opaque>)
           Or
-          [POS]))
-        [POS])))
+          <opaque>))
+        <opaque>)))
   (StmtDecl
     (ExprStmt
       (FuncInvoc
         (IdRef
           assert
-          [POS])
+          <opaque>)
         ((Binary
           (Bool
             true
-            [POS])
+            <opaque>)
           (Bool
             false
-            [POS])
+            <opaque>)
           Or
-          [POS]))
-        [POS])))
+          <opaque>))
+        <opaque>)))
   (StmtDecl
     (ExprStmt
       (FuncInvoc
         (IdRef
           assert
-          [POS])
+          <opaque>)
         ((UnaryExpr
           (target
             (Binary
               (Bool
                 false
-                [POS])
+                <opaque>)
               (Bool
                 false
-                [POS])
+                <opaque>)
               Or
-              [POS]))
+              <opaque>))
           (pos
-            [POS])
+            <opaque>)
           (operator
             Not)))
-        [POS])))
+        <opaque>)))
   (FuncDecl
     (name
       fail)
@@ -105,32 +105,32 @@ assert(true or fail())
         (FuncInvoc
           (IdRef
             assert
-            [POS])
+            <opaque>)
           ((Bool
             false
-            [POS]))
-          [POS]))))
+            <opaque>))
+          <opaque>))))
     (pos
-      [POS]))
+      <opaque>))
   (StmtDecl
     (ExprStmt
       (FuncInvoc
         (IdRef
           assert
-          [POS])
+          <opaque>)
         ((Binary
           (Bool
             true
-            [POS])
+            <opaque>)
           (FuncInvoc
             (IdRef
               fail
-              [POS])
+              <opaque>)
             ()
-            [POS])
+            <opaque>)
           Or
-          [POS]))
-        [POS]))))
+          <opaque>))
+        <opaque>))))
 
 ### Stdout
 

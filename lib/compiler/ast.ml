@@ -2,15 +2,15 @@ open Core
 
 type func_stmt_t = {
   name : string;
-  parameters : (string * Sloth_common.Position.t) list;
+  parameters : (string * (Lexing.position[@sexp.opaque])) list;
   block : stmt list;
-  pos : Sloth_common.Position.t;
+  pos : (Lexing.position[@sexp.opaque]);
 }
 
 and func_expr_t = {
-  parameters : (string * Sloth_common.Position.t) list;
+  parameters : (string * (Lexing.position[@sexp.opaque])) list;
   block : stmt list;
-  pos : Sloth_common.Position.t;
+  pos : (Lexing.position[@sexp.opaque]);
 }
 
 and prog = stmt list [@@deriving sexp]
@@ -19,7 +19,8 @@ and decl = FuncDecl of func_stmt_t | StmtDecl of stmt
 and stmt =
   (* No position *)
   | ExprStmt of expr
-  | BreakingStmt of breaking_type * expr option * Sloth_common.Position.t
+  | BreakingStmt of
+      breaking_type * expr option * (Lexing.position[@sexp.opaque])
 [@@deriving sexp]
 
 and breaking_type =
@@ -32,61 +33,63 @@ and breaking_type =
 (* TODO make an interpreter type to store the runtime data *)
 
 and expr =
-  | Num of float * Sloth_common.Position.t
-  | Bool of bool * Sloth_common.Position.t
-  | Null of Sloth_common.Position.t
-  | String of string_parts * Sloth_common.Position.t
-  | List of expr list * Sloth_common.Position.t
-  | HashMap of (expr * expr) list * Sloth_common.Position.t
-  | Subscript of expr * expr * Sloth_common.Position.t
-  | IdRef of string * Sloth_common.Position.t
-  | ContextId of string * Sloth_common.Position.t
-  | ProtoRef of string * Sloth_common.Position.t
-  | FuncInvoc of expr * expr list * Sloth_common.Position.t
+  | Num of float * (Lexing.position[@sexp.opaque])
+  | Bool of bool * (Lexing.position[@sexp.opaque])
+  | Null of (Lexing.position[@sexp.opaque])
+  | String of string_parts * (Lexing.position[@sexp.opaque])
+  | List of expr list * (Lexing.position[@sexp.opaque])
+  | HashMap of (expr * expr) list * (Lexing.position[@sexp.opaque])
+  | Subscript of expr * expr * (Lexing.position[@sexp.opaque])
+  | IdRef of string * (Lexing.position[@sexp.opaque])
+  | ContextId of string * (Lexing.position[@sexp.opaque])
+  | ProtoRef of string * (Lexing.position[@sexp.opaque])
+  | FuncInvoc of expr * expr list * (Lexing.position[@sexp.opaque])
   (* Migrate to Binary *)
-  | Equality of expr * expr * bool * Sloth_common.Position.t
-  | Binary of expr * expr * operator * Sloth_common.Position.t
-  | ObjDeref of expr * string * Sloth_common.Position.t
+  | Equality of expr * expr * bool * (Lexing.position[@sexp.opaque])
+  | Binary of expr * expr * operator * (Lexing.position[@sexp.opaque])
+  | ObjDeref of expr * string * (Lexing.position[@sexp.opaque])
   | MethodInvoc of {
       receiver : expr;
       target : string;
       args : expr list;
-      pos : Sloth_common.Position.t;
+      pos : (Lexing.position[@sexp.opaque]);
     }
   | FuncExpr of func_expr_t
-  | IfExpr of cond_cont * Sloth_common.Position.t
+  | IfExpr of cond_cont * (Lexing.position[@sexp.opaque])
   | UnaryExpr of {
       target : expr;
-      pos : Sloth_common.Position.t;
+      pos : (Lexing.position[@sexp.opaque]);
       operator : operator;
     }
-  | DoBlock of stmt list * Sloth_common.Position.t
-  | LetExpr of string * expr * Sloth_common.Position.t
-  | AssignExpr of string * expr * Sloth_common.Position.t
+  | DoBlock of stmt list * (Lexing.position[@sexp.opaque])
+  | LetExpr of string * expr * (Lexing.position[@sexp.opaque])
+  | AssignExpr of string * expr * (Lexing.position[@sexp.opaque])
   | SubAssignExpr of {
       subscript : expr;
       value : expr;
-      pos : Sloth_common.Position.t;
+      pos : (Lexing.position[@sexp.opaque]);
     }
-  | ForLoop of expr * expr * expr * stmt list * Sloth_common.Position.t
+  | ForLoop of expr * expr * expr * stmt list * (Lexing.position[@sexp.opaque])
   | ForInLoop of {
       iterator_name : string;
       iteratee : expr;
       block : stmt list;
-      pos : Sloth_common.Position.t;
+      pos : (Lexing.position[@sexp.opaque]);
     }
-  | WithExpr of (string * expr) list * stmt list * Sloth_common.Position.t
+  | WithExpr of
+      (string * expr) list * stmt list * (Lexing.position[@sexp.opaque])
 [@@deriving sexp]
 
 and string_parts =
-  | FullString of string * Sloth_common.Position.t
-  | StartStringInterp of string * string_continuation * Sloth_common.Position.t
+  | FullString of string * (Lexing.position[@sexp.opaque])
+  | StartStringInterp of
+      string * string_continuation * (Lexing.position[@sexp.opaque])
 [@@deriving sexp]
 
 and string_continuation =
   | MiddleStringInterp of
-      expr * string * string_continuation * Sloth_common.Position.t
-  | EndStringInterp of expr * string * Sloth_common.Position.t
+      expr * string * string_continuation * (Lexing.position[@sexp.opaque])
+  | EndStringInterp of expr * string * (Lexing.position[@sexp.opaque])
 [@@deriving sexp]
 
 and cond_cont =
@@ -94,9 +97,9 @@ and cond_cont =
       conditional : expr;
       block : stmt list;
       continuation : cond_cont option;
-      pos : Sloth_common.Position.t;
+      pos : (Lexing.position[@sexp.opaque]);
     }
-  | ElseCont of stmt list * Sloth_common.Position.t
+  | ElseCont of stmt list * (Lexing.position[@sexp.opaque])
 
 and operator =
   | Plus

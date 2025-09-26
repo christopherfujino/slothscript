@@ -4,6 +4,9 @@ regression test
 ### Program
 if false {} else {let x = 1; print(x);};
 
+### Processes
+()
+
 ### Ast
 ((StmtDecl
   (ExprStmt
@@ -12,7 +15,7 @@ if false {} else {let x = 1; print(x);};
         (conditional
           (Bool
             false
-            [POS]))
+            <opaque>))
         (block
           ())
         (continuation
@@ -22,26 +25,23 @@ if false {} else {let x = 1; print(x);};
                 x
                 (Num
                   1
-                  [POS])
-                [POS]))
+                  <opaque>)
+                <opaque>))
               (ExprStmt
                 (FuncInvoc
                   (IdRef
                     print
-                    [POS])
+                    <opaque>)
                   ((IdRef
                     x
-                    [POS]))
-                  [POS])))
-            [POS])))
+                    <opaque>))
+                  <opaque>)))
+            <opaque>)))
         (pos
-          [POS]))
-      [POS]))))
+          <opaque>))
+      <opaque>))))
 
 ### Stdout
 1
 
 ### Failure
-
-### Processes
-()

@@ -47,20 +47,20 @@ print(result2.stdout())
             (String
               ((FullString
                 uname
-                [POS]))
-              [POS])
+                <opaque>))
+              <opaque>)
             (String
               ((FullString
                 "tr x s"
-                [POS]))
-              [POS])
+                <opaque>))
+              <opaque>)
             Pipe
-            [POS]))
+            <opaque>))
         (pos
-          [POS])
+          <opaque>)
         (operator
           Bang))
-      [POS])))
+      <opaque>)))
   (StmtDecl
     (ExprStmt
       (LetExpr
@@ -72,65 +72,65 @@ print(result2.stdout())
                 (ObjDeref
                   (IdRef
                     Process
-                    [POS])
+                    <opaque>)
                   new
-                  [POS])
+                  <opaque>)
                 ((List
                   ((String
                     ((FullString
                       uname
-                      [POS]))
-                    [POS]))
-                  [POS]))
-                [POS])
+                      <opaque>))
+                    <opaque>))
+                  <opaque>))
+                <opaque>)
               (FuncInvoc
                 (ObjDeref
                   (IdRef
                     Process
-                    [POS])
+                    <opaque>)
                   new
-                  [POS])
+                  <opaque>)
                 ((List
                   ((String
                     ((FullString
                       tr
-                      [POS]))
-                    [POS])
+                      <opaque>))
+                    <opaque>)
                     (String
                       ((FullString
                         x
-                        [POS]))
-                      [POS])
+                        <opaque>))
+                      <opaque>)
                     (String
                       ((FullString
                         s
-                        [POS]))
-                      [POS]))
-                  [POS]))
-                [POS])
+                        <opaque>))
+                      <opaque>))
+                  <opaque>))
+                <opaque>)
               Pipe
-              [POS]))
+              <opaque>))
           (pos
-            [POS])
+            <opaque>)
           (operator
             Bang))
-        [POS])))
+        <opaque>)))
   (StmtDecl
     (ExprStmt
       (FuncInvoc
         (IdRef
           print
-          [POS])
+          <opaque>)
         ((FuncInvoc
           (ObjDeref
             (IdRef
               result2
-              [POS])
+              <opaque>)
             stdout
-            [POS])
+            <opaque>)
           ()
-          [POS]))
-        [POS]))))
+          <opaque>))
+        <opaque>))))
 
 ### Stdout
 Linus

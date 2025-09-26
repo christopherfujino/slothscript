@@ -1,15 +1,5 @@
 open Core
 
-type t = { pos_fname : string; pos_lnum : int; pos_bol : int; pos_cnum : int }
-
-let t_of_lexing_position (p : Lexing.position) : t =
-  {
-    pos_fname = p.pos_fname;
-    pos_lnum = p.pos_lnum;
-    pos_bol = p.pos_bol;
-    pos_cnum = p.pos_cnum;
-  }
-
 let rec indent_str b i s =
   if i <= 0 then Buffer.add_string b s
   else (
@@ -17,7 +7,7 @@ let rec indent_str b i s =
     (indent_str [@tailcall]) b (i - 1) s)
 
 (* t' src *)
-let summarize t' src =
+let summarize (t' : Lexing.position) src =
   let line_num_col = Printf.sprintf "%d | " t'.pos_lnum in
   let line_num_len = String.length line_num_col in
   let buffer = Buffer.create ((80 * 2) + 2) in
@@ -30,10 +20,5 @@ let summarize t' src =
   indent_str buffer line_col "^";
   Buffer.contents buffer
 
-let sexp_of_t _ = Sexp.Atom "[POS]"
-
-let rec t_of_sexp _ = dummy
-and dummy = t_of_lexing_position Lexing.dummy_pos
-
-let string_of_t t' =
+let string_of_t (t' : Lexing.position) =
   Printf.sprintf "%d:%d" t'.pos_lnum (t'.pos_cnum - t'.pos_bol)

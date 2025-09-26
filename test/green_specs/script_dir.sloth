@@ -17,42 +17,42 @@ with($cwd = $scriptDir) {
       (($cwd
         (ContextId
           $scriptDir
-          [POS])))
+          <opaque>)))
       ((ExprStmt
         (FuncInvoc
           (IdRef
             assert
-            [POS])
+            <opaque>)
           ((Equality
             (ContextId
               $script
-              [POS])
+              <opaque>)
             (String
               ((FullString
                 /parent/unit_test.sloth
-                [POS]))
-              [POS])
+                <opaque>))
+              <opaque>)
             true
-            [POS]))
-          [POS]))
+            <opaque>))
+          <opaque>))
         (ExprStmt
           (FuncInvoc
             (IdRef
               assert
-              [POS])
+              <opaque>)
             ((Equality
               (ContextId
                 $scriptDir
-                [POS])
+                <opaque>)
               (String
                 ((FullString
                   /parent
-                  [POS]))
-                [POS])
+                  <opaque>))
+                <opaque>)
               true
-              [POS]))
-            [POS])))
-      [POS]))))
+              <opaque>))
+            <opaque>)))
+      <opaque>))))
 
 ### Stdout
 

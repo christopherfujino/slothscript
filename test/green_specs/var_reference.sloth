@@ -6,6 +6,9 @@ let x = 1 + 1
 
 print(x)
 
+### Processes
+()
+
 ### Ast
 ((StmtDecl
   (ExprStmt
@@ -14,28 +17,25 @@ print(x)
       (Binary
         (Num
           1
-          [POS])
+          <opaque>)
         (Num
           1
-          [POS])
+          <opaque>)
         Plus
-        [POS])
-      [POS])))
+        <opaque>)
+      <opaque>)))
   (StmtDecl
     (ExprStmt
       (FuncInvoc
         (IdRef
           print
-          [POS])
+          <opaque>)
         ((IdRef
           x
-          [POS]))
-        [POS]))))
+          <opaque>))
+        <opaque>))))
 
 ### Stdout
 2
 
 ### Failure
-
-### Processes
-()

@@ -10,6 +10,9 @@ let x = do {
 let y = x + 1
 assert(y == 9)
 
+### Processes
+()
+
 ### Ast
 ((StmtDecl
   (ExprStmt
@@ -22,38 +25,38 @@ assert(y == 9)
             (Binary
               (Num
                 1
-                [POS])
+                <opaque>)
               (Num
                 2
-                [POS])
+                <opaque>)
               Plus
-              [POS])
-            [POS]))
+              <opaque>)
+            <opaque>))
           (ExprStmt
             (LetExpr
               y
               (Binary
                 (Num
                   2
-                  [POS])
+                  <opaque>)
                 (Num
                   3
-                  [POS])
+                  <opaque>)
                 Plus
-                [POS])
-              [POS]))
+                <opaque>)
+              <opaque>))
           (ExprStmt
             (Binary
               (IdRef
                 x
-                [POS])
+                <opaque>)
               (IdRef
                 y
-                [POS])
+                <opaque>)
               Plus
-              [POS])))
-        [POS])
-      [POS])))
+              <opaque>)))
+        <opaque>)
+      <opaque>)))
   (StmtDecl
     (ExprStmt
       (LetExpr
@@ -61,34 +64,31 @@ assert(y == 9)
         (Binary
           (IdRef
             x
-            [POS])
+            <opaque>)
           (Num
             1
-            [POS])
+            <opaque>)
           Plus
-          [POS])
-        [POS])))
+          <opaque>)
+        <opaque>)))
   (StmtDecl
     (ExprStmt
       (FuncInvoc
         (IdRef
           assert
-          [POS])
+          <opaque>)
         ((Equality
           (IdRef
             y
-            [POS])
+            <opaque>)
           (Num
             9
-            [POS])
+            <opaque>)
           true
-          [POS]))
-        [POS]))))
+          <opaque>))
+        <opaque>))))
 
 ### Stdout
 
 
 ### Failure
-
-### Processes
-()

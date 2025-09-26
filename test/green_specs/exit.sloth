@@ -14,21 +14,21 @@ assert(false)
     (FuncInvoc
       (IdRef
         exit
-        [POS])
+        <opaque>)
       ((Num
         0
-        [POS]))
-      [POS])))
+        <opaque>))
+      <opaque>)))
   (StmtDecl
     (ExprStmt
       (FuncInvoc
         (IdRef
           assert
-          [POS])
+          <opaque>)
         ((Bool
           false
-          [POS]))
-        [POS]))))
+          <opaque>))
+        <opaque>))))
 
 ### Stdout
 

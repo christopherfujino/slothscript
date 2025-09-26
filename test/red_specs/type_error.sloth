@@ -5,7 +5,7 @@ Runtime type error
 assert("true")
 
 ### Ast
-((StmtDecl(ExprStmt(FuncInvoc(IdRef assert [POS])((String((FullString true [POS]))[POS]))[POS]))))
+((StmtDecl(ExprStmt(FuncInvoc(IdRef assert <opaque>)((String((FullString true <opaque>))<opaque>))<opaque>))))
 
 ### Failure
 [1:6] Runtime error

@@ -7,69 +7,6 @@ with ($cwd = "./green_specs") {
   print(result.stdout())
 }
 
-### Ast
-((StmtDecl
-  (ExprStmt
-    (WithExpr
-      (($cwd
-        (String
-          ((FullString
-            ./green_specs
-            [POS]))
-          [POS])))
-      ((ExprStmt
-        (LetExpr
-          result
-          (UnaryExpr
-            (target
-              (Binary
-                (Binary
-                  (String
-                    ((FullString
-                      ls
-                      [POS]))
-                    [POS])
-                  (String
-                    ((FullString
-                      sort
-                      [POS]))
-                    [POS])
-                  Pipe
-                  [POS])
-                (String
-                  ((FullString
-                    "tail -n 1"
-                    [POS]))
-                  [POS])
-                Pipe
-                [POS]))
-            (pos
-              [POS])
-            (operator
-              Bang))
-          [POS]))
-        (ExprStmt
-          (FuncInvoc
-            (IdRef
-              print
-              [POS])
-            ((FuncInvoc
-              (ObjDeref
-                (IdRef
-                  result
-                  [POS])
-                stdout
-                [POS])
-              ()
-              [POS]))
-            [POS])))
-      [POS]))))
-
-### Stdout
-var_reference.sloth
-
-### Failure
-
 ### Processes
 (((cmd
   (ls))
@@ -86,3 +23,66 @@ var_reference.sloth
     (instructions
       ((Stdout
         var_reference.sloth)))))
+
+### Ast
+((StmtDecl
+  (ExprStmt
+    (WithExpr
+      (($cwd
+        (String
+          ((FullString
+            ./green_specs
+            <opaque>))
+          <opaque>)))
+      ((ExprStmt
+        (LetExpr
+          result
+          (UnaryExpr
+            (target
+              (Binary
+                (Binary
+                  (String
+                    ((FullString
+                      ls
+                      <opaque>))
+                    <opaque>)
+                  (String
+                    ((FullString
+                      sort
+                      <opaque>))
+                    <opaque>)
+                  Pipe
+                  <opaque>)
+                (String
+                  ((FullString
+                    "tail -n 1"
+                    <opaque>))
+                  <opaque>)
+                Pipe
+                <opaque>))
+            (pos
+              <opaque>)
+            (operator
+              Bang))
+          <opaque>))
+        (ExprStmt
+          (FuncInvoc
+            (IdRef
+              print
+              <opaque>)
+            ((FuncInvoc
+              (ObjDeref
+                (IdRef
+                  result
+                  <opaque>)
+                stdout
+                <opaque>)
+              ()
+              <opaque>))
+            <opaque>)))
+      <opaque>))))
+
+### Stdout
+var_reference.sloth
+
+### Failure
