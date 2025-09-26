@@ -23,7 +23,8 @@ and decl =
 
 and stmt =
   | ExprStmt of expr
-  | BreakingStmt of Ast.breaking_type * expr option * (Lexing.position[@sexp.opaque])
+  | BreakingStmt of
+      Ast.breaking_type * expr option * (Lexing.position[@sexp.opaque])
 [@@deriving sexp]
 
 and expr =
@@ -72,7 +73,8 @@ and expr =
       block : stmt list;
       pos : (Lexing.position[@sexp.opaque]);
     }
-  | WithExpr of (string * expr) list * stmt list * (Lexing.position[@sexp.opaque])
+  | WithExpr of
+      (string * expr) list * stmt list * (Lexing.position[@sexp.opaque])
 [@@deriving sexp]
 
 and string_parts =

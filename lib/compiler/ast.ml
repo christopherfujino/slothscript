@@ -19,7 +19,8 @@ and decl = FuncDecl of func_stmt_t | StmtDecl of stmt
 and stmt =
   (* No position *)
   | ExprStmt of expr
-  | BreakingStmt of breaking_type * expr option * (Lexing.position[@sexp.opaque])
+  | BreakingStmt of
+      breaking_type * expr option * (Lexing.position[@sexp.opaque])
 [@@deriving sexp]
 
 and breaking_type =
@@ -75,12 +76,14 @@ and expr =
       block : stmt list;
       pos : (Lexing.position[@sexp.opaque]);
     }
-  | WithExpr of (string * expr) list * stmt list * (Lexing.position[@sexp.opaque])
+  | WithExpr of
+      (string * expr) list * stmt list * (Lexing.position[@sexp.opaque])
 [@@deriving sexp]
 
 and string_parts =
   | FullString of string * (Lexing.position[@sexp.opaque])
-  | StartStringInterp of string * string_continuation * (Lexing.position[@sexp.opaque])
+  | StartStringInterp of
+      string * string_continuation * (Lexing.position[@sexp.opaque])
 [@@deriving sexp]
 
 and string_continuation =
