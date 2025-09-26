@@ -7,8 +7,8 @@ modulo invalid left
 ### Failure
 [1:4] Runtime error
 
-1 | 5.5 % 5
-        ^
+ 1 | 5.5 % 5
+         ^
 Modulo (`%`) can only operate on integers, got 5.500000
 
 ### Ast

@@ -19,6 +19,9 @@ let () =
 
   let res =
     Sloth_common.Common.wrap_error (fun () ->
+        (*
+        if Sloth_common.Common.debug_mode then Compiler.Main.debug spec.program
+        else (); *)
         let proc_spec =
           Interpreter.Mock_process.spec_of_string spec.proc_spec
         in

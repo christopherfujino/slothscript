@@ -1,4 +1,5 @@
 open OUnit2
+open Sloth_common.Common
 open Common
 open Core
 
@@ -38,7 +39,11 @@ let make_test spec =
   let env =
     Compiler.Environment.create spec.program |> Compiler.Environment.populate
   in
-  let _, prog = Main.parse env spec.program in
+  let prog =
+    match wrap_error (fun () -> Main.parse env spec.program) with
+    | Ok (_, prog) -> prog
+    | Error msg -> assert_failure msg
+  in
 
   let proc_spec = Interpreter.Mock_process.spec_of_string spec.proc_spec in
 
@@ -50,7 +55,13 @@ let make_test spec =
       (module Lib)
       spec.program "/parent/unit_test.sloth" ~env:[| "UNIT_TEST=true" |]
   in
-  let _, either = Interpreter.Interpret.interpret_prog ctx prog in
+  let either =
+    match
+      wrap_error (fun () -> Interpreter.Interpret.interpret_prog ctx prog)
+    with
+    | Error msg -> assert_failure msg
+    | Ok (_, either) -> either
+  in
   (match either with
   | First _ -> ()
   | Second (bt, _) -> (
@@ -157,9 +168,9 @@ let make_failing_test spec =
                   with code %d"
                  code)
   with
-  | Sloth_common.Common.CompileError msg -> handle_failure msg
-  | Sloth_common.Common.RuntimeError msg -> handle_failure msg
-  | Sloth_common.Common.ParseError msg -> handle_failure msg
+  | CompileError msg -> handle_failure msg
+  | RuntimeError msg -> handle_failure msg
+  | ParseError msg -> handle_failure msg
 
 let tests =
   "slothscript"

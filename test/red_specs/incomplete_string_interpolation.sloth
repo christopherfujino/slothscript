@@ -7,6 +7,6 @@ incomplete string interpolation
 ### Failure
 [1:11] Parser error (code #160)
 
-1 | "start ${ 1
-               ^
+ 1 | "start ${ 1
+                ^
 String interpolation was started but never finished

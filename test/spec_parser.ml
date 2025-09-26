@@ -72,7 +72,6 @@ let deserialize path =
             (prev_title, forward_lines) :: acc)
   in
   let parts = process_line NotParsing lines [] in
-  let name_opt_ref = ref None in
   let ast_opt_ref = ref None in
   let program_opt_ref = ref None in
   let stdout_expect_opt_ref = ref None in
@@ -86,7 +85,7 @@ let deserialize path =
           Buffer.add_char buf '\n');
       let body = Buffer.contents buf |> String.strip in
       match title with
-      | "Name" -> name_opt_ref := Some body
+      | "Name" -> () (* TODO delete *)
       | "Program" -> program_opt_ref := Some body
       | "Ast" -> ast_opt_ref := Some body
       | "Failure" ->
@@ -98,7 +97,7 @@ let deserialize path =
 
   let ast = Option.value !ast_opt_ref ~default:"()" in
   {
-    name = Option.value_exn !name_opt_ref ~message:"Foo Bar name";
+    name = path;
     ast;
     program =
       Option.value_exn !program_opt_ref

@@ -29,6 +29,9 @@ let repl () =
           Readline.add_history line;
           line
     in
+
+    if Sloth_common.Common.debug_mode then Compiler.Main.debug line else ();
+
     let env = Compiler.Environment.update_src env line in
     let globals = Globals.{ globals with src = line } in
 

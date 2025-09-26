@@ -9,6 +9,8 @@ func x() {}
 ### Failure
 [3:5] Optimizer error
 
-3 | func x() {}
-         ^
+ 1 | let x = 1
+ 2 | let y = 2
+ 3 | func x() {}
+          ^
 The name x has already been declared

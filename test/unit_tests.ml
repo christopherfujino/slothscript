@@ -67,7 +67,7 @@ let get () =
   let f =
    fun tuple ->
     let name, callback = tuple in
-    name >:: callback
+    "[Unit test] " ^ name >:: callback
   in
   [
     "shell_like_escape" >::: List.map (escape ()) ~f;

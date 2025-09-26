@@ -10,6 +10,6 @@ assert("true")
 ### Failure
 [1:6] Runtime error
 
-1 | assert("true")
-          ^
+ 1 | assert("true")
+           ^
 The first argument to assert() must be a Bool value, got true

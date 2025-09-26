@@ -4,14 +4,68 @@ open Parser
 
 exception SyntaxError of string * Lexing.position
 
-(* TODO pretty print *)
-let syntax_error e = raise e
-
 type globalLexerState =
   | NotInterpolating
   | Interpolating
 
 let string_buffer_size = 33
+
+(* TODO figure out how to derive this *)
+let to_s = function
+| BANG _ -> "BANG"
+| LEFT_ARROW _ -> "LEFT_ARROW"
+| RIGHT_ARROW _ -> "RIGHT_ARROW"
+| NOT _ -> "NOT"
+| AND _ -> "AND"
+| OR _ -> "OR"
+| DOT _ -> "DOT"
+| PIPE _ -> "PIPE"
+| COLON _ -> "COLON"
+| SEMICOLON _ -> "SEMICOLON"
+| TRUE _ -> "TRUE"
+| RPAREN _ -> "RPAREN"
+| RCURLY _ -> "RCURLY"
+| RBRACKET _ -> "RBRACKET"
+| PRODUCT _ -> "PRODUCT"
+| MODULO _ -> "MODULO"
+| PLUS _ -> "PLUS"
+| NULL _ -> "NULL"
+| MINUS _ -> "MINUS"
+| LPAREN _ -> "LPAREN"
+| LET _ -> "LET"
+| WITH _ -> "WITH"
+| RETURN _ -> "RETURN"
+| BREAK _ -> "BREAK"
+| CONTINUE _ -> "CONTINUE"
+| LESS _ -> "LESS"
+| GREATER _ -> "GREATER"
+| DOUBLE_EQUALS _ -> "DOUBLE_EQUALS"
+| NOT_EQUALS _ -> "NOT_EQUALS"
+| LEQ _ -> "LEQ"
+| GEQ _ -> "GEQ"
+| LCURLY _ -> "LCURLY"
+| LBRACKET _ -> "LBRACKET"
+| IN _ -> "IN"
+| DO _ -> "DO"
+| IF _ -> "IF"
+| FUNC _ -> "FUNC"
+| FOR _ -> "FOR"
+| FALSE _ -> "FALSE"
+| EQUALS _ -> "EQUALS"
+| EOF _ -> "EOF"
+| ELSE _ -> "ELSE"
+| DIVIDE _ -> "DIVIDE"
+| COMMA _ -> "COMMA"
+| STRING_START (s, _) -> Printf.sprintf "STRING_START(%s)" s
+| STRING_MIDDLE (s, _) -> Printf.sprintf "STRING_MIDDLE(%s)" s
+| STRING_FULL (s, _) -> Printf.sprintf "STRING_FULL(%s)" s
+| STRING_END (s, _) -> Printf.sprintf "STRING_END(%s)" s
+| NUM (n, _) -> Printf.sprintf "NUM(%f)" n
+| ID (s, _) -> Printf.sprintf "ID(%s)" s
+| CONTEXT_ID (s, _) -> Printf.sprintf "CONTEXT_ID(%s)" s
+| PROTOTYPE (s, _) -> Printf.sprintf "PROTOTYPE(%s)" s
+| COMMENT _ -> failwith "Unreachable"
+
 }
 
 (* identifiers *)
@@ -40,120 +94,115 @@ rule private_read last_token state =
       automatic semicolon insertion
       Inspired by: https://go101.org/article/line-break-rules.html
     *)
-    let asi () =
-      let token = SEMICOLON lexbuf.lex_curr_p in
-      last_token := Some token;
-      token in
+    let semicolon = SEMICOLON lexbuf.lex_curr_p in
     match !last_token with
     | None -> (private_read [@tailcall]) last_token state lexbuf
     | Some t -> (match t with
-        | ID _ -> asi ()
-        | CONTEXT_ID _ -> asi ()
-        | RPAREN _ -> asi ()
-        | RCURLY _ -> asi ()
-        | RBRACKET _ -> asi ()
-        | NUM _ -> asi ()
-        | STRING_FULL _ -> asi ()
-        | STRING_END _ -> asi ()
-        | NULL _ -> asi ()
-        | RETURN _ -> asi ()
-        | BREAK _ -> asi ()
-        | CONTINUE _ -> asi ()
-        | TRUE _ -> asi ()
-        | FALSE _ -> asi ()
+        | ID _ -> semicolon
+        | CONTEXT_ID _ -> semicolon
+        | RPAREN _ -> semicolon
+        | RCURLY _ -> semicolon
+        | RBRACKET _ -> semicolon
+        | NUM _ -> semicolon
+        | STRING_FULL _ -> semicolon
+        | STRING_END _ -> semicolon
+        | NULL _ -> semicolon
+        | RETURN _ -> semicolon
+        | BREAK _ -> semicolon
+        | CONTINUE _ -> semicolon
+        | TRUE _ -> semicolon
+        | FALSE _ -> semicolon
         (* ! is a postfix operator *)
-        | BANG _ -> asi ()
-        | _ -> (private_read [@tailcall]) last_token state lexbuf
+        | BANG _ -> semicolon
+        | _ ->
+            (private_read [@tailcall]) last_token state lexbuf
     )
   }
-  (* TODO remove copy pasta setting last_token, we do that in the filter *)
   (* Literals *)
-  | "true" { let token = TRUE lexbuf.lex_start_p in last_token := Some token; token }
-  | "false" { let token = FALSE lexbuf.lex_start_p in last_token := Some token; token }
-  | "null" { let token = NULL lexbuf.lex_start_p in last_token := Some token; token }
+  | "true" { TRUE lexbuf.lex_start_p }
+  | "false" { FALSE lexbuf.lex_start_p }
+  | "null" { NULL lexbuf.lex_start_p }
 
   (* Keywords *)
-  | "let" { let token = LET lexbuf.lex_start_p in last_token := Some token; token }
-  | "func" { let token = FUNC lexbuf.lex_start_p in last_token := Some token; token }
-  | "if" { let token = IF lexbuf.lex_start_p in last_token := Some token; token }
-  | "else" { let token = ELSE lexbuf.lex_start_p in last_token := Some token; token }
-  | "in" { let token = IN lexbuf.lex_start_p in last_token := Some token; token }
-  | "do" { let token = DO lexbuf.lex_start_p in last_token := Some token; token }
-  | "for" { let token = FOR lexbuf.lex_start_p in last_token := Some token; token }
-  | "with" { let token = WITH lexbuf.lex_start_p in last_token := Some token; token }
-  | "return" { let token = RETURN lexbuf.lex_start_p in last_token := Some token; token }
-  | "break" { let token = BREAK lexbuf.lex_start_p in last_token := Some token; token }
-  | "continue" { let token = CONTINUE lexbuf.lex_start_p in last_token := Some token; token }
+  | "let" { LET lexbuf.lex_start_p }
+  | "func" { FUNC lexbuf.lex_start_p }
+  | "if" { IF lexbuf.lex_start_p }
+  | "else" { ELSE lexbuf.lex_start_p }
+  | "in" { IN lexbuf.lex_start_p }
+  | "do" { DO lexbuf.lex_start_p }
+  | "for" { FOR lexbuf.lex_start_p }
+  | "with" { WITH lexbuf.lex_start_p }
+  | "return" { RETURN lexbuf.lex_start_p }
+  | "break" { BREAK lexbuf.lex_start_p }
+  | "continue" { CONTINUE lexbuf.lex_start_p }
 
   (* Operators *)
-  | '+' { let token = PLUS lexbuf.lex_start_p in last_token := Some token; token }
-  | '-' { let token = MINUS lexbuf.lex_start_p in last_token := Some token; token }
-  | '=' { let token = EQUALS lexbuf.lex_start_p in last_token := Some token; token }
-  | '*' { let token = PRODUCT lexbuf.lex_start_p in last_token := Some token; token }
-  | '/' { let token = DIVIDE lexbuf.lex_start_p in last_token := Some token; token }
-  | '%' { let token = MODULO lexbuf.lex_start_p in last_token := Some token; token }
-  | '!' { let token = BANG lexbuf.lex_start_p in last_token := Some token; token }
-  | "not" { let token = NOT lexbuf.lex_start_p in last_token := Some token; token }
-  | "and" { let token = AND lexbuf.lex_start_p in last_token := Some token; token }
-  | "or" { let token = OR lexbuf.lex_start_p in last_token := Some token; token }
+  | '+' { PLUS lexbuf.lex_start_p }
+  | '-' { MINUS lexbuf.lex_start_p }
+  | '=' { EQUALS lexbuf.lex_start_p }
+  | '*' { PRODUCT lexbuf.lex_start_p }
+  | '/' { DIVIDE lexbuf.lex_start_p }
+  | '%' { MODULO lexbuf.lex_start_p }
+  | '!' { BANG lexbuf.lex_start_p }
+  | "not" { NOT lexbuf.lex_start_p }
+  | "and" { AND lexbuf.lex_start_p }
+  | "or" { OR lexbuf.lex_start_p }
   | ';' {
-    let parse_semicolon () =
-      let token = SEMICOLON lexbuf.lex_start_p in
-      last_token := Some token;
-      token
-    in
+    let semicolon = SEMICOLON lexbuf.lex_start_p in
     match !last_token with
-    | None -> (* TODO should we ignore leading semicolon? *) parse_semicolon ()
+    | None ->
+        (* TODO should we ignore leading semicolon? *) semicolon
     | Some t -> (match t with
         (* Allow no-op repeat semicolons *)
-        | SEMICOLON _ -> (private_read [@tailcall]) last_token state lexbuf
-        | _ -> parse_semicolon ()
+        | SEMICOLON _ ->
+            (private_read [@tailcall]) last_token state lexbuf
+        | _ ->
+            semicolon
     )
   }
-  | ':' { let token = COLON lexbuf.lex_start_p in last_token := Some token; token }
+  | ':' { COLON lexbuf.lex_start_p }
   | '#' { read_comment lexbuf.lex_start_p lexbuf }
-  | '|' { let token = PIPE lexbuf.lex_start_p in last_token := Some token; token }
-  | '.' { let token = DOT lexbuf.lex_start_p in last_token := Some token; token }
+  | '|' { PIPE lexbuf.lex_start_p }
+  | '.' { DOT lexbuf.lex_start_p }
 
   (* String literals *)
   | '\'' {
-    let token = read_string '\'' (Buffer.create string_buffer_size) lexbuf.lex_start_p state lexbuf in
-    last_token := Some token;
-    token
+    read_string '\'' (Buffer.create string_buffer_size) lexbuf.lex_start_p state lexbuf
   }
   | '"' {
     state := NotInterpolating :: !state;
-    let token = read_string '"' (Buffer.create string_buffer_size) lexbuf.lex_start_p state lexbuf in
-    last_token := Some token;
-    token
+    read_string '"' (Buffer.create string_buffer_size) lexbuf.lex_start_p state lexbuf
   }
-  | '{' { let token = LCURLY lexbuf.lex_start_p in last_token := Some token; token}
+  | '{' { LCURLY lexbuf.lex_start_p}
   | '}' {
-    let token = (match List.hd !state with
+    match List.hd !state with
     | NotInterpolating -> RCURLY lexbuf.lex_start_p
-    | Interpolating -> (read_string '"' (Buffer.create string_buffer_size) lexbuf.lex_start_p state lexbuf)) in
-    last_token := Some token;
-    token
+    | Interpolating -> (read_string
+      '"'
+      (Buffer.create string_buffer_size)
+      lexbuf.lex_start_p
+      state
+      lexbuf)
   }
-  | '(' { let token = LPAREN lexbuf.lex_start_p in last_token := Some token; token}
-  | ')' { let token = RPAREN lexbuf.lex_start_p in last_token := Some token; token}
-  | ',' { let token = COMMA lexbuf.lex_start_p in last_token := Some token; token}
-  | '<' { let token = LESS lexbuf.lex_start_p in last_token := Some token; token}
-  | '>' { let token = GREATER lexbuf.lex_start_p in last_token := Some token; token}
-  | "<=" { let token = LEQ lexbuf.lex_start_p in last_token := Some token; token}
-  | ">=" { let token = GEQ lexbuf.lex_start_p in last_token := Some token; token}
-  | "==" { let token = DOUBLE_EQUALS lexbuf.lex_start_p in last_token := Some token; token }
-  | "!=" { let token = NOT_EQUALS lexbuf.lex_start_p in last_token := Some token; token }
-  | "<-" { let token = LEFT_ARROW lexbuf.lex_start_p in last_token := Some token; token }
-  | "->" { let token = RIGHT_ARROW lexbuf.lex_start_p in last_token := Some token; token }
-  | '[' { let token = LBRACKET lexbuf.lex_start_p in last_token := Some token; token}
-  | ']' { let token = RBRACKET lexbuf.lex_start_p in last_token := Some token; token}
+  | '(' { LPAREN lexbuf.lex_start_p}
+  | ')' { RPAREN lexbuf.lex_start_p}
+  | ',' { COMMA lexbuf.lex_start_p}
+  | '<' { LESS lexbuf.lex_start_p}
+  | '>' { GREATER lexbuf.lex_start_p}
+  | "<=" { LEQ lexbuf.lex_start_p}
+  | ">=" { GEQ lexbuf.lex_start_p}
+  | "==" { DOUBLE_EQUALS lexbuf.lex_start_p }
+  | "!=" { NOT_EQUALS lexbuf.lex_start_p }
+  | "<-" { LEFT_ARROW lexbuf.lex_start_p }
+  | "->" { RIGHT_ARROW lexbuf.lex_start_p }
+  | '[' { LBRACKET lexbuf.lex_start_p}
+  | ']' { RBRACKET lexbuf.lex_start_p}
   (* Lexing.lexeme means return the string that matched the pattern *)
-  | id as lxm { let token = ID (lxm, lexbuf.lex_start_p) in last_token := Some token; token }
-  | context_id { let token = CONTEXT_ID (Lexing.lexeme lexbuf, lexbuf.lex_start_p) in last_token := Some token; token }
-  | prototype { let token = PROTOTYPE (Lexing.lexeme lexbuf, lexbuf.lex_start_p) in last_token := Some token; token }
-  | num { let token = NUM (float_of_string (Lexing.lexeme lexbuf), lexbuf.lex_start_p) in last_token := Some token; token }
-  | _ { syntax_error (SyntaxError (Lexing.lexeme lexbuf, lexbuf.lex_start_p))}
+  | id as lexeme { ID (lexeme, lexbuf.lex_start_p) }
+  | context_id as lexeme { CONTEXT_ID (lexeme, lexbuf.lex_start_p) }
+  | prototype as lexeme { PROTOTYPE (lexeme, lexbuf.lex_start_p) }
+  | num as lexeme { NUM (float_of_string lexeme, lexbuf.lex_start_p) }
+  | _ { raise (SyntaxError (Lexing.lexeme lexbuf, lexbuf.lex_start_p))}
   (* Here `eof` is a special regex built into ocamllex *)
   | eof {
     (* Note: if needed, a semicolon will be inserted later in filtering
@@ -281,9 +330,10 @@ and read_string delimiter buf pos state =
 {
   type lex_filter_state = False | True of Lexing.position
 
+  let token_to_s = to_s
+
   (* insert semicolon before EOF *)
   let make_lex_filter () =
-    let r = ref None in
     let last_token = ref None in
     let state = ref [ NotInterpolating ] in
     let should_spit_eof = ref False in
@@ -294,7 +344,7 @@ and read_string delimiter buf pos state =
       | True pos -> EOF pos
       | False -> (
           let token = try
-            private_read r state buf
+            private_read last_token state buf
           with
           | Failure msg -> raise @@ Sloth_common.Common.LexerError msg
           in

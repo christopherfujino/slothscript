@@ -13,6 +13,8 @@ closure()
 ### Failure
 [4:8] Optimizer error
 
-4 |   print(x)
-            ^
+ 2 |   # Although this works in JS, Python, and Perl, this seems like a mistake
+ 3 |   # Go does not allow it
+ 4 |   print(x)
+             ^
 Undeclared identifier x
