@@ -12,6 +12,8 @@ print(result2.stdout())
 
 # Because the pipe operator has rules for implicit casts
 
+let handle = "uname"&
+
 ### Processes
 (((cmd
   (uname))
