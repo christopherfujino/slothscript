@@ -50,7 +50,8 @@ let () =
         else
           Printf.eprintf
             "STDOUT did not match expectations\n\nExpected %s\n\nReceived: %s\n"
-            spec.stdout_expect catted_output; failwith "Fail")
+            spec.stdout_expect catted_output;
+        failwith "Fail")
   in
   match res with
   | Ok () -> ()
