@@ -1,6 +1,3 @@
-### Name
-green_specs/context.sloth
-
 ### Program
 with ($cwd = "./green_specs") {
   let result = "ls" | "sort" | "tail -n 1"!

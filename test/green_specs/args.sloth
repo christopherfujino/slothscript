@@ -1,6 +1,3 @@
-### Name
-args
-
 ### Program
 func f(x, y) {
   print(x)

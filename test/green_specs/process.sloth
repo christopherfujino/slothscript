@@ -1,6 +1,3 @@
-### Name
-green_specs/process.sloth
-
 ### Program
 #This short version...
 let result1 = "uname" | "tr x s"!
