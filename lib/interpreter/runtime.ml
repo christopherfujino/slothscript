@@ -150,6 +150,7 @@ let bool_of_val = function Bool b' -> Some b' | _ -> None
 let list_of_val = function List l -> Some l | _ -> None
 let hashmap_of_val = function HashMap h -> Some h | _ -> None
 let process_of_val = function Process p -> Some p | _ -> None
+let process_handle_of_val = function ProcessHandle p -> Some p | _ -> None
 let process_result_of_val = function ProcessResult p -> Some p | _ -> None
 let func_of_val = function Func func -> Some func | _ -> None
 

@@ -228,11 +228,12 @@ let make_globals m src script_path ~env =
               match meth with
               | "wait" ->
                   make_method meth 1 cl.instance_members (fun args ->
-                      let proc = List.hd_exn args in
-                      let result =
-                        Runtime.process_result_of_val proc |> Option.value_exn
+                      let handle = List.hd_exn args in
+                      let handle =
+                        Runtime.process_handle_of_val handle |> Option.value_exn
                       in
-                      First (Runtime.String result.stdout))
+                      First
+                        (Runtime.Num (Float.of_int @@ Pid.to_int handle.pid)))
               | _ ->
                   Printf.sprintf
                     "`ProcessResult` does not implement the method `%s`" meth

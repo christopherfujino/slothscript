@@ -11,6 +11,8 @@ module type Sig = sig
   val file_read_all : string -> string
   val file_write_all : string -> data:string -> unit
 
+  val wait : int -> unit
+
   val proc_exec :
     mode:processMode ->
     Runtime.process ->
@@ -34,6 +36,12 @@ module Prod : Sig = struct
     | `Yes -> true
     | `No -> false
     | `Unknown -> false (* TODO? *)
+
+  let wait pid =
+    let pid_t = Pid.of_int pid in
+    match Core_unix.waitpid pid_t with
+    | Error e -> ()
+    | Ok 
 
   let proc_exec ~mode (proc : Runtime.process) env =
     let read_stdout, write_stdout, read_stderr, write_stderr =

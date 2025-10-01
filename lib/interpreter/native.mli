@@ -10,6 +10,8 @@ module type Sig = sig
   val file_read_all : string -> string
   val file_write_all : string -> data:string -> unit
 
+  val wait : int -> unit
+
   val proc_exec :
     mode:processMode ->
     Runtime.process ->
