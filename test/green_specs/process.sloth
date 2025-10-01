@@ -8,8 +8,6 @@ let result1 = "uname" | "tr x s"!
 # Is equivalent to the more verbose...
 let result2 = Process.new(["uname"]) | Process.new(["tr", "x", "s"])!
 
-print(result2.stdout())
-
 # Because the pipe operator has rules for implicit casts
 
 let handle = "uname"&
@@ -126,22 +124,6 @@ assert(result.stdout() == "Linux")
         <opaque>)))
   (StmtDecl
     (ExprStmt
-      (FuncInvoc
-        (IdRef
-          print
-          <opaque>)
-        ((FuncInvoc
-          (ObjDeref
-            (IdRef
-              result2
-              <opaque>)
-            stdout
-            <opaque>)
-          ()
-          <opaque>))
-        <opaque>)))
-  (StmtDecl
-    (ExprStmt
       (LetExpr
         handle
         (UnaryExpr
@@ -155,6 +137,44 @@ assert(result.stdout() == "Linux")
             <opaque>)
           (operator
             Ampersand))
+        <opaque>)))
+  (StmtDecl
+    (ExprStmt
+      (LetExpr
+        result
+        (FuncInvoc
+          (ObjDeref
+            (IdRef
+              handle
+              <opaque>)
+            wait
+            <opaque>)
+          ()
+          <opaque>)
+        <opaque>)))
+  (StmtDecl
+    (ExprStmt
+      (FuncInvoc
+        (IdRef
+          assert
+          <opaque>)
+        ((Equality
+          (FuncInvoc
+            (ObjDeref
+              (IdRef
+                result
+                <opaque>)
+              stdout
+              <opaque>)
+            ()
+            <opaque>)
+          (String
+            ((FullString
+              Linux
+              <opaque>))
+            <opaque>)
+          true
+          <opaque>))
         <opaque>))))
 
 ### Stdout

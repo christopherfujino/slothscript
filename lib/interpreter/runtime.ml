@@ -11,11 +11,13 @@ type process = {
   previous : process option;
 }
 
-type process_handle = {
-  pid : Pid.t;
-  stdout : Core_unix.File_descr.t;
-  stderr : Core_unix.File_descr.t;
-}
+type process_handle =
+  | ProcessInherited of Pid.t
+  | ProcessBuffered of {
+      pid : Pid.t;
+      stdout : Core_unix.File_descr.t;
+      stderr : Core_unix.File_descr.t;
+    }  (** A reference to a (potentially) running process. *)
 
 type process_result = { code : int; stdout : string; stderr : string }
 type file = { path : string }
@@ -127,7 +129,12 @@ let rec to_s t' =
   (* TODO we should list out all in the group *)
   | Process { cmd; _ } ->
       Printf.sprintf "Process(cmd=[%s])" @@ stringify_list cmd
-  | ProcessHandle { pid; stdout = _; stderr = _ } ->
+  | ProcessHandle proc_handle ->
+      let pid =
+        match proc_handle with
+        | ProcessBuffered { pid; stdout = _; stderr = _ } -> pid
+        | ProcessInherited pid -> pid (* TODO is this reachable? *)
+      in
       Printf.sprintf "ProcessHandle(pid=%s)" @@ Pid.to_string pid
   | ProcessResult { code; stdout; stderr } ->
       let stdout = String.strip stdout in

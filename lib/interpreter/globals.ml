@@ -232,8 +232,16 @@ let make_globals m src script_path ~env =
                       let handle =
                         Runtime.process_handle_of_val handle |> Option.value_exn
                       in
-                      First
-                        (Runtime.Num (Float.of_int @@ Pid.to_int handle.pid)))
+                      let res =
+                        match handle with
+                        | ProcessInherited _ ->
+                            Sloth_common.Common.internal_failure __LOC__
+                        | ProcessBuffered _ -> M.wait handle
+                      in
+                      match res with
+                      | Ok proc_result -> First proc_result
+                      | Error msg ->
+                          Second (Compiler.Ast.Error msg, Runtime.Null))
               | _ ->
                   Printf.sprintf
                     "`ProcessResult` does not implement the method `%s`" meth

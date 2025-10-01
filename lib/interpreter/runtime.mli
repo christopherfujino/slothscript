@@ -11,11 +11,13 @@ type process = {
   previous : process option;
 }
 
-type process_handle = {
-  pid : Pid.t;
-  stdout : Core_unix.File_descr.t;
-  stderr : Core_unix.File_descr.t;
-}
+type process_handle =
+  | ProcessInherited of Pid.t
+  | ProcessBuffered of {
+      pid : Pid.t;
+      stdout : Core_unix.File_descr.t;
+      stderr : Core_unix.File_descr.t;
+    }  (** A reference to a (potentially) running process. *)
 
 type file = { path : string }
 type process_result = { code : int; stdout : string; stderr : string }
