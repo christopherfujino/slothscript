@@ -114,6 +114,7 @@ and operator =
   | Geq
   | Bang
   | Ampersand
+  | AmpersandBang
   | And
   | Or
   | Not

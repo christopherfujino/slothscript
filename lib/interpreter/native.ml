@@ -355,7 +355,9 @@ module Make_test () : TestSig = struct
                              stdout = unsafe_fd;
                              stderr = unsafe_fd;
                            })))
-          | _ -> Error "TODO")
+          | _ ->
+              let msg = Printf.sprintf "TODO (%s)" __LOC__ in
+              Error msg)
     in
     rec_proc_exec None proc
 end

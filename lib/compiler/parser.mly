@@ -50,6 +50,7 @@
 %token <Lexing.position> GREATER
 %token <Lexing.position> BANG
 %token <Lexing.position> AMPERSAND
+%token <Lexing.position> AMPERSAND_BANG
 %token <Lexing.position> NOT
 %token <Lexing.position> AND
 %token <Lexing.position> OR
@@ -79,7 +80,7 @@
    These are ordered, from high to low precedence.
    *)
 
-%left OR BANG AMPERSAND (* Postfix *)
+%left OR BANG AMPERSAND AMPERSAND_BANG (* Postfix *)
 %left AND
 %left LEFT_ARROW (* Prefix *) RIGHT_ARROW (* Postfix *)
 %left NOT_EQUALS DOUBLE_EQUALS GEQ LEQ LESS GREATER
@@ -236,6 +237,9 @@ expr2:
   }
   | e = expr2; pos = AMPERSAND {
     UnaryExpr { target = e; operator=Ampersand; pos}
+  }
+  | e = expr2; pos = AMPERSAND_BANG {
+    UnaryExpr { target = e; operator=AmpersandBang; pos}
   }
   | pos = MINUS; e = expr2 {
     UnaryExpr { target = e; operator=Minus; pos}

@@ -378,6 +378,25 @@ and interpret_expr globals expr :
                  ~second:Fun.id
           in
           (globals, either)
+      | AmpersandBang ->
+          interpret_expr globals target >>= fun globals target ->
+          let either =
+            cast_to_process ~globals ~pos target
+            |> Either.map
+                 ~first:(fun proc ->
+                   let module M = (val globals.l : Native.Sig) in
+                   (* TODO add error handling *)
+                   let env =
+                     Context.get globals.context_ids "$env"
+                     |> Option.value_exn |> Runtime.env_of_val
+                     |> Option.value_exn
+                   in
+                   match M.proc_exec ~mode:Native.BlockBuffer proc env with
+                   | Ok t' -> t'
+                   | Error err -> fail ~globals pos err)
+                 ~second:Fun.id
+          in
+          (globals, either)
       | Bang ->
           interpret_expr globals target >>= fun globals target ->
           let either =
@@ -992,7 +1011,7 @@ and interpret_binary globals lhs rhs op pos =
       let module M = (val globals.l) in
       M.file_write_all path ~data:left;
       (globals, Either.first @@ Runtime.String left)
-  | Bang | Ampersand | Not | LeftArrow ->
+  | Bang | AmpersandBang | Ampersand | Not | LeftArrow ->
       (* Not binary ops, unreachable *)
       Sloth_common.Common.internal_failure __LOC__
 

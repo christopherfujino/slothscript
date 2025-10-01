@@ -24,6 +24,8 @@ let () =
         let proc_spec =
           Interpreter.Mock_process.spec_of_string spec.proc_spec
         in
+        Printf.printf "%d proc specs\n%!" @@ List.length proc_spec;
+
         let m = Interpreter.Native.make_test proc_spec in
         let module M = (val m) in
         let globals =
@@ -47,11 +49,14 @@ let () =
           | Some s -> (String.(spec.stdout_expect = String.strip s), s)
         in
         if is_equal then ()
-        else
+        else (
           Printf.eprintf
-            "STDOUT did not match expectations\n\nExpected %s\n\nReceived: %s\n"
+            "STDOUT did not match expectations\n\n\
+             Expected %s\n\n\
+             Received: %s\n\
+             %!"
             spec.stdout_expect catted_output;
-        failwith "Fail")
+          failwith __LOC__))
   in
   match res with
   | Ok () -> ()

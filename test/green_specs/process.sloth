@@ -14,6 +14,9 @@ let handle = "uname"&
 let result = handle.wait()
 assert(result.stdout() == "Linux")
 
+result = "uname"&!
+assert(result.stdout() == "Linux")
+
 ### Processes
 (((cmd
   (uname))
@@ -37,6 +40,11 @@ assert(result.stdout() == "Linux")
     (instructions
       ((Stdout
         Linus))))
+  ((cmd
+    (uname))
+    (instructions
+      ((Stdout
+        Linux))))
   ((cmd
     (uname))
     (instructions
@@ -151,6 +159,46 @@ assert(result.stdout() == "Linux")
             <opaque>)
           ()
           <opaque>)
+        <opaque>)))
+  (StmtDecl
+    (ExprStmt
+      (FuncInvoc
+        (IdRef
+          assert
+          <opaque>)
+        ((Equality
+          (FuncInvoc
+            (ObjDeref
+              (IdRef
+                result
+                <opaque>)
+              stdout
+              <opaque>)
+            ()
+            <opaque>)
+          (String
+            ((FullString
+              Linux
+              <opaque>))
+            <opaque>)
+          true
+          <opaque>))
+        <opaque>)))
+  (StmtDecl
+    (ExprStmt
+      (AssignExpr
+        result
+        (UnaryExpr
+          (target
+            (String
+              ((FullString
+                uname
+                <opaque>))
+              <opaque>))
+          (pos
+            <opaque>)
+          (operator
+            AmpersandBang))
         <opaque>)))
   (StmtDecl
     (ExprStmt
