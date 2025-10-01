@@ -164,20 +164,6 @@ module Prod : Sig = struct
         Core_unix.close @@ Option.value_exn write_stdout;
         Core_unix.close @@ Option.value_exn write_stderr);
 
-    (*
-    let stdout, stderr =
-      match mode with
-      | BlockInherit -> ("", "")
-      | BlockBuffer | ForkBuffer ->
-          (* If forking, this should be called in wait *)
-          let read_stdout = Option.value_exn read_stdout in
-          let read_stderr = Option.value_exn read_stderr in
-          select
-            [ read_stdout; read_stderr ]
-            read_stdout read_stderr stdout_buf stderr_buf
-    in
-    *)
-
     (* First is the last in the queue *)
     let last_pid = List.hd_exn pids in
 
@@ -197,11 +183,13 @@ module Prod : Sig = struct
                   stderr = Option.value_exn read_stderr;
                 }))
     | BlockBuffer ->
-        let read_stdout = Option.value_exn read_stdout in
-        let read_stderr = Option.value_exn read_stderr in
         let handle =
           Runtime.ProcessBuffered
-            { pid = last_pid; stdout = read_stdout; stderr = read_stderr }
+            {
+              pid = last_pid;
+              stdout = Option.value_exn read_stdout;
+              stderr = Option.value_exn read_stderr;
+            }
         in
         wait handle >>= fun t -> Ok t
 end
@@ -284,11 +272,11 @@ module Make_test () : TestSig = struct
     match res_opt with
     | None ->
         (* TODO should this just be a no-op? *)
-        Printf.sprintf
-          "Tried to wait the PID %d but it is not running; did you `wait()`'d \
-           it twice"
-          pid
-        |> failwith
+        Error
+          (Printf.sprintf
+             "Tried to wait the PID %d but it is not running; did you \
+              `wait()`'d it twice"
+             pid)
     | Some res -> res
 
   let proc_exec ~mode proc _ =

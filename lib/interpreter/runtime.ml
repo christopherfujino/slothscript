@@ -133,7 +133,7 @@ let rec to_s t' =
       let pid =
         match proc_handle with
         | ProcessBuffered { pid; stdout = _; stderr = _ } -> pid
-        | ProcessInherited pid -> pid (* TODO is this reachable? *)
+        | ProcessInherited _ -> Sloth_common.Common.internal_failure __LOC__
       in
       Printf.sprintf "ProcessHandle(pid=%s)" @@ Pid.to_string pid
   | ProcessResult { code; stdout; stderr } ->
