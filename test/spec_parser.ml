@@ -10,10 +10,6 @@ let serialize path spec =
     Buffer.add_char buf '\n'
   in
 
-  print "### Name";
-  print spec.name;
-  print "";
-
   print "### Program";
   print spec.program;
   print "";

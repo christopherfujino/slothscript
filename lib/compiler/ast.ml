@@ -113,6 +113,8 @@ and operator =
   | Leq
   | Geq
   | Bang
+  | Ampersand
+  | AmpersandBang
   | And
   | Or
   | Not

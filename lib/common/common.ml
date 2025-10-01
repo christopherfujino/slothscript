@@ -21,3 +21,6 @@ let wrap_error cb =
   | RuntimeError msg -> Error msg
 
 let debug_mode = false
+
+(* See BUFSIZ in stdio.h *)
+let bufsiz = 8192

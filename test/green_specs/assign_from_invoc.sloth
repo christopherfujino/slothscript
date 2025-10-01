@@ -1,6 +1,3 @@
-### Name
-Assign from invocation
-
 ### Program
 func fn() { 1 }
 

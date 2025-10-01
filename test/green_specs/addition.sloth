@@ -1,6 +1,3 @@
-### Name
-addition
-
 ### Program
 assert(1 + 1 == 2);
 

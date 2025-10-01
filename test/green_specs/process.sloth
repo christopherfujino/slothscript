@@ -1,6 +1,3 @@
-### Name
-process
-
 ### Program
 #This short version...
 let result1 = "uname" | "tr x s"!
@@ -8,9 +5,14 @@ let result1 = "uname" | "tr x s"!
 # Is equivalent to the more verbose...
 let result2 = Process.new(["uname"]) | Process.new(["tr", "x", "s"])!
 
-print(result2.stdout())
-
 # Because the pipe operator has rules for implicit casts
+
+let handle = "uname"&
+let result = handle.wait()
+assert(result.stdout() == "Linux")
+
+result = "uname"&!
+assert(result.stdout() == "Linux")
 
 ### Processes
 (((cmd
@@ -34,7 +36,17 @@ print(result2.stdout())
       s))
     (instructions
       ((Stdout
-        Linus)))))
+        Linus))))
+  ((cmd
+    (uname))
+    (instructions
+      ((Stdout
+        Linux))))
+  ((cmd
+    (uname))
+    (instructions
+      ((Stdout
+        Linux)))))
 
 ### Ast
 ((StmtDecl
@@ -117,22 +129,101 @@ print(result2.stdout())
         <opaque>)))
   (StmtDecl
     (ExprStmt
-      (FuncInvoc
-        (IdRef
-          print
-          <opaque>)
-        ((FuncInvoc
+      (LetExpr
+        handle
+        (UnaryExpr
+          (target
+            (String
+              ((FullString
+                uname
+                <opaque>))
+              <opaque>))
+          (pos
+            <opaque>)
+          (operator
+            Ampersand))
+        <opaque>)))
+  (StmtDecl
+    (ExprStmt
+      (LetExpr
+        result
+        (FuncInvoc
           (ObjDeref
             (IdRef
-              result2
+              handle
               <opaque>)
-            stdout
+            wait
             <opaque>)
           ()
+          <opaque>)
+        <opaque>)))
+  (StmtDecl
+    (ExprStmt
+      (FuncInvoc
+        (IdRef
+          assert
+          <opaque>)
+        ((Equality
+          (FuncInvoc
+            (ObjDeref
+              (IdRef
+                result
+                <opaque>)
+              stdout
+              <opaque>)
+            ()
+            <opaque>)
+          (String
+            ((FullString
+              Linux
+              <opaque>))
+            <opaque>)
+          true
+          <opaque>))
+        <opaque>)))
+  (StmtDecl
+    (ExprStmt
+      (AssignExpr
+        result
+        (UnaryExpr
+          (target
+            (String
+              ((FullString
+                uname
+                <opaque>))
+              <opaque>))
+          (pos
+            <opaque>)
+          (operator
+            AmpersandBang))
+        <opaque>)))
+  (StmtDecl
+    (ExprStmt
+      (FuncInvoc
+        (IdRef
+          assert
+          <opaque>)
+        ((Equality
+          (FuncInvoc
+            (ObjDeref
+              (IdRef
+                result
+                <opaque>)
+              stdout
+              <opaque>)
+            ()
+            <opaque>)
+          (String
+            ((FullString
+              Linux
+              <opaque>))
+            <opaque>)
+          true
           <opaque>))
         <opaque>))))
 
 ### Stdout
+Linus
 Linus
 
 ### Failure

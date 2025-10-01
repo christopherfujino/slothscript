@@ -11,6 +11,14 @@ type process = {
   previous : process option;
 }
 
+type process_handle =
+  | ProcessInherited of Pid.t
+  | ProcessBuffered of {
+      pid : Pid.t;
+      stdout : Core_unix.File_descr.t;
+      stderr : Core_unix.File_descr.t;
+    }  (** A reference to a (potentially) running process. *)
+
 type process_result = { code : int; stdout : string; stderr : string }
 type file = { path : string }
 
@@ -30,6 +38,7 @@ type t =
   | Prototype of prototype
   (* Stdlib Types *)
   | Process of process
+  | ProcessHandle of process_handle
   | ProcessResult of process_result
   | File of file
   | FileHandle
@@ -67,6 +76,7 @@ let to_class_name = function
   | Method _ -> "Method"
   | Prototype _ -> "Prototype"
   | Process _ -> "Process"
+  | ProcessHandle _ -> "ProcessHandle"
   | ProcessResult _ -> "ProcessResult"
   | File _ -> "File"
   | FileHandle -> "FileHandle"
@@ -119,6 +129,13 @@ let rec to_s t' =
   (* TODO we should list out all in the group *)
   | Process { cmd; _ } ->
       Printf.sprintf "Process(cmd=[%s])" @@ stringify_list cmd
+  | ProcessHandle proc_handle ->
+      let pid =
+        match proc_handle with
+        | ProcessBuffered { pid; stdout = _; stderr = _ } -> pid
+        | ProcessInherited _ -> Sloth_common.Common.internal_failure __LOC__
+      in
+      Printf.sprintf "ProcessHandle(pid=%s)" @@ Pid.to_string pid
   | ProcessResult { code; stdout; stderr } ->
       let stdout = String.strip stdout in
       let stderr = String.strip stderr in
@@ -140,6 +157,7 @@ let bool_of_val = function Bool b' -> Some b' | _ -> None
 let list_of_val = function List l -> Some l | _ -> None
 let hashmap_of_val = function HashMap h -> Some h | _ -> None
 let process_of_val = function Process p -> Some p | _ -> None
+let process_handle_of_val = function ProcessHandle p -> Some p | _ -> None
 let process_result_of_val = function ProcessResult p -> Some p | _ -> None
 let func_of_val = function Func func -> Some func | _ -> None
 

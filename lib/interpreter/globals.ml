@@ -223,6 +223,36 @@ let make_globals m src script_path ~env =
                   Printf.sprintf
                     "`Process` does not implement the static member `%s`" name
                   |> failwith)
+      | "ProcessHandle" ->
+          List.iter methods ~f:(fun meth ->
+              match meth with
+              | "wait" ->
+                  make_method meth 1 cl.instance_members (fun args ->
+                      let handle = List.hd_exn args in
+                      let handle =
+                        Runtime.process_handle_of_val handle |> Option.value_exn
+                      in
+                      let res =
+                        match handle with
+                        | ProcessInherited _ ->
+                            Sloth_common.Common.internal_failure __LOC__
+                        | ProcessBuffered _ -> M.wait handle
+                      in
+                      match res with
+                      | Ok proc_result -> First proc_result
+                      | Error msg ->
+                          Second (Compiler.Ast.Error msg, Runtime.Null))
+              | _ ->
+                  Printf.sprintf
+                    "`ProcessResult` does not implement the method `%s`" meth
+                  |> failwith);
+          List.iter static_members ~f:(fun name ->
+              match name with
+              | _ ->
+                  Printf.sprintf
+                    "`ProcessResult` does not implement the static member `%s`"
+                    name
+                  |> failwith)
       | "ProcessResult" ->
           List.iter methods ~f:(fun meth ->
               match meth with

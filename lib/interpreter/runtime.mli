@@ -11,6 +11,14 @@ type process = {
   previous : process option;
 }
 
+type process_handle =
+  | ProcessInherited of Pid.t
+  | ProcessBuffered of {
+      pid : Pid.t;
+      stdout : Core_unix.File_descr.t;
+      stderr : Core_unix.File_descr.t;
+    }  (** A reference to a (potentially) running process. *)
+
 type file = { path : string }
 type process_result = { code : int; stdout : string; stderr : string }
 
@@ -25,6 +33,7 @@ type t =
   | Method of t * function_t
   | Prototype of prototype
   | Process of process
+  | ProcessHandle of process_handle
   | ProcessResult of process_result
   | File of file
   | FileHandle
@@ -58,6 +67,7 @@ val bool_of_val : t -> bool option
 val list_of_val : t -> t Array.t option
 val hashmap_of_val : t -> (t, t) Stdlib.Hashtbl.t option
 val process_of_val : t -> process option
+val process_handle_of_val : t -> process_handle option
 val process_result_of_val : t -> process_result option
 val func_of_val : t -> function_t option
 val method_of_val : t -> (t * function_t) option

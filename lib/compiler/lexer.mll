@@ -13,6 +13,8 @@ let string_buffer_size = 33
 (* TODO figure out how to derive this *)
 let to_s = function
 | BANG _ -> "BANG"
+| AMPERSAND _ -> "AMPERSAND"
+| AMPERSAND_BANG _ -> "AMPERSAND_BANG"
 | LEFT_ARROW _ -> "LEFT_ARROW"
 | RIGHT_ARROW _ -> "RIGHT_ARROW"
 | NOT _ -> "NOT"
@@ -114,6 +116,8 @@ rule private_read last_token state =
         | FALSE _ -> semicolon
         (* ! is a postfix operator *)
         | BANG _ -> semicolon
+        | AMPERSAND _ -> semicolon
+        | AMPERSAND_BANG _ -> semicolon
         | _ ->
             (private_read [@tailcall]) last_token state lexbuf
     )
@@ -144,6 +148,8 @@ rule private_read last_token state =
   | '/' { DIVIDE lexbuf.lex_start_p }
   | '%' { MODULO lexbuf.lex_start_p }
   | '!' { BANG lexbuf.lex_start_p }
+  | '&' { AMPERSAND lexbuf.lex_start_p }
+  | "&!" { AMPERSAND_BANG lexbuf.lex_start_p }
   | "not" { NOT lexbuf.lex_start_p }
   | "and" { AND lexbuf.lex_start_p }
   | "or" { OR lexbuf.lex_start_p }

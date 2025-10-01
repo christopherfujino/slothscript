@@ -332,9 +332,12 @@ and interpret_expr globals expr :
                 (globals, either)
             | _ -> Sloth_common.Common.internal_failure __LOC__)
       | _ as t ->
-          Printf.sprintf "Tried to invoke %s, but it is not a function"
-            (Runtime.to_s t)
-          |> failwith)
+          ( globals,
+            Second
+              ( Error
+                  (Printf.sprintf "Tried to invoke %s, but it is not a function"
+                     (Runtime.to_s t)),
+                Runtime.Null ) ))
   | FuncExpr { parameters; block; _ } ->
       let parameters = List.map parameters ~f:(fun (name, _) -> name) in
       let u =
@@ -356,6 +359,44 @@ and interpret_expr globals expr :
                     got %s"
               |> fail ~globals pos
           | Some b -> (globals, First (Runtime.Bool (not b))))
+      | Ampersand ->
+          interpret_expr globals target >>= fun globals target ->
+          let either =
+            cast_to_process ~globals ~pos target
+            |> Either.map
+                 ~first:(fun proc ->
+                   let module M = (val globals.l : Native.Sig) in
+                   (* TODO add error handling *)
+                   let env =
+                     Context.get globals.context_ids "$env"
+                     |> Option.value_exn |> Runtime.env_of_val
+                     |> Option.value_exn
+                   in
+                   match M.proc_exec ~mode:Native.ForkBuffer proc env with
+                   | Ok t' -> t'
+                   | Error err -> fail ~globals pos err)
+                 ~second:Fun.id
+          in
+          (globals, either)
+      | AmpersandBang ->
+          interpret_expr globals target >>= fun globals target ->
+          let either =
+            cast_to_process ~globals ~pos target
+            |> Either.map
+                 ~first:(fun proc ->
+                   let module M = (val globals.l : Native.Sig) in
+                   (* TODO add error handling *)
+                   let env =
+                     Context.get globals.context_ids "$env"
+                     |> Option.value_exn |> Runtime.env_of_val
+                     |> Option.value_exn
+                   in
+                   match M.proc_exec ~mode:Native.BlockBuffer proc env with
+                   | Ok t' -> t'
+                   | Error err -> fail ~globals pos err)
+                 ~second:Fun.id
+          in
+          (globals, either)
       | Bang ->
           interpret_expr globals target >>= fun globals target ->
           let either =
@@ -369,7 +410,7 @@ and interpret_expr globals expr :
                      |> Option.value_exn |> Runtime.env_of_val
                      |> Option.value_exn
                    in
-                   match M.proc_exec proc env with
+                   match M.proc_exec ~mode:Native.BlockInherit proc env with
                    | Ok t' -> t'
                    | Error err -> fail ~globals pos err)
                  ~second:Fun.id
@@ -970,7 +1011,7 @@ and interpret_binary globals lhs rhs op pos =
       let module M = (val globals.l) in
       M.file_write_all path ~data:left;
       (globals, Either.first @@ Runtime.String left)
-  | Bang | Not | LeftArrow ->
+  | Bang | AmpersandBang | Ampersand | Not | LeftArrow ->
       (* Not binary ops, unreachable *)
       Sloth_common.Common.internal_failure __LOC__
 
@@ -991,7 +1032,8 @@ and cast_to_string ~globals ~pos t' =
             Printf.sprintf "$env is the wrong type: %s" @@ Runtime.to_s env_val
             |> fail ~globals pos
       in
-      match M.proc_exec proc env with
+      (* TODO: this is sus *)
+      match M.proc_exec ~mode:Native.BlockBuffer proc env with
       | Ok t' -> (cast_to_string [@tailcall]) ~globals ~pos t'
       | Error err -> fail ~globals pos err)
   | _ as t' ->
