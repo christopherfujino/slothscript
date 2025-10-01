@@ -19,9 +19,8 @@ let () =
 
   let res =
     Sloth_common.Common.wrap_error (fun () ->
-        (*
-        if Sloth_common.Common.debug_mode then Compiler.Main.debug spec.program
-        else (); *)
+        let _, ir = Compiler.Main.parse env spec.program in
+
         let proc_spec =
           Interpreter.Mock_process.spec_of_string spec.proc_spec
         in
@@ -33,9 +32,25 @@ let () =
             spec.program test ~env:[| "UNIT_TEST=true" |]
         in
 
-        let _, ir = Compiler.Main.parse env spec.program in
         let _, _ = Interpreter.Interpret.interpret_prog globals ir in
-        ())
+        let forward_buffer = List.rev !M.stdout_buffer in
+        let catted_output_opt =
+          List.fold_left forward_buffer
+            ~f:(fun acc cur ->
+              Some (match acc with None -> cur | Some acc -> acc ^ cur))
+            ~init:None
+        in
+        (* Is STDOUT correct? *)
+        let is_equal, catted_output =
+          match catted_output_opt with
+          | None -> (String.(spec.stdout_expect = ""), "")
+          | Some s -> (String.(spec.stdout_expect = String.strip s), s)
+        in
+        if is_equal then ()
+        else
+          Printf.eprintf
+            "STDOUT did not match expectations\n\nExpected %s\n\nReceived: %s\n"
+            spec.stdout_expect catted_output; failwith "Fail")
   in
   match res with
   | Ok () -> ()

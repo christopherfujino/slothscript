@@ -291,60 +291,73 @@ module Make_test () : TestSig = struct
         |> failwith
     | Some res -> res
 
-  let rec proc_exec ~mode (proc : Runtime.process) env =
-    (* Start from the end of the list *)
-    (match proc.previous with
-    | Some prev ->
-        let _ = proc_exec ~mode prev env in
-        ()
-    | None -> ());
-    match !proc_expectations |> Option.value_exn with
-    | [] ->
-        Printf.sprintf "Unexpected proc: %s"
-        @@ Runtime.to_s (Runtime.Process proc)
-        |> failwith
-    | hd :: tl -> (
-        proc_expectations := Some tl;
-        let n = List.compare String.compare hd.cmd proc.cmd in
-        match n with
-        | 0 -> (
-            let exec_proc_spec () =
-              let code = ref 0 in
-              let stdout_buf = Buffer.create 32 in
-              let stderr_buf = Buffer.create 32 in
-              List.iter hd.instructions ~f:(function
-                | Exit c -> code := c
-                | Stdout s -> Buffer.add_string stdout_buf s
-                | Stderr s -> Buffer.add_string stderr_buf s
-                | Stdin _ -> failwith "TODO");
-              Ok
-                (Runtime.ProcessResult
-                   {
-                     code = !code;
-                     stdout = Buffer.contents stdout_buf;
-                     stderr = Buffer.contents stderr_buf;
-                   })
-            in
-            match mode with
-            | BlockInherit ->
-                let open Result.Monad_infix in
-                exec_proc_spec () >>= fun _ -> Ok Runtime.Null
-            | BlockBuffer -> exec_proc_spec ()
-            | ForkBuffer ->
-                let this_pid = get_next_pid () in
-                running_pids := (this_pid, exec_proc_spec) :: !running_pids;
-                (* TODO remove this when we've abstracted over this exact type *)
-                let dummy = Core_unix.File_descr.of_int 69 in
+  let proc_exec ~mode proc _ =
+    let rec rec_proc_exec follower_opt (proc : Runtime.process) =
+      (* Start from the end of the list *)
+      (match proc.previous with
+      | Some prev ->
+          let _ = rec_proc_exec (Some proc) prev in
+          ()
+      | None -> ());
+      match !proc_expectations |> Option.value_exn with
+      | [] ->
+          Printf.sprintf "Unexpected proc: %s"
+          @@ Runtime.to_s (Runtime.Process proc)
+          |> failwith
+      | hd :: tl -> (
+          proc_expectations := Some tl;
+          let n = List.compare String.compare hd.cmd proc.cmd in
+          match n with
+          | 0 -> (
+              let exec_proc_spec () =
+                let code = ref 0 in
+                let stdout_buf = Buffer.create 32 in
+                let stderr_buf = Buffer.create 32 in
+                List.iter hd.instructions ~f:(function
+                  | Exit c -> code := c
+                  | Stdout s -> Buffer.add_string stdout_buf s
+                  | Stderr s -> Buffer.add_string stderr_buf s
+                  | Stdin _ -> failwith "TODO");
                 Ok
-                  Runtime.(
-                    ProcessHandle
-                      (ProcessBuffered
-                         {
-                           pid = Pid.of_int this_pid;
-                           stdout = dummy;
-                           stderr = dummy;
-                         })))
-        | _ -> Error "TODO")
+                  (Runtime.ProcessResult
+                     {
+                       code = !code;
+                       stdout = Buffer.contents stdout_buf;
+                       stderr = Buffer.contents stderr_buf;
+                     })
+              in
+              match mode with
+              | BlockInherit ->
+                  let open Result.Monad_infix in
+                  exec_proc_spec () >>= fun proc_res ->
+                  let proc_res =
+                    Runtime.process_result_of_val proc_res |> Option.value_exn
+                  in
+                  (* TODO stderr *)
+                  (match follower_opt with
+                  | None ->
+                      proc_res.stdout |> print_s;
+                      print_s "\n"
+                  | Some _ -> (* TODO match with stdin *) ());
+                  Ok Runtime.Null
+              | BlockBuffer -> exec_proc_spec ()
+              | ForkBuffer ->
+                  let this_pid = get_next_pid () in
+                  running_pids := (this_pid, exec_proc_spec) :: !running_pids;
+                  (* TODO remove this when we've abstracted over this exact type *)
+                  let unsafe_fd = Core_unix.File_descr.of_int 69 in
+                  Ok
+                    Runtime.(
+                      ProcessHandle
+                        (ProcessBuffered
+                           {
+                             pid = Pid.of_int this_pid;
+                             stdout = unsafe_fd;
+                             stderr = unsafe_fd;
+                           })))
+          | _ -> Error "TODO")
+    in
+    rec_proc_exec None proc
 end
 
 let make_test spec =

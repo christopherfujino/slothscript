@@ -1,10 +1,9 @@
 ### Name
-context, with expressions
+green_specs/context.sloth
 
 ### Program
 with ($cwd = "./green_specs") {
   let result = "ls" | "sort" | "tail -n 1"!
-  print(result.stdout())
 }
 
 ### Processes
@@ -64,22 +63,7 @@ with ($cwd = "./green_specs") {
               <opaque>)
             (operator
               Bang))
-          <opaque>))
-        (ExprStmt
-          (FuncInvoc
-            (IdRef
-              print
-              <opaque>)
-            ((FuncInvoc
-              (ObjDeref
-                (IdRef
-                  result
-                  <opaque>)
-                stdout
-                <opaque>)
-              ()
-              <opaque>))
-            <opaque>)))
+          <opaque>)))
       <opaque>))))
 
 ### Stdout

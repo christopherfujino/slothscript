@@ -179,5 +179,6 @@ assert(result.stdout() == "Linux")
 
 ### Stdout
 Linus
+Linus
 
 ### Failure
