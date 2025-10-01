@@ -11,6 +11,12 @@ type process = {
   previous : process option;
 }
 
+type process_handle = {
+  pid : Pid.t;
+  stdout : Core_unix.File_descr.t;
+  stderr : Core_unix.File_descr.t;
+}
+
 type process_result = { code : int; stdout : string; stderr : string }
 type file = { path : string }
 
@@ -30,6 +36,7 @@ type t =
   | Prototype of prototype
   (* Stdlib Types *)
   | Process of process
+  | ProcessHandle of process_handle
   | ProcessResult of process_result
   | File of file
   | FileHandle
@@ -67,6 +74,7 @@ let to_class_name = function
   | Method _ -> "Method"
   | Prototype _ -> "Prototype"
   | Process _ -> "Process"
+  | ProcessHandle _ -> "ProcessHandle"
   | ProcessResult _ -> "ProcessResult"
   | File _ -> "File"
   | FileHandle -> "FileHandle"
@@ -119,6 +127,8 @@ let rec to_s t' =
   (* TODO we should list out all in the group *)
   | Process { cmd; _ } ->
       Printf.sprintf "Process(cmd=[%s])" @@ stringify_list cmd
+  | ProcessHandle { pid; stdout = _; stderr = _ } ->
+      Printf.sprintf "ProcessHandle(pid=%s)" @@ Pid.to_string pid
   | ProcessResult { code; stdout; stderr } ->
       let stdout = String.strip stdout in
       let stderr = String.strip stderr in

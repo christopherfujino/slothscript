@@ -1,5 +1,5 @@
 ### Name
-process
+green_specs/process.sloth
 
 ### Program
 #This short version...
@@ -13,6 +13,8 @@ print(result2.stdout())
 # Because the pipe operator has rules for implicit casts
 
 let handle = "uname"&
+let result = handle.wait()
+assert(result.stdout() == "Linux")
 
 ### Processes
 (((cmd
@@ -36,7 +38,12 @@ let handle = "uname"&
       s))
     (instructions
       ((Stdout
-        Linus)))))
+        Linus))))
+  ((cmd
+    (uname))
+    (instructions
+      ((Stdout
+        Linux)))))
 
 ### Ast
 ((StmtDecl
@@ -132,6 +139,22 @@ let handle = "uname"&
             <opaque>)
           ()
           <opaque>))
+        <opaque>)))
+  (StmtDecl
+    (ExprStmt
+      (LetExpr
+        handle
+        (UnaryExpr
+          (target
+            (String
+              ((FullString
+                uname
+                <opaque>))
+              <opaque>))
+          (pos
+            <opaque>)
+          (operator
+            Ampersand))
         <opaque>))))
 
 ### Stdout

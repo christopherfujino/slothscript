@@ -14,6 +14,7 @@ let globals =
     protos =
       [
         { name = "Process"; methods = []; static_members = [ "new" ] };
+        { name = "ProcessHandle"; methods = [ "wait" ]; static_members = [] };
         { name = "ProcessResult"; methods = [ "stdout" ]; static_members = [] };
         { name = "Number"; methods = []; static_members = [] };
         {

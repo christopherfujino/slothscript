@@ -1,4 +1,10 @@
 open Core
+open Sloth_common.Common
+
+type processMode =
+  | BlockInherit (* proc! -> null *)
+  | ForkBuffer (* proc& -> ProcessHandle *)
+  | BlockBuffer (* proc&! -> ProcessResult *)
 
 module type Sig = sig
   val print_s : string -> unit
@@ -6,7 +12,10 @@ module type Sig = sig
   val file_write_all : string -> data:string -> unit
 
   val proc_exec :
-    Runtime.process -> string array -> (Runtime.t, string) Result.t
+    mode:processMode ->
+    Runtime.process ->
+    string array ->
+    (Runtime.t, string) Result.t
 
   val chdir : string -> unit
   val directory_exists : string -> bool
@@ -26,13 +35,24 @@ module Prod : Sig = struct
     | `No -> false
     | `Unknown -> false (* TODO? *)
 
-  let proc_exec (proc : Runtime.process) env =
-    let read_stdout, write_stdout = Core_unix.pipe ~close_on_exec:true () in
-    let read_stderr, write_stderr = Core_unix.pipe ~close_on_exec:true () in
-    let original_stdout = proc.stdout in
-    let original_stderr = proc.stderr in
-    proc.stdout <- write_stdout;
-    proc.stderr <- write_stderr;
+  let proc_exec ~mode (proc : Runtime.process) env =
+    let read_stdout, write_stdout, read_stderr, write_stderr =
+      match mode with
+      | BlockInherit -> (None, None, None, None)
+      | BlockBuffer | ForkBuffer ->
+          let read_stdout, write_stdout =
+            Core_unix.pipe ~close_on_exec:true ()
+          in
+          let read_stderr, write_stderr =
+            Core_unix.pipe ~close_on_exec:true ()
+          in
+          proc.stdout <- write_stdout;
+          proc.stderr <- write_stderr;
+          ( Some read_stdout,
+            Some write_stdout,
+            Some read_stderr,
+            Some write_stderr )
+    in
     let rec get_pids proc =
       let prev_pids =
         match Runtime.(proc.previous) with
@@ -44,12 +64,19 @@ module Prod : Sig = struct
       let this_pid =
         match Core_unix.fork () with
         | `In_the_child ->
-            Core_unix.close read_stdout;
-            Core_unix.close read_stderr;
-            if phys_equal write_stdout proc.stdout then ()
-            else Core_unix.close write_stdout;
-            if phys_equal write_stderr proc.stderr then ()
-            else Core_unix.close write_stderr;
+            (match mode with
+            | BlockInherit -> ()
+            | BlockBuffer | ForkBuffer ->
+                let read_stdout = Option.value_exn read_stdout in
+                let read_stderr = Option.value_exn read_stderr in
+                let write_stdout = Option.value_exn write_stdout in
+                let write_stderr = Option.value_exn write_stderr in
+                Core_unix.close read_stdout;
+                Core_unix.close read_stderr;
+                if phys_equal write_stdout proc.stdout then ()
+                else Core_unix.close write_stdout;
+                if phys_equal write_stderr proc.stderr then ()
+                else Core_unix.close write_stderr);
 
             Core_unix.dup2 ~src:proc.stdin ~dst:Core_unix.stdin ();
             Core_unix.dup2 ~src:proc.stdout ~dst:Core_unix.stdout ();
@@ -71,27 +98,22 @@ module Prod : Sig = struct
 
     let pids = get_pids proc in
 
-    Core_unix.close write_stdout;
-    Core_unix.close write_stderr;
-
-    (* See BUFSIZ in stdio.h *)
-    let bufsiz = 8192 in
+    (match mode with
+    | BlockInherit -> ()
+    | BlockBuffer | ForkBuffer ->
+        Core_unix.close @@ Option.value_exn write_stdout;
+        Core_unix.close @@ Option.value_exn write_stderr);
 
     let stdout_buf = Buffer.create 16 in
     let stderr_buf = Buffer.create 16 in
-    let rec select input_fds =
+    let rec select input_fds read_stdout read_stderr =
       (* Should this even have a timeout? *)
       let ready_fds =
-        (Core_unix.select
-           ~timeout:(`After (Time_ns.Span.create ~sec:10 ()))
-           ~except:[] ~write:[]
-           ~read:[ read_stdout; read_stderr ]
+        (Core_unix.select ~timeout:`Never ~except:[] ~write:[] ~read:input_fds
            ())
           .read
       in
       let buf = Bytes.create bufsiz in
-      let stdout_chan = Core_unix.out_channel_of_descr original_stdout in
-      let stderr_chan = Core_unix.out_channel_of_descr original_stderr in
       let input_fds =
         List.fold_left ~init:input_fds ready_fds ~f:(fun input_fds fd ->
             let bytes_read = Core_unix.read ~pos:0 ~len:bufsiz ~buf fd in
@@ -102,32 +124,60 @@ module Prod : Sig = struct
               in
               updated_fds
             else
-              let chan, string_buf =
+              let string_buf =
                 let ( === ) = Core_unix.File_descr.equal in
-                if fd === read_stdout then (stdout_chan, stdout_buf)
-                else if fd === read_stderr then (stderr_chan, stderr_buf)
+                if fd === read_stdout then stdout_buf
+                else if fd === read_stderr then stderr_buf
                 else failwith "Unreachable"
               in
-              Out_channel.output chan ~buf ~pos:0 ~len:bytes_read;
-              Out_channel.flush chan;
               Buffer.add_subbytes string_buf buf ~pos:0 ~len:bytes_read;
               input_fds)
       in
       if List.is_empty input_fds then
         (Buffer.contents stdout_buf, Buffer.contents stderr_buf)
-      else select input_fds
+      else select input_fds read_stdout read_stderr
     in
 
-    (* TODO check $Process.tee *)
-    let stdout, stderr = select [ read_stdout; read_stderr ] in
+    let stdout, stderr =
+      match mode with
+      | BlockInherit -> ("", "")
+      | BlockBuffer | ForkBuffer ->
+          let read_stdout = Option.value_exn read_stdout in
+          let read_stderr = Option.value_exn read_stderr in
+          select [ read_stdout; read_stderr ] read_stdout read_stderr
+    in
 
     (* First is the last in the queue *)
     let last_pid = List.hd_exn pids in
-    (* TODO support non-zero exit codes *)
-    match Core_unix.waitpid last_pid with
-    | Error _ -> Error "Your subprocess failed with a mysterious(?) error"
-    | Ok () ->
-        (* TODO check all the other pids too *)
+
+    let wait pid =
+      (* TODO support non-zero exit codes *)
+      match Core_unix.waitpid pid with
+      | Error e -> (
+          match e with
+          | `Exit_non_zero code ->
+              Error (Printf.sprintf "Your subprocess exited with code %d" code)
+          | `Signal s ->
+              Error
+                (Printf.sprintf "Your subprocess exited on signal %s"
+                @@ Signal.to_string s))
+      | Ok () ->
+          (* TODO check all the other pids too *)
+          Ok Runtime.Null
+    in
+    let open Result.Monad_infix in
+    match mode with
+    | BlockInherit (* ! *) -> wait last_pid
+    | ForkBuffer ->
+        Ok
+          (Runtime.ProcessHandle
+             {
+               pid = last_pid;
+               stdout = Option.value_exn read_stdout;
+               stderr = Option.value_exn read_stderr;
+             })
+    | BlockBuffer ->
+        wait last_pid >>= fun _ ->
         Ok (Runtime.ProcessResult { code = 0; stdout; stderr })
 end
 
@@ -177,11 +227,11 @@ module Make_test () : TestSig = struct
 
   let print_s s = stdout_buffer := s :: !stdout_buffer
 
-  let rec proc_exec (proc : Runtime.process) env =
+  let rec proc_exec ~mode (proc : Runtime.process) env =
     (* Start from the end of the list *)
     (match proc.previous with
     | Some prev ->
-        let _ = proc_exec prev env in
+        let _ = proc_exec ~mode prev env in
         ()
     | None -> ());
     match !proc_expectations |> Option.value_exn with

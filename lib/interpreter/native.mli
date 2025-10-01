@@ -1,12 +1,20 @@
 open Core
 
+type processMode =
+  | BlockInherit (* proc! -> null *)
+  | ForkBuffer (* proc& -> ProcessHandle *)
+  | BlockBuffer (* proc&! -> ProcessResult *)
+
 module type Sig = sig
   val print_s : string -> unit
   val file_read_all : string -> string
   val file_write_all : string -> data:string -> unit
 
   val proc_exec :
-    Runtime.process -> string array -> (Runtime.t, string) Result.t
+    mode:processMode ->
+    Runtime.process ->
+    string array ->
+    (Runtime.t, string) Result.t
 
   val chdir : string -> unit
   val directory_exists : string -> bool

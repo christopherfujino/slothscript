@@ -11,6 +11,12 @@ type process = {
   previous : process option;
 }
 
+type process_handle = {
+  pid : Pid.t;
+  stdout : Core_unix.File_descr.t;
+  stderr : Core_unix.File_descr.t;
+}
+
 type file = { path : string }
 type process_result = { code : int; stdout : string; stderr : string }
 
@@ -25,6 +31,7 @@ type t =
   | Method of t * function_t
   | Prototype of prototype
   | Process of process
+  | ProcessHandle of process_handle
   | ProcessResult of process_result
   | File of file
   | FileHandle
