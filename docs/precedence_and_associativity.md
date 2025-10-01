@@ -30,4 +30,4 @@ From high to low precedence (left-associative):
 - `==`, `!=`, `<`, `<=`, `>`, `>=`
 - `<-`, `->`
 - `and`
-- `or`, `!` (postfix), `&` (postfix)
+- `or`, `!` (postfix), `&` (postfix), `&!` (postfix)
