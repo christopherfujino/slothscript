@@ -81,4 +81,5 @@
 - [x] $script & $scriptDir
 - [x] $env
 - [x] Parser errors
-- [x] Implement exit keyword
+- [x] Implement exit function
+- [x] `&` and `&!` operators for spawning sub-processes
