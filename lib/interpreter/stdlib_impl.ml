@@ -4,7 +4,8 @@ type func_t = {
   name : string;
   arity : int option;
   cb :
-    Runtime.t Context.t -> Runtime.t list ->
+    Runtime.t Context.t ->
+    Runtime.t list ->
     (Runtime.t, Compiler.Ast.breaking_type * Runtime.t) Either.t;
 }
 
@@ -115,7 +116,7 @@ let make_protos m =
             name = "new";
             arity = Some 2;
             cb =
-              (fun _ args ->
+              (fun ctx args ->
                 let arg = List.nth_exn args 1 in
                 match Runtime.list_of_val arg with
                 | None ->
@@ -127,38 +128,85 @@ let make_protos m =
                     in
                     Second (Compiler.Ast.Error err_msg, Runtime.Null)
                 | Some arr ->
-                    let cmd_either =
-                      List.of_array arr (* Not efficient *)
-                      |> List.fold_right ~init:(First []) ~f:(fun t acc ->
-                             match acc with
-                             | First prev -> (
-                                 let string_opt = Runtime.string_of_val t in
-                                 match string_opt with
-                                 | Some s -> First (s :: prev)
-                                 | None ->
-                                     Second
-                                       ( Compiler.Ast.Error
-                                           (Printf.sprintf
-                                              "Expected the first argument to \
-                                               `Process.new` to be a \
-                                               List[String], but got a \
-                                               non-String element"),
-                                         Runtime.Null ))
-                             | Second _ as sec -> sec)
+                    let ( >>= ) left right =
+                      match left with
+                      | Second _ as second -> second
+                      | First first -> right first
                     in
-                    Either.map cmd_either ~second:Fun.id ~first:(fun cmd ->
-                        let proc =
-                          Runtime.
-                            {
-                              cmd;
-                              stdin = Core_unix.stdin; (* TODO grab from context *)
-                              stdout = Core_unix.stdout;
-                              stderr = Core_unix.stderr;
-                              previous = None;
-                              pipes_to_collect = [];
-                            }
-                        in
-                        Runtime.Process proc));
+                    List.of_array arr (* Not efficient *)
+                    |> List.fold_right ~init:(First []) ~f:(fun t acc ->
+                           match acc with
+                           | First prev -> (
+                               let string_opt = Runtime.string_of_val t in
+                               match string_opt with
+                               | Some s -> First (s :: prev)
+                               | None ->
+                                   Second
+                                     ( Compiler.Ast.Error
+                                         (Printf.sprintf
+                                            "Expected the first argument to \
+                                             `Process.new` to be a \
+                                             List[String], but got a \
+                                             non-String element"),
+                                       Runtime.Null ))
+                           | Second _ as sec -> sec)
+                    >>= fun cmd ->
+                    (match
+                       Option.bind (Context.get ctx "$stdin") ~f:(fun stdin_t ->
+                           Runtime.file_descriptor_of_t stdin_t)
+                     with
+                    | Some fd -> First fd
+                    | None ->
+                        (* TODO Should this be recoverable? *)
+                        Second
+                          ( Compiler.Ast.Error
+                              (Printf.sprintf
+                                 "The `$stdin` context variable has an invalid \
+                                  value"),
+                            Runtime.Null ))
+                    >>= fun stdin ->
+                    (match
+                       Option.bind (Context.get ctx "$stdout")
+                         ~f:(fun stdout_t ->
+                           Runtime.file_descriptor_of_t stdout_t)
+                     with
+                    | Some fd -> First fd
+                    | None ->
+                        (* TODO Should this be recoverable? *)
+                        Second
+                          ( Compiler.Ast.Error
+                              (Printf.sprintf
+                                 "The `$stdout` context variable has an \
+                                  invalid value"),
+                            Runtime.Null ))
+                    >>= fun stdout ->
+                    (match
+                       Option.bind (Context.get ctx "$stderr")
+                         ~f:(fun stderr_t ->
+                           Runtime.file_descriptor_of_t stderr_t)
+                     with
+                    | Some fd -> First fd
+                    | None ->
+                        (* TODO Should this be recoverable? *)
+                        Second
+                          ( Compiler.Ast.Error
+                              (Printf.sprintf
+                                 "The `$stderr` context variable has an \
+                                  invalid value"),
+                            Runtime.Null ))
+                    >>= fun stderr ->
+                    let proc =
+                      Runtime.
+                        {
+                          cmd;
+                          stdin;
+                          stdout;
+                          stderr;
+                          previous = None;
+                          pipes_to_collect = [];
+                        }
+                    in
+                    First (Runtime.Process proc));
           };
         ];
     };
@@ -266,8 +314,7 @@ let make_protos m =
             cb =
               (fun _ args ->
                 let path =
-                  List.hd_exn args |> Runtime.directory_of_t
-                  |> Option.value_exn
+                  List.hd_exn args |> Runtime.directory_of_t |> Option.value_exn
                 in
                 let b = M.directory_exists path in
                 First (Runtime.Bool b));
@@ -278,8 +325,7 @@ let make_protos m =
             cb =
               (fun _ args ->
                 let path =
-                  List.hd_exn args |> Runtime.directory_of_t
-                  |> Option.value_exn
+                  List.hd_exn args |> Runtime.directory_of_t |> Option.value_exn
                 in
                 M.mkdir path;
                 First Runtime.Null);
@@ -290,8 +336,7 @@ let make_protos m =
             cb =
               (fun _ args ->
                 let path =
-                  List.hd_exn args |> Runtime.directory_of_t
-                  |> Option.value_exn
+                  List.hd_exn args |> Runtime.directory_of_t |> Option.value_exn
                 in
                 First (Runtime.String path));
           };
