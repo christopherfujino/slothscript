@@ -777,7 +777,13 @@ and is_equal globals is_equality lhs rhs =
           in
           Bool.(is_deep_equal = is_equality)
     | Null -> ( match rhs with Null -> is_equality | _ -> not is_equality)
-    | _ ->
+    | Prototype { name = left_name } -> (
+        match rhs with
+        | Prototype { name = right_name } ->
+            let names_same = String.(left_name = right_name) in
+            Bool.(names_same = is_equality)
+        | _ -> not is_equality)
+    | Func _ | Method _ | _ ->
         Printf.sprintf "is_equal the type %s is not implemented" lh_s
         |> failwith
 

@@ -41,7 +41,7 @@ type t =
   | ProcessHandle of process_handle
   | ProcessResult of process_result
   | File of file
-  | FileHandle
+  | FileDescriptor of Core_unix.File_descr.t
   | Directory of string
 
 (* TODO add positions for error messages *)
@@ -75,7 +75,7 @@ let to_class_name = function
   | ProcessHandle _ -> "ProcessHandle"
   | ProcessResult _ -> "ProcessResult"
   | File _ -> "File"
-  | FileHandle -> "FileHandle"
+  | FileDescriptor _ -> "FileDescriptor"
   | Directory _ -> "Directory"
 
 let rec to_s t' =
@@ -138,7 +138,8 @@ let rec to_s t' =
       Printf.sprintf "ProcessResult(code=%d, stdout=\"%s\", stderr=\"%s\")" code
         stdout stderr
   | File { path } -> Printf.sprintf "File(path=%s)" path
-  | FileHandle -> "FileHandle(TODO)"
+  | FileDescriptor fd ->
+      Printf.sprintf "FileDescriptor(fd=%d)" @@ Core_unix.File_descr.to_int fd
   | Directory path -> Printf.sprintf "Directory(path=%s)" path
 
 let num_of_val = function Num f -> Some f | _ -> None

@@ -36,7 +36,7 @@ type t =
   | ProcessHandle of process_handle
   | ProcessResult of process_result
   | File of file
-  | FileHandle
+  | FileDescriptor of Core_unix.File_descr.t
   | Directory of string
 
 (* TODO make this hidden *)

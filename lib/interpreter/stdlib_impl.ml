@@ -345,11 +345,14 @@ let make_protos m =
 
 let context_ids ~cwd ~env ~script_path ~argv =
   [
+    ( "$argv",
+      Runtime.List
+        (List.to_array @@ List.map argv ~f:(fun s -> Runtime.String s)) );
     ("$cwd", Runtime.String cwd);
     ("$env", Runtime.val_of_env env);
     ("$script", Runtime.String script_path);
     ("$scriptDir", Runtime.String (Filename.dirname script_path));
-    ( "$argv",
-      Runtime.List
-        (List.to_array @@ List.map argv ~f:(fun s -> Runtime.String s)) );
+    ("$stderr", Runtime.FileDescriptor Core_unix.stderr);
+    ("$stdin", Runtime.FileDescriptor Core_unix.stdin);
+    ("$stdout", Runtime.FileDescriptor Core_unix.stdout);
   ]

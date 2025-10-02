@@ -1,0 +1,62 @@
+### Program
+assert($stdout != $stdin)
+assert($stdin != $stderr)
+assert($stdout != $stderr)
+
+### Processes
+()
+
+### Ast
+((StmtDecl
+  (ExprStmt
+    (FuncInvoc
+      (IdRef
+        assert
+        <opaque>)
+      ((Equality
+        (ContextId
+          $stdout
+          <opaque>)
+        (ContextId
+          $stdin
+          <opaque>)
+        false
+        <opaque>))
+      <opaque>)))
+  (StmtDecl
+    (ExprStmt
+      (FuncInvoc
+        (IdRef
+          assert
+          <opaque>)
+        ((Equality
+          (ContextId
+            $stdin
+            <opaque>)
+          (ContextId
+            $stderr
+            <opaque>)
+          false
+          <opaque>))
+        <opaque>)))
+  (StmtDecl
+    (ExprStmt
+      (FuncInvoc
+        (IdRef
+          assert
+          <opaque>)
+        ((Equality
+          (ContextId
+            $stdout
+            <opaque>)
+          (ContextId
+            $stderr
+            <opaque>)
+          false
+          <opaque>))
+        <opaque>))))
+
+### Stdout
+
+
+### Failure
