@@ -344,7 +344,11 @@ module Make_test () : TestSig = struct
                              stderr = unsafe_fd;
                            })))
           | _ ->
-              let msg = Printf.sprintf "TODO (%s)" __LOC__ in
+              let msg =
+                Printf.sprintf "Tried to execute sub-process %s but expected %s"
+                  (List.to_string ~f:Fun.id hd.cmd)
+                  (List.to_string ~f:Fun.id proc.cmd)
+              in
               Error msg)
     in
     rec_proc_exec None proc

@@ -41,7 +41,7 @@ let fail ~globals pos msg =
   raise (Sloth_common.Common.RuntimeError msg)
 
 let invoke_native_func ~globals ~pos cb args =
-  let either = cb args in
+  let either = cb Globals.(globals.context_ids) args in
   match either with
   | First _ as first -> first
   | Second (bt, _) as second -> (
@@ -817,7 +817,47 @@ and is_equal globals is_equality lhs rhs =
         let rhs = Runtime.file_descriptor_of_t rhs |> Option.value_exn in
         let same_fd = Core_unix.File_descr.equal lhs rhs in
         Bool.(same_fd = is_equality)
-    | Func _ | Method _ | _ ->
+    | File { path = lhs } ->
+        let rhs =
+          Runtime.file_of_val rhs |> Option.value_exn ~message:__LOC__
+        in
+        let same_file = String.(lhs = rhs.path) in
+        Bool.(same_file = is_equality)
+    | Directory lhs ->
+        let rhs =
+          Runtime.directory_of_t rhs |> Option.value_exn ~message:__LOC__
+        in
+        let same_dir = String.(lhs = rhs) in
+        Bool.(same_dir = is_equality)
+    | ProcessHandle lhs ->
+        let rhs =
+          Runtime.process_handle_of_t rhs |> Option.value_exn ~message:__LOC__
+        in
+        let same_handle =
+          match lhs with
+          | ProcessInherited left_pid -> (
+              match rhs with
+              | ProcessInherited right_pid -> Pid.(left_pid = right_pid)
+              | _ -> false)
+          | ProcessBuffered
+              { pid = left_pid; stdout = left_stdout; stderr = left_stderr }
+            -> (
+              match rhs with
+              | ProcessBuffered
+                  {
+                    pid = right_pid;
+                    stdout = right_stdout;
+                    stderr = right_stderr;
+                  } ->
+                  Pid.(left_pid = right_pid) >>= fun () ->
+                  Core_unix.File_descr.equal left_stdout right_stdout
+                  >>= fun () ->
+                  Core_unix.File_descr.equal left_stderr right_stderr
+              | _ -> false)
+        in
+        Bool.(same_handle = is_equality)
+    | ProcessResult _ -> failwith "TODO"
+    | Func _ | Method _ ->
         Printf.sprintf "is_equal the type %s is not implemented" lh_s
         |> failwith
 

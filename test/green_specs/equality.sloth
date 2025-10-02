@@ -7,6 +7,8 @@ let matrix = [
   [{"key": "value"}, {"key": "value2"}, "HashMap"],
   [String, Number, "Prototype"],
   [Process.new(["uname"]), Process.new(["uname", "-a"]), "Process"],
+  # These are different because they have different PIDs
+  ["uname"&, "uname"&, "ProcessHandle"],
 ]
 
 for arr in matrix {
@@ -26,7 +28,14 @@ assert(null == null)
 assert(not (null != null))
 
 ### Processes
-()
+(((cmd
+  (uname))
+  (instructions
+    ()))
+  ((cmd
+    (uname))
+    (instructions
+      ())))
 
 ### Ast
 ((StmtDecl
@@ -180,6 +189,35 @@ assert(not (null != null))
               (String
                 ((FullString
                   Process
+                  <opaque>))
+                <opaque>))
+            <opaque>)
+          (List
+            ((UnaryExpr
+              (target
+                (String
+                  ((FullString
+                    uname
+                    <opaque>))
+                  <opaque>))
+              (pos
+                <opaque>)
+              (operator
+                Ampersand))
+              (UnaryExpr
+                (target
+                  (String
+                    ((FullString
+                      uname
+                      <opaque>))
+                    <opaque>))
+                (pos
+                  <opaque>)
+                (operator
+                  Ampersand))
+              (String
+                ((FullString
+                  ProcessHandle
                   <opaque>))
                 <opaque>))
             <opaque>))

@@ -41,7 +41,9 @@ type t =
 
 (* TODO make this hidden *)
 and function_t =
-  | Native of { cb : t list -> (t, Compiler.Ast.breaking_type * t) Either.t }
+  | Native of {
+      cb : t Context.t -> t list -> (t, Compiler.Ast.breaking_type * t) Either.t;
+    }
   | User of {
       parameters : string list;
       block : Compiler.Optimizer.stmt list;
@@ -58,7 +60,7 @@ type class_lookup = (string, class_t) Hashtbl.t
 
 val to_s : t -> string
 val bool_of_val : t -> bool option
-val directory_of_val : t -> string option
+val directory_of_t : t -> string option
 val env_of_val : t -> string array option
 val file_of_val : t -> file option
 val file_descriptor_of_t : t -> Core_unix.File_descr.t option
@@ -68,7 +70,7 @@ val int_of_val : t -> int option
 val list_of_val : t -> t Array.t option
 val method_of_val : t -> (t * function_t) option
 val num_of_val : t -> float option
-val process_handle_of_val : t -> process_handle option
+val process_handle_of_t : t -> process_handle option
 val process_of_val : t -> process option
 val process_result_of_val : t -> process_result option
 val string_of_val : t -> string option

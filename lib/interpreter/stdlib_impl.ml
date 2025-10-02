@@ -4,7 +4,7 @@ type func_t = {
   name : string;
   arity : int option;
   cb :
-    Runtime.t list ->
+    Runtime.t Context.t -> Runtime.t list ->
     (Runtime.t, Compiler.Ast.breaking_type * Runtime.t) Either.t;
 }
 
@@ -15,7 +15,7 @@ let make_ids m =
       name = "print";
       arity = Some 1;
       cb =
-        (fun args ->
+        (fun _ args ->
           let arg = List.hd_exn args in
           Runtime.to_s arg |> M.print_s;
           M.print_s "\n";
@@ -25,7 +25,7 @@ let make_ids m =
       name = "exit";
       arity = Some 1;
       cb =
-        (fun args ->
+        (fun _ args ->
           let arg = List.hd_exn args in
           match Runtime.int_of_val arg with
           | Some code -> Second (Compiler.Ast.Exit code, Runtime.Null)
@@ -42,7 +42,7 @@ let make_ids m =
       arity = None;
       (* could be 1 or 2 *)
       cb =
-        (fun args ->
+        (fun _ args ->
           let arg = List.hd_exn args in
           let second_arg = List.nth args 1 in
           let res =
@@ -95,7 +95,7 @@ let make_protos m =
             name = "length";
             arity = Some 1;
             cb =
-              (fun args ->
+              (fun _ args ->
                 let arg = List.hd_exn args in
                 let arr_of_ts =
                   Runtime.list_of_val arg |> Option.value_exn ~message:__LOC__
@@ -115,7 +115,7 @@ let make_protos m =
             name = "new";
             arity = Some 2;
             cb =
-              (fun args ->
+              (fun _ args ->
                 let arg = List.nth_exn args 1 in
                 match Runtime.list_of_val arg with
                 | None ->
@@ -151,7 +151,7 @@ let make_protos m =
                           Runtime.
                             {
                               cmd;
-                              stdin = Core_unix.stdin;
+                              stdin = Core_unix.stdin; (* TODO grab from context *)
                               stdout = Core_unix.stdout;
                               stderr = Core_unix.stderr;
                               previous = None;
@@ -170,10 +170,10 @@ let make_protos m =
             name = "wait";
             arity = Some 1;
             cb =
-              (fun args ->
+              (fun _ args ->
                 let handle = List.hd_exn args in
                 let handle =
-                  Runtime.process_handle_of_val handle |> Option.value_exn
+                  Runtime.process_handle_of_t handle |> Option.value_exn
                 in
                 let res =
                   match handle with
@@ -196,7 +196,7 @@ let make_protos m =
             name = "stdout";
             arity = Some 1;
             cb =
-              (fun args ->
+              (fun _ args ->
                 let proc = List.hd_exn args in
                 let result =
                   Runtime.process_result_of_val proc |> Option.value_exn
@@ -214,7 +214,7 @@ let make_protos m =
             name = "merge";
             arity = Some 2;
             cb =
-              (fun args ->
+              (fun _ args ->
                 let left =
                   List.hd_exn args |> Runtime.hashmap_of_val |> Option.value_exn
                 in
@@ -246,7 +246,7 @@ let make_protos m =
             name = "trim";
             arity = Some 1;
             cb =
-              (fun args ->
+              (fun _ args ->
                 let str = List.hd_exn args in
                 let ocaml_string =
                   Runtime.string_of_val str |> Option.value_exn
@@ -264,9 +264,9 @@ let make_protos m =
             name = "exists";
             arity = Some 1;
             cb =
-              (fun args ->
+              (fun _ args ->
                 let path =
-                  List.hd_exn args |> Runtime.directory_of_val
+                  List.hd_exn args |> Runtime.directory_of_t
                   |> Option.value_exn
                 in
                 let b = M.directory_exists path in
@@ -276,9 +276,9 @@ let make_protos m =
             name = "create";
             arity = Some 1;
             cb =
-              (fun args ->
+              (fun _ args ->
                 let path =
-                  List.hd_exn args |> Runtime.directory_of_val
+                  List.hd_exn args |> Runtime.directory_of_t
                   |> Option.value_exn
                 in
                 M.mkdir path;
@@ -288,9 +288,9 @@ let make_protos m =
             name = "path";
             arity = Some 1;
             cb =
-              (fun args ->
+              (fun _ args ->
                 let path =
-                  List.hd_exn args |> Runtime.directory_of_val
+                  List.hd_exn args |> Runtime.directory_of_t
                   |> Option.value_exn
                 in
                 First (Runtime.String path));
@@ -306,7 +306,7 @@ let make_protos m =
             name = "readString";
             arity = Some 2;
             cb =
-              (fun args ->
+              (fun _ args ->
                 let first_arg = List.nth_exn args 1 in
                 let Runtime.{ path } =
                   match Runtime.file_of_val first_arg with
@@ -324,7 +324,7 @@ let make_protos m =
             name = "new";
             arity = Some 2;
             cb =
-              (fun args ->
+              (fun _ args ->
                 let first_arg = List.nth_exn args 1 in
                 (match Runtime.string_of_val first_arg with
                 | None ->
