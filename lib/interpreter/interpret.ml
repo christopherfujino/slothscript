@@ -64,17 +64,11 @@ and interpret_decl (globals : Globals.t) decl :
     Globals.t * (Runtime.t, Compiler.Ast.breaking_type * Runtime.t) Either.t =
   let open Compiler.Optimizer in
   match decl with
-  | FuncDecl { name; parameters; block; pos = _ } ->
+  | FuncDecl { name; parameters; block; pos } ->
       let parameters = List.map parameters ~f:(fun (name, _) -> name) in
       let f =
         Runtime.Func
-          (User
-             {
-               parameters;
-               block;
-               (* TODO this should snapshot *)
-               identifiers = globals.identifiers;
-             })
+          (User { parameters; block; identifiers = globals.identifiers; pos })
       in
       (match Identifiers.bind globals.identifiers name f with
       | Some () -> ()
@@ -245,7 +239,7 @@ and interpret_expr globals expr :
       interpret_expr globals receiver >>= fun globals -> function
       | Func f -> (
           match f with
-          | User { parameters; block; identifiers } ->
+          | User { parameters; block; identifiers; pos = _ } ->
               let identifiers2 = Identifiers.push_empty identifiers in
               (* Bind args to env *)
               let or_unequal =
@@ -260,6 +254,7 @@ and interpret_expr globals expr :
               (match or_unequal with
               | Ok tuple -> tuple
               | Unequal_lengths ->
+                  (* TODO use the User.pos field *)
                   Printf.sprintf
                     "You passed %d arguments to a function that expected %d"
                     (List.length args) (List.length parameters)
@@ -338,10 +333,11 @@ and interpret_expr globals expr :
                   (Printf.sprintf "Tried to invoke %s, but it is not a function"
                      (Runtime.to_s t)),
                 Runtime.Null ) ))
-  | FuncExpr { parameters; block; _ } ->
+  | FuncExpr { parameters; block; pos } ->
       let parameters = List.map parameters ~f:(fun (name, _) -> name) in
       let u =
-        Runtime.User { parameters; block; identifiers = globals.identifiers }
+        Runtime.User
+          { parameters; block; identifiers = globals.identifiers; pos }
       in
       let f = Runtime.Func u in
       (globals, First f)

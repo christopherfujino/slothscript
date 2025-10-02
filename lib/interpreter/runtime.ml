@@ -51,6 +51,7 @@ and function_t =
       parameters : string list;
       block : Compiler.Optimizer.stmt list;
       identifiers : t Identifiers.t;
+      pos : Lexing.position;
     }
 
 type class_t = {
