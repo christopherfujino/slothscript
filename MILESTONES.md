@@ -1,29 +1,27 @@
 # Milestones
 
-## v0.1 - initial version
+## v0.1 - initially tagged version
 - [ ] error handling (`let result = mayError() catch (e) DEFAULT;`)
+- [ ] STDERR
 - [ ] Stack traces
 - [ ] Language versioning
 - [ ] Standard Library
   - `List` methods
   - `String` methods
   - `$Process.allowNonzero : Bool`
-  - `$Process.mirror : Bool`
-- [ ] string escapes
 
 ## v0.2 - initial pre-release
-- [ ] STDERR
-- [ ] Optional function parameters
-- [ ] statically link readline
 - [ ] Regular expressions
-- [ ] JSON module
+- [ ] Test suite
+- [ ] Security policy
 
 ## v1.0
-- [ ] Test suite
 - [ ] Formatter
 - [ ] LSP server
-- [ ] Security policy
 - [ ] Binary builds
+- [ ] JSON module
+- [ ] statically link readline
+- [ ] Optional function parameters
 
 ## Stretch goals
 - [ ] Unicode strings
@@ -82,4 +80,4 @@
 - [x] Parser errors
 - [x] Implement exit function
 - [x] `&` and `&!` operators for spawning sub-processes
-- [ ] CLI args
+- [x] CLI args
