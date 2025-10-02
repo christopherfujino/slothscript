@@ -732,50 +732,47 @@ and is_equal globals is_equality lhs rhs =
   let same_class = String.equal lh_s rh_s in
   (* if ==, then return false; if !=, then return true *)
   if not same_class then not is_equality
-  else if not @@ String.equal lh_s rh_s then false
   else
+    let ( >>= ) left right = if not left then left else right () in
     match lhs with
-    | String lh_s -> (
+    | String lh_s ->
         let rh_s = Runtime.string_of_val rhs |> Option.value_exn in
-        match is_equality with
-        | true -> String.equal lh_s rh_s
-        | false -> not @@ String.equal lh_s rh_s)
-    | Num lhs -> (
+        let same_string = String.equal lh_s rh_s in
+        Bool.(same_string = is_equality)
+    | Num lhs ->
         let rhs = Runtime.num_of_val rhs |> Option.value_exn in
-        match is_equality with
-        | true -> Float.equal lhs rhs
-        | false -> not @@ Float.equal lhs rhs)
-    | Bool lhs -> (
+        let same_float = Float.equal lhs rhs in
+        Bool.(same_float = is_equality)
+    | Bool lhs ->
         let rhs = Runtime.bool_of_val rhs |> Option.value_exn in
-        match is_equality with
-        | true -> Bool.(lhs = rhs)
-        | false -> Bool.((not lhs) = rhs))
+        let same_bool = Bool.( = ) lhs rhs in
+        Bool.( = ) same_bool is_equality
     | List lhs ->
         let rhs = Runtime.list_of_val rhs |> Option.value_exn in
         let left_len = Array.length lhs in
         let right_len = Array.length rhs in
-        if (not is_equality) && not (phys_equal left_len right_len) then true
-        else
-          let is_deep_equal = Array.equal (is_equal globals true) lhs rhs in
-          Bool.(is_deep_equal = is_equality)
+        let same_list =
+          left_len = right_len >>= fun () ->
+          Array.equal (is_equal globals true) lhs rhs
+        in
+        Bool.(same_list = is_equality)
     | HashMap lhs ->
         let rhs = Runtime.hashmap_of_val rhs |> Option.value_exn in
         let left_len = Stdlib.Hashtbl.length lhs in
         let right_len = Stdlib.Hashtbl.length rhs in
-        if (not is_equality) && not (phys_equal left_len right_len) then true
-        else
-          let is_deep_equal =
-            Stdlib.Hashtbl.fold
-              (fun key left_value equal_so_far ->
-                if not equal_so_far then false
-                else
-                  match Stdlib.Hashtbl.find_opt rhs key with
-                  | None -> false
-                  | Some right_value ->
-                      is_equal globals true left_value right_value)
-              lhs true
-          in
-          Bool.(is_deep_equal = is_equality)
+        let same_table =
+          left_len = right_len >>= fun () ->
+          Stdlib.Hashtbl.fold
+            (fun key left_value equal_so_far ->
+              if not equal_so_far then false
+              else
+                match Stdlib.Hashtbl.find_opt rhs key with
+                | None -> false
+                | Some right_value ->
+                    is_equal globals true left_value right_value)
+            lhs true
+        in
+        Bool.(same_table = is_equality)
     | Null -> ( match rhs with Null -> is_equality | _ -> not is_equality)
     | Prototype { name = left_name } -> (
         match rhs with
@@ -783,6 +780,43 @@ and is_equal globals is_equality lhs rhs =
             let names_same = String.(left_name = right_name) in
             Bool.(names_same = is_equality)
         | _ -> not is_equality)
+    | Process lhs ->
+        let rhs =
+          Runtime.process_of_val rhs |> Option.value_exn ~message:__LOC__
+        in
+        let rec inner_proc (lhs : Runtime.process) (rhs : Runtime.process) =
+          let same_proc =
+            (match
+               List.fold2 lhs.cmd rhs.cmd ~init:true
+                 ~f:(fun all_same left right ->
+                   if all_same then String.(left = right) else false)
+             with
+            | Ok b -> b
+            | Unequal_lengths -> false)
+            >>= fun () ->
+            Core_unix.File_descr.equal lhs.stdout rhs.stdout >>= fun () ->
+            Core_unix.File_descr.equal lhs.stderr rhs.stderr >>= fun () ->
+            Core_unix.File_descr.equal lhs.stdin rhs.stdin >>= fun () ->
+            match
+              List.fold2 lhs.pipes_to_collect rhs.pipes_to_collect ~init:true
+                ~f:(fun all_same left right ->
+                  if all_same then Core_unix.File_descr.equal left right
+                  else false)
+            with
+            | Ok b -> b
+            | Unequal_lengths ->
+                false >>= fun () ->
+                Option.equal
+                  (fun proc1 proc2 -> inner_proc proc1 proc2)
+                  lhs.previous rhs.previous
+          in
+          Bool.(same_proc = is_equality)
+        in
+        inner_proc lhs rhs
+    | FileDescriptor lhs ->
+        let rhs = Runtime.file_descriptor_of_t rhs |> Option.value_exn in
+        let same_fd = Core_unix.File_descr.equal lhs rhs in
+        Bool.(same_fd = is_equality)
     | Func _ | Method _ | _ ->
         Printf.sprintf "is_equal the type %s is not implemented" lh_s
         |> failwith

@@ -57,19 +57,20 @@ type class_t = {
 type class_lookup = (string, class_t) Hashtbl.t
 
 val to_s : t -> string
-val num_of_val : t -> float option
-val string_of_val : t -> string option
-val int_of_val : t -> int option
 val bool_of_val : t -> bool option
-val list_of_val : t -> t Array.t option
-val hashmap_of_val : t -> (t, t) Stdlib.Hashtbl.t option
-val process_of_val : t -> process option
-val process_handle_of_val : t -> process_handle option
-val process_result_of_val : t -> process_result option
-val func_of_val : t -> function_t option
-val method_of_val : t -> (t * function_t) option
-val file_of_val : t -> file option
 val directory_of_val : t -> string option
-val to_class_name : t -> string
-val val_of_env : string array -> t
 val env_of_val : t -> string array option
+val file_of_val : t -> file option
+val file_descriptor_of_t : t -> Core_unix.File_descr.t option
+val func_of_val : t -> function_t option
+val hashmap_of_val : t -> (t, t) Stdlib.Hashtbl.t option
+val int_of_val : t -> int option
+val list_of_val : t -> t Array.t option
+val method_of_val : t -> (t * function_t) option
+val num_of_val : t -> float option
+val process_handle_of_val : t -> process_handle option
+val process_of_val : t -> process option
+val process_result_of_val : t -> process_result option
+val string_of_val : t -> string option
+val val_of_env : string array -> t
+val to_class_name : t -> string
