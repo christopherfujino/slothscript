@@ -11,6 +11,7 @@ print(l[getTwo()]);
 print(l[2 + 3]);
 l[1] = 2.5;
 print(l);
+assert(l.length() == 6)
 
 ### Processes
 ()

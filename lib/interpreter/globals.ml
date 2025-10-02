@@ -10,9 +10,10 @@ type t = {
   classes : Runtime.class_lookup;
   src : string;
   script_path : string;
+  argv : string list;
 }
 
-let make_globals m src script_path ~env =
+let make_globals m src script_path ~argv ~env =
   let module M = (val m : Native.Sig) in
   let classes = Hashtbl.create (module String) in
   let identifiers = Identifiers.create () in
@@ -138,6 +139,10 @@ let make_globals m src script_path ~env =
         let script_dir = Filename.dirname script_path in
         Context.bind context_ids "$scriptDir" (Runtime.String script_dir)
         |> Option.value_exn
+    | "$argv" ->
+        let t_list = List.map argv ~f:(fun s -> Runtime.String s) in
+        let list_t = Runtime.List (List.to_array t_list) in
+        Context.bind context_ids "$argv" list_t |> Option.value_exn
     | _ as name ->
         Printf.sprintf
           "TODO: You have not yet implemented the context var %s at %s" name
@@ -418,4 +423,4 @@ let make_globals m src script_path ~env =
       Identifiers.bind identifiers name (Runtime.Prototype { name })
       |> Option.value_exn);
 
-  { l = m; identifiers; src; classes; context_ids; script_path }
+  { l = m; identifiers; src; classes; context_ids; script_path; argv }

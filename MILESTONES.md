@@ -9,7 +9,6 @@
   - `String` methods
   - `$Process.allowNonzero : Bool`
   - `$Process.mirror : Bool`
-- [ ] CLI args
 - [ ] string escapes
 
 ## v0.2 - initial pre-release
@@ -83,3 +82,4 @@
 - [x] Parser errors
 - [x] Implement exit function
 - [x] `&` and `&!` operators for spawning sub-processes
+- [ ] CLI args

@@ -50,14 +50,15 @@ let make_test spec =
   (* Interpreter *)
   let lib = Interpreter.Native.make_test proc_spec in
   let module Lib = (val lib) in
-  let ctx =
+  let globals =
     Interpreter.Globals.make_globals
       (module Lib)
       spec.program "/parent/unit_test.sloth" ~env:[| "UNIT_TEST=true" |]
+      ~argv:[]
   in
   let either =
     match
-      wrap_error (fun () -> Interpreter.Interpret.interpret_prog ctx prog)
+      wrap_error (fun () -> Interpreter.Interpret.interpret_prog globals prog)
     with
     | Error msg -> assert_failure msg
     | Ok (_, either) -> either
@@ -132,12 +133,12 @@ let make_failing_test spec =
     let proc_spec = Interpreter.Mock_process.spec_of_string spec.proc_spec in
     let lib = Interpreter.Native.make_test proc_spec in
     let module Lib = (val lib) in
-    let ctx =
+    let globals =
       Interpreter.Globals.make_globals
         (module Lib)
-        spec.program "unit_test.sloth" ~env:[||]
+        spec.program "unit_test.sloth" ~env:[||] ~argv:[]
     in
-    let _, either = Interpreter.Interpret.interpret_prog ctx prog in
+    let _, either = Interpreter.Interpret.interpret_prog globals prog in
     match either with
     | First _ ->
         let buf_s =

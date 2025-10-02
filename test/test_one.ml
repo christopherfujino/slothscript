@@ -31,7 +31,7 @@ let () =
         let globals =
           Interpreter.Globals.make_globals
             (module M)
-            spec.program test ~env:[| "UNIT_TEST=true" |]
+            spec.program test ~env:[| "UNIT_TEST=true" |] ~argv:[]
         in
 
         let _, _ = Interpreter.Interpret.interpret_prog globals ir in
