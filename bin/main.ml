@@ -71,8 +71,7 @@ let interpreter path argv =
   let globals =
     Globals.make_globals
       (module Native.Prod)
-      ~argv
-      program path ~env:(Core_unix.environment ())
+      ~argv program path ~env:(Core_unix.environment ())
   in
 
   let result =

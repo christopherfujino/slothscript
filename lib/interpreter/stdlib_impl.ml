@@ -8,7 +8,6 @@ type func_t = {
     (Runtime.t, Compiler.Ast.breaking_type * Runtime.t) Either.t;
 }
 
-(* TODO test that these match the interface *)
 let make_ids m =
   let module M = (val m : Native.Sig) in
   [
