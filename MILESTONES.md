@@ -2,7 +2,6 @@
 
 ## v0.1 - initially tagged version
 - [ ] error handling (`let result = mayError() catch (e) DEFAULT;`)
-- [ ] STDERR
 - [ ] Stack traces
 - [ ] Language versioning
 - [ ] Standard Library
@@ -81,3 +80,4 @@
 - [x] Implement exit function
 - [x] `&` and `&!` operators for spawning sub-processes
 - [x] CLI args
+- [x] $stdin, $stderr
