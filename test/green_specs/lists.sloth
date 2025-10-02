@@ -1,6 +1,3 @@
-### Name
-Lists
-
 ### Program
 func getTwo() {
   2;
@@ -119,6 +116,28 @@ assert(l.length() == 6)
           <opaque>)
         ((IdRef
           l
+          <opaque>))
+        <opaque>)))
+  (StmtDecl
+    (ExprStmt
+      (FuncInvoc
+        (IdRef
+          assert
+          <opaque>)
+        ((Equality
+          (FuncInvoc
+            (ObjDeref
+              (IdRef
+                l
+                <opaque>)
+              length
+              <opaque>)
+            ()
+            <opaque>)
+          (Num
+            6
+            <opaque>)
+          true
           <opaque>))
         <opaque>))))
 

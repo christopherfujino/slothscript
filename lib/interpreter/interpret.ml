@@ -284,7 +284,7 @@ and interpret_expr globals expr :
               (* Note, Return has already been unwrapped *)
               let _, either = traverse_stmts temp_globals block in
               (globals, either)
-          | Native { cb; parameters = _; identifiers = _ } ->
+          | Native { cb } ->
               List.fold args ~init:(globals, First []) ~f:(fun acc arg ->
                   acc >>= fun globals prev ->
                   interpret_expr globals arg >>= fun globals arg ->
@@ -296,7 +296,7 @@ and interpret_expr globals expr :
               (globals, invoke_native_func ~globals ~pos cb args))
       | Method (receiver, func_t) -> (
           match func_t with
-          | Native { cb; parameters = _; identifiers = _ } ->
+          | Native { cb } ->
               List.fold args ~init:(globals, First []) ~f:(fun acc arg ->
                   acc >>= fun globals prev ->
                   interpret_expr globals arg >>= fun globals arg ->

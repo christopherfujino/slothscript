@@ -13,6 +13,7 @@ let globals =
     context_ids = [ "$cwd"; "$scriptDir"; "$script"; "$env"; "$argv" ];
     protos =
       [
+        { name = "List"; methods = [ "length" ]; static_members = [] };
         { name = "Process"; methods = []; static_members = [ "new" ] };
         { name = "ProcessHandle"; methods = [ "wait" ]; static_members = [] };
         { name = "ProcessResult"; methods = [ "stdout" ]; static_members = [] };
