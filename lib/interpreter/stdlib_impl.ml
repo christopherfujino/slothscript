@@ -9,6 +9,9 @@ type func_t = {
     (Runtime.t, Compiler.Ast.breaking_type * Runtime.t) Either.t;
 }
 
+let ( >>= ) left right =
+  match left with Second _ as second -> second | First first -> right first
+
 let make_ids m =
   let module M = (val m : Native.Sig) in
   [
@@ -128,11 +131,6 @@ let make_protos m =
                     in
                     Second (Compiler.Ast.Error err_msg, Runtime.Null)
                 | Some arr ->
-                    let ( >>= ) left right =
-                      match left with
-                      | Second _ as second -> second
-                      | First first -> right first
-                    in
                     List.of_array arr (* Not efficient *)
                     |> List.fold_right ~init:(First []) ~f:(fun t acc ->
                            match acc with
@@ -151,50 +149,27 @@ let make_protos m =
                                        Runtime.Null ))
                            | Second _ as sec -> sec)
                     >>= fun cmd ->
-                    (match
-                       Option.bind (Context.get ctx "$stdin") ~f:(fun stdin_t ->
-                           Runtime.file_descriptor_of_t stdin_t)
-                     with
-                    | Some fd -> First fd
-                    | None ->
-                        (* TODO Should this be recoverable? *)
-                        Second
-                          ( Compiler.Ast.Error
-                              (Printf.sprintf
-                                 "The `$stdin` context variable has an invalid \
-                                  value"),
-                            Runtime.Null ))
-                    >>= fun stdin ->
-                    (match
-                       Option.bind (Context.get ctx "$stdout")
-                         ~f:(fun stdout_t ->
-                           Runtime.file_descriptor_of_t stdout_t)
-                     with
-                    | Some fd -> First fd
-                    | None ->
-                        (* TODO Should this be recoverable? *)
-                        Second
-                          ( Compiler.Ast.Error
-                              (Printf.sprintf
-                                 "The `$stdout` context variable has an \
-                                  invalid value"),
-                            Runtime.Null ))
-                    >>= fun stdout ->
-                    (match
-                       Option.bind (Context.get ctx "$stderr")
-                         ~f:(fun stderr_t ->
-                           Runtime.file_descriptor_of_t stderr_t)
-                     with
-                    | Some fd -> First fd
-                    | None ->
-                        (* TODO Should this be recoverable? *)
-                        Second
-                          ( Compiler.Ast.Error
-                              (Printf.sprintf
-                                 "The `$stderr` context variable has an \
-                                  invalid value"),
-                            Runtime.Null ))
-                    >>= fun stderr ->
+                    let unwrap_fd identifier =
+                      let t' =
+                        Context.get ctx identifier
+                        |> Option.value_exn
+                             ~message:
+                               (Printf.sprintf
+                                  "The context variable `%s` has been unset"
+                                  identifier)
+                      in
+                      Runtime.file_descriptor_of_t t'
+                      |> Option.value_exn
+                           ~message:
+                             (Printf.sprintf
+                                "Expected `%s` to be of type `FileDescriptor`, \
+                                 but instead it was %s"
+                                identifier
+                             @@ Runtime.to_s t')
+                    in
+                    let stdin = unwrap_fd "$stdin" in
+                    let stdout = unwrap_fd "$stdout" in
+                    let stderr = unwrap_fd "$stderr" in
                     let proc =
                       Runtime.
                         {

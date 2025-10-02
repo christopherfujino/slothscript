@@ -41,7 +41,10 @@ let fail ~globals pos msg =
   raise (Sloth_common.Common.RuntimeError msg)
 
 let invoke_native_func ~globals ~pos cb args =
-  let either = cb Globals.(globals.context_ids) args in
+  let either =
+    try cb Globals.(globals.context_ids) args
+    with Failure msg -> fail ~globals pos msg
+  in
   match either with
   | First _ as first -> first
   | Second (bt, _) as second -> (
