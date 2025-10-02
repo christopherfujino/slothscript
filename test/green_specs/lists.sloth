@@ -1,6 +1,3 @@
-### Name
-Lists
-
 ### Program
 func getTwo() {
   2;
@@ -11,6 +8,7 @@ print(l[getTwo()]);
 print(l[2 + 3]);
 l[1] = 2.5;
 print(l);
+assert(l.length() == 6)
 
 ### Processes
 ()
@@ -118,6 +116,28 @@ print(l);
           <opaque>)
         ((IdRef
           l
+          <opaque>))
+        <opaque>)))
+  (StmtDecl
+    (ExprStmt
+      (FuncInvoc
+        (IdRef
+          assert
+          <opaque>)
+        ((Equality
+          (FuncInvoc
+            (ObjDeref
+              (IdRef
+                l
+                <opaque>)
+              length
+              <opaque>)
+            ()
+            <opaque>)
+          (Num
+            6
+            <opaque>)
+          true
           <opaque>))
         <opaque>))))
 

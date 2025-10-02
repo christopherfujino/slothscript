@@ -63,6 +63,67 @@ let escape () =
           [ "this should be \"only a single\" string" ] );
   ]
 
+let compare_two_string_lists interfaces implementations =
+  List.iter interfaces ~f:(fun interface ->
+      match List.find implementations ~f:(String.( = ) interface) with
+      | None ->
+          Printf.sprintf "You have not implemented %s" interface
+          |> assert_failure
+      | Some _ -> ());
+
+  if List.length interfaces = List.length implementations then ()
+  else
+    List.iter implementations ~f:(fun implementation ->
+        match List.find interfaces ~f:(String.( = ) implementation) with
+        | None ->
+            Printf.sprintf
+              "The implementation for %s is not defined as an interface"
+              implementation
+            |> assert_failure
+        | Some _ -> ())
+
+let stdlib_interface_and_impl_match _ =
+  let m = Interpreter.Native.make_test Interpreter.Mock_process.empty_spec in
+  let module M = (val m) in
+  let interface = Sloth_common.Stdlib_interface.globals in
+  let impl_ids =
+    Interpreter.Stdlib_impl.make_ids (module M)
+    |> List.map ~f:(fun (f : Interpreter.Stdlib_impl.func_t) -> f.name)
+  in
+  let impl_context_ids =
+    Interpreter.Stdlib_impl.context_ids ~cwd:"/home/user"
+      ~env:[| "USER=sloth" |] ~script_path:"/home/user/script.sloth" ~argv:[]
+    |> List.map ~f:(fun (name, _) -> name)
+  in
+  compare_two_string_lists interface.ids impl_ids;
+  compare_two_string_lists interface.context_ids impl_context_ids;
+
+  let impl_protos = Interpreter.Stdlib_impl.make_protos (module M) in
+  List.iter interface.protos ~f:(fun interface_proto ->
+      let has_impl =
+        List.fold impl_protos ~init:false
+          ~f:(fun found { name; methods; static_members } ->
+            if found then true
+            else if String.(name = interface_proto.name) then (
+              let impl_methods = List.map methods ~f:(fun meth -> meth.name) in
+              compare_two_string_lists interface_proto.methods impl_methods;
+              let impl_statics =
+                List.map static_members ~f:(fun static -> static.name)
+              in
+              compare_two_string_lists interface_proto.static_members
+                impl_statics;
+              true)
+            else false)
+      in
+      if not has_impl then
+        Printf.sprintf
+          "The interface prototype %s does not have an implementation"
+          interface_proto.name
+        |> assert_failure);
+  if not (List.length interface.protos = List.length impl_protos) then
+    assert_failure
+      "You have more prototype implementations than interfaces TODO: message"
+
 let get () =
   let f =
    fun tuple ->
@@ -72,4 +133,6 @@ let get () =
   [
     "shell_like_escape" >::: List.map (escape ()) ~f;
     "pretty" >::: List.map pretty ~f;
+    "STDLIB interface & implementation match"
+    >:: stdlib_interface_and_impl_match;
   ]

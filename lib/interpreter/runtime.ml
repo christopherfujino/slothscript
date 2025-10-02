@@ -46,12 +46,7 @@ type t =
 
 (* TODO add positions for error messages *)
 and function_t =
-  (* TODO this prob doesn't need params or identifiers *)
-  | Native of {
-      parameters : string list;
-      cb : t list -> (t, Compiler.Ast.breaking_type * t) Either.t;
-      identifiers : t Identifiers.t;
-    }
+  | Native of { cb : t list -> (t, Compiler.Ast.breaking_type * t) Either.t }
   | User of {
       parameters : string list;
       block : Compiler.Optimizer.stmt list;

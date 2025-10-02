@@ -41,11 +41,7 @@ type t =
 
 (* TODO make this hidden *)
 and function_t =
-  | Native of {
-      parameters : string list;
-      cb : t list -> (t, Compiler.Ast.breaking_type * t) Either.t;
-      identifiers : t Identifiers.t;
-    }
+  | Native of { cb : t list -> (t, Compiler.Ast.breaking_type * t) Either.t }
   | User of {
       parameters : string list;
       block : Compiler.Optimizer.stmt list;

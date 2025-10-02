@@ -14,7 +14,7 @@ let repl () =
   let globals =
     Globals.make_globals
       (module Native.Prod)
-      "" "REPL" ~env:(Core_unix.environment ())
+      "" "REPL" ~env:(Core_unix.environment ()) ~argv:[]
   in
   let env = Compiler.Environment.create "" |> Compiler.Environment.populate in
   let rec repl_inner globals env =
@@ -63,7 +63,7 @@ let repl () =
   in
   repl_inner globals env
 
-let interpreter path =
+let interpreter path argv =
   let program = In_channel.read_all path in
   let env =
     Compiler.Environment.create program |> Compiler.Environment.populate
@@ -71,7 +71,7 @@ let interpreter path =
   let globals =
     Globals.make_globals
       (module Native.Prod)
-      program path ~env:(Core_unix.environment ())
+      ~argv program path ~env:(Core_unix.environment ())
   in
 
   let result =
@@ -103,8 +103,9 @@ let () =
   let argv = Sys.get_argv () in
   let argc = Array.length argv in
   match argc with
-  | 2 ->
-      let script = Array.get argv 1 in
-      interpreter script
   | 1 -> repl ()
-  | _ -> Printf.sprintf "TODO: implement sub-commands" |> failwith
+  | _ when argc > 1 ->
+      let script = Array.get argv 1 in
+      let actual_args = Array.to_list argv |> List.sub ~pos:2 ~len:(argc - 2) in
+      interpreter script actual_args
+  | _ -> Sloth_common.Common.internal_failure __LOC__
