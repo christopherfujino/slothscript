@@ -44,11 +44,16 @@ type t =
   | FileDescriptor of Core_unix.File_descr.t
   | Directory of string
 
+and breaking_type =
+  | Return of t
+  | Break of t
+  | Continue of t
+  | Error of t
+  | Exit of int
+
 (* TODO add positions for error messages *)
 and function_t =
-  | Native of {
-      cb : t Context.t -> t list -> (t, Compiler.Ast.breaking_type * t) Either.t;
-    }
+  | Native of { cb : t Context.t -> t list -> (t, breaking_type) Either.t }
   | User of {
       parameters : string list;
       block : Compiler.Optimizer.stmt list;
@@ -62,6 +67,8 @@ type class_t = {
 }
 
 type class_lookup = (string, class_t) Hashtbl.t
+
+let create_error s = Error (String s)
 
 let to_class_name = function
   | String _ -> "String"

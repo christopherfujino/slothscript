@@ -36,6 +36,7 @@ let to_s = function
 | LPAREN _ -> "LPAREN"
 | LET _ -> "LET"
 | WITH _ -> "WITH"
+| CATCH _ -> "CATCH"
 | RETURN _ -> "RETURN"
 | BREAK _ -> "BREAK"
 | CONTINUE _ -> "CONTINUE"
@@ -136,6 +137,7 @@ rule private_read last_token state =
   | "do" { DO lexbuf.lex_start_p }
   | "for" { FOR lexbuf.lex_start_p }
   | "with" { WITH lexbuf.lex_start_p }
+  | "catch" { CATCH lexbuf.lex_start_p }
   | "return" { RETURN lexbuf.lex_start_p }
   | "break" { BREAK lexbuf.lex_start_p }
   | "continue" { CONTINUE lexbuf.lex_start_p }

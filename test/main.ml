@@ -65,12 +65,14 @@ let make_test spec =
   in
   (match either with
   | First _ -> ()
-  | Second (bt, _) -> (
+  | Second bt -> (
       match bt with
       | Exit _ -> ()
       | Error msg ->
-          assert_failure @@ Printf.sprintf "Uncaught exception:\n\n%s" msg
-      | Return | Break | Continue -> failwith "Unreachable"));
+          assert_failure
+          @@ Printf.sprintf "Uncaught exception:\n\n%s\n"
+          @@ Interpreter.Runtime.to_s msg
+      | Return _ | Break _ | Continue _ -> failwith "Unreachable"));
   let forward_buffer = List.rev !Lib.stdout_buffer in
   let catted_output_opt =
     List.fold_left forward_buffer
@@ -157,11 +159,11 @@ let make_failing_test spec =
             buf_s
         in
         assert_failure msg
-    | Second (bt, _) -> (
+    | Second bt -> (
         match bt with
-        | Return | Break | Continue ->
+        | Return _ | Break _ | Continue _ ->
             Sloth_common.Common.internal_failure __LOC__
-        | Error msg -> handle_failure msg
+        | Error msg -> handle_failure @@ Interpreter.Runtime.to_s msg
         | Exit code ->
             assert_failure
             @@ Printf.sprintf

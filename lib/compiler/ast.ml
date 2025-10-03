@@ -23,14 +23,7 @@ and stmt =
       breaking_type * expr option * (Lexing.position[@sexp.opaque])
 [@@deriving sexp]
 
-and breaking_type =
-  | Return
-  | Break
-  | Continue
-  | Error of string (* TODO add an enum type *)
-  | Exit of int
-[@@deriving sexp]
-(* TODO make an interpreter type to store the runtime data *)
+and breaking_type = Return | Break | Continue [@@deriving sexp]
 
 and expr =
   | Num of float * (Lexing.position[@sexp.opaque])
@@ -78,6 +71,12 @@ and expr =
     }
   | WithExpr of
       (string * expr) list * stmt list * (Lexing.position[@sexp.opaque])
+  | CatchExpr of {
+      subject : expr;
+      capture : string;
+      catch : expr;
+      pos : (Lexing.position[@sexp.opaque]);
+    }
 [@@deriving sexp]
 
 and string_parts =

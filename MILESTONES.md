@@ -1,7 +1,7 @@
 # Milestones
 
 ## v0.1 - initially tagged version
-- [ ] error handling (`let result = mayError() catch (e) DEFAULT;`)
+- [ ] `error()` function
 - [ ] Stack traces
 - [ ] Language versioning
 - [ ] Standard Library
@@ -10,15 +10,16 @@
   - `$Process.allowNonzero : Bool`
 
 ## v0.2 - initial pre-release
+- [ ] Blank identifier does not bind
 - [ ] Regular expressions
 - [ ] Test suite
 - [ ] Security policy
+- [ ] JSON module
 
 ## v1.0
 - [ ] Formatter
 - [ ] LSP server
 - [ ] Binary builds
-- [ ] JSON module
 - [ ] statically link readline
 - [ ] optimize binary size
 - [ ] Optional function parameters
@@ -82,3 +83,4 @@
 - [x] `&` and `&!` operators for spawning sub-processes
 - [x] CLI args
 - [x] $stdin, $stderr
+- [x] error handling (`let result = mayError() catch (e) DEFAULT;`)

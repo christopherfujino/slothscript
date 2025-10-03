@@ -22,14 +22,6 @@ prog: STRING_START STRING_MIDDLE
 
 String interpolation was started but never finished
 
-prog: NOT WITH
-
-The `not` operator should be followed by a `Bool` expression
-
-prog: MINUS WITH
-
-The `-` operator expects to be followed by a `Number`
-
 prog: LPAREN STRING_MIDDLE
 
 You have an unclosed parenthesis in the middle of string interpolation
@@ -45,10 +37,6 @@ Expected an `=` to complete the `let` expression
 prog: LET ID EQUALS STRING_MIDDLE
 
 [UNREACHABLE]
-
-prog: LEFT_ARROW WITH
-
-A `File` expression was expected here
 
 prog: IF STRING_MIDDLE
 
