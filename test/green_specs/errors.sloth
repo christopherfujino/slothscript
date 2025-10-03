@@ -1,0 +1,55 @@
+### Program
+let result = 1 / 0
+assert(result == 42, "${result} != 42")
+
+### Processes
+()
+
+### Ast
+((StmtDecl
+  (ExprStmt
+    (LetExpr
+      result
+      (Binary
+        (Num
+          1
+          <opaque>)
+        (Num
+          0
+          <opaque>)
+        Divide
+        <opaque>)
+      <opaque>)))
+  (StmtDecl
+    (ExprStmt
+      (FuncInvoc
+        (IdRef
+          assert
+          <opaque>)
+        ((Equality
+          (IdRef
+            result
+            <opaque>)
+          (Num
+            42
+            <opaque>)
+          true
+          <opaque>)
+          (String
+            ((StartStringInterp
+              ""
+              <opaque>)
+              (ExpressionStringInterp
+                (IdRef
+                  result
+                  <opaque>))
+              (EndStringInterp
+                " != 42"
+                <opaque>))
+            <opaque>))
+        <opaque>))))
+
+### Stdout
+
+
+### Failure
