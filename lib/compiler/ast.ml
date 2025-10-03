@@ -27,8 +27,6 @@ and breaking_type =
   | Return
   | Break
   | Continue
-  | Error of string (* TODO add an enum type *)
-  | Exit of int
 [@@deriving sexp]
 (* TODO make an interpreter type to store the runtime data *)
 

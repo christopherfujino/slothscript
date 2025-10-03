@@ -38,7 +38,7 @@ let internal_failure_msg ~globals ~pos msg =
    messages without source summaries *)
 let failure_obj ~globals ~pos msg =
   let msg = runtime_failure_msg ~globals ~pos msg in
-  Second (Compiler.Ast.Error msg, Runtime.Null)
+  Second (Runtime.create_error msg)
 
 (** For error cases that could potentially become compiler errors.
 
@@ -54,11 +54,11 @@ let invoke_native_func ~globals ~pos cb args =
   in
   match either with
   | First _ as first -> first
-  | Second (bt, _) as second -> (
+  | Second bt as second -> (
       match bt with
-      | Compiler.Ast.Return | Break | Continue -> internal_failure __LOC__
+      | Runtime.Return _ | Break _ | Continue _ -> internal_failure __LOC__
       | Exit _ -> second
-      | Error msg -> failure_obj ~globals ~pos msg)
+      | Error msg -> failure_obj ~globals ~pos (Runtime.to_s msg))
 
 let rec interpret_prog globals prog =
   match prog with
@@ -70,7 +70,7 @@ let rec interpret_prog globals prog =
       | _ -> (interpret_prog [@tailcall]) new_globals tl)
 
 and interpret_decl (globals : Globals.t) decl :
-    Globals.t * (Runtime.t, Compiler.Ast.breaking_type * Runtime.t) Either.t =
+    Globals.t * (Runtime.t, Runtime.breaking_type) Either.t =
   let open Compiler.Optimizer in
   match decl with
   | FuncDecl { name; parameters; block; pos } ->
@@ -89,25 +89,32 @@ and interpret_decl (globals : Globals.t) decl :
       let globals, either = interpret_stmt globals s in
       (match either with
       | First _ -> ()
-      | Second (bt, _) -> (
+      | Second bt -> (
           match bt with
-          | Break | Continue | Return ->
+          | Break _ | Continue _ | Return _ ->
               (* TODO: This should be caught by optimizer *)
               internal_failure __LOC__
           | Exit _ | Error _ -> ()));
       (globals, either)
 
 and interpret_stmt (globals : Globals.t) stmt :
-    Globals.t * (Runtime.t, Compiler.Ast.breaking_type * Runtime.t) Either.t =
+    Globals.t * (Runtime.t, Runtime.breaking_type) Either.t =
   (* Globals.t * Compiler.Ast.breaking_type option * Runtime.t = *)
   let open Compiler.Optimizer in
   match stmt with
   | ExprStmt expr -> interpret_expr globals expr
-  | BreakingStmt (break_type, expr_opt, _) ->
-      (match expr_opt with
-      | None -> (globals, Second (break_type, Runtime.Null))
-      | Some e -> interpret_expr globals e)
-      >>= fun globals v -> (globals, Second (break_type, v))
+  | BreakingStmt (break_type, expr_opt, _) -> (
+      match expr_opt with
+      | None -> (globals, First Runtime.Null)
+      | Some e ->
+          interpret_expr globals e >>= fun globals v ->
+          let wrapped_type =
+            match break_type with
+            | Break -> Runtime.Break v
+            | Continue -> Continue v
+            | Return -> Return v
+          in
+          (globals, Second wrapped_type))
 
 and interpret_cond globals cond =
   match cond with
@@ -142,7 +149,7 @@ and interpret_cond globals cond =
       (globals, interpret_block inner_globals stmts)
 
 and interpret_expr globals expr :
-    Globals.t * (Runtime.t, Compiler.Ast.breaking_type * Runtime.t) Either.t =
+    Globals.t * (Runtime.t, Runtime.breaking_type) Either.t =
   let open Compiler.Optimizer in
   match expr with
   | Num (f, _) -> (globals, First (Runtime.Num f))
@@ -280,9 +287,9 @@ and interpret_expr globals expr :
                     | First return_val ->
                         if List.is_empty tl then (globals, First return_val)
                         else (traverse_stmts [@tailrec]) globals tl
-                    | Second (bt, return_val) as either -> (
+                    | Second bt as either -> (
                         match bt with
-                        | Return -> (globals, First return_val)
+                        | Return return_val -> (globals, First return_val)
                         | _ -> (globals, either)))
               in
               (* discard context *)
@@ -340,10 +347,9 @@ and interpret_expr globals expr :
       | _ as t ->
           ( globals,
             Second
-              ( Error
-                  (Printf.sprintf "Tried to invoke %s, but it is not a function"
-                     (Runtime.to_s t)),
-                Runtime.Null ) ))
+              (Runtime.create_error
+              @@ Printf.sprintf "Tried to invoke %s, but it is not a function"
+              @@ Runtime.to_s t) ))
   | FuncExpr { parameters; block; pos } ->
       let parameters = List.map parameters ~f:(fun (name, _) -> name) in
       let u =
@@ -535,10 +541,10 @@ and interpret_expr globals expr :
         let globals' = { globals with identifiers } in
         let globals'', either = interpret_expr globals' init in
         (match either with
-        | Second (bt, _) -> (
+        | Second bt -> (
             match bt with
             | Exit _ | Error _ -> ()
-            | Continue | Break | Return ->
+            | Continue _ | Break _ | Return _ ->
                 (* TODO optimizer should check for this *)
                 internal_failure __LOC__)
         | First _ -> ());
@@ -548,12 +554,12 @@ and interpret_expr globals expr :
           ( globals,
             match bt_either with
             | First _ -> bt_either
-            | Second (bt, _) -> (
+            | Second bt -> (
                 match bt with
-                | Return ->
+                | Return _ ->
                     (* This is reachable if the expression was a do block with
                        a return statement in it *)
-                    bt_either
+                    either
                 | _ ->
                     Printf.sprintf
                       "TODO: figure out how to handle break/continue within \
@@ -581,9 +587,9 @@ and interpret_expr globals expr :
                   | First _ ->
                       (interpret_for_loop [@tailcall]) globals cmp inc bl
                         ret_val
-                  | Second (bt, _) -> (
+                  | Second bt -> (
                       match bt with
-                      | Return ->
+                      | Return _ ->
                           (* This is reachable if the expression was a do block *)
                           (globals, either)
                       | _ ->
@@ -598,15 +604,15 @@ and interpret_expr globals expr :
                 | First v ->
                     (* The inner block cannot bind new names accessible out here *)
                     recurse v
-                | Second (bt, break_val) as either -> (
+                | Second bt as either -> (
                     match bt with
-                    | Return ->
+                    | Return _ ->
                         (* let returns bubble up *)
                         (globals, either)
-                    | Break ->
+                    | Break break_val ->
                         (* Done with loop, return break_val *)
                         (globals, First break_val)
-                    | Continue -> recurse break_val
+                    | Continue v -> recurse v
                     | Error _ | Exit _ -> (globals, either)))
           | None ->
               Printf.sprintf
@@ -707,13 +713,11 @@ and interpret_expr globals expr :
       let globals, subject_either = interpret_expr globals subject in
       match subject_either with
       | First _ as first -> (globals, first)
-      | Second (bt, _) as second -> (
+      | Second bt as second -> (
           match bt with
           | Error msg ->
               let inner_ids = Identifiers.push_empty globals.identifiers in
-              (match
-                 Identifiers.bind inner_ids capture (Runtime.String msg)
-               with
+              (match Identifiers.bind inner_ids capture msg with
               | None -> failwith "TODO"
               | Some () -> ());
               let inner_globals = { globals with identifiers = inner_ids } in
@@ -724,7 +728,7 @@ and interpret_expr globals expr :
 
 (** You must push an empty env frame on first *)
 and interpret_block (globals : Globals.t) (stmts : Compiler.Optimizer.stmt list)
-    : (Runtime.t, Compiler.Ast.breaking_type * Runtime.t) Either.t =
+    : (Runtime.t, Runtime.breaking_type) Either.t =
   (* TODO can't use List.fold_left because we want to handle empty list
      differently *)
   let rec traverse_stmts globals' stmts =
@@ -733,7 +737,7 @@ and interpret_block (globals : Globals.t) (stmts : Compiler.Optimizer.stmt list)
     | hd :: tl -> (
         let globals'', either = interpret_stmt globals' hd in
         match either with
-        | Second (bt, v) -> Second (bt, v)
+        | Second _ as second -> second
         | First v ->
             if List.is_empty tl then First v
             else (traverse_stmts [@tailcall]) globals'' tl)
@@ -949,7 +953,7 @@ and cast_to_file ~globals ~pos = function
       @@ Runtime.to_s t'
 
 and cast_to_process ~globals ~pos v :
-    (Runtime.process, Compiler.Ast.breaking_type * Runtime.t) Either.t =
+    (Runtime.process, Runtime.breaking_type) Either.t =
   match v with
   | Runtime.Process p -> First p
   | Runtime.List _ as l -> (
@@ -1033,10 +1037,8 @@ and interpret_binary globals lhs rhs op pos =
       let right = cast_to_number rhs in
       if Float.(right = 0.0) then
         ( globals,
-          Either.second
-            ( Compiler.Ast.Error
-                (runtime_failure_msg ~globals ~pos "Divide by zero"),
-              Runtime.Null ) )
+          Either.second @@ Runtime.create_error
+          @@ runtime_failure_msg ~globals ~pos "Divide by zero" )
       else (globals, Either.first @@ Runtime.Num (left /. right))
   | Product ->
       interpret_expr globals rhs >>= fun globals rhs ->
@@ -1047,8 +1049,7 @@ and interpret_binary globals lhs rhs op pos =
       interpret_expr globals rhs >>= fun globals rhs ->
       let left = cast_to_number lhs in
       let right = cast_to_number rhs in
-      let either : (Runtime.t, Compiler.Ast.breaking_type * Runtime.t) Either.t
-          =
+      let either =
         let left_either =
           if Float.is_integer left then Either.first @@ Float.to_int left
           else

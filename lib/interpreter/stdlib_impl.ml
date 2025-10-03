@@ -7,7 +7,7 @@ type func_t = {
   cb :
     Runtime.t Context.t ->
     Runtime.t list ->
-    (Runtime.t, Compiler.Ast.breaking_type * Runtime.t) Either.t;
+    (Runtime.t, Runtime.breaking_type) Either.t;
 }
 
 let ( >>= ) left right =
@@ -33,14 +33,14 @@ let make_ids m =
         (fun _ args ->
           let arg = List.hd_exn args in
           match Runtime.int_of_val arg with
-          | Some code -> Second (Compiler.Ast.Exit code, Runtime.Null)
+          | Some code -> Second (Runtime.Exit code)
           | None ->
               let msg =
                 Printf.sprintf
                   "The argument passed to `exit()` must be an integer, got %s"
                 @@ Runtime.to_s arg
               in
-              Second (Compiler.Ast.Error msg, Runtime.Null));
+              Second (Runtime.create_error msg));
     };
     {
       name = "assert";
@@ -78,7 +78,7 @@ let make_ids m =
           in
           match res with
           | Ok v -> First v
-          | Error err -> Second (Error err, Runtime.Null));
+          | Error err -> Second (Runtime.create_error err));
     };
   ]
 
@@ -130,7 +130,7 @@ let make_protos m =
                          List[String] but got `%s`"
                       @@ Runtime.to_s arg
                     in
-                    Second (Compiler.Ast.Error err_msg, Runtime.Null)
+                    Second (Runtime.create_error err_msg)
                 | Some arr ->
                     List.of_array arr (* Not efficient *)
                     |> List.fold_right ~init:(First []) ~f:(fun t acc ->
@@ -141,13 +141,11 @@ let make_protos m =
                                | Some s -> First (s :: prev)
                                | None ->
                                    Second
-                                     ( Compiler.Ast.Error
-                                         (Printf.sprintf
-                                            "Expected the first argument to \
-                                             `Process.new` to be a \
-                                             List[String], but got a \
-                                             non-String element"),
-                                       Runtime.Null ))
+                                     (Runtime.create_error
+                                     @@ Printf.sprintf
+                                          "Expected the first argument to \
+                                           `Process.new` to be a List[String], \
+                                           but got a non-String element"))
                            | Second _ as sec -> sec)
                     >>= fun cmd ->
                     let unwrap_fd identifier =
@@ -208,7 +206,7 @@ let make_protos m =
                 in
                 match res with
                 | Ok proc_result -> First proc_result
-                | Error msg -> Second (Compiler.Ast.Error msg, Runtime.Null));
+                | Error msg -> Second (Runtime.create_error msg));
           };
         ];
       static_members = [];
@@ -255,8 +253,8 @@ let make_protos m =
                          `HashMap`, but received %s"
                         (Runtime.to_s right_v)
                     in
-                    let bt = Compiler.Ast.Error msg in
-                    Second (bt, Runtime.Null))
+                    let bt = Runtime.create_error msg in
+                    Second bt)
                 >>= fun right ->
                 let left_copy = Stdlib.Hashtbl.copy left in
                 Stdlib.Hashtbl.iter
@@ -358,12 +356,10 @@ let make_protos m =
                 (match Runtime.string_of_val first_arg with
                 | None ->
                     Second
-                      ( Compiler.Ast.Error
-                          (Printf.sprintf
-                             "You must pass a String to File.new(), but got a \
-                              %s"
-                          @@ Runtime.to_s first_arg),
-                        Runtime.Null )
+                      (Runtime.create_error
+                      @@ Printf.sprintf
+                           "You must pass a String to File.new(), but got a %s"
+                      @@ Runtime.to_s first_arg)
                 | Some str -> First str)
                 |> Either.map ~second:Fun.id ~first:(fun path ->
                        Runtime.File { path }));

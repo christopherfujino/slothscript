@@ -19,20 +19,23 @@ let make_globals m src script_path ~argv ~env =
   let classes = Hashtbl.create (module String) in
   let identifiers = Identifiers.create () in
   let context_ids = Context.create () in
-  let make_method name arity methods cb =
+  let make_method name arity methods
+      (cb :
+        Runtime.t Context.t ->
+        Runtime.t list ->
+        (Runtime.t, Runtime.breaking_type) Either.t) =
     let cb =
      fun ctx args ->
       let arg_len = List.length args in
       if not (Int.equal arg_len arity) then
         Second
-          ( Compiler.Ast.Error
-              (Printf.sprintf
-                 "You passed %d arguments (%s) to %s but %d were expected"
-                 arg_len
-                 (List.fold_left args ~init:"" ~f:(fun msg arg ->
-                      msg ^ Runtime.to_s arg ^ ", "))
-                 name arity),
-            Runtime.Null )
+          (Runtime.create_error
+             (Printf.sprintf
+                "You passed %d arguments (%s) to %s but %d were expected"
+                arg_len
+                (List.fold_left args ~init:"" ~f:(fun msg arg ->
+                     msg ^ Runtime.to_s arg ^ ", "))
+                name arity))
       else cb ctx args
     in
     let native = Runtime.Native { cb } in
@@ -42,17 +45,17 @@ let make_globals m src script_path ~argv ~env =
     let (cb
           : Runtime.t Context.t ->
             Runtime.t list ->
-            (Runtime.t, Compiler.Ast.breaking_type * Runtime.t) Either.t) =
+            (Runtime.t, Runtime.breaking_type) Either.t) =
      fun ctx args ->
       let arg_len = List.length args in
       if
         Option.is_some arity && not (Int.equal arg_len (Option.value_exn arity))
       then
         Second
-          ( Compiler.Ast.Error
-              (Printf.sprintf "You passed %d arguments but %d were expected"
-                 arg_len (Option.value_exn arity)),
-            Runtime.Null )
+          (Runtime.create_error
+          @@ Printf.sprintf "You passed %d arguments but %d were expected"
+               arg_len
+          @@ Option.value_exn arity)
       else cb ctx args
     in
     Identifiers.bind identifiers name (Runtime.Func (Native { cb }))

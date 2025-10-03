@@ -39,10 +39,17 @@ type t =
   | FileDescriptor of Core_unix.File_descr.t
   | Directory of string
 
+and breaking_type =
+  | Return of t
+  | Break of t
+  | Continue of t
+  | Error of t
+  | Exit of int
+
 (* TODO make this hidden *)
 and function_t =
   | Native of {
-      cb : t Context.t -> t list -> (t, Compiler.Ast.breaking_type * t) Either.t;
+      cb : t Context.t -> t list -> (t, breaking_type) Either.t;
     }
   | User of {
       parameters : string list;
@@ -58,6 +65,7 @@ type class_t = {
 
 type class_lookup = (string, class_t) Hashtbl.t
 
+val create_error : string -> breaking_type
 val to_s : t -> string
 val bool_of_val : t -> bool option
 val directory_of_t : t -> string option
