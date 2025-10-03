@@ -1,24 +1,25 @@
 # Milestones
 
 ## v0.1 - initially tagged version
+- [ ] `error()` function
 - [ ] Stack traces
 - [ ] Language versioning
-- [ ] Blank identifier does not bind
 - [ ] Standard Library
   - `List` methods
   - `String` methods
   - `$Process.allowNonzero : Bool`
 
 ## v0.2 - initial pre-release
+- [ ] Blank identifier does not bind
 - [ ] Regular expressions
 - [ ] Test suite
 - [ ] Security policy
+- [ ] JSON module
 
 ## v1.0
 - [ ] Formatter
 - [ ] LSP server
 - [ ] Binary builds
-- [ ] JSON module
 - [ ] statically link readline
 - [ ] optimize binary size
 - [ ] Optional function parameters
