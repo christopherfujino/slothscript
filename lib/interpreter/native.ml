@@ -127,10 +127,10 @@ module Prod : Sig = struct
             (match mode with
             | BlockInherit -> ()
             | BlockBuffer | ForkBuffer ->
-                let read_stdout = Option.value_exn read_stdout in
-                let read_stderr = Option.value_exn read_stderr in
-                let write_stdout = Option.value_exn write_stdout in
-                let write_stderr = Option.value_exn write_stderr in
+                let read_stdout = option_value read_stdout ~message:__LOC__ in
+                let read_stderr = option_value read_stderr ~message:__LOC__ in
+                let write_stdout = option_value write_stdout ~message:__LOC__ in
+                let write_stderr = option_value write_stderr ~message:__LOC__ in
                 Core_unix.close read_stdout;
                 Core_unix.close read_stderr;
                 if phys_equal write_stdout proc.stdout then ()
@@ -161,8 +161,8 @@ module Prod : Sig = struct
     (match mode with
     | BlockInherit -> ()
     | BlockBuffer | ForkBuffer ->
-        Core_unix.close @@ Option.value_exn write_stdout;
-        Core_unix.close @@ Option.value_exn write_stderr);
+        Core_unix.close @@ option_value write_stdout ~message:__LOC__;
+        Core_unix.close @@ option_value write_stderr ~message:__LOC__);
 
     (* First is the last in the queue *)
     let last_pid = List.hd_exn pids in
@@ -179,16 +179,16 @@ module Prod : Sig = struct
              (ProcessBuffered
                 {
                   pid = last_pid;
-                  stdout = Option.value_exn read_stdout;
-                  stderr = Option.value_exn read_stderr;
+                  stdout = option_value read_stdout ~message:__LOC__;
+                  stderr = option_value read_stderr ~message:__LOC__;
                 }))
     | BlockBuffer ->
         let handle =
           Runtime.ProcessBuffered
             {
               pid = last_pid;
-              stdout = Option.value_exn read_stdout;
-              stderr = Option.value_exn read_stderr;
+              stdout = option_value read_stdout ~message:__LOC__;
+              stderr = option_value read_stderr ~message:__LOC__;
             }
         in
         wait handle >>= fun t -> Ok t
@@ -245,8 +245,7 @@ module Make_test () : TestSig = struct
     (* TODO: resolve relative paths *)
     let file =
       Hashtbl.find file_system path
-      |> Option.value_exn
-           ~message:(Printf.sprintf "Error no entity \"%s\"" path)
+      |> option_value ~message:(Printf.sprintf "Error no entity \"%s\"" path)
     in
     match file with File data -> data | _ -> failwith "TODO"
 
@@ -287,7 +286,7 @@ module Make_test () : TestSig = struct
           let _ = rec_proc_exec (Some proc) prev in
           ()
       | None -> ());
-      match !proc_expectations |> Option.value_exn with
+      match !proc_expectations |> option_value ~message:__LOC__ with
       | [] ->
           Printf.sprintf "Unexpected proc: %s"
           @@ Runtime.to_s (Runtime.Process proc)
@@ -319,7 +318,8 @@ module Make_test () : TestSig = struct
                   let open Result.Monad_infix in
                   exec_proc_spec () >>= fun proc_res ->
                   let proc_res =
-                    Runtime.process_result_of_val proc_res |> Option.value_exn
+                    Runtime.process_result_of_val proc_res
+                    |> option_value ~message:__LOC__
                   in
                   (* TODO stderr *)
                   (match follower_opt with
@@ -344,7 +344,11 @@ module Make_test () : TestSig = struct
                              stderr = unsafe_fd;
                            })))
           | _ ->
-              let msg = Printf.sprintf "TODO (%s)" __LOC__ in
+              let msg =
+                Printf.sprintf "Tried to execute sub-process %s but expected %s"
+                  (List.to_string ~f:Fun.id hd.cmd)
+                  (List.to_string ~f:Fun.id proc.cmd)
+              in
               Error msg)
     in
     rec_proc_exec None proc

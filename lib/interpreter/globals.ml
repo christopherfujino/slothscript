@@ -3,7 +3,7 @@ open Core
 type t = {
   l : (module Native.Sig);
   identifiers : Runtime.t Identifiers.t;
-  context_ids : Context.t;
+  context_ids : Runtime.t Context.t;
   (* We need to store these at the top level so that we can find these for
    runtime lookup. They must also be stored in identifiers however, so users
    can invoke them explicitly. *)
@@ -19,14 +19,9 @@ let make_globals m src script_path ~argv ~env =
   let classes = Hashtbl.create (module String) in
   let identifiers = Identifiers.create () in
   let context_ids = Context.create () in
-  let make_method name arity methods
-      (cb :
-        Runtime.t list ->
-        (Runtime.t, Compiler.Ast.breaking_type * Runtime.t) Either.t) =
-    let cb :
-        Runtime.t list ->
-        (Runtime.t, Compiler.Ast.breaking_type * Runtime.t) Either.t =
-     fun args ->
+  let make_method name arity methods cb =
+    let cb =
+     fun ctx args ->
       let arg_len = List.length args in
       if not (Int.equal arg_len arity) then
         Second
@@ -38,16 +33,17 @@ let make_globals m src script_path ~argv ~env =
                       msg ^ Runtime.to_s arg ^ ", "))
                  name arity),
             Runtime.Null )
-      else cb args
+      else cb ctx args
     in
     let native = Runtime.Native { cb } in
     Hashtbl.add_exn methods ~key:name ~data:(Runtime.Func native)
   in
   let make_func name ?arity identifiers cb =
     let (cb
-          : Runtime.t list ->
+          : Runtime.t Context.t ->
+            Runtime.t list ->
             (Runtime.t, Compiler.Ast.breaking_type * Runtime.t) Either.t) =
-     fun args ->
+     fun ctx args ->
       let arg_len = List.length args in
       if
         Option.is_some arity && not (Int.equal arg_len (Option.value_exn arity))
@@ -57,7 +53,7 @@ let make_globals m src script_path ~argv ~env =
               (Printf.sprintf "You passed %d arguments but %d were expected"
                  arg_len (Option.value_exn arity)),
             Runtime.Null )
-      else cb args
+      else cb ctx args
     in
     Identifiers.bind identifiers name (Runtime.Func (Native { cb }))
     |> Option.value_exn

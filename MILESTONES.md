@@ -2,7 +2,6 @@
 
 ## v0.1 - initially tagged version
 - [ ] error handling (`let result = mayError() catch (e) DEFAULT;`)
-- [ ] STDERR
 - [ ] Stack traces
 - [ ] Language versioning
 - [ ] Standard Library
@@ -21,6 +20,7 @@
 - [ ] Binary builds
 - [ ] JSON module
 - [ ] statically link readline
+- [ ] optimize binary size
 - [ ] Optional function parameters
 
 ## Stretch goals
@@ -81,3 +81,4 @@
 - [x] Implement exit function
 - [x] `&` and `&!` operators for spawning sub-processes
 - [x] CLI args
+- [x] $stdin, $stderr

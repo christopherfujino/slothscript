@@ -41,12 +41,14 @@ type t =
   | ProcessHandle of process_handle
   | ProcessResult of process_result
   | File of file
-  | FileHandle
+  | FileDescriptor of Core_unix.File_descr.t
   | Directory of string
 
 (* TODO add positions for error messages *)
 and function_t =
-  | Native of { cb : t list -> (t, Compiler.Ast.breaking_type * t) Either.t }
+  | Native of {
+      cb : t Context.t -> t list -> (t, Compiler.Ast.breaking_type * t) Either.t;
+    }
   | User of {
       parameters : string list;
       block : Compiler.Optimizer.stmt list;
@@ -75,7 +77,7 @@ let to_class_name = function
   | ProcessHandle _ -> "ProcessHandle"
   | ProcessResult _ -> "ProcessResult"
   | File _ -> "File"
-  | FileHandle -> "FileHandle"
+  | FileDescriptor _ -> "FileDescriptor"
   | Directory _ -> "Directory"
 
 let rec to_s t' =
@@ -114,7 +116,7 @@ let rec to_s t' =
             let key = to_s key in
             let data = to_s data in
             ( (if is_first then Printf.sprintf "%s%s: %s" acc key data
-               else Printf.sprintf ", %s%s: %s" acc key data),
+               else Printf.sprintf "%s, %s: %s" acc key data),
               false ))
           tbl ("{", true)
       in
@@ -138,7 +140,8 @@ let rec to_s t' =
       Printf.sprintf "ProcessResult(code=%d, stdout=\"%s\", stderr=\"%s\")" code
         stdout stderr
   | File { path } -> Printf.sprintf "File(path=%s)" path
-  | FileHandle -> "FileHandle(TODO)"
+  | FileDescriptor fd ->
+      Printf.sprintf "FileDescriptor(fd=%d)" @@ Core_unix.File_descr.to_int fd
   | Directory path -> Printf.sprintf "Directory(path=%s)" path
 
 let num_of_val = function Num f -> Some f | _ -> None
@@ -153,7 +156,7 @@ let bool_of_val = function Bool b' -> Some b' | _ -> None
 let list_of_val = function List l -> Some l | _ -> None
 let hashmap_of_val = function HashMap h -> Some h | _ -> None
 let process_of_val = function Process p -> Some p | _ -> None
-let process_handle_of_val = function ProcessHandle p -> Some p | _ -> None
+let process_handle_of_t = function ProcessHandle p -> Some p | _ -> None
 let process_result_of_val = function ProcessResult p -> Some p | _ -> None
 let func_of_val = function Func func -> Some func | _ -> None
 
@@ -162,7 +165,8 @@ let method_of_val = function
   | _ -> None
 
 let file_of_val = function File f -> Some f | _ -> None
-let directory_of_val = function Directory p -> Some p | _ -> None
+let file_descriptor_of_t = function FileDescriptor fd -> Some fd | _ -> None
+let directory_of_t = function Directory p -> Some p | _ -> None
 
 let val_of_env strings =
   let len = Array.length strings * 2 in

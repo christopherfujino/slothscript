@@ -1,0 +1,94 @@
+### Program
+let handles = [
+  "./slow-script.sh"&,
+  "./really-slow-script.sh"&,
+  "sleep 99999999"&,
+]
+
+for handle in handles {
+  handle.wait()
+}
+
+### Processes
+(((cmd
+  (./slow-script.sh))
+  (instructions
+    ()))
+  ((cmd
+    (./really-slow-script.sh))
+    (instructions
+      ()))
+  ((cmd
+    (sleep
+      99999999))
+    (instructions
+      ())))
+
+### Ast
+((StmtDecl
+  (ExprStmt
+    (LetExpr
+      handles
+      (List
+        ((UnaryExpr
+          (target
+            (String
+              ((FullString
+                ./slow-script.sh
+                <opaque>))
+              <opaque>))
+          (pos
+            <opaque>)
+          (operator
+            Ampersand))
+          (UnaryExpr
+            (target
+              (String
+                ((FullString
+                  ./really-slow-script.sh
+                  <opaque>))
+                <opaque>))
+            (pos
+              <opaque>)
+            (operator
+              Ampersand))
+          (UnaryExpr
+            (target
+              (String
+                ((FullString
+                  "sleep 99999999"
+                  <opaque>))
+                <opaque>))
+            (pos
+              <opaque>)
+            (operator
+              Ampersand)))
+        <opaque>)
+      <opaque>)))
+  (StmtDecl
+    (ExprStmt
+      (ForInLoop
+        (iterator_name
+          handle)
+        (iteratee
+          (IdRef
+            handles
+            <opaque>))
+        (block
+          ((ExprStmt
+            (FuncInvoc
+              (ObjDeref
+                (IdRef
+                  handle
+                  <opaque>)
+                wait
+                <opaque>)
+              ()
+              <opaque>))))
+        (pos
+          <opaque>)))))
+
+### Stdout
+
+
+### Failure

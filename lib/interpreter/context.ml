@@ -1,6 +1,7 @@
 open Core
 
-type t = (string, Runtime.t) Hashtbl.t list
+(* Polymorphic to avoid module cycle with Runtime *)
+type 'a t = (string, 'a) Hashtbl.t list
 
 let tbl_size = 10
 let create () = [ Hashtbl.create ~size:tbl_size (module String) ]

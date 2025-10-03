@@ -1,12 +1,17 @@
 open Core
+open Sloth_common.Common
 
 type func_t = {
   name : string;
   arity : int option;
   cb :
+    Runtime.t Context.t ->
     Runtime.t list ->
     (Runtime.t, Compiler.Ast.breaking_type * Runtime.t) Either.t;
 }
+
+let ( >>= ) left right =
+  match left with Second _ as second -> second | First first -> right first
 
 let make_ids m =
   let module M = (val m : Native.Sig) in
@@ -15,7 +20,7 @@ let make_ids m =
       name = "print";
       arity = Some 1;
       cb =
-        (fun args ->
+        (fun _ args ->
           let arg = List.hd_exn args in
           Runtime.to_s arg |> M.print_s;
           M.print_s "\n";
@@ -25,7 +30,7 @@ let make_ids m =
       name = "exit";
       arity = Some 1;
       cb =
-        (fun args ->
+        (fun _ args ->
           let arg = List.hd_exn args in
           match Runtime.int_of_val arg with
           | Some code -> Second (Compiler.Ast.Exit code, Runtime.Null)
@@ -42,7 +47,7 @@ let make_ids m =
       arity = None;
       (* could be 1 or 2 *)
       cb =
-        (fun args ->
+        (fun _ args ->
           let arg = List.hd_exn args in
           let second_arg = List.nth args 1 in
           let res =
@@ -95,10 +100,10 @@ let make_protos m =
             name = "length";
             arity = Some 1;
             cb =
-              (fun args ->
+              (fun _ args ->
                 let arg = List.hd_exn args in
                 let arr_of_ts =
-                  Runtime.list_of_val arg |> Option.value_exn ~message:__LOC__
+                  Runtime.list_of_val arg |> option_value ~message:__LOC__
                 in
                 let len = Array.length arr_of_ts |> Float.of_int in
                 First (Runtime.Num len));
@@ -115,7 +120,7 @@ let make_protos m =
             name = "new";
             arity = Some 2;
             cb =
-              (fun args ->
+              (fun ctx args ->
                 let arg = List.nth_exn args 1 in
                 match Runtime.list_of_val arg with
                 | None ->
@@ -127,38 +132,57 @@ let make_protos m =
                     in
                     Second (Compiler.Ast.Error err_msg, Runtime.Null)
                 | Some arr ->
-                    let cmd_either =
-                      List.of_array arr (* Not efficient *)
-                      |> List.fold_right ~init:(First []) ~f:(fun t acc ->
-                             match acc with
-                             | First prev -> (
-                                 let string_opt = Runtime.string_of_val t in
-                                 match string_opt with
-                                 | Some s -> First (s :: prev)
-                                 | None ->
-                                     Second
-                                       ( Compiler.Ast.Error
-                                           (Printf.sprintf
-                                              "Expected the first argument to \
-                                               `Process.new` to be a \
-                                               List[String], but got a \
-                                               non-String element"),
-                                         Runtime.Null ))
-                             | Second _ as sec -> sec)
+                    List.of_array arr (* Not efficient *)
+                    |> List.fold_right ~init:(First []) ~f:(fun t acc ->
+                           match acc with
+                           | First prev -> (
+                               let string_opt = Runtime.string_of_val t in
+                               match string_opt with
+                               | Some s -> First (s :: prev)
+                               | None ->
+                                   Second
+                                     ( Compiler.Ast.Error
+                                         (Printf.sprintf
+                                            "Expected the first argument to \
+                                             `Process.new` to be a \
+                                             List[String], but got a \
+                                             non-String element"),
+                                       Runtime.Null ))
+                           | Second _ as sec -> sec)
+                    >>= fun cmd ->
+                    let unwrap_fd identifier =
+                      let t' =
+                        Context.get ctx identifier
+                        |> option_value
+                             ~message:
+                               (Printf.sprintf
+                                  "The context variable `%s` has been unset"
+                                  identifier)
+                      in
+                      Runtime.file_descriptor_of_t t'
+                      |> option_value
+                           ~message:
+                             (Printf.sprintf
+                                "Expected `%s` to be of type `FileDescriptor`, \
+                                 but instead it was %s"
+                                identifier
+                             @@ Runtime.to_s t')
                     in
-                    Either.map cmd_either ~second:Fun.id ~first:(fun cmd ->
-                        let proc =
-                          Runtime.
-                            {
-                              cmd;
-                              stdin = Core_unix.stdin;
-                              stdout = Core_unix.stdout;
-                              stderr = Core_unix.stderr;
-                              previous = None;
-                              pipes_to_collect = [];
-                            }
-                        in
-                        Runtime.Process proc));
+                    let stdin = unwrap_fd "$stdin" in
+                    let stdout = unwrap_fd "$stdout" in
+                    let stderr = unwrap_fd "$stderr" in
+                    let proc =
+                      Runtime.
+                        {
+                          cmd;
+                          stdin;
+                          stdout;
+                          stderr;
+                          previous = None;
+                          pipes_to_collect = [];
+                        }
+                    in
+                    First (Runtime.Process proc));
           };
         ];
     };
@@ -170,10 +194,11 @@ let make_protos m =
             name = "wait";
             arity = Some 1;
             cb =
-              (fun args ->
+              (fun _ args ->
                 let handle = List.hd_exn args in
                 let handle =
-                  Runtime.process_handle_of_val handle |> Option.value_exn
+                  Runtime.process_handle_of_t handle
+                  |> option_value ~message:__LOC__
                 in
                 let res =
                   match handle with
@@ -196,10 +221,11 @@ let make_protos m =
             name = "stdout";
             arity = Some 1;
             cb =
-              (fun args ->
+              (fun _ args ->
                 let proc = List.hd_exn args in
                 let result =
-                  Runtime.process_result_of_val proc |> Option.value_exn
+                  Runtime.process_result_of_val proc
+                  |> option_value ~message:__LOC__
                 in
                 First (Runtime.String result.stdout));
           };
@@ -214,21 +240,24 @@ let make_protos m =
             name = "merge";
             arity = Some 2;
             cb =
-              (fun args ->
+              (fun _ args ->
                 let left =
-                  List.hd_exn args |> Runtime.hashmap_of_val |> Option.value_exn
+                  List.hd_exn args |> Runtime.hashmap_of_val
+                  |> option_value ~message:__LOC__
                 in
                 let right_v = List.nth_exn args 1 in
-                let right =
-                  match Runtime.hashmap_of_val right_v with
-                  | Some right -> right
-                  | None ->
+                (match Runtime.hashmap_of_val right_v with
+                | Some right -> First right
+                | None ->
+                    let msg =
                       Printf.sprintf
                         "HashMap.merge() expects an argument of type \
                          `HashMap`, but received %s"
                         (Runtime.to_s right_v)
-                      |> failwith
-                in
+                    in
+                    let bt = Compiler.Ast.Error msg in
+                    Second (bt, Runtime.Null))
+                >>= fun right ->
                 let left_copy = Stdlib.Hashtbl.copy left in
                 Stdlib.Hashtbl.iter
                   (fun key v -> Stdlib.Hashtbl.add left_copy key v)
@@ -246,10 +275,10 @@ let make_protos m =
             name = "trim";
             arity = Some 1;
             cb =
-              (fun args ->
+              (fun _ args ->
                 let str = List.hd_exn args in
                 let ocaml_string =
-                  Runtime.string_of_val str |> Option.value_exn
+                  Runtime.string_of_val str |> option_value ~message:__LOC__
                 in
                 First (Runtime.String (String.strip ocaml_string)));
           };
@@ -264,10 +293,10 @@ let make_protos m =
             name = "exists";
             arity = Some 1;
             cb =
-              (fun args ->
+              (fun _ args ->
                 let path =
-                  List.hd_exn args |> Runtime.directory_of_val
-                  |> Option.value_exn
+                  List.hd_exn args |> Runtime.directory_of_t
+                  |> option_value ~message:__LOC__
                 in
                 let b = M.directory_exists path in
                 First (Runtime.Bool b));
@@ -276,10 +305,10 @@ let make_protos m =
             name = "create";
             arity = Some 1;
             cb =
-              (fun args ->
+              (fun _ args ->
                 let path =
-                  List.hd_exn args |> Runtime.directory_of_val
-                  |> Option.value_exn
+                  List.hd_exn args |> Runtime.directory_of_t
+                  |> option_value ~message:__LOC__
                 in
                 M.mkdir path;
                 First Runtime.Null);
@@ -288,10 +317,10 @@ let make_protos m =
             name = "path";
             arity = Some 1;
             cb =
-              (fun args ->
+              (fun _ args ->
                 let path =
-                  List.hd_exn args |> Runtime.directory_of_val
-                  |> Option.value_exn
+                  List.hd_exn args |> Runtime.directory_of_t
+                  |> option_value ~message:__LOC__
                 in
                 First (Runtime.String path));
           };
@@ -306,7 +335,7 @@ let make_protos m =
             name = "readString";
             arity = Some 2;
             cb =
-              (fun args ->
+              (fun _ args ->
                 let first_arg = List.nth_exn args 1 in
                 let Runtime.{ path } =
                   match Runtime.file_of_val first_arg with
@@ -324,7 +353,7 @@ let make_protos m =
             name = "new";
             arity = Some 2;
             cb =
-              (fun args ->
+              (fun _ args ->
                 let first_arg = List.nth_exn args 1 in
                 (match Runtime.string_of_val first_arg with
                 | None ->
@@ -345,11 +374,14 @@ let make_protos m =
 
 let context_ids ~cwd ~env ~script_path ~argv =
   [
+    ( "$argv",
+      Runtime.List
+        (List.to_array @@ List.map argv ~f:(fun s -> Runtime.String s)) );
     ("$cwd", Runtime.String cwd);
     ("$env", Runtime.val_of_env env);
     ("$script", Runtime.String script_path);
     ("$scriptDir", Runtime.String (Filename.dirname script_path));
-    ( "$argv",
-      Runtime.List
-        (List.to_array @@ List.map argv ~f:(fun s -> Runtime.String s)) );
+    ("$stderr", Runtime.FileDescriptor Core_unix.stderr);
+    ("$stdin", Runtime.FileDescriptor Core_unix.stdin);
+    ("$stdout", Runtime.FileDescriptor Core_unix.stdout);
   ]

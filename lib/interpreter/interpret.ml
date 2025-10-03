@@ -1,5 +1,6 @@
 open Core
 open Common
+open Sloth_common.Common
 
 (** Bind an either and globals where globals need to be passed. *)
 let ( >>= ) (globals, either) cb =
@@ -12,14 +13,14 @@ let ( >>= ) (globals, either) cb =
 let ( >>- ) either cb =
   match either with First t -> cb t | Second _ as second -> second
 
-let failure_msg ~globals ~pos msg =
+let abstract_failure_msg ~globals ~pos msg type_s =
   let pos_s = Sloth_common.Position.string_of_t pos in
   let msg =
-    Printf.sprintf "[%s] Runtime error\n\n%s\n%s" pos_s
+    Printf.sprintf "[%s] %s\n\n%s\n%s" pos_s type_s
       (Sloth_common.Position.summarize pos Globals.(globals.src))
       msg
   in
-  if Sloth_common.Common.debug_mode then
+  if debug_mode then
     let callstack_depth = 50 in
     Printf.sprintf "%s\n\n%s" msg
       (* Core.Printexc does not implement .get_callstack *)
@@ -27,27 +28,35 @@ let failure_msg ~globals ~pos msg =
       |> Stdlib.Printexc.raw_backtrace_to_string)
   else msg
 
+let runtime_failure_msg ~globals ~pos msg =
+  abstract_failure_msg ~globals ~pos msg "Runtime error"
+
+let internal_failure_msg ~globals ~pos msg =
+  abstract_failure_msg ~globals ~pos msg "Internal failure"
+
 (* TODO make this a private type so we don't accidentally create error
    messages without source summaries *)
 let failure_obj ~globals ~pos msg =
-  let msg = failure_msg ~globals ~pos msg in
+  let msg = runtime_failure_msg ~globals ~pos msg in
   Second (Compiler.Ast.Error msg, Runtime.Null)
 
 (** For error cases that could potentially become compiler errors.
 
     These should not be recoverable, you need to fix your code. *)
 let fail ~globals pos msg =
-  let msg = failure_msg ~globals ~pos msg in
-  raise (Sloth_common.Common.RuntimeError msg)
+  let msg = runtime_failure_msg ~globals ~pos msg in
+  raise (RuntimeError msg)
 
 let invoke_native_func ~globals ~pos cb args =
-  let either = cb args in
+  let either =
+    try cb Globals.(globals.context_ids) args
+    with InternalFailure msg -> fail ~globals pos msg
+  in
   match either with
   | First _ as first -> first
   | Second (bt, _) as second -> (
       match bt with
-      | Compiler.Ast.Return | Break | Continue ->
-          Sloth_common.Common.internal_failure __LOC__
+      | Compiler.Ast.Return | Break | Continue -> internal_failure __LOC__
       | Exit _ -> second
       | Error msg -> failure_obj ~globals ~pos msg)
 
@@ -74,7 +83,7 @@ and interpret_decl (globals : Globals.t) decl :
       | Some () -> ()
       | None ->
           (* This should be caught by optimizer *)
-          Sloth_common.Common.internal_failure __LOC__);
+          internal_failure __LOC__);
       (globals, First f)
   | StmtDecl s ->
       let globals, either = interpret_stmt globals s in
@@ -84,7 +93,7 @@ and interpret_decl (globals : Globals.t) decl :
           match bt with
           | Break | Continue | Return ->
               (* TODO: This should be caught by optimizer *)
-              Sloth_common.Common.internal_failure __LOC__
+              internal_failure __LOC__
           | Exit _ | Error _ -> ()));
       (globals, either)
 
@@ -248,7 +257,8 @@ and interpret_expr globals expr :
                     acc >>= fun globals () ->
                     interpret_expr globals a >>= fun globals arg_val ->
                     (* This must not throw *)
-                    Identifiers.bind identifiers2 p arg_val |> Option.value_exn;
+                    Identifiers.bind identifiers2 p arg_val
+                    |> option_value ~message:__LOC__;
                     (globals, First ()))
               in
               (match or_unequal with
@@ -303,7 +313,7 @@ and interpret_expr globals expr :
               (globals, invoke_native_func ~globals ~pos cb (receiver :: args))
           | User _ ->
               (* I think this is unreachable... *)
-              Sloth_common.Common.internal_failure __LOC__)
+              internal_failure __LOC__)
       | Prototype { name } -> (
           if not @@ phys_equal (List.length args) 1 then
             Printf.sprintf "TODO %s" __LOC__ |> failwith
@@ -325,7 +335,8 @@ and interpret_expr globals expr :
                        ~second:Fun.id
                 in
                 (globals, either)
-            | _ -> Sloth_common.Common.internal_failure __LOC__)
+            | "String" -> (globals, First (Runtime.String (Runtime.to_s arg)))
+            | _ -> fail ~globals pos (Printf.sprintf "unimplemented %s" name))
       | _ as t ->
           ( globals,
             Second
@@ -365,8 +376,9 @@ and interpret_expr globals expr :
                    (* TODO add error handling *)
                    let env =
                      Context.get globals.context_ids "$env"
-                     |> Option.value_exn |> Runtime.env_of_val
-                     |> Option.value_exn
+                     |> option_value ~message:__LOC__
+                     |> Runtime.env_of_val
+                     |> option_value ~message:__LOC__
                    in
                    match M.proc_exec ~mode:Native.ForkBuffer proc env with
                    | Ok t' -> t'
@@ -381,11 +393,19 @@ and interpret_expr globals expr :
             |> Either.map
                  ~first:(fun proc ->
                    let module M = (val globals.l : Native.Sig) in
-                   (* TODO add error handling *)
                    let env =
-                     Context.get globals.context_ids "$env"
-                     |> Option.value_exn |> Runtime.env_of_val
-                     |> Option.value_exn
+                     let t' =
+                       Context.get globals.context_ids "$env"
+                       |> option_value
+                            ~message:"The context variable `$env` was not set!"
+                     in
+                     Runtime.env_of_val t'
+                     |> option_value
+                          ~message:
+                            (Printf.sprintf
+                               "Expected `$env` to be of type \
+                                `HashMap[String]String`, but got %s"
+                            @@ Runtime.to_s t')
                    in
                    match M.proc_exec ~mode:Native.BlockBuffer proc env with
                    | Ok t' -> t'
@@ -400,11 +420,19 @@ and interpret_expr globals expr :
             |> Either.map
                  ~first:(fun proc ->
                    let module M = (val globals.l : Native.Sig) in
-                   (* TODO add error handling *)
                    let env =
-                     Context.get globals.context_ids "$env"
-                     |> Option.value_exn |> Runtime.env_of_val
-                     |> Option.value_exn
+                     let t' =
+                       Context.get globals.context_ids "$env"
+                       |> option_value
+                            ~message:"The context variable `$env` was not set!"
+                     in
+                     Runtime.env_of_val t'
+                     |> option_value
+                          ~message:
+                            (Printf.sprintf
+                               "Expected `$env` to be of type \
+                                `HashMap[String]String`, but got %s"
+                            @@ Runtime.to_s t')
                    in
                    match M.proc_exec ~mode:Native.BlockInherit proc env with
                    | Ok t' -> t'
@@ -419,12 +447,12 @@ and interpret_expr globals expr :
           let func = dereference_object globals target "readString" pos in
           let receiver, func =
             match Runtime.method_of_val func with
-            | None -> Sloth_common.Common.internal_failure __LOC__
+            | None -> internal_failure __LOC__
             | Some func -> func
           in
           let cb =
             match func with
-            | User _ -> Sloth_common.Common.internal_failure __LOC__
+            | User _ -> internal_failure __LOC__
             | Native { cb; _ } -> cb
           in
           (globals, invoke_native_func ~globals ~pos cb [ receiver; target ])
@@ -443,8 +471,7 @@ and interpret_expr globals expr :
           (globals, First (Runtime.Num (Float.neg f)))
       | Plus | Product | Divide | Modulo | Pipe | Less | Greater | Leq | Geq
       | RightArrow | And | Or ->
-          (* Not unary operators *) Sloth_common.Common.internal_failure __LOC__
-      )
+          (* Not unary operators *) internal_failure __LOC__)
   | DoBlock (block, _) ->
       let inner_globals =
         {
@@ -501,7 +528,7 @@ and interpret_expr globals expr :
               Printf.sprintf "Assigning via subscript to %s not implemented"
                 (Runtime.to_s receiver')
               |> fail ~globals pos)
-      | _ -> Sloth_common.Common.internal_failure __LOC__)
+      | _ -> internal_failure __LOC__)
   | ForLoop (init, cmp, inc, bl, pos) ->
       let _, either =
         let identifiers = Identifiers.push_empty globals.identifiers in
@@ -513,7 +540,7 @@ and interpret_expr globals expr :
             | Exit _ | Error _ -> ()
             | Continue | Break | Return ->
                 (* TODO optimizer should check for this *)
-                Sloth_common.Common.internal_failure __LOC__)
+                internal_failure __LOC__)
         | First _ -> ());
         (globals'', either) >>= fun globals _ ->
         let rec interpret_for_loop globals cmp inc bl (last_val : Runtime.t) =
@@ -621,7 +648,8 @@ and interpret_expr globals expr :
                 }
               in
               Identifiers.bind temp_globals.identifiers iterator_name element
-              |> Option.value_exn;
+              |> option_value
+                   ~message:(internal_failure_msg ~globals ~pos __LOC__);
               interpret_block temp_globals block) )
       >>= fun _ ret_val -> (globals, First ret_val)
   | WithExpr (assignments, block, pos) ->
@@ -646,7 +674,9 @@ and interpret_expr globals expr :
             post_block_hook :=
               Some
                 (fun () ->
-                  Runtime.string_of_val prev |> Option.value_exn |> M.chdir)
+                  Runtime.string_of_val prev
+                  |> option_value ~message:__LOC__
+                  |> M.chdir)
         | _ -> ()
       in
 
@@ -666,7 +696,7 @@ and interpret_expr globals expr :
             middleware name prev v;
             (match Context.reassign globals.context_ids name v with
             | Some () -> ()
-            | None -> Sloth_common.Common.internal_failure __LOC__);
+            | None -> internal_failure __LOC__);
             (globals, First ()))
         >>= fun globals () -> (globals, interpret_block globals block)
       in
@@ -732,52 +762,128 @@ and is_equal globals is_equality lhs rhs =
   let same_class = String.equal lh_s rh_s in
   (* if ==, then return false; if !=, then return true *)
   if not same_class then not is_equality
-  else if not @@ String.equal lh_s rh_s then false
   else
+    let ( >>= ) left right = if not left then left else right () in
     match lhs with
-    | String lh_s -> (
-        let rh_s = Runtime.string_of_val rhs |> Option.value_exn in
-        match is_equality with
-        | true -> String.equal lh_s rh_s
-        | false -> not @@ String.equal lh_s rh_s)
-    | Num lhs -> (
-        let rhs = Runtime.num_of_val rhs |> Option.value_exn in
-        match is_equality with
-        | true -> Float.equal lhs rhs
-        | false -> not @@ Float.equal lhs rhs)
-    | Bool lhs -> (
-        let rhs = Runtime.bool_of_val rhs |> Option.value_exn in
-        match is_equality with
-        | true -> Bool.(lhs = rhs)
-        | false -> Bool.((not lhs) = rhs))
+    | String lh_s ->
+        let rh_s = Runtime.string_of_val rhs |> option_value ~message:__LOC__ in
+        let same_string = String.equal lh_s rh_s in
+        Bool.(same_string = is_equality)
+    | Num lhs ->
+        let rhs = Runtime.num_of_val rhs |> option_value ~message:__LOC__ in
+        let same_float = Float.equal lhs rhs in
+        Bool.(same_float = is_equality)
+    | Bool lhs ->
+        let rhs = Runtime.bool_of_val rhs |> option_value ~message:__LOC__ in
+        let same_bool = Bool.( = ) lhs rhs in
+        Bool.( = ) same_bool is_equality
     | List lhs ->
-        let rhs = Runtime.list_of_val rhs |> Option.value_exn in
+        let rhs = Runtime.list_of_val rhs |> option_value ~message:__LOC__ in
         let left_len = Array.length lhs in
         let right_len = Array.length rhs in
-        if (not is_equality) && not (phys_equal left_len right_len) then true
-        else
-          let is_deep_equal = Array.equal (is_equal globals true) lhs rhs in
-          Bool.(is_deep_equal = is_equality)
+        let same_list =
+          left_len = right_len >>= fun () ->
+          Array.equal (is_equal globals true) lhs rhs
+        in
+        Bool.(same_list = is_equality)
     | HashMap lhs ->
-        let rhs = Runtime.hashmap_of_val rhs |> Option.value_exn in
+        let rhs = Runtime.hashmap_of_val rhs |> option_value ~message:__LOC__ in
         let left_len = Stdlib.Hashtbl.length lhs in
         let right_len = Stdlib.Hashtbl.length rhs in
-        if (not is_equality) && not (phys_equal left_len right_len) then true
-        else
-          let is_deep_equal =
-            Stdlib.Hashtbl.fold
-              (fun key left_value equal_so_far ->
-                if not equal_so_far then false
-                else
-                  match Stdlib.Hashtbl.find_opt rhs key with
-                  | None -> false
-                  | Some right_value ->
-                      is_equal globals true left_value right_value)
-              lhs true
-          in
-          Bool.(is_deep_equal = is_equality)
+        let same_table =
+          left_len = right_len >>= fun () ->
+          Stdlib.Hashtbl.fold
+            (fun key left_value equal_so_far ->
+              if not equal_so_far then false
+              else
+                match Stdlib.Hashtbl.find_opt rhs key with
+                | None -> false
+                | Some right_value ->
+                    is_equal globals true left_value right_value)
+            lhs true
+        in
+        Bool.(same_table = is_equality)
     | Null -> ( match rhs with Null -> is_equality | _ -> not is_equality)
-    | _ ->
+    | Prototype { name = left_name } -> (
+        match rhs with
+        | Prototype { name = right_name } ->
+            let names_same = String.(left_name = right_name) in
+            Bool.(names_same = is_equality)
+        | _ -> not is_equality)
+    | Process lhs ->
+        let rhs = Runtime.process_of_val rhs |> option_value ~message:__LOC__ in
+        let rec inner_proc (lhs : Runtime.process) (rhs : Runtime.process) =
+          let same_proc =
+            (match
+               List.fold2 lhs.cmd rhs.cmd ~init:true
+                 ~f:(fun all_same left right ->
+                   if all_same then String.(left = right) else false)
+             with
+            | Ok b -> b
+            | Unequal_lengths -> false)
+            >>= fun () ->
+            Core_unix.File_descr.equal lhs.stdout rhs.stdout >>= fun () ->
+            Core_unix.File_descr.equal lhs.stderr rhs.stderr >>= fun () ->
+            Core_unix.File_descr.equal lhs.stdin rhs.stdin >>= fun () ->
+            match
+              List.fold2 lhs.pipes_to_collect rhs.pipes_to_collect ~init:true
+                ~f:(fun all_same left right ->
+                  if all_same then Core_unix.File_descr.equal left right
+                  else false)
+            with
+            | Ok b -> b
+            | Unequal_lengths ->
+                false >>= fun () ->
+                Option.equal
+                  (fun proc1 proc2 -> inner_proc proc1 proc2)
+                  lhs.previous rhs.previous
+          in
+          Bool.(same_proc = is_equality)
+        in
+        inner_proc lhs rhs
+    | FileDescriptor lhs ->
+        let rhs =
+          Runtime.file_descriptor_of_t rhs |> option_value ~message:__LOC__
+        in
+        let same_fd = Core_unix.File_descr.equal lhs rhs in
+        Bool.(same_fd = is_equality)
+    | File { path = lhs } ->
+        let rhs = Runtime.file_of_val rhs |> option_value ~message:__LOC__ in
+        let same_file = String.(lhs = rhs.path) in
+        Bool.(same_file = is_equality)
+    | Directory lhs ->
+        let rhs = Runtime.directory_of_t rhs |> option_value ~message:__LOC__ in
+        let same_dir = String.(lhs = rhs) in
+        Bool.(same_dir = is_equality)
+    | ProcessHandle lhs ->
+        let rhs =
+          Runtime.process_handle_of_t rhs |> option_value ~message:__LOC__
+        in
+        let same_handle =
+          match lhs with
+          | ProcessInherited left_pid -> (
+              match rhs with
+              | ProcessInherited right_pid -> Pid.(left_pid = right_pid)
+              | _ -> false)
+          | ProcessBuffered
+              { pid = left_pid; stdout = left_stdout; stderr = left_stderr }
+            -> (
+              match rhs with
+              | ProcessBuffered
+                  {
+                    pid = right_pid;
+                    stdout = right_stdout;
+                    stderr = right_stderr;
+                  } ->
+                  Pid.(left_pid = right_pid) >>= fun () ->
+                  Core_unix.File_descr.equal left_stdout right_stdout
+                  >>= fun () ->
+                  Core_unix.File_descr.equal left_stderr right_stderr
+              | _ -> false)
+        in
+        Bool.(same_handle = is_equality)
+    | ProcessResult _ -> failwith "TODO"
+    | Func _ | Method _ ->
         Printf.sprintf "is_equal the type %s is not implemented" lh_s
         |> failwith
 
@@ -1019,7 +1125,7 @@ and cast_to_string ~globals ~pos t' =
   | Process proc -> (
       let module M = (val globals.l : Native.Sig) in
       let env_val =
-        Context.get globals.context_ids "$env" |> Option.value_exn
+        Context.get globals.context_ids "$env" |> option_value ~message:__LOC__
       in
       let env =
         match Runtime.env_of_val env_val with

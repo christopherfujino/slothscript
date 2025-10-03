@@ -1,6 +1,3 @@
-### Name
-files
-
 ### Program
 let file = File("foo")
 # String -> File

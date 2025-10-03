@@ -172,6 +172,7 @@ let make_failing_test spec =
   | CompileError msg -> handle_failure msg
   | RuntimeError msg -> handle_failure msg
   | ParseError msg -> handle_failure msg
+  | InternalFailure msg -> assert_failure msg
 
 let tests =
   "slothscript"
