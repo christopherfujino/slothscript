@@ -53,9 +53,7 @@ and breaking_type =
 
 (* TODO add positions for error messages *)
 and function_t =
-  | Native of {
-      cb : t Context.t -> t list -> (t, breaking_type) Either.t;
-    }
+  | Native of { cb : t Context.t -> t list -> (t, breaking_type) Either.t }
   | User of {
       parameters : string list;
       block : Compiler.Optimizer.stmt list;

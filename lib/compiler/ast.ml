@@ -23,11 +23,7 @@ and stmt =
       breaking_type * expr option * (Lexing.position[@sexp.opaque])
 [@@deriving sexp]
 
-and breaking_type =
-  | Return
-  | Break
-  | Continue
-[@@deriving sexp]
+and breaking_type = Return | Break | Continue [@@deriving sexp]
 (* TODO make an interpreter type to store the runtime data *)
 
 and expr =

@@ -48,9 +48,7 @@ and breaking_type =
 
 (* TODO make this hidden *)
 and function_t =
-  | Native of {
-      cb : t Context.t -> t list -> (t, breaking_type) Either.t;
-    }
+  | Native of { cb : t Context.t -> t list -> (t, breaking_type) Either.t }
   | User of {
       parameters : string list;
       block : Compiler.Optimizer.stmt list;

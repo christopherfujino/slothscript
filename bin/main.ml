@@ -44,11 +44,11 @@ let repl () =
       | First v ->
           print_endline @@ Runtime.to_s v;
           Result.return (globals, env)
-      | Second (bt, _) -> (
+      | Second bt -> (
           match bt with
-          | Error msg -> Result.Error msg
+          | Error msg -> Result.Error (Interpreter.Runtime.to_s msg)
           | Exit code -> exit code
-          | Return | Break | Continue ->
+          | Return _ | Break _ | Continue _ ->
               Sloth_common.Common.internal_failure __LOC__)
     in
 
@@ -81,11 +81,11 @@ let interpreter path argv =
     in
     match either with
     | First _ -> Ok 0
-    | Second (bt, _) -> (
+    | Second bt -> (
         match bt with
         | Exit code -> Ok code
-        | Error msg -> Error msg
-        | Return | Break | Continue ->
+        | Error msg -> Error (Interpreter.Runtime.to_s msg)
+        | Return _ | Break _ | Continue _ ->
             Sloth_common.Common.internal_failure __LOC__)
   in
 
