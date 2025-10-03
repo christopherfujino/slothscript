@@ -1,5 +1,8 @@
 ### Program
-let result = 1 / 0
+let result = 1 / 0 catch (foo) do {
+  print(foo)
+  42
+}
 assert(result == 42, "${result} != 42")
 
 ### Processes
@@ -10,15 +13,37 @@ assert(result == 42, "${result} != 42")
   (ExprStmt
     (LetExpr
       result
-      (Binary
-        (Num
-          1
-          <opaque>)
-        (Num
-          0
-          <opaque>)
-        Divide
-        <opaque>)
+      (CatchExpr
+        (subject
+          (Binary
+            (Num
+              1
+              <opaque>)
+            (Num
+              0
+              <opaque>)
+            Divide
+            <opaque>))
+        (capture
+          foo)
+        (catch
+          (DoBlock
+            ((ExprStmt
+              (FuncInvoc
+                (IdRef
+                  print
+                  <opaque>)
+                ((IdRef
+                  foo
+                  <opaque>))
+                <opaque>))
+              (ExprStmt
+                (Num
+                  42
+                  <opaque>)))
+            <opaque>))
+        (pos
+          <opaque>))
       <opaque>)))
   (StmtDecl
     (ExprStmt
@@ -50,6 +75,10 @@ assert(result == 42, "${result} != 42")
         <opaque>))))
 
 ### Stdout
+[1:15] Runtime error
 
+ 1 | let result = 1 / 0 catch (foo) do {
+                    ^
+Divide by zero
 
 ### Failure

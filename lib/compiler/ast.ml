@@ -78,6 +78,12 @@ and expr =
     }
   | WithExpr of
       (string * expr) list * stmt list * (Lexing.position[@sexp.opaque])
+  | CatchExpr of {
+      subject : expr;
+      capture : string;
+      catch : expr;
+      pos : (Lexing.position[@sexp.opaque]);
+    }
 [@@deriving sexp]
 
 and string_parts =

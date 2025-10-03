@@ -1,9 +1,9 @@
 # Milestones
 
 ## v0.1 - initially tagged version
-- [ ] error handling (`let result = mayError() catch (e) DEFAULT;`)
 - [ ] Stack traces
 - [ ] Language versioning
+- [ ] Blank identifier does not bind
 - [ ] Standard Library
   - `List` methods
   - `String` methods
@@ -82,3 +82,4 @@
 - [x] `&` and `&!` operators for spawning sub-processes
 - [x] CLI args
 - [x] $stdin, $stderr
+- [x] error handling (`let result = mayError() catch (e) DEFAULT;`)

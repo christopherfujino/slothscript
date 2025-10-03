@@ -703,6 +703,24 @@ and interpret_expr globals expr :
       (* This needs to run regardless of either's state *)
       let _ = Option.map !post_block_hook ~f:(fun hook -> hook ()) in
       (globals, either)
+  | CatchExpr { subject; capture; catch; pos = _ } -> (
+      let globals, subject_either = interpret_expr globals subject in
+      match subject_either with
+      | First _ as first -> (globals, first)
+      | Second (bt, _) as second -> (
+          match bt with
+          | Error msg ->
+              let inner_ids = Identifiers.push_empty globals.identifiers in
+              (match
+                 Identifiers.bind inner_ids capture (Runtime.String msg)
+               with
+              | None -> failwith "TODO"
+              | Some () -> ());
+              let inner_globals = { globals with identifiers = inner_ids } in
+              (* Don't let the inner_globals escape *)
+              let _, either = interpret_expr inner_globals catch in
+              (globals, either)
+          | _ -> (globals, second)))
 
 (** You must push an empty env frame on first *)
 and interpret_block (globals : Globals.t) (stmts : Compiler.Optimizer.stmt list)
@@ -1013,7 +1031,13 @@ and interpret_binary globals lhs rhs op pos =
       interpret_expr globals rhs >>= fun globals rhs ->
       let left = cast_to_number lhs in
       let right = cast_to_number rhs in
-      (globals, Either.first @@ Runtime.Num (left /. right))
+      if Float.(right = 0.0) then
+        ( globals,
+          Either.second
+            ( Compiler.Ast.Error
+                (runtime_failure_msg ~globals ~pos "Divide by zero"),
+              Runtime.Null ) )
+      else (globals, Either.first @@ Runtime.Num (left /. right))
   | Product ->
       interpret_expr globals rhs >>= fun globals rhs ->
       let left = cast_to_number lhs in

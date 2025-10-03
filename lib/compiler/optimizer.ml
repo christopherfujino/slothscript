@@ -75,6 +75,12 @@ and expr =
     }
   | WithExpr of
       (string * expr) list * stmt list * (Lexing.position[@sexp.opaque])
+  | CatchExpr of {
+      subject : expr;
+      capture : string;
+      catch : expr;
+      pos : (Lexing.position[@sexp.opaque]);
+    }
 [@@deriving sexp]
 
 and string_parts =
@@ -307,6 +313,18 @@ and optimize_expr (env : Environment.t) (e : Ast.expr) : Environment.t * expr =
       let inner_env = Environment.push_empty env in
       let block = optimize_block inner_env block in
       (env, WithExpr (assignments, block, pos))
+  | CatchExpr { subject; capture; catch; pos } ->
+      let env, subject = optimize_expr env subject in
+      let inner_env = Environment.push_empty env in
+      let inner_env =
+        match Environment.bind inner_env capture with
+        | None ->
+            Printf.sprintf "The name %s has already been declared" capture
+            |> fail ~env ~pos
+        | Some e -> e
+      in
+      let _, catch = optimize_expr inner_env catch in
+      (env, CatchExpr { subject; capture; catch; pos })
 
 and optimize_string env s pos =
   let env, contents =

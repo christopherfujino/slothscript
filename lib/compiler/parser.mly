@@ -33,6 +33,7 @@
 %token <Lexing.position> BREAK
 %token <Lexing.position> CONTINUE
 %token <Lexing.position> WITH
+%token <Lexing.position> CATCH
 
 (* Operators *)
 %token <Lexing.position> PLUS
@@ -148,6 +149,15 @@ stmt_sans_semicolon:
 
 (* Conditionals *)
 expr1:
+  | e1 = expr2 ; pos = CATCH; LPAREN; capture = ID; RPAREN; e2 = expr8 {
+    let (capture, _) = capture in
+    CatchExpr {
+      subject = e1;
+      capture = capture;
+      catch = e2;
+      pos;
+    }
+  }
   | pos = FOR; init = expr1; SEMICOLON; comp = expr1; SEMICOLON; inc = expr1; bl = block {
     ForLoop (init, comp, inc, bl, pos)
   }
@@ -166,6 +176,7 @@ expr1:
     SubAssignExpr {subscript; value=rhs; pos }
   }
 
+  (* TODO can this be lowered? *)
   (* assignment_list never has trailing comma *)
   | pos = WITH; LPAREN; assignments = assignment_list; COMMA; RPAREN; b = block {
     WithExpr (assignments, b, pos)
