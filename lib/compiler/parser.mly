@@ -147,17 +147,8 @@ stmt_sans_semicolon:
   | e1 = expr1 { ExprStmt e1 }
   ;
 
-(* Conditionals *)
+(* statement like expression *)
 expr1:
-  | e1 = expr2 ; pos = CATCH; LPAREN; capture = ID; RPAREN; e2 = expr8 {
-    let (capture, _) = capture in
-    CatchExpr {
-      subject = e1;
-      capture = capture;
-      catch = e2;
-      pos;
-    }
-  }
   | pos = FOR; init = expr1; SEMICOLON; comp = expr1; SEMICOLON; inc = expr1; bl = block {
     ForLoop (init, comp, inc, bl, pos)
   }
@@ -176,86 +167,91 @@ expr1:
     SubAssignExpr {subscript; value=rhs; pos }
   }
 
-  (* TODO can this be lowered? *)
-  (* assignment_list never has trailing comma *)
-  | pos = WITH; LPAREN; assignments = assignment_list; COMMA; RPAREN; b = block {
-    WithExpr (assignments, b, pos)
-  }
-  | pos = WITH; LPAREN; assignments = assignment_list; RPAREN; b = block {
-    WithExpr (assignments, b, pos)
-  }
   | e = expr2 { e }
 
-(* Operators *)
+(* Catch expression *)
 expr2:
+  | e1 = expr2 ; pos = CATCH; LPAREN; capture = ID; RPAREN; e2 = expr8 {
+    let (capture, _) = capture in
+    CatchExpr {
+      subject = e1;
+      capture = capture;
+      catch = e2;
+      pos;
+    }
+  }
+  | e = expr3 { e }
+
+(* Operators *)
+expr3:
   (* Highest *)
-  | e1 = expr2; pos = DOUBLE_EQUALS; e2 = expr2 {
+  | e1 = expr3; pos = DOUBLE_EQUALS; e2 = expr3 {
     Equality (e1, e2, true, pos)
   }
-  | e1 = expr2; pos = NOT_EQUALS; e2 = expr2 {
+  | e1 = expr3; pos = NOT_EQUALS; e2 = expr3 {
     Equality (e1, e2, false, pos)
   }
-  | e1 = expr2; pos = LESS; e2 = expr2 {
+  | e1 = expr3; pos = LESS; e2 = expr3 {
     Binary ( e1, e2, Less, pos)
   }
-  | e1 = expr2; pos = GREATER; e2 = expr2 {
+  | e1 = expr3; pos = GREATER; e2 = expr3 {
     Binary ( e1, e2, Greater, pos)
   }
-  | e1 = expr2; pos = LEQ; e2 = expr2 {
+  | e1 = expr3; pos = LEQ; e2 = expr3 {
     Binary ( e1, e2, Leq, pos)
   }
-  | e1 = expr2; pos = GEQ; e2 = expr2 {
+  | e1 = expr3; pos = GEQ; e2 = expr3 {
     Binary ( e1, e2, Geq, pos)
   }
 
-  | e1 = expr2; pos = PLUS; e2 = expr2 {
+  | e1 = expr3; pos = PLUS; e2 = expr3 {
     Binary ( e1, e2, Plus, pos)
   }
-  | e1 = expr2; pos = MINUS; e2 = expr2 {
+  | e1 = expr3; pos = MINUS; e2 = expr3 {
     Binary ( e1, e2, Minus, pos)
   }
-  | e1 = expr2; pos = PIPE; e2 = expr2 {
+  | e1 = expr3; pos = PIPE; e2 = expr3 {
     Binary ( e1, e2, Pipe, pos)
   }
 
-  | e1 = expr2; pos = PRODUCT; e2 = expr2 {
+  | e1 = expr3; pos = PRODUCT; e2 = expr3 {
     Binary ( e1, e2, Product, pos)
   }
-  | e1 = expr2; pos = DIVIDE; e2 = expr2 {
+  | e1 = expr3; pos = DIVIDE; e2 = expr3 {
     Binary ( e1, e2, Divide, pos)
   }
-  | e1 = expr2; pos = MODULO; e2 = expr2 {
+  | e1 = expr3; pos = MODULO; e2 = expr3 {
     Binary ( e1, e2, Modulo, pos)
   }
-  | e1 = expr2; pos = AND; e2 = expr2 {
+  | e1 = expr3; pos = AND; e2 = expr3 {
     Binary ( e1, e2, And, pos)
   }
-  | e1 = expr2; pos = OR; e2 = expr2 {
+  | e1 = expr3; pos = OR; e2 = expr3 {
     Binary ( e1, e2, Or, pos)
   }
 
-  | e1 = expr2; pos = RIGHT_ARROW; e2 = expr2 {
+  | e1 = expr3; pos = RIGHT_ARROW; e2 = expr3 {
     Binary ( e1, e2, RightArrow, pos)
   }
-  | pos = LEFT_ARROW; e = expr2 {
+  | pos = LEFT_ARROW; e = expr3 {
     UnaryExpr { target=e; operator=LeftArrow; pos}
   }
-  | pos = NOT; e = expr2 {
+  | pos = NOT; e = expr3 {
     UnaryExpr { target=e; operator=Not; pos}
   }
-  | e = expr2; pos = BANG {
+  | e = expr3; pos = BANG {
     UnaryExpr { target = e; operator=Bang; pos}
   }
-  | e = expr2; pos = AMPERSAND {
+  | e = expr3; pos = AMPERSAND {
     UnaryExpr { target = e; operator=Ampersand; pos}
   }
-  | e = expr2; pos = AMPERSAND_BANG {
+  | e = expr3; pos = AMPERSAND_BANG {
     UnaryExpr { target = e; operator=AmpersandBang; pos}
   }
-  | pos = MINUS; e = expr2 {
+  | pos = MINUS; e = expr3 {
     UnaryExpr { target = e; operator=Minus; pos}
   }
- 
+
   | e = expr7 { e }
 
 
@@ -278,6 +274,14 @@ expr7:
 
 (* Primary - literals or grouping *)
 expr8:
+  (* assignment_list never has trailing comma *)
+  | pos = WITH; LPAREN; assignments = assignment_list; COMMA; RPAREN; b = block {
+    WithExpr (assignments, b, pos)
+  }
+  | pos = WITH; LPAREN; assignments = assignment_list; RPAREN; b = block {
+    WithExpr (assignments, b, pos)
+  }
+
   | pos = DO; block = block {
     DoBlock (block, pos)
   }
