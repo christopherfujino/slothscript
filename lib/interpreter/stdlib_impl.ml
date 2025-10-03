@@ -1,4 +1,5 @@
 open Core
+open Sloth_common.Common
 
 type func_t = {
   name : string;
@@ -102,7 +103,7 @@ let make_protos m =
               (fun _ args ->
                 let arg = List.hd_exn args in
                 let arr_of_ts =
-                  Runtime.list_of_val arg |> Option.value_exn ~message:__LOC__
+                  Runtime.list_of_val arg |> option_value ~message:__LOC__
                 in
                 let len = Array.length arr_of_ts |> Float.of_int in
                 First (Runtime.Num len));
@@ -152,14 +153,14 @@ let make_protos m =
                     let unwrap_fd identifier =
                       let t' =
                         Context.get ctx identifier
-                        |> Option.value_exn
+                        |> option_value
                              ~message:
                                (Printf.sprintf
                                   "The context variable `%s` has been unset"
                                   identifier)
                       in
                       Runtime.file_descriptor_of_t t'
-                      |> Option.value_exn
+                      |> option_value
                            ~message:
                              (Printf.sprintf
                                 "Expected `%s` to be of type `FileDescriptor`, \
@@ -196,7 +197,8 @@ let make_protos m =
               (fun _ args ->
                 let handle = List.hd_exn args in
                 let handle =
-                  Runtime.process_handle_of_t handle |> Option.value_exn
+                  Runtime.process_handle_of_t handle
+                  |> option_value ~message:__LOC__
                 in
                 let res =
                   match handle with
@@ -222,7 +224,8 @@ let make_protos m =
               (fun _ args ->
                 let proc = List.hd_exn args in
                 let result =
-                  Runtime.process_result_of_val proc |> Option.value_exn
+                  Runtime.process_result_of_val proc
+                  |> option_value ~message:__LOC__
                 in
                 First (Runtime.String result.stdout));
           };
@@ -239,19 +242,22 @@ let make_protos m =
             cb =
               (fun _ args ->
                 let left =
-                  List.hd_exn args |> Runtime.hashmap_of_val |> Option.value_exn
+                  List.hd_exn args |> Runtime.hashmap_of_val
+                  |> option_value ~message:__LOC__
                 in
                 let right_v = List.nth_exn args 1 in
-                let right =
-                  match Runtime.hashmap_of_val right_v with
-                  | Some right -> right
-                  | None ->
+                (match Runtime.hashmap_of_val right_v with
+                | Some right -> First right
+                | None ->
+                    let msg =
                       Printf.sprintf
                         "HashMap.merge() expects an argument of type \
                          `HashMap`, but received %s"
                         (Runtime.to_s right_v)
-                      |> failwith
-                in
+                    in
+                    let bt = Compiler.Ast.Error msg in
+                    Second (bt, Runtime.Null))
+                >>= fun right ->
                 let left_copy = Stdlib.Hashtbl.copy left in
                 Stdlib.Hashtbl.iter
                   (fun key v -> Stdlib.Hashtbl.add left_copy key v)
@@ -272,7 +278,7 @@ let make_protos m =
               (fun _ args ->
                 let str = List.hd_exn args in
                 let ocaml_string =
-                  Runtime.string_of_val str |> Option.value_exn
+                  Runtime.string_of_val str |> option_value ~message:__LOC__
                 in
                 First (Runtime.String (String.strip ocaml_string)));
           };
@@ -289,7 +295,8 @@ let make_protos m =
             cb =
               (fun _ args ->
                 let path =
-                  List.hd_exn args |> Runtime.directory_of_t |> Option.value_exn
+                  List.hd_exn args |> Runtime.directory_of_t
+                  |> option_value ~message:__LOC__
                 in
                 let b = M.directory_exists path in
                 First (Runtime.Bool b));
@@ -300,7 +307,8 @@ let make_protos m =
             cb =
               (fun _ args ->
                 let path =
-                  List.hd_exn args |> Runtime.directory_of_t |> Option.value_exn
+                  List.hd_exn args |> Runtime.directory_of_t
+                  |> option_value ~message:__LOC__
                 in
                 M.mkdir path;
                 First Runtime.Null);
@@ -311,7 +319,8 @@ let make_protos m =
             cb =
               (fun _ args ->
                 let path =
-                  List.hd_exn args |> Runtime.directory_of_t |> Option.value_exn
+                  List.hd_exn args |> Runtime.directory_of_t
+                  |> option_value ~message:__LOC__
                 in
                 First (Runtime.String path));
           };

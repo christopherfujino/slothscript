@@ -1,6 +1,3 @@
-### Name
-hashmaps
-
 ### Program
 let h = {
   "foo": "bar",
@@ -17,6 +14,8 @@ print(h["foo"])
 h = {"on a": "single line"}
 
 assert(h["foo bar"] == null)
+
+assert(String(h) == "{on a: single line}", String(h))
 
 ### Processes
 ()
@@ -168,6 +167,37 @@ assert(h["foo bar"] == null)
             <opaque>)
           true
           <opaque>))
+        <opaque>)))
+  (StmtDecl
+    (ExprStmt
+      (FuncInvoc
+        (IdRef
+          assert
+          <opaque>)
+        ((Equality
+          (FuncInvoc
+            (IdRef
+              String
+              <opaque>)
+            ((IdRef
+              h
+              <opaque>))
+            <opaque>)
+          (String
+            ((FullString
+              "{on a: single line}"
+              <opaque>))
+            <opaque>)
+          true
+          <opaque>)
+          (FuncInvoc
+            (IdRef
+              String
+              <opaque>)
+            ((IdRef
+              h
+              <opaque>))
+            <opaque>))
         <opaque>))))
 
 ### Stdout

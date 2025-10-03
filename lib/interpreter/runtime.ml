@@ -116,7 +116,7 @@ let rec to_s t' =
             let key = to_s key in
             let data = to_s data in
             ( (if is_first then Printf.sprintf "%s%s: %s" acc key data
-               else Printf.sprintf ", %s%s: %s" acc key data),
+               else Printf.sprintf "%s, %s: %s" acc key data),
               false ))
           tbl ("{", true)
       in

@@ -11,7 +11,7 @@ exception CompileError of string
 exception RuntimeError of string
 
 let internal_failure loc =
-  raise @@ InternalFailure (Printf.sprintf "Internal failure at %s" loc)
+  raise @@ InternalFailure (Printf.sprintf "You hit an internal bug at %s\n\nPlease file a bug at https://github.com/christopherfujino/slothscript/issues/new" loc)
 
 let wrap_error cb =
   try Ok (cb ()) with
@@ -19,6 +19,9 @@ let wrap_error cb =
   | ParseError msg -> Error msg
   | CompileError msg -> Error msg
   | RuntimeError msg -> Error msg
+
+let option_value opt ~message =
+  match opt with Some v -> v | None -> raise @@ InternalFailure message
 
 let debug_mode = false
 

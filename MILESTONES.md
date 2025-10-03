@@ -20,6 +20,7 @@
 - [ ] Binary builds
 - [ ] JSON module
 - [ ] statically link readline
+- [ ] optimize binary size
 - [ ] Optional function parameters
 
 ## Stretch goals
