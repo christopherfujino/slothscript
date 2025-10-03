@@ -24,7 +24,6 @@ and stmt =
 [@@deriving sexp]
 
 and breaking_type = Return | Break | Continue [@@deriving sexp]
-(* TODO make an interpreter type to store the runtime data *)
 
 and expr =
   | Num of float * (Lexing.position[@sexp.opaque])
