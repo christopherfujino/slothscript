@@ -31,6 +31,7 @@
 %token <Lexing.position> FOR
 %token <Lexing.position> RETURN
 %token <Lexing.position> BREAK
+%token <Lexing.position> THROW
 %token <Lexing.position> CONTINUE
 %token <Lexing.position> WITH
 %token <Lexing.position> CATCH
@@ -131,6 +132,9 @@ stmt_sans_semicolon:
   }
   | pos = RETURN {
     BreakingStmt (Return, None, pos)
+  }
+  | pos = THROW; e = expr1 {
+    BreakingStmt (Error, Some e, pos)
   }
   | pos = BREAK; e = expr1 {
     BreakingStmt (Break, Some e, pos)

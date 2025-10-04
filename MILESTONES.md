@@ -1,7 +1,6 @@
 # Milestones
 
 ## v0.1 - initially tagged version
-- [ ] `error()` function
 - [ ] `File::open()` -> `FileDescriptor`
      - `fprintf($stderr, "err!")`
 - [ ] Reading from `$stdin`
@@ -10,7 +9,14 @@
 - [ ] Language versioning
 - [ ] Standard Library
   - `List` methods
+    - `.contains(element)`
+    - `.forEach(callback)`
+    - `.map(callback)`
+    - `.filter(callback)`
+    - `.reduce(callback)`
   - `String` methods
+    - `.split(sep)`
+    - `.contains(substring)`
   - `$Process.allowNonzero : Bool`
 
 ## v0.2 - initial pre-release
@@ -88,3 +94,4 @@
 - [x] CLI args
 - [x] $stdin, $stderr
 - [x] error handling (`let result = mayError() catch (e) DEFAULT;`)
+- [x] `throw` keyword

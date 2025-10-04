@@ -5,7 +5,7 @@ incomplete string interpolation
 "start ${ 1
 
 ### Failure
-[1:11] Parser error (code #168)
+[1:11] Parser error (code ##)
 
  1 | "start ${ 1
                 ^

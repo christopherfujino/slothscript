@@ -113,6 +113,7 @@ and interpret_stmt (globals : Globals.t) stmt :
             | Break -> Runtime.Break v
             | Continue -> Continue v
             | Return -> Return v
+            | Error -> Error v
           in
           (globals, Second wrapped_type))
 

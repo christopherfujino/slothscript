@@ -13,10 +13,10 @@ func f1() {
 f1()
 
 ### Failure
-[3:7] Parser error (code #25)
+[3:7] Parser error (code ##)
 
  1 | func f1() {
  2 |   let x = 1
  3 |   func f2() {
             ^
-An expression was expected here; function expressions should be unnamed
+An expression was expected here; function expressions should be unnamed (e.g. `let f = func(x) {x + 1}`)

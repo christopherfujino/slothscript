@@ -49,3 +49,7 @@ An expression was expected here; function expressions should be unnamed (e.g. `l
 prog: STRING_START CONTEXT_ID RPAREN
 
 String interpolation was started but never finished
+
+prog: LCURLY CONTEXT_ID STRING_MIDDLE
+
+This is not a valid `HashMap` literal expression--did you want to make this a `do {...}` expression?

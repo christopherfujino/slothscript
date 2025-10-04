@@ -23,7 +23,7 @@ and stmt =
       breaking_type * expr option * (Lexing.position[@sexp.opaque])
 [@@deriving sexp]
 
-and breaking_type = Return | Break | Continue [@@deriving sexp]
+and breaking_type = Return | Break | Continue | Error [@@deriving sexp]
 
 and expr =
   | Num of float * (Lexing.position[@sexp.opaque])

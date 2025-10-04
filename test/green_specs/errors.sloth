@@ -1,9 +1,23 @@
 ### Program
 let result = 1 / 0 catch (foo) do {
-  print(foo)
+  assert(foo == "[1:15] Runtime error
+
+ 1 | let result = 1 / 0 catch (foo) do {
+                    ^
+Divide by zero")
   42
 }
 assert(result == 42, "${result} != 42")
+
+func willThrow() {
+  throw "oops!"
+}
+
+result = willThrow() catch (msg) do {
+  assert(msg == "oops!")
+  "all good"
+}
+assert(result == "all good")
 
 ### Processes
 ()
@@ -31,10 +45,18 @@ assert(result == 42, "${result} != 42")
             ((ExprStmt
               (FuncInvoc
                 (IdRef
-                  print
+                  assert
                   <opaque>)
-                ((IdRef
-                  foo
+                ((Equality
+                  (IdRef
+                    foo
+                    <opaque>)
+                  (String
+                    ((FullString
+                      "[1:15] Runtime error\n\n 1 | let result = 1 / 0 catch (foo) do {\n                    ^\nDivide by zero"
+                      <opaque>))
+                    <opaque>)
+                  true
                   <opaque>))
                 <opaque>))
               (ExprStmt
@@ -72,13 +94,86 @@ assert(result == 42, "${result} != 42")
                 " != 42"
                 <opaque>))
             <opaque>))
+        <opaque>)))
+  (FuncDecl
+    (name
+      willThrow)
+    (parameters
+      ())
+    (block
+      ((BreakingStmt
+        Error
+        ((String
+          ((FullString
+            oops!
+            <opaque>))
+          <opaque>))
+        <opaque>)))
+    (pos
+      <opaque>))
+  (StmtDecl
+    (ExprStmt
+      (AssignExpr
+        result
+        (CatchExpr
+          (subject
+            (FuncInvoc
+              (IdRef
+                willThrow
+                <opaque>)
+              ()
+              <opaque>))
+          (capture
+            msg)
+          (catch
+            (DoBlock
+              ((ExprStmt
+                (FuncInvoc
+                  (IdRef
+                    assert
+                    <opaque>)
+                  ((Equality
+                    (IdRef
+                      msg
+                      <opaque>)
+                    (String
+                      ((FullString
+                        oops!
+                        <opaque>))
+                      <opaque>)
+                    true
+                    <opaque>))
+                  <opaque>))
+                (ExprStmt
+                  (String
+                    ((FullString
+                      "all good"
+                      <opaque>))
+                    <opaque>)))
+              <opaque>))
+          (pos
+            <opaque>))
+        <opaque>)))
+  (StmtDecl
+    (ExprStmt
+      (FuncInvoc
+        (IdRef
+          assert
+          <opaque>)
+        ((Equality
+          (IdRef
+            result
+            <opaque>)
+          (String
+            ((FullString
+              "all good"
+              <opaque>))
+            <opaque>)
+          true
+          <opaque>))
         <opaque>))))
 
 ### Stdout
-[1:15] Runtime error
 
- 1 | let result = 1 / 0 catch (foo) do {
-                    ^
-Divide by zero
 
 ### Failure

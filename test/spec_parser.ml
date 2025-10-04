@@ -33,6 +33,8 @@ let serialize path spec =
   Buffer.contents buf |> Out_channel.output_string chan;
   Out_channel.close chan
 
+let regex_pattern = Re.Pcre.regexp "^### ([a-zA-Z].*)"
+
 let deserialize path =
   if not (Filename.check_suffix path ".sloth") then
     Printf.sprintf "%s is not a valid slothscript file" path |> failwith;
@@ -42,8 +44,7 @@ let deserialize path =
   let rec process_line state' lines acc =
     match lines with
     | line :: tail ->
-        let r = Re.Pcre.regexp "^### ([a-zA-Z].*)" in
-        let groups_opt = Re.exec_opt r line in
+        let groups_opt = Re.exec_opt regex_pattern line in
         let next_state, acc =
           match groups_opt with
           | Some groups -> (

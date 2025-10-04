@@ -105,6 +105,8 @@ let make_test spec =
     in
     assert_failure msg)
 
+let parser_error_pattern = Re.Pcre.regexp "\\(code #[0-9]+\\)"
+
 let make_failing_test spec =
   let open Compiler in
   spec.name >:: fun _ ->
@@ -112,15 +114,28 @@ let make_failing_test spec =
     match spec.failure with
     | None -> assert_failure @@ Printf.sprintf "%s" actual_msg
     | Some expectation ->
-        if String.is_substring actual_msg ~substring:expectation then ()
+        let redacted_msg =
+          Re.replace_string ~all:false parser_error_pattern ~by:"(code ##)"
+            actual_msg
+        in
+        if String.(redacted_msg = expectation) then ()
         else
-          assert_failure
-          @@ Printf.sprintf
-               "Received unexpected error\n\n\
-                Expected: \"%s\"\n\n\
-                Received:\n\n\
-                %s"
-               expectation actual_msg
+          let print_hint = String.(not (actual_msg = redacted_msg)) in
+          let base_msg =
+            Printf.sprintf
+              "Received unexpected error\n\nExpected: \"%s\"\n\nReceived:\n\n%s"
+              expectation actual_msg
+          in
+          let msg =
+            if print_hint then
+              Printf.sprintf
+                "%s\n\n\
+                 (Hint: your expectation should not include actual parser \
+                 error codes, but instead `(code ##)`"
+                base_msg
+            else base_msg
+          in
+          assert_failure msg
   in
   (* Parser *)
   try

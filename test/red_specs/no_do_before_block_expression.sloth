@@ -1,0 +1,14 @@
+### Program
+
+assert(false) catch (err) {
+  print(err)
+  null
+}
+
+### Failure
+[2:12] Parser error (code ##)
+
+ 1 | assert(false) catch (err) {
+ 2 |   print(err)
+                 ^
+This is not a valid `HashMap` literal expression--did you want to make this a `do {...}` expression?

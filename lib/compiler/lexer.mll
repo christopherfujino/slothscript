@@ -39,6 +39,7 @@ let to_s = function
 | CATCH _ -> "CATCH"
 | RETURN _ -> "RETURN"
 | BREAK _ -> "BREAK"
+| THROW _ -> "THROW"
 | CONTINUE _ -> "CONTINUE"
 | LESS _ -> "LESS"
 | GREATER _ -> "GREATER"
@@ -140,6 +141,7 @@ rule private_read last_token state =
   | "catch" { CATCH lexbuf.lex_start_p }
   | "return" { RETURN lexbuf.lex_start_p }
   | "break" { BREAK lexbuf.lex_start_p }
+  | "throw" { THROW lexbuf.lex_start_p }
   | "continue" { CONTINUE lexbuf.lex_start_p }
 
   (* Operators *)
