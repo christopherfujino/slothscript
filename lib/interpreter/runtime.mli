@@ -68,7 +68,7 @@ val to_s : t -> string
 val bool_of_val : t -> bool option
 val directory_of_t : t -> string option
 val env_of_val : t -> string array option
-val file_of_val : t -> file option
+val file_of_t : t -> file option
 val file_descriptor_of_t : t -> Core_unix.File_descr.t option
 val func_of_val : t -> function_t option
 val hashmap_of_val : t -> (t, t) Stdlib.Hashtbl.t option

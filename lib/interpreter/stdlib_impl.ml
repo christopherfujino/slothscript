@@ -336,7 +336,7 @@ let make_protos m =
               (fun _ args ->
                 let first_arg = List.nth_exn args 1 in
                 let Runtime.{ path } =
-                  match Runtime.file_of_val first_arg with
+                  match Runtime.file_of_t first_arg with
                   | Some f -> f
                   | None -> Sloth_common.Common.internal_failure __LOC__
                 in

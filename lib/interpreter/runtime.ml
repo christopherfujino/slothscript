@@ -171,7 +171,7 @@ let method_of_val = function
   | Method (t, func_t) -> Some (t, func_t)
   | _ -> None
 
-let file_of_val = function File f -> Some f | _ -> None
+let file_of_t = function File f -> Some f | _ -> None
 let file_descriptor_of_t = function FileDescriptor fd -> Some fd | _ -> None
 let directory_of_t = function Directory p -> Some p | _ -> None
 

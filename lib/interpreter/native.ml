@@ -9,7 +9,9 @@ type processMode =
 module type Sig = sig
   val print_s : string -> unit
   val file_read_all : string -> string
-  val file_write_all : string -> data:string -> unit
+
+  (* TODO does this type of `data` need to be more generic to support binary? *)
+  val write : Core_unix.File_descr.t -> data:string -> (unit, string) Result.t
   val wait : Runtime.process_handle -> (Runtime.t, string) Result.t
 
   val proc_exec :
@@ -26,7 +28,17 @@ end
 module Prod : Sig = struct
   let print_s = Printf.printf "%s%!"
   let file_read_all = In_channel.read_all
-  let file_write_all = Out_channel.write_all
+
+  let write fd ~data =
+    let buf = Bytes.of_string data in
+    let len = Bytes.length buf in
+    let actual_len = Core_unix.write fd ~buf ~len in
+    if not (actual_len = len) then
+      Error
+        (Printf.sprintf "Tried to write %d bytes, but actually wrote %d" len
+           actual_len)
+    else Ok ()
+
   let chdir = Core_unix.chdir
   let mkdir = Core_unix.mkdir ~perm:0o775
 
@@ -200,7 +212,8 @@ module type TestSig = sig
   type fs_entity = File of string | Directory
 
   val stdout_buffer : string list ref
-  val file_system : (string, fs_entity) Hashtbl.t
+  val path_to_fd : (string, int) Hashtbl.t
+  val fd_to_entity : (int, fs_entity) Hashtbl.t
   val proc_expectations : Mock_process.spec option ref
 end
 
@@ -212,6 +225,14 @@ module Make_test () : TestSig = struct
   let running_pids : (int * (unit -> (Runtime.t, 'a) Result.t)) list ref =
     ref []
 
+  (** Use get_next_fd *)
+  let next_fd = ref 3
+
+  let get_next_fd () =
+    let this_fd = !next_fd in
+    next_fd := this_fd + 1;
+    this_fd
+
   (** Use get_next_pid *)
   let next_pid = ref 42
 
@@ -220,16 +241,22 @@ module Make_test () : TestSig = struct
     next_pid := this_pid + 1;
     this_pid
 
-  let file_system = Hashtbl.create (module String)
+  let path_to_fd : (string, int) Hashtbl.t = Hashtbl.create (module String)
+  let fd_to_entity : (int, fs_entity) Hashtbl.t = Hashtbl.create (module Int)
   let proc_expectations : Mock_process.spec option ref = ref None
   let chdir _ = ()
+  (* This function only exists to cause OS side-effects, no-op in tests *)
 
   let mkdir path =
-    match Hashtbl.add file_system ~key:path ~data:Directory with
+    let fd = get_next_fd () in
+    (match Hashtbl.add path_to_fd ~key:path ~data:fd with
     | `Ok -> ()
     | `Duplicate ->
         Printf.sprintf "EEXIST: the directory %s already exists" path
-        |> failwith
+        |> failwith);
+    match Hashtbl.add fd_to_entity ~key:fd ~data:Directory with
+    | `Ok -> ()
+    | `Duplicate -> internal_failure __LOC__
 
   let directory_exists path =
     let entity_opt = Hashtbl.find file_system path in
@@ -237,9 +264,11 @@ module Make_test () : TestSig = struct
     | None -> false
     | Some entity -> ( match entity with File _ -> false | Directory -> true)
 
-  let file_write_all path ~data =
+  let write fd ~data =
+    let fd = Core_unix.File_descr.to_int fd in
     (* TODO allow over-writing *)
-    Hashtbl.add_exn file_system ~key:path ~data:(File data)
+    Hashtbl.add_exn fd_to_entity ~key:fd ~data:(File data);
+    Ok ()
 
   let file_read_all path =
     (* TODO: resolve relative paths *)
