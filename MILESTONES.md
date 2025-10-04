@@ -2,6 +2,10 @@
 
 ## v0.1 - initially tagged version
 - [ ] `error()` function
+- [ ] `File::open()` -> `FileDescriptor`
+     - `fprintf($stderr, "err!")`
+- [ ] Reading from `$stdin`
+- [ ] Mock out standard I/O for tests
 - [ ] Stack traces
 - [ ] Language versioning
 - [ ] Standard Library
