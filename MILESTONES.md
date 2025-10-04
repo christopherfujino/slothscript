@@ -2,7 +2,9 @@
 
 ## v0.1 - initially tagged version
 - [ ] `File::open()` -> `FileDescriptor`
-     - `fprintf($stderr, "err!")`
+    - `fd.write("Hello, World!\n")`
+    - `fd.print("Hello, World!")`
+    - `fprintf($stderr, "err!")`
 - [ ] Reading from `$stdin`
 - [ ] Mock out standard I/O for tests
 - [ ] Stack traces
