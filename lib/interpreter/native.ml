@@ -10,6 +10,7 @@ module type Sig = sig
   val print_s : string -> unit
   val file_read_all : string -> string
   val fd_read_all : Core_unix.File_descr.t -> (Runtime.t, string) Result.t
+  val fd_write_all : Core_unix.File_descr.t -> string -> (unit, string) Result.t
 
   (* TODO does this type of `data` need to be more generic to support binary? *)
   val write : Core_unix.File_descr.t -> data:string -> (unit, string) Result.t
@@ -34,6 +35,14 @@ end
 module Prod : Sig = struct
   let print_s = Printf.printf "%s%!"
   let file_read_all = In_channel.read_all
+
+  let fd_write_all fd contents =
+    let len = String.length contents in
+    let buf = Bytes.of_string contents in
+    let n = Core_unix.single_write ~len ~buf ~pos:0 fd in
+    if not (n = len) then
+      Error (Printf.sprintf "Tried to write %d bytes but only wrote %d" len n)
+    else Ok ()
 
   let fd_read_all fd =
     let string_buf = Buffer.create bufsiz in
@@ -330,6 +339,15 @@ module Make_test () : TestSig = struct
     match entity with
     | File (contents, _) -> Ok (contents := data)
     | Directory -> internal_failure __LOC__
+
+  let fd_write_all fd contents =
+    let fd_int = Core_unix.File_descr.to_int fd in
+    match List.Assoc.find !open_fds ~equal:( = ) fd_int with
+    | None -> Error (Printf.sprintf "File %d not found" fd_int)
+    | Some entity -> (
+        match entity with
+        | File (contents_ref, _) -> Ok (contents_ref := contents)
+        | Directory -> internal_failure __LOC__)
 
   let fd_read_all fd =
     let fd_int = Core_unix.File_descr.to_int fd in

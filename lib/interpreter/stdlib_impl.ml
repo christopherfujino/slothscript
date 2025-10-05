@@ -348,6 +348,28 @@ let make_protos m =
                 | Error msg -> Second (Error (Runtime.String msg)));
           };
           {
+            name = "openWrite";
+            arity = Some 1;
+            cb =
+              (fun _ args ->
+                let self = List.hd_exn args in
+                let Runtime.{ path } =
+                  match Runtime.file_of_t self with
+                  | Some p -> p
+                  | None ->
+                      internal_failure
+                      @@ Printf.sprintf "Expected a file, but got %s (%s)"
+                           (Runtime.to_s self) __LOC__
+                in
+                match
+                  M.open_file
+                    ~mode:[ Core_unix.O_WRONLY; Core_unix.O_CREAT ]
+                    path
+                with
+                | Ok fd -> First (Runtime.FileDescriptor fd)
+                | Error msg -> Second (Error (Runtime.String msg)));
+          };
+          {
             name = "readString";
             arity = Some 1;
             cb =
@@ -404,6 +426,35 @@ let make_protos m =
                 in
                 match M.fd_read_all fd with
                 | Ok contents -> First contents
+                | Error msg -> Second (Error (String msg)));
+          };
+          {
+            name = "writeAll";
+            arity = Some 2;
+            cb =
+              (fun _ args ->
+                let fd_t = List.hd_exn args in
+                let fd =
+                  match Runtime.file_descriptor_of_t fd_t with
+                  | Some fd -> fd
+                  | None -> Sloth_common.Common.internal_failure __LOC__
+                in
+                let contents = List.nth_exn args 1 in
+                (match Runtime.string_of_val contents with
+                | Some s -> First s
+                | None ->
+                    let msg =
+                      Printf.sprintf
+                        "The first argument passed to \
+                         `FileDescriptor.writeAll()` should be a `String`, but \
+                         got %s"
+                      @@ Runtime.to_s contents
+                    in
+                    let runtime_t = Runtime.String msg in
+                    Second (Runtime.Error runtime_t))
+                >>= fun str ->
+                match M.fd_write_all fd str with
+                | Ok () -> First Runtime.Null
                 | Error msg -> Second (Error (String msg)));
           };
         ];

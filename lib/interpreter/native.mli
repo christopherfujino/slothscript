@@ -9,6 +9,7 @@ module type Sig = sig
   val print_s : string -> unit
   val file_read_all : string -> string
   val fd_read_all : Core_unix.File_descr.t -> (Runtime.t, string) Result.t
+  val fd_write_all : Core_unix.File_descr.t -> string -> (unit, string) Result.t
   val write : Core_unix.File_descr.t -> data:string -> (unit, string) Result.t
   val wait : Runtime.process_handle -> (Runtime.t, string) Result.t
 
