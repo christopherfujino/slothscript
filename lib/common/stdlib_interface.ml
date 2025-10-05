@@ -30,13 +30,13 @@ let globals =
         { name = "Number"; methods = []; static_members = [] };
         {
           name = "File";
-          (* Do we still need this? *)
-          methods = [ "readString" ];
+          methods = [ "readString"; "openRead"; "openWrite" ];
           static_members = [ "new" ];
         };
         {
+          (* Should we have separate types for reading and writing? *)
           name = "FileDescriptor";
-          methods = ["readAll"];
+          methods = [ "readAll" ];
           static_members = [];
         };
         {

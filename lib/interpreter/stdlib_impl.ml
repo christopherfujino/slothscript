@@ -330,6 +330,24 @@ let make_protos m =
       methods =
         [
           {
+            name = "openRead";
+            arity = Some 1;
+            cb =
+              (fun _ args ->
+                let self = List.hd_exn args in
+                let Runtime.{ path } =
+                  match Runtime.file_of_t self with
+                  | Some p -> p
+                  | None ->
+                      internal_failure
+                      @@ Printf.sprintf "Expected a file, but got %s (%s)"
+                           (Runtime.to_s self) __LOC__
+                in
+                match M.open_file ~mode:[ Core_unix.O_RDONLY ] path with
+                | Ok fd -> First (Runtime.FileDescriptor fd)
+                | Error msg -> Second (Error (Runtime.String msg)));
+          };
+          {
             name = "readString";
             arity = Some 1;
             cb =
@@ -339,7 +357,7 @@ let make_protos m =
                   match Runtime.file_of_t first_arg with
                   | Some f -> f
                   | None ->
-                      Sloth_common.Common.internal_failure
+                      internal_failure
                       @@ Printf.sprintf "Expected a file, but got %s (%s)"
                            (Runtime.to_s first_arg) __LOC__
                 in
