@@ -30,8 +30,14 @@ let globals =
         { name = "Number"; methods = []; static_members = [] };
         {
           name = "File";
+          (* Do we still need this? *)
           methods = [ "readString" ];
           static_members = [ "new" ];
+        };
+        {
+          name = "FileDescriptor";
+          methods = ["readAll"];
+          static_members = [];
         };
         {
           name = "Directory";

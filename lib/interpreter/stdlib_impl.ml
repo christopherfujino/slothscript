@@ -331,14 +331,17 @@ let make_protos m =
         [
           {
             name = "readString";
-            arity = Some 2;
+            arity = Some 1;
             cb =
               (fun _ args ->
-                let first_arg = List.nth_exn args 1 in
+                let first_arg = List.hd_exn args in
                 let Runtime.{ path } =
                   match Runtime.file_of_t first_arg with
                   | Some f -> f
-                  | None -> Sloth_common.Common.internal_failure __LOC__
+                  | None ->
+                      Sloth_common.Common.internal_failure
+                      @@ Printf.sprintf "Expected a file, but got %s (%s)"
+                           (Runtime.to_s first_arg) __LOC__
                 in
                 (* Errors? *)
                 let contents = M.file_read_all path in
@@ -365,6 +368,28 @@ let make_protos m =
                        Runtime.File { path }));
           };
         ];
+    };
+    {
+      name = "FileDescriptor";
+      methods =
+        [
+          {
+            name = "readAll";
+            arity = Some 1;
+            cb =
+              (fun _ args ->
+                let fd_t = List.hd_exn args in
+                let fd =
+                  match Runtime.file_descriptor_of_t fd_t with
+                  | Some fd -> fd
+                  | None -> Sloth_common.Common.internal_failure __LOC__
+                in
+                match M.fd_read_all fd with
+                | Ok contents -> First contents
+                | Error msg -> Second (Error (String msg)));
+          };
+        ];
+      static_members = [];
     };
   ]
 

@@ -8,8 +8,14 @@ type processMode =
 module type Sig = sig
   val print_s : string -> unit
   val file_read_all : string -> string
+  val fd_read_all : Core_unix.File_descr.t -> (Runtime.t, string) Result.t
   val write : Core_unix.File_descr.t -> data:string -> (unit, string) Result.t
   val wait : Runtime.process_handle -> (Runtime.t, string) Result.t
+
+  val open_file :
+    mode:Core_unix.open_flag list ->
+    string ->
+    (Core_unix.File_descr.t, string) Result.t
 
   val proc_exec :
     mode:processMode ->
@@ -27,11 +33,10 @@ module Prod : Sig
 module type TestSig = sig
   include Sig
 
-  type fs_entity = File of string | Directory
+  type fs_entity = File of string ref * Core_unix.File_descr.t | Directory
 
   val stdout_buffer : string list ref
-  val path_to_fd : (string, int) Hashtbl.t
-  val fd_to_entity : (int, fs_entity) Hashtbl.t
+  val path_to_entity : (string, fs_entity) Hashtbl.t
   val proc_expectations : Mock_process.spec option ref
 end
 
