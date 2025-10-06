@@ -1194,6 +1194,6 @@ and cast_to_file_descriptor ~globals ~pos ~mode ~m t :
       | Ok fd -> First fd
       | Error msg -> failure_obj ~globals ~pos msg)
   | String path ->
-      let t = Runtime.File {path} in
+      let t = Runtime.File { path } in
       cast_to_file_descriptor ~globals ~pos ~mode ~m t
   | _ -> failure_obj ~globals ~pos "foo"
