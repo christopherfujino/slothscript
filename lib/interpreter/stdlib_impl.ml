@@ -1,26 +1,38 @@
 open Core
 open Sloth_common.Common
 
-type func_t = {
-  name : string;
-  arity : int option;
-  cb :
-    Runtime.t Context.t ->
-    Runtime.t list ->
-    (Runtime.t, Runtime.breaking_type) Either.t;
-}
-
 let ( >>= ) left right =
   match left with Second _ as second -> second | First first -> right first
+
+let make_func ~arity cb =
+  let open Runtime in
+  let wrapped_cb =
+   fun ctx args ->
+    (match arity with
+    | None -> Either.First ()
+    | Some arity ->
+        let arg_len = List.length args in
+        if not (Int.equal (List.length args) arity) then
+          Second
+            (Runtime.create_error
+               (Printf.sprintf
+                  "You passed %d arguments (%s) but %d were expected" arg_len
+                  (List.fold_left args ~init:"" ~f:(fun msg arg ->
+                       msg ^ Runtime.to_s arg ^ ", "))
+                  arity))
+        else First ())
+    >>= fun () -> cb ctx args
+  in
+  Func (Native { cb = wrapped_cb })
+
+let make_getter ~arity cb =
+  fun () -> make_func ~arity cb
 
 let make_ids m =
   let module M = (val m : Native.Sig) in
   [
-    {
-      name = "print";
-      arity = Some 1;
-      cb =
-        (fun ctx args ->
+    ( "print",
+      make_func ~arity:(Some 1) (fun ctx args ->
           match Context.get ctx "$stdout" with
           | None ->
               let err_msg = "The context variable `$stdout` was unset" in
@@ -44,13 +56,9 @@ let make_ids m =
 
               match res with
               | Ok () -> First Runtime.Null
-              | Error msg -> Second (Runtime.create_error msg)));
-    };
-    {
-      name = "exit";
-      arity = Some 1;
-      cb =
-        (fun _ args ->
+              | Error msg -> Second (Runtime.create_error msg))) );
+    ( "exit",
+      make_func ~arity:(Some 1) (fun _ args ->
           let arg = List.hd_exn args in
           match Runtime.int_of_val arg with
           | Some code -> Second (Runtime.Exit code)
@@ -60,14 +68,10 @@ let make_ids m =
                   "The argument passed to `exit()` must be an integer, got %s"
                 @@ Runtime.to_s arg
               in
-              Second (Runtime.create_error msg));
-    };
-    {
-      name = "assert";
-      arity = None;
+              Second (Runtime.create_error msg)) );
+    ( "assert",
       (* could be 1 or 2 *)
-      cb =
-        (fun _ args ->
+      make_func ~arity:None (fun _ args ->
           let arg = List.hd_exn args in
           let second_arg = List.nth args 1 in
           let res =
@@ -98,49 +102,42 @@ let make_ids m =
           in
           match res with
           | Ok v -> First v
-          | Error err -> Second (Runtime.create_error err));
-    };
+          | Error err -> Second (Runtime.create_error err)) );
   ]
 
 type proto_t = {
   name : string;
-  members : func_t list;
-  static_members : func_t list;
+  getters : (string * (unit -> Runtime.t)) list;
+  (* setters : (string * (Runtime.t -> unit)) list; *)
+  static_getters : (string * (unit -> Runtime.t)) list;
 }
 
 let make_protos m =
   let module M = (val m : Native.Sig) in
   [
-    { name = "Number"; members = []; static_members = [] };
+    { name = "Number"; getters = []; static_getters = [] };
     {
       name = "List";
-      members =
+      getters =
         [
-          {
-            name = "length";
-            arity = Some 1;
-            cb =
-              (fun _ args ->
+          ( "length",
+            make_getter ~arity:(Some 1) (fun _ args ->
                 let arg = List.hd_exn args in
                 let arr_of_ts =
                   Runtime.list_of_val arg |> option_value ~message:__LOC__
                 in
                 let len = Array.length arr_of_ts |> Float.of_int in
-                First (Runtime.Num len));
-          };
+                First (Runtime.Num len)) );
         ];
-      static_members = [];
+      static_getters = [];
     };
     {
       name = "Process";
-      members = [];
-      static_members =
+      getters = [];
+      static_getters =
         [
-          {
-            name = "new";
-            arity = Some 2;
-            cb =
-              (fun ctx args ->
+          ( "new",
+            make_getter ~arity:(Some 2) (fun ctx args ->
                 let arg = List.nth_exn args 1 in
                 match Runtime.list_of_val arg with
                 | None ->
@@ -200,19 +197,15 @@ let make_protos m =
                           pipes_to_collect = [];
                         }
                     in
-                    First (Runtime.Process proc));
-          };
+                    First (Runtime.Process proc)) );
         ];
     };
     {
       name = "ProcessHandle";
-      members =
+      getters =
         [
-          {
-            name = "wait";
-            arity = Some 1;
-            cb =
-              (fun _ args ->
+          ( "wait",
+            make_getter ~arity:(Some 1) (fun _ args ->
                 let handle = List.hd_exn args in
                 let handle =
                   Runtime.process_handle_of_t handle
@@ -226,39 +219,31 @@ let make_protos m =
                 in
                 match res with
                 | Ok proc_result -> First proc_result
-                | Error msg -> Second (Runtime.create_error msg));
-          };
+                | Error msg -> Second (Runtime.create_error msg)) );
         ];
-      static_members = [];
+      static_getters = [];
     };
     {
       name = "ProcessResult";
-      members =
+      getters =
         [
-          {
-            name = "stdout";
-            arity = Some 1;
-            cb =
-              (fun _ args ->
+          ( "stdout",
+            make_getter ~arity:(Some 1) (fun _ args ->
                 let proc = List.hd_exn args in
                 let result =
                   Runtime.process_result_of_val proc
                   |> option_value ~message:__LOC__
                 in
-                First (Runtime.String result.stdout));
-          };
+                First (Runtime.String result.stdout)) );
         ];
-      static_members = [];
+      static_getters = [];
     };
     {
       name = "HashMap";
-      members =
+      getters =
         [
-          {
-            name = "merge";
-            arity = Some 2;
-            cb =
-              (fun _ args ->
+          ( "merge",
+            make_getter ~arity:(Some 2) (fun _ args ->
                 let left =
                   List.hd_exn args |> Runtime.hashmap_of_val
                   |> option_value ~message:__LOC__
@@ -280,80 +265,60 @@ let make_protos m =
                 Stdlib.Hashtbl.iter
                   (fun key v -> Stdlib.Hashtbl.add left_copy key v)
                   right;
-                First (Runtime.HashMap left_copy));
-          };
+                First (Runtime.HashMap left_copy)) );
         ];
-      static_members = [];
+      static_getters = [];
     };
     {
       name = "String";
-      members =
+      getters =
         [
-          {
-            name = "trim";
-            arity = Some 1;
-            cb =
-              (fun _ args ->
+          ( "trim",
+            make_getter ~arity:(Some 1) (fun _ args ->
                 let str = List.hd_exn args in
                 let ocaml_string =
                   Runtime.string_of_val str |> option_value ~message:__LOC__
                 in
-                First (Runtime.String (String.strip ocaml_string)));
-          };
+                First (Runtime.String (String.strip ocaml_string))) );
         ];
-      static_members = [];
+      static_getters = [];
     };
     {
       name = "Directory";
-      members =
+      getters =
         [
-          {
-            name = "exists";
-            arity = Some 1;
-            cb =
-              (fun _ args ->
+          ( "exists",
+            make_getter ~arity:(Some 1) (fun _ args ->
                 let path =
                   List.hd_exn args |> Runtime.directory_of_t
                   |> option_value ~message:__LOC__
                 in
                 let b = M.directory_exists path in
-                First (Runtime.Bool b));
-          };
-          {
-            name = "create";
-            arity = Some 1;
-            cb =
-              (fun _ args ->
+                First (Runtime.Bool b)) );
+          ( "create",
+            make_getter ~arity:(Some 1) (fun _ args ->
                 let path =
                   List.hd_exn args |> Runtime.directory_of_t
                   |> option_value ~message:__LOC__
                 in
                 M.mkdir path;
-                First Runtime.Null);
-          };
-          {
-            name = "path";
-            arity = Some 1;
-            cb =
-              (fun _ args ->
+                First Runtime.Null) );
+          ( "path",
+            make_getter ~arity:(Some 1) (fun _ args ->
                 let path =
                   List.hd_exn args |> Runtime.directory_of_t
                   |> option_value ~message:__LOC__
                 in
-                First (Runtime.String path));
-          };
+                First (Runtime.String path)) );
         ];
-      static_members = [];
+      static_getters = [];
     };
     {
       name = "File";
-      members =
+      getters =
         [
-          {
-            name = "openRead";
-            arity = Some 1;
-            cb =
-              (fun _ args ->
+          ( "openRead",
+            make_getter ~arity:(Some 1) (fun _ args ->
                 let self = List.hd_exn args in
                 let Runtime.{ path } =
                   match Runtime.file_of_t self with
@@ -365,13 +330,9 @@ let make_protos m =
                 in
                 match M.open_file ~mode:[ Core_unix.O_RDONLY ] path with
                 | Ok fd -> First (Runtime.FileDescriptor fd)
-                | Error msg -> Second (Error (Runtime.String msg)));
-          };
-          {
-            name = "openWrite";
-            arity = Some 1;
-            cb =
-              (fun _ args ->
+                | Error msg -> Second (Error (Runtime.String msg))) );
+          ( "openWrite",
+            make_getter ~arity:(Some 1) (fun _ args ->
                 let self = List.hd_exn args in
                 let Runtime.{ path } =
                   match Runtime.file_of_t self with
@@ -387,13 +348,9 @@ let make_protos m =
                     path
                 with
                 | Ok fd -> First (Runtime.FileDescriptor fd)
-                | Error msg -> Second (Error (Runtime.String msg)));
-          };
-          {
-            name = "readString";
-            arity = Some 1;
-            cb =
-              (fun _ args ->
+                | Error msg -> Second (Error (Runtime.String msg))) );
+          ( "readString",
+            make_getter ~arity:(Some 1) (fun _ args ->
                 let first_arg = List.hd_exn args in
                 let Runtime.{ path } =
                   match Runtime.file_of_t first_arg with
@@ -405,16 +362,12 @@ let make_protos m =
                 in
                 (* Errors? *)
                 let contents = M.file_read_all path in
-                First (Runtime.String contents));
-          };
+                First (Runtime.String contents)) );
         ];
-      static_members =
+      static_getters =
         [
-          {
-            name = "new";
-            arity = Some 2;
-            cb =
-              (fun _ args ->
+          ( "new",
+            make_getter ~arity:(Some 2) (fun _ args ->
                 let first_arg = List.nth_exn args 1 in
                 (match Runtime.string_of_val first_arg with
                 | None ->
@@ -425,19 +378,15 @@ let make_protos m =
                       @@ Runtime.to_s first_arg)
                 | Some str -> First str)
                 |> Either.map ~second:Fun.id ~first:(fun path ->
-                       Runtime.File { path }));
-          };
+                       Runtime.File { path })) );
         ];
     };
     {
       name = "FileDescriptor";
-      members =
+      getters =
         [
-          {
-            name = "close";
-            arity = Some 1;
-            cb =
-              (fun _ args ->
+          ( "close",
+            make_getter ~arity:(Some 1) (fun _ args ->
                 let fd_t = List.hd_exn args in
                 let fd =
                   match Runtime.file_descriptor_of_t fd_t with
@@ -446,13 +395,9 @@ let make_protos m =
                 in
                 match M.close fd with
                 | Ok () -> First Runtime.Null
-                | Error msg -> Second (Error (String msg)));
-          };
-          {
-            name = "read";
-            arity = Some 1;
-            cb =
-              (fun _ args ->
+                | Error msg -> Second (Error (String msg))) );
+          ( "read",
+            make_getter ~arity:(Some 1) (fun _ args ->
                 let fd_t = List.hd_exn args in
                 let fd =
                   match Runtime.file_descriptor_of_t fd_t with
@@ -461,13 +406,9 @@ let make_protos m =
                 in
                 match M.read fd with
                 | Ok contents -> First contents
-                | Error msg -> Second (Error (String msg)));
-          };
-          {
-            name = "readAll";
-            arity = Some 1;
-            cb =
-              (fun _ args ->
+                | Error msg -> Second (Error (String msg))) );
+          ( "readAll",
+            make_getter ~arity:(Some 1) (fun _ args ->
                 let fd_t = List.hd_exn args in
                 let fd =
                   match Runtime.file_descriptor_of_t fd_t with
@@ -476,13 +417,9 @@ let make_protos m =
                 in
                 match M.fd_read_all fd with
                 | Ok contents -> First contents
-                | Error msg -> Second (Error (String msg)));
-          };
-          {
-            name = "writeAll";
-            arity = Some 2;
-            cb =
-              (fun _ args ->
+                | Error msg -> Second (Error (String msg))) );
+          ( "writeAll",
+            make_getter ~arity:(Some 2) (fun _ args ->
                 let fd_t = List.hd_exn args in
                 let fd =
                   match Runtime.file_descriptor_of_t fd_t with
@@ -505,18 +442,14 @@ let make_protos m =
                 >>= fun str ->
                 match M.fd_write_all fd str with
                 | Ok () -> First Runtime.Null
-                | Error msg -> Second (Error (String msg)));
-          };
+                | Error msg -> Second (Error (String msg))) );
         ];
-      static_members =
+      static_getters =
         [
-          {
-            name = "pipe";
-            arity = Some 1;
-            cb = (fun _ _ ->
-              (*let read, write = M.pipe () in *)
-              failwith "TODO implement pipe");
-          };
+          ( "pipe",
+            make_getter ~arity:(Some 1) (fun _ _ ->
+                (*let read, write = M.pipe () in *)
+                failwith "TODO implement pipe") );
         ];
     };
   ]

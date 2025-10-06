@@ -57,8 +57,9 @@ and function_t =
     }
 
 type class_t = {
-  instance_members : (string, t) Hashtbl.t;
-  static_members : (string, t) Hashtbl.t;
+  instance_getters : (string, unit -> t) Hashtbl.t;
+  instance_setters : (string, t -> unit) Hashtbl.t;
+  static_getters : (string, unit -> t) Hashtbl.t;
 }
 
 type class_lookup = (string, class_t) Hashtbl.t
