@@ -1,10 +1,6 @@
 # Milestones
 
 ## v0.1 - initially tagged version
-- [ ] `File::open()` -> `FileDescriptor`
-     - `fprintf($stderr, "err!")`
-- [ ] Reading from `$stdin`
-- [ ] Mock out standard I/O for tests
 - [ ] Stack traces
 - [ ] Language versioning
 - [ ] Standard Library
@@ -95,3 +91,8 @@
 - [x] $stdin, $stderr
 - [x] error handling (`let result = mayError() catch (e) DEFAULT;`)
 - [x] `throw` keyword
+- [x] `File::open()` -> `FileDescriptor`
+    - `fd.writeAll("Hello, World!\n")`
+    - `fd.close()
+- [x] Reading from `$stdin`
+- [x] Mock out standard I/O for tests

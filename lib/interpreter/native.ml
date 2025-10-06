@@ -7,10 +7,21 @@ type processMode =
   | BlockBuffer (* proc&! -> ProcessResult *)
 
 module type Sig = sig
-  val print_s : string -> unit
   val file_read_all : string -> string
-  val file_write_all : string -> data:string -> unit
+  val fd_read_all : Core_unix.File_descr.t -> (Runtime.t, string) Result.t
+  val fd_write_all : Core_unix.File_descr.t -> string -> (unit, string) Result.t
+
+  (* TODO does this type of `data` need to be more generic to support binary? *)
+  val write : Core_unix.File_descr.t -> data:string -> (unit, string) Result.t
+  val read : Core_unix.File_descr.t -> (Runtime.t, string) Result.t
   val wait : Runtime.process_handle -> (Runtime.t, string) Result.t
+
+  val open_file :
+    mode:Core_unix.open_flag list ->
+    string ->
+    (Core_unix.File_descr.t, string) Result.t
+
+  val close : Core_unix.File_descr.t -> (unit, string) Result.t
 
   val proc_exec :
     mode:processMode ->
@@ -24,9 +35,55 @@ module type Sig = sig
 end
 
 module Prod : Sig = struct
-  let print_s = Printf.printf "%s%!"
   let file_read_all = In_channel.read_all
-  let file_write_all = Out_channel.write_all
+
+  let fd_write_all fd contents =
+    let len = String.length contents in
+    let buf = Bytes.of_string contents in
+    let n = Core_unix.single_write ~len ~buf ~pos:0 fd in
+    if not (n = len) then
+      Error (Printf.sprintf "Tried to write %d bytes but only wrote %d" len n)
+    else (* TODO close? *) Ok ()
+
+  let fd_read_all fd =
+    let string_buf = Buffer.create bufsiz in
+    let buf = Bytes.create bufsiz in
+    let rec loop () =
+      let n = Core_unix.read ~len:bufsiz fd ~buf in
+      if n = 0 then Ok (Runtime.String (Buffer.contents string_buf))
+      else (
+        Buffer.add_subbytes string_buf buf ~pos:0 ~len:n;
+        (loop [@tailcall]) ())
+    in
+    let result = loop () in
+    (* TODO close fd *)
+    result
+
+  let read fd =
+    let string_buf = Buffer.create bufsiz in
+    let buf = Bytes.create bufsiz in
+    let n = Core_unix.read ~len:bufsiz fd ~buf in
+    Buffer.add_subbytes string_buf buf ~pos:0 ~len:n;
+    Ok (Runtime.String (Buffer.contents string_buf))
+
+  let close fd =
+    (* TODO catch? *)
+    Ok (Core_unix.close fd)
+
+  let open_file ~mode path =
+    try Ok (Core_unix.openfile ~mode path)
+    with _ -> Error (Printf.sprintf "failed to open %s" path)
+
+  let write fd ~data =
+    let buf = Bytes.of_string data in
+    let len = Bytes.length buf in
+    let actual_len = Core_unix.write fd ~buf ~len in
+    if not (actual_len = len) then
+      Error
+        (Printf.sprintf "Tried to write %d bytes, but actually wrote %d" len
+           actual_len)
+    else Ok ()
+
   let chdir = Core_unix.chdir
   let mkdir = Core_unix.mkdir ~perm:0o775
 
@@ -197,59 +254,178 @@ end
 module type TestSig = sig
   include Sig
 
-  type fs_entity = File of string | Directory
+  type fs_entity = File of string ref * Core_unix.File_descr.t | Directory
 
-  val stdout_buffer : string list ref
-  val file_system : (string, fs_entity) Hashtbl.t
+  val get_stdout : unit -> string
+  val path_to_entity : (string, fs_entity) Hashtbl.t
   val proc_expectations : Mock_process.spec option ref
 end
 
 module Make_test () : TestSig = struct
-  type fs_entity = File of string | Directory
-
-  let stdout_buffer : string list ref = ref []
+  type fs_entity = File of string ref * Core_unix.File_descr.t | Directory
 
   let running_pids : (int * (unit -> (Runtime.t, 'a) Result.t)) list ref =
     ref []
 
+  module Fds : sig
+    val get : int -> (fs_entity, string) Result.t
+    val get_file : int -> (string ref * Core_unix.File_descr.t, string) Result.t
+    val remove : int -> (unit, string) Result.t
+    val set : int -> fs_entity -> unit
+  end = struct
+    let open_fds : (int * fs_entity) list ref =
+      ref
+        [
+          (0, File (ref "", Core_unix.File_descr.of_int 0)) (* STDIN *);
+          (1, File (ref "", Core_unix.File_descr.of_int 1)) (* STDOUT *);
+          (2, File (ref "", Core_unix.File_descr.of_int 2)) (* STDERR *);
+        ]
+
+    let set fd entity =
+      open_fds := List.Assoc.add !open_fds ~equal:( = ) fd entity
+
+    let get i =
+      match List.Assoc.find !open_fds ~equal:( = ) i with
+      | None -> Error (Printf.sprintf "File descriptor %d not found" i)
+      | Some entity -> Ok entity
+
+    let get_file i =
+      let open Result.Monad_infix in
+      get i >>= function
+      | File (str_ref, fd) -> Ok (str_ref, fd)
+      | Directory -> internal_failure __LOC__
+
+    let remove i =
+      let open Result.Monad_infix in
+      get i >>= fun _ ->
+      open_fds := List.Assoc.remove ~equal:( = ) !open_fds i;
+      Ok ()
+  end
+
+  let get_stdout () =
+    match Fds.get_file 1 with
+    | Ok (contents_ref, _) -> !contents_ref
+    | Error msg -> failwith msg
+
+  let path_to_entity : (string, fs_entity) Hashtbl.t =
+    Hashtbl.create (module String)
+
+  (** Use get_next_fd *)
+  let next_fd = ref 3
+
+  let get_next_fd () =
+    let this_fd = !next_fd in
+    next_fd := this_fd + 1;
+    this_fd
+
   (** Use get_next_pid *)
   let next_pid = ref 42
+
+  let close fd =
+    let fd_int = Core_unix.File_descr.to_int fd in
+    Fds.remove fd_int
+
+  let open_file ~mode path =
+    let fd = get_next_fd () in
+    let open Result.Monad_infix in
+    if List.exists mode ~f:(function Core_unix.O_RDONLY -> true | _ -> false)
+    then
+      match Hashtbl.find path_to_entity path with
+      | None ->
+          Error
+            (Printf.sprintf "no file named %s found in the file system" path)
+      | Some entity -> (
+          match entity with
+          | Directory ->
+              Error
+                (Printf.sprintf "You tried to open the directory %s as a file"
+                   path)
+          | File (contents, _) ->
+              let fd_t = Core_unix.File_descr.of_int fd in
+              let entity = File (contents, fd_t) in
+              Fds.set fd entity;
+              Ok fd_t)
+    else
+      let entity = File (ref "", Core_unix.File_descr.of_int fd) in
+      Fds.set fd entity;
+      (match Hashtbl.add path_to_entity ~key:path ~data:entity with
+      | `Ok -> Ok ()
+      | `Duplicate ->
+          Error
+            (Printf.sprintf "duplicate path %s in test memory file system" path))
+      >>= fun () ->
+      let fd = Core_unix.File_descr.of_int fd in
+      if
+        List.exists mode ~f:(function Core_unix.O_WRONLY -> true | _ -> false)
+      then
+        (* TODO check for O_CREAT *)
+        Ok fd
+      else failwith "TODO"
 
   let get_next_pid () =
     let this_pid = !next_pid in
     next_pid := this_pid + 1;
     this_pid
 
-  let file_system = Hashtbl.create (module String)
   let proc_expectations : Mock_process.spec option ref = ref None
   let chdir _ = ()
+  (* This function only exists to cause OS side-effects, no-op in tests *)
 
   let mkdir path =
-    match Hashtbl.add file_system ~key:path ~data:Directory with
+    match Hashtbl.add path_to_entity ~key:path ~data:Directory with
     | `Ok -> ()
     | `Duplicate ->
         Printf.sprintf "EEXIST: the directory %s already exists" path
         |> failwith
 
   let directory_exists path =
-    let entity_opt = Hashtbl.find file_system path in
+    let entity_opt = Hashtbl.find path_to_entity path in
     match entity_opt with
     | None -> false
     | Some entity -> ( match entity with File _ -> false | Directory -> true)
 
-  let file_write_all path ~data =
+  let write fd ~data =
+    let fd = Core_unix.File_descr.to_int fd in
+    let open Result.Monad_infix in
     (* TODO allow over-writing *)
-    Hashtbl.add_exn file_system ~key:path ~data:(File data)
+    Fds.get fd >>= function
+    | File (contents, _) ->
+        (* TODO check permissions FD was opened with *)
+        Ok (contents := !contents ^ data)
+    | Directory -> internal_failure __LOC__
+
+  let fd_write_all fd contents =
+    let fd_int = Core_unix.File_descr.to_int fd in
+    let open Result.Monad_infix in
+    Fds.get fd_int >>= function
+    | File (contents_ref, _) -> Ok (contents_ref := contents)
+    | Directory -> internal_failure __LOC__
+
+  let fd_read_all fd =
+    let fd_int = Core_unix.File_descr.to_int fd in
+
+    let open Result.Monad_infix in
+    Fds.get fd_int >>= function
+    | File (contents, _) -> Ok (Runtime.String !contents)
+    | Directory -> internal_failure __LOC__
+
+  let read fd =
+    let fd_int = Core_unix.File_descr.to_int fd in
+
+    let open Result.Monad_infix in
+    Fds.get fd_int >>= function
+    | File (contents, _) ->
+        (* TODO split by newlines *)
+        Ok (Runtime.String !contents)
+    | Directory -> internal_failure __LOC__
 
   let file_read_all path =
     (* TODO: resolve relative paths *)
     let file =
-      Hashtbl.find file_system path
+      Hashtbl.find path_to_entity path
       |> option_value ~message:(Printf.sprintf "Error no entity \"%s\"" path)
     in
-    match file with File data -> data | _ -> failwith "TODO"
-
-  let print_s s = stdout_buffer := s :: !stdout_buffer
+    match file with File (data, _) -> !data | _ -> failwith "TODO"
 
   let wait handle =
     let pid =
@@ -323,11 +499,12 @@ module Make_test () : TestSig = struct
                   in
                   (* TODO stderr *)
                   (match follower_opt with
-                  | None ->
-                      proc_res.stdout |> print_s;
-                      print_s "\n"
-                  | Some _ -> (* TODO match with stdin *) ());
-                  Ok Runtime.Null
+                  | None -> (
+                      match Fds.get_file 1 with
+                      | Ok (_, fd) -> write fd ~data:(proc_res.stdout ^ "\n")
+                      | Error msg -> failwith msg)
+                  | Some _ -> (* TODO match with stdin *) Ok ())
+                  >>= fun () -> Ok Runtime.Null
               | BlockBuffer -> exec_proc_spec ()
               | ForkBuffer ->
                   let this_pid = get_next_pid () in

@@ -30,8 +30,14 @@ let globals =
         { name = "Number"; methods = []; static_members = [] };
         {
           name = "File";
-          methods = [ "readString" ];
+          methods = [ "readString"; "openRead"; "openWrite" ];
           static_members = [ "new" ];
+        };
+        {
+          (* Should we have separate types for reading and writing? *)
+          name = "FileDescriptor";
+          methods = [ "close"; "read"; "readAll"; "writeAll" ];
+          static_members = [];
         };
         {
           name = "Directory";

@@ -1,0 +1,11 @@
+#!/usr/bin/env sloth
+
+with($cwd = "${$scriptDir}/../_build/default") {
+  ['find',
+    '-type', 'f',
+    '-exec', 'ls', '-l', '{}', ';',
+  ] |
+  # $5 = size; $9 = path
+  "awk '{ print $5, $9}'" |
+  "sort --general-numeric-sort"!
+}

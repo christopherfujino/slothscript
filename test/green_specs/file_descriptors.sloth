@@ -1,0 +1,123 @@
+### Program
+let f = File("newfile.ext")
+let fd = f.openWrite()
+fd.writeAll("yolo")
+fd.close()
+
+let fd2 = f.openRead()
+assert(fd2.readAll() == "yolo")
+fd2.close()
+
+### Processes
+()
+
+### Ast
+((StmtDecl
+  (ExprStmt
+    (LetExpr
+      f
+      (FuncInvoc
+        (IdRef
+          File
+          <opaque>)
+        ((String
+          ((FullString
+            newfile.ext
+            <opaque>))
+          <opaque>))
+        <opaque>)
+      <opaque>)))
+  (StmtDecl
+    (ExprStmt
+      (LetExpr
+        fd
+        (FuncInvoc
+          (ObjDeref
+            (IdRef
+              f
+              <opaque>)
+            openWrite
+            <opaque>)
+          ()
+          <opaque>)
+        <opaque>)))
+  (StmtDecl
+    (ExprStmt
+      (FuncInvoc
+        (ObjDeref
+          (IdRef
+            fd
+            <opaque>)
+          writeAll
+          <opaque>)
+        ((String
+          ((FullString
+            yolo
+            <opaque>))
+          <opaque>))
+        <opaque>)))
+  (StmtDecl
+    (ExprStmt
+      (FuncInvoc
+        (ObjDeref
+          (IdRef
+            fd
+            <opaque>)
+          close
+          <opaque>)
+        ()
+        <opaque>)))
+  (StmtDecl
+    (ExprStmt
+      (LetExpr
+        fd2
+        (FuncInvoc
+          (ObjDeref
+            (IdRef
+              f
+              <opaque>)
+            openRead
+            <opaque>)
+          ()
+          <opaque>)
+        <opaque>)))
+  (StmtDecl
+    (ExprStmt
+      (FuncInvoc
+        (IdRef
+          assert
+          <opaque>)
+        ((Equality
+          (FuncInvoc
+            (ObjDeref
+              (IdRef
+                fd2
+                <opaque>)
+              readAll
+              <opaque>)
+            ()
+            <opaque>)
+          (String
+            ((FullString
+              yolo
+              <opaque>))
+            <opaque>)
+          true
+          <opaque>))
+        <opaque>)))
+  (StmtDecl
+    (ExprStmt
+      (FuncInvoc
+        (ObjDeref
+          (IdRef
+            fd2
+            <opaque>)
+          close
+          <opaque>)
+        ()
+        <opaque>))))
+
+### Stdout
+
+
+### Failure

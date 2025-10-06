@@ -449,9 +449,12 @@ and interpret_expr globals expr :
           (globals, either)
       | LeftArrow ->
           interpret_expr globals target >>= fun globals target ->
-          let file = cast_to_file ~globals ~pos target in
-          let target = Runtime.File file in
-          let func = dereference_object globals target "readString" pos in
+          ( globals,
+            cast_to_file_descriptor ~globals ~pos ~mode:[ Core_unix.O_RDONLY ]
+              ~m:globals.l target )
+          >>= fun globals fd ->
+          let fd = Runtime.FileDescriptor fd in
+          let func = dereference_object globals fd "readAll" pos in
           let receiver, func =
             match Runtime.method_of_val func with
             | None -> internal_failure __LOC__
@@ -462,7 +465,8 @@ and interpret_expr globals expr :
             | User _ -> internal_failure __LOC__
             | Native { cb; _ } -> cb
           in
-          (globals, invoke_native_func ~globals ~pos cb [ receiver; target ])
+          (* TODO close fd *)
+          (globals, invoke_native_func ~globals ~pos cb [ receiver ])
       | Minus ->
           interpret_expr globals target >>= fun globals target ->
           let f_opt = Runtime.num_of_val target in
@@ -871,7 +875,7 @@ and is_equal globals is_equality lhs rhs =
         let same_fd = Core_unix.File_descr.equal lhs rhs in
         Bool.(same_fd = is_equality)
     | File { path = lhs } ->
-        let rhs = Runtime.file_of_val rhs |> option_value ~message:__LOC__ in
+        let rhs = Runtime.file_of_t rhs |> option_value ~message:__LOC__ in
         let same_file = String.(lhs = rhs.path) in
         Bool.(same_file = is_equality)
     | Directory lhs ->
@@ -923,10 +927,11 @@ and dereference_object globals receiver target pos =
   in
   match Hashtbl.find globals.classes class_name with
   | None ->
-      Printf.sprintf
-        "Internal error: could not find prototype for the %s class (%s)"
-        class_name __LOC__
-      |> fail ~globals pos
+      internal_failure
+      @@ internal_failure_msg ~globals ~pos
+      @@ Printf.sprintf
+           "Internal error: could not find prototype for the %s class (%s)"
+           class_name __LOC__
   | Some klass -> (
       match Hashtbl.find (table_thunk klass) target with
       | None ->
@@ -1127,44 +1132,68 @@ and interpret_binary globals lhs rhs op pos =
       let left = cast_to_number lhs in
       let right = cast_to_number rhs in
       (globals, Either.first @@ Runtime.Bool Float.(left > right))
-  | RightArrow ->
-      (*
-        TODO: consider:
-          - directly write a string: `"Hello" -> "hello.txt"`
-          - write output of a proc: `Process.new("uname") -> "os.txt"` (this should be optimized)
-      *)
-      let left = cast_to_string ~globals ~pos lhs in
-      interpret_expr globals rhs >>= fun globals rhs ->
-      let Runtime.{ path } = cast_to_file ~globals ~pos rhs in
-      let module M = (val globals.l) in
-      M.file_write_all path ~data:left;
-      (globals, Either.first @@ Runtime.String left)
+  | RightArrow -> interpret_right_arrow ~globals ~pos lhs rhs
   | Bang | AmpersandBang | Ampersand | Not | LeftArrow ->
       (* Not binary ops, unreachable *)
       Sloth_common.Common.internal_failure __LOC__
 
-and cast_to_string ~globals ~pos t' =
-  let open Runtime in
-  match t' with
-  | String s -> s
-  | ProcessResult { stdout; _ } -> stdout
-  | Process proc -> (
-      let module M = (val globals.l : Native.Sig) in
-      let env_val =
-        Context.get globals.context_ids "$env" |> option_value ~message:__LOC__
-      in
-      let env =
-        match Runtime.env_of_val env_val with
-        | Some env -> env
-        | None ->
-            Printf.sprintf "$env is the wrong type: %s" @@ Runtime.to_s env_val
-            |> fail ~globals pos
-      in
-      (* TODO: this is sus *)
-      match M.proc_exec ~mode:Native.BlockBuffer proc env with
-      | Ok t' -> (cast_to_string [@tailcall]) ~globals ~pos t'
-      | Error err -> fail ~globals pos err)
-  | _ as t' ->
-      fail ~globals pos
-      @@ Printf.sprintf "Expected a String, but got a %s"
-      @@ Runtime.to_s t'
+and interpret_right_arrow ~globals ~pos lhs rhs =
+  let rec cast_to_string ~globals ~pos t' =
+    let open Runtime in
+    match t' with
+    | String s -> s
+    | ProcessResult { stdout; _ } -> stdout
+    | Process proc -> (
+        let module M = (val Globals.(globals.l) : Native.Sig) in
+        let env_val =
+          Context.get globals.context_ids "$env"
+          |> option_value ~message:__LOC__
+        in
+        let env =
+          match Runtime.env_of_val env_val with
+          | Some env -> env
+          | None ->
+              Printf.sprintf "$env is the wrong type: %s"
+              @@ Runtime.to_s env_val
+              |> fail ~globals pos
+        in
+        (* TODO: this is sus *)
+        match M.proc_exec ~mode:Native.BlockBuffer proc env with
+        | Ok t' -> (cast_to_string [@tailcall]) ~globals ~pos t'
+        | Error err -> fail ~globals pos err)
+    | _ as t' ->
+        fail ~globals pos
+        @@ Printf.sprintf "Expected a String, but got a %s"
+        @@ Runtime.to_s t'
+  in
+  (*
+        TODO: consider:
+          - directly write a string: `"Hello" -> "hello.txt"`
+          - write output of a proc: `Process.new("uname") -> "os.txt"` (this should be optimized)
+      *)
+  let left = cast_to_string ~globals ~pos lhs in
+  interpret_expr globals rhs >>= fun globals rhs ->
+  (* TODO O_CREAT? *)
+  ( globals,
+    cast_to_file_descriptor ~globals ~pos ~mode:[ Core_unix.O_WRONLY ]
+      ~m:globals.l rhs )
+  >>= fun globals fd ->
+  let module M = (val globals.l) in
+  (* TODO close after write; at least if the cast opened it *)
+  match M.write fd ~data:left with
+  | Ok () -> (globals, Either.first @@ Runtime.String left)
+  | Error msg -> (globals, failure_obj ~globals ~pos msg)
+
+and cast_to_file_descriptor ~globals ~pos ~mode ~m t :
+    (Core_unix.File_descr.t, Runtime.breaking_type) Either.t =
+  match t with
+  | FileDescriptor fd -> First fd
+  | File { path } -> (
+      let module M = (val m : Native.Sig) in
+      match M.open_file ~mode path with
+      | Ok fd -> First fd
+      | Error msg -> failure_obj ~globals ~pos msg)
+  | String path ->
+      let t = Runtime.File { path } in
+      cast_to_file_descriptor ~globals ~pos ~mode ~m t
+  | _ -> failure_obj ~globals ~pos "foo"

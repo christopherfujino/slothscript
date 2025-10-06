@@ -73,19 +73,10 @@ let make_test spec =
           @@ Printf.sprintf "Uncaught exception:\n\n%s\n"
           @@ Interpreter.Runtime.to_s msg
       | Return _ | Break _ | Continue _ -> failwith "Unreachable"));
-  let forward_buffer = List.rev !Lib.stdout_buffer in
-  let catted_output_opt =
-    List.fold_left forward_buffer
-      ~f:(fun acc cur ->
-        Some (match acc with None -> cur | Some acc -> acc ^ cur))
-      ~init:None
-  in
-  (* Is STDOUT correct? *)
-  (match catted_output_opt with
-  | None -> assert_equal ~printer spec.stdout_expect ""
-  | Some s ->
-      assert_equal ~printer spec.stdout_expect (String.strip s)
-        ~msg:"STDOUT did not meet expectations");
+
+  let stdout = Lib.get_stdout () in
+  assert_equal ~printer spec.stdout_expect (String.strip stdout)
+    ~msg:"STDOUT did not meet expectations";
 
   (* Is AST pretty? *)
   assert_equal ~pp_diff ~printer spec.ast
@@ -158,20 +149,13 @@ let make_failing_test spec =
     let _, either = Interpreter.Interpret.interpret_prog globals prog in
     match either with
     | First _ ->
-        let buf_s =
-          List.fold_left
-            ~f:(fun acc cur ->
-              match acc with
-              | None -> Some cur
-              | Some acc -> Some (acc ^ ", " ^ cur))
-            ~init:None !Lib.stdout_buffer
-          |> Option.value ~default:""
-        in
+        let stdout = Lib.get_stdout () in
+
         let msg =
           Printf.sprintf
             "test did not throw a runtime error as expected\n\
              stdout_buffer is = %s"
-            buf_s
+            stdout
         in
         assert_failure msg
     | Second bt -> (
