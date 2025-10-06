@@ -1,8 +1,6 @@
 # Milestones
 
 ## v0.1 - initially tagged version
-- [ ] Reading from `$stdin`
-- [ ] Mock out standard I/O for tests
 - [ ] Stack traces
 - [ ] Language versioning
 - [ ] Standard Library
@@ -96,3 +94,5 @@
 - [x] `File::open()` -> `FileDescriptor`
     - `fd.writeAll("Hello, World!\n")`
     - `fd.close()
+- [x] Reading from `$stdin`
+- [x] Mock out standard I/O for tests

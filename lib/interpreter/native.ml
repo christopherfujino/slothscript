@@ -13,6 +13,7 @@ module type Sig = sig
 
   (* TODO does this type of `data` need to be more generic to support binary? *)
   val write : Core_unix.File_descr.t -> data:string -> (unit, string) Result.t
+  val read : Core_unix.File_descr.t -> (Runtime.t, string) Result.t
   val wait : Runtime.process_handle -> (Runtime.t, string) Result.t
 
   val open_file :
@@ -57,6 +58,13 @@ module Prod : Sig = struct
     let result = loop () in
     (* TODO close fd *)
     result
+
+  let read fd =
+    let string_buf = Buffer.create bufsiz in
+    let buf = Bytes.create bufsiz in
+    let n = Core_unix.read ~len:bufsiz fd ~buf in
+    Buffer.add_subbytes string_buf buf ~pos:0 ~len:n;
+    Ok (Runtime.String (Buffer.contents string_buf))
 
   let close fd =
     (* TODO catch? *)
@@ -399,6 +407,16 @@ module Make_test () : TestSig = struct
     let open Result.Monad_infix in
     Fds.get fd_int >>= function
     | File (contents, _) -> Ok (Runtime.String !contents)
+    | Directory -> internal_failure __LOC__
+
+  let read fd =
+    let fd_int = Core_unix.File_descr.to_int fd in
+
+    let open Result.Monad_infix in
+    Fds.get fd_int >>= function
+    | File (contents, _) ->
+        (* TODO split by newlines *)
+        Ok (Runtime.String !contents)
     | Directory -> internal_failure __LOC__
 
   let file_read_all path =
