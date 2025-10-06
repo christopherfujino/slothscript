@@ -88,7 +88,7 @@ let stdlib_interface_and_impl_match _ =
   let interface = Sloth_common.Stdlib_interface.globals in
   let impl_ids =
     Interpreter.Stdlib_impl.make_ids (module M)
-    |> List.map ~f:(fun (f : Interpreter.Stdlib_impl.func_t) -> f.name)
+    |> List.map ~f:(fun (name, _) -> name)
   in
   let impl_context_ids =
     Interpreter.Stdlib_impl.context_ids ~cwd:"/home/user"
@@ -102,13 +102,13 @@ let stdlib_interface_and_impl_match _ =
   List.iter interface.protos ~f:(fun interface_proto ->
       let has_impl =
         List.fold impl_protos ~init:false
-          ~f:(fun found { name; members; static_members } ->
+          ~f:(fun found { name; getters; static_getters } ->
             if found then true
             else if String.(name = interface_proto.name) then (
-              let impl_methods = List.map members ~f:(fun meth -> meth.name) in
+              let impl_methods = List.map getters ~f:(fun (name, _) -> name) in
               compare_two_string_lists interface_proto.members impl_methods;
               let impl_statics =
-                List.map static_members ~f:(fun static -> static.name)
+                List.map static_getters ~f:(fun (name, _) -> name)
               in
               compare_two_string_lists interface_proto.static_members
                 impl_statics;

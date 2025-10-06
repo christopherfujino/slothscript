@@ -764,24 +764,23 @@ and interpret_method ~globals ~pos receiver args method_name =
     | None -> Sloth_common.Common.internal_failure __LOC__
     | Some klass -> klass
   in
-  match Hashtbl.find klass.instance_members method_name with
+  match Hashtbl.find klass.instance_getters method_name with
   | None ->
       Printf.sprintf "The class %s does not have an instance field named %s"
         class_name method_name
       |> fail ~globals pos
-  | Some func -> (
-      match func with
+  | Some thunk -> (
+      match thunk () with
       | Func func -> (
           match func with
           | User _ -> Sloth_common.Common.internal_failure __LOC__
           | Native { cb; _ } ->
               let args = receiver :: args in
               (globals, invoke_native_func ~globals ~pos cb args))
-      | _ ->
-          Printf.sprintf "Internal error: %s\n\n%s"
-            (Runtime.to_class_name func)
-            __LOC__
-          |> failwith)
+      | _ as t ->
+          internal_failure
+          @@ Printf.sprintf "Expected func, got %s (%s)" (Runtime.to_s t)
+               __LOC__)
 
 and is_equal globals is_equality lhs rhs =
   let lh_s = Runtime.to_class_name lhs in
@@ -919,11 +918,11 @@ and dereference_object globals receiver target pos =
     let open Runtime in
     match receiver with
     (* Static access has different semantics *)
-    | Prototype { name } -> ("static", name, fun cl -> cl.static_members)
+    | Prototype { name } -> ("static", name, fun cl -> cl.static_getters)
     | _ ->
         ( "instance",
           Runtime.to_class_name receiver,
-          fun cl -> cl.instance_members )
+          fun cl -> cl.instance_getters )
   in
   match Hashtbl.find globals.classes class_name with
   | None ->
@@ -938,8 +937,8 @@ and dereference_object globals receiver target pos =
           Printf.sprintf "The class %s does not have a %s field named %s"
             class_name descriptor target
           |> fail ~globals pos
-      | Some field -> (
-          match field with
+      | Some thunk -> (
+          match thunk () with
           | Func func_t -> Method (receiver, func_t)
           | _ -> fail ~globals pos "TODO"))
 
