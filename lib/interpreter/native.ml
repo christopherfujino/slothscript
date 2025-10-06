@@ -21,6 +21,8 @@ module type Sig = sig
     string ->
     (Core_unix.File_descr.t, string) Result.t
 
+  val close : Core_unix.File_descr.t -> (unit, string) Result.t
+
   val proc_exec :
     mode:processMode ->
     Runtime.process ->
@@ -57,6 +59,10 @@ module Prod : Sig = struct
     let result = loop () in
     (* TODO close fd *)
     result
+
+  let close fd =
+    (* TODO catch? *)
+    Ok (Core_unix.close fd)
 
   let open_file ~mode path =
     try Ok (Core_unix.openfile ~mode path)
@@ -273,9 +279,18 @@ module Make_test () : TestSig = struct
   (** Use get_next_pid *)
   let next_pid = ref 42
 
+  let close fd =
+    let fd_int = Core_unix.File_descr.to_int fd in
+    let open Result.Monad_infix in
+    (match List.Assoc.find !open_fds fd_int ~equal:( = ) with
+    | None -> Error "You tried to close an FD that wasn't open"
+    | Some _ -> Ok ())
+    >>= fun () ->
+    open_fds := List.Assoc.remove ~equal:( = ) !open_fds fd_int;
+    Ok ()
+
   let open_file ~mode path =
     let fd = get_next_fd () in
-    let entity = File (ref "", Core_unix.File_descr.of_int fd) in
     let open Result.Monad_infix in
     if List.exists mode ~f:(function Core_unix.O_RDONLY -> true | _ -> false)
     then
@@ -289,8 +304,13 @@ module Make_test () : TestSig = struct
               Error
                 (Printf.sprintf "You tried to open the directory %s as a file"
                    path)
-          | File (_, fd) -> Ok fd)
-    else (
+          | File (contents, _) ->
+              let fd_t = Core_unix.File_descr.of_int fd in
+              let entity = File (contents, fd_t) in
+              open_fds := List.Assoc.add !open_fds ~equal:( = ) fd entity;
+              Ok fd_t)
+    else
+      let entity = File (ref "", Core_unix.File_descr.of_int fd) in
       open_fds := List.Assoc.add !open_fds ~equal:( = ) fd entity;
       (match Hashtbl.add path_to_entity ~key:path ~data:entity with
       | `Ok -> Ok ()
@@ -304,7 +324,7 @@ module Make_test () : TestSig = struct
       then
         (* TODO check for O_CREAT *)
         Ok fd
-      else failwith "TODO")
+      else failwith "TODO"
 
   let get_next_pid () =
     let this_pid = !next_pid in

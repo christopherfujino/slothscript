@@ -414,6 +414,21 @@ let make_protos m =
       methods =
         [
           {
+            name = "close";
+            arity = Some 1;
+            cb =
+              (fun _ args ->
+                let fd_t = List.hd_exn args in
+                let fd =
+                  match Runtime.file_descriptor_of_t fd_t with
+                  | Some fd -> fd
+                  | None -> Sloth_common.Common.internal_failure __LOC__
+                in
+                match M.close fd with
+                | Ok () -> First Runtime.Null
+                | Error msg -> Second (Error (String msg)));
+          };
+          {
             name = "readAll";
             arity = Some 1;
             cb =

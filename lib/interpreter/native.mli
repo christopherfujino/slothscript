@@ -18,6 +18,8 @@ module type Sig = sig
     string ->
     (Core_unix.File_descr.t, string) Result.t
 
+  val close : Core_unix.File_descr.t -> (unit, string) Result.t
+
   val proc_exec :
     mode:processMode ->
     Runtime.process ->
