@@ -6,7 +6,6 @@ type processMode =
   | BlockBuffer (* proc&! -> ProcessResult *)
 
 module type Sig = sig
-  val print_s : string -> unit
   val file_read_all : string -> string
   val fd_read_all : Core_unix.File_descr.t -> (Runtime.t, string) Result.t
   val fd_write_all : Core_unix.File_descr.t -> string -> (unit, string) Result.t
@@ -38,7 +37,7 @@ module type TestSig = sig
 
   type fs_entity = File of string ref * Core_unix.File_descr.t | Directory
 
-  val stdout_buffer : string list ref
+  val get_stdout : unit -> string
   val path_to_entity : (string, fs_entity) Hashtbl.t
   val proc_expectations : Mock_process.spec option ref
 end

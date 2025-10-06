@@ -20,11 +20,31 @@ let make_ids m =
       name = "print";
       arity = Some 1;
       cb =
-        (fun _ args ->
-          let arg = List.hd_exn args in
-          Runtime.to_s arg |> M.print_s;
-          M.print_s "\n";
-          First Runtime.Null);
+        (fun ctx args ->
+          match Context.get ctx "$stdout" with
+          | None ->
+              let err_msg = "The context variable `$stdout` was unset" in
+              Second (Runtime.create_error err_msg)
+          | Some stdout -> (
+              let open Result.Monad_infix in
+              let res =
+                (match Runtime.file_descriptor_of_t stdout with
+                | Some s -> Ok s
+                | None ->
+                    Error
+                      (Printf.sprintf
+                         "Expected `$stdout` to be of type `FileDescriptor`, \
+                          but instead it was %s"
+                         (Runtime.to_s stdout)))
+                >>= fun stdout ->
+                let arg = List.hd_exn args in
+                let data = Runtime.to_s arg ^ "\n" in
+                M.write stdout ~data
+              in
+
+              match res with
+              | Ok () -> First Runtime.Null
+              | Error msg -> Second (Runtime.create_error msg)));
     };
     {
       name = "exit";

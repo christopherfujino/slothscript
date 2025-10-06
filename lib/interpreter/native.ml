@@ -7,7 +7,6 @@ type processMode =
   | BlockBuffer (* proc&! -> ProcessResult *)
 
 module type Sig = sig
-  val print_s : string -> unit
   val file_read_all : string -> string
   val fd_read_all : Core_unix.File_descr.t -> (Runtime.t, string) Result.t
   val fd_write_all : Core_unix.File_descr.t -> string -> (unit, string) Result.t
@@ -35,7 +34,6 @@ module type Sig = sig
 end
 
 module Prod : Sig = struct
-  let print_s = Printf.printf "%s%!"
   let file_read_all = In_channel.read_all
 
   let fd_write_all fd contents =
@@ -250,7 +248,7 @@ module type TestSig = sig
 
   type fs_entity = File of string ref * Core_unix.File_descr.t | Directory
 
-  val stdout_buffer : string list ref
+  val get_stdout : unit -> string
   val path_to_entity : (string, fs_entity) Hashtbl.t
   val proc_expectations : Mock_process.spec option ref
 end
@@ -258,12 +256,48 @@ end
 module Make_test () : TestSig = struct
   type fs_entity = File of string ref * Core_unix.File_descr.t | Directory
 
-  let stdout_buffer : string list ref = ref []
-
   let running_pids : (int * (unit -> (Runtime.t, 'a) Result.t)) list ref =
     ref []
 
-  let open_fds : (int * fs_entity) list ref = ref []
+  module Fds : sig
+    val get : int -> (fs_entity, string) Result.t
+    val get_file : int -> (string ref * Core_unix.File_descr.t, string) Result.t
+    val remove : int -> (unit, string) Result.t
+    val set : int -> fs_entity -> unit
+  end = struct
+    let open_fds : (int * fs_entity) list ref =
+      ref
+        [
+          (0, File (ref "", Core_unix.File_descr.of_int 0)) (* STDIN *);
+          (1, File (ref "", Core_unix.File_descr.of_int 1)) (* STDOUT *);
+          (2, File (ref "", Core_unix.File_descr.of_int 2)) (* STDERR *);
+        ]
+
+    let set fd entity =
+      open_fds := List.Assoc.add !open_fds ~equal:( = ) fd entity
+
+    let get i =
+      match List.Assoc.find !open_fds ~equal:( = ) i with
+      | None -> Error (Printf.sprintf "File descriptor %d not found" i)
+      | Some entity -> Ok entity
+
+    let get_file i =
+      let open Result.Monad_infix in
+      get i >>= function
+      | File (str_ref, fd) -> Ok (str_ref, fd)
+      | Directory -> internal_failure __LOC__
+
+    let remove i =
+      let open Result.Monad_infix in
+      get i >>= fun _ ->
+      open_fds := List.Assoc.remove ~equal:( = ) !open_fds i;
+      Ok ()
+  end
+
+  let get_stdout () =
+    match Fds.get_file 1 with
+    | Ok (contents_ref, _) -> !contents_ref
+    | Error msg -> failwith msg
 
   let path_to_entity : (string, fs_entity) Hashtbl.t =
     Hashtbl.create (module String)
@@ -281,13 +315,7 @@ module Make_test () : TestSig = struct
 
   let close fd =
     let fd_int = Core_unix.File_descr.to_int fd in
-    let open Result.Monad_infix in
-    (match List.Assoc.find !open_fds fd_int ~equal:( = ) with
-    | None -> Error "You tried to close an FD that wasn't open"
-    | Some _ -> Ok ())
-    >>= fun () ->
-    open_fds := List.Assoc.remove ~equal:( = ) !open_fds fd_int;
-    Ok ()
+    Fds.remove fd_int
 
   let open_file ~mode path =
     let fd = get_next_fd () in
@@ -307,11 +335,11 @@ module Make_test () : TestSig = struct
           | File (contents, _) ->
               let fd_t = Core_unix.File_descr.of_int fd in
               let entity = File (contents, fd_t) in
-              open_fds := List.Assoc.add !open_fds ~equal:( = ) fd entity;
+              Fds.set fd entity;
               Ok fd_t)
     else
       let entity = File (ref "", Core_unix.File_descr.of_int fd) in
-      open_fds := List.Assoc.add !open_fds ~equal:( = ) fd entity;
+      Fds.set fd entity;
       (match Hashtbl.add path_to_entity ~key:path ~data:entity with
       | `Ok -> Ok ()
       | `Duplicate ->
@@ -352,31 +380,26 @@ module Make_test () : TestSig = struct
     let fd = Core_unix.File_descr.to_int fd in
     let open Result.Monad_infix in
     (* TODO allow over-writing *)
-    (match List.Assoc.find !open_fds ~equal:( = ) fd with
-    | None -> Error (Printf.sprintf "File %d not found" fd)
-    | Some entity -> Ok entity)
-    >>= fun entity ->
-    match entity with
-    | File (contents, _) -> Ok (contents := data)
+    Fds.get fd >>= function
+    | File (contents, _) ->
+        (* TODO check permissions FD was opened with *)
+        Ok (contents := !contents ^ data)
     | Directory -> internal_failure __LOC__
 
   let fd_write_all fd contents =
     let fd_int = Core_unix.File_descr.to_int fd in
-    match List.Assoc.find !open_fds ~equal:( = ) fd_int with
-    | None -> Error (Printf.sprintf "File %d not found" fd_int)
-    | Some entity -> (
-        match entity with
-        | File (contents_ref, _) -> Ok (contents_ref := contents)
-        | Directory -> internal_failure __LOC__)
+    let open Result.Monad_infix in
+    Fds.get fd_int >>= function
+    | File (contents_ref, _) -> Ok (contents_ref := contents)
+    | Directory -> internal_failure __LOC__
 
   let fd_read_all fd =
     let fd_int = Core_unix.File_descr.to_int fd in
-    match List.Assoc.find !open_fds ~equal:( = ) fd_int with
-    | None -> Error (Printf.sprintf "File %d not found" fd_int)
-    | Some entity -> (
-        match entity with
-        | File (contents, _) -> Ok (Runtime.String !contents)
-        | Directory -> internal_failure __LOC__)
+
+    let open Result.Monad_infix in
+    Fds.get fd_int >>= function
+    | File (contents, _) -> Ok (Runtime.String !contents)
+    | Directory -> internal_failure __LOC__
 
   let file_read_all path =
     (* TODO: resolve relative paths *)
@@ -385,8 +408,6 @@ module Make_test () : TestSig = struct
       |> option_value ~message:(Printf.sprintf "Error no entity \"%s\"" path)
     in
     match file with File (data, _) -> !data | _ -> failwith "TODO"
-
-  let print_s s = stdout_buffer := s :: !stdout_buffer
 
   let wait handle =
     let pid =
@@ -460,11 +481,12 @@ module Make_test () : TestSig = struct
                   in
                   (* TODO stderr *)
                   (match follower_opt with
-                  | None ->
-                      proc_res.stdout |> print_s;
-                      print_s "\n"
-                  | Some _ -> (* TODO match with stdin *) ());
-                  Ok Runtime.Null
+                  | None -> (
+                      match Fds.get_file 1 with
+                      | Ok (_, fd) -> write fd ~data:(proc_res.stdout ^ "\n")
+                      | Error msg -> failwith msg)
+                  | Some _ -> (* TODO match with stdin *) Ok ())
+                  >>= fun () -> Ok Runtime.Null
               | BlockBuffer -> exec_proc_spec ()
               | ForkBuffer ->
                   let this_pid = get_next_pid () in
