@@ -42,7 +42,7 @@ module Prod : Sig = struct
     let n = Core_unix.single_write ~len ~buf ~pos:0 fd in
     if not (n = len) then
       Error (Printf.sprintf "Tried to write %d bytes but only wrote %d" len n)
-    else Ok ()
+    else (* TODO close? *) Ok ()
 
   let fd_read_all fd =
     let string_buf = Buffer.create bufsiz in

@@ -35,19 +35,11 @@ let () =
         in
 
         let _, _ = Interpreter.Interpret.interpret_prog globals ir in
-        let forward_buffer = List.rev !M.stdout_buffer in
-        let catted_output_opt =
-          List.fold_left forward_buffer
-            ~f:(fun acc cur ->
-              Some (match acc with None -> cur | Some acc -> acc ^ cur))
-            ~init:None
-        in
+
+        let stdout = M.get_stdout () |> String.strip in
         (* Is STDOUT correct? *)
-        let is_equal, catted_output =
-          match catted_output_opt with
-          | None -> (String.(spec.stdout_expect = ""), "")
-          | Some s -> (String.(spec.stdout_expect = String.strip s), s)
-        in
+        let is_equal = String.(spec.stdout_expect = stdout) in
+
         if is_equal then ()
         else (
           Printf.eprintf
@@ -55,7 +47,7 @@ let () =
              Expected %s\n\n\
              Received: %s\n\
              %!"
-            spec.stdout_expect catted_output;
+            spec.stdout_expect stdout;
           failwith __LOC__))
   in
   match res with
