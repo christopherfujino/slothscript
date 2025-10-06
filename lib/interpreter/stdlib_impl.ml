@@ -104,17 +104,17 @@ let make_ids m =
 
 type proto_t = {
   name : string;
-  methods : func_t list;
+  members : func_t list;
   static_members : func_t list;
 }
 
 let make_protos m =
   let module M = (val m : Native.Sig) in
   [
-    { name = "Number"; methods = []; static_members = [] };
+    { name = "Number"; members = []; static_members = [] };
     {
       name = "List";
-      methods =
+      members =
         [
           {
             name = "length";
@@ -133,7 +133,7 @@ let make_protos m =
     };
     {
       name = "Process";
-      methods = [];
+      members = [];
       static_members =
         [
           {
@@ -206,7 +206,7 @@ let make_protos m =
     };
     {
       name = "ProcessHandle";
-      methods =
+      members =
         [
           {
             name = "wait";
@@ -233,7 +233,7 @@ let make_protos m =
     };
     {
       name = "ProcessResult";
-      methods =
+      members =
         [
           {
             name = "stdout";
@@ -252,7 +252,7 @@ let make_protos m =
     };
     {
       name = "HashMap";
-      methods =
+      members =
         [
           {
             name = "merge";
@@ -287,7 +287,7 @@ let make_protos m =
     };
     {
       name = "String";
-      methods =
+      members =
         [
           {
             name = "trim";
@@ -305,7 +305,7 @@ let make_protos m =
     };
     {
       name = "Directory";
-      methods =
+      members =
         [
           {
             name = "exists";
@@ -347,7 +347,7 @@ let make_protos m =
     };
     {
       name = "File";
-      methods =
+      members =
         [
           {
             name = "openRead";
@@ -431,7 +431,7 @@ let make_protos m =
     };
     {
       name = "FileDescriptor";
-      methods =
+      members =
         [
           {
             name = "close";
@@ -508,7 +508,16 @@ let make_protos m =
                 | Error msg -> Second (Error (String msg)));
           };
         ];
-      static_members = [];
+      static_members =
+        [
+          {
+            name = "pipe";
+            arity = Some 1;
+            cb = (fun _ _ ->
+              (*let read, write = M.pipe () in *)
+              failwith "TODO implement pipe");
+          };
+        ];
     };
   ]
 

@@ -12,6 +12,7 @@ module type Sig = sig
   val write : Core_unix.File_descr.t -> data:string -> (unit, string) Result.t
   val read : Core_unix.File_descr.t -> (Runtime.t, string) Result.t
   val wait : Runtime.process_handle -> (Runtime.t, string) Result.t
+  val pipe : unit -> Core_unix.File_descr.t * Core_unix.File_descr.t
 
   val open_file :
     mode:Core_unix.open_flag list ->

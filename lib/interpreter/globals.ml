@@ -74,7 +74,7 @@ let make_globals m src script_path ~argv ~env =
       Context.bind context_ids name t |> Option.value_exn ~message:__LOC__);
 
   List.iter (Stdlib_impl.make_protos m)
-    ~f:(fun { name; methods; static_members } ->
+    ~f:(fun { name; members; static_members } ->
       let cl =
         Runtime.
           {
@@ -82,7 +82,7 @@ let make_globals m src script_path ~argv ~env =
             static_members = Hashtbl.create (module String);
           }
       in
-      List.iter methods ~f:(fun meth ->
+      List.iter members ~f:(fun meth ->
           make_method meth.name
             (Option.value_exn meth.arity)
             cl.instance_members meth.cb);

@@ -1,7 +1,7 @@
 (* TODO move arity here *)
 type class_t = {
   name : string;
-  methods : string list;
+  members : string list;
   static_members : string list;
 }
 
@@ -23,28 +23,29 @@ let globals =
       ];
     protos =
       [
-        { name = "List"; methods = [ "length" ]; static_members = [] };
-        { name = "Process"; methods = []; static_members = [ "new" ] };
-        { name = "ProcessHandle"; methods = [ "wait" ]; static_members = [] };
-        { name = "ProcessResult"; methods = [ "stdout" ]; static_members = [] };
-        { name = "Number"; methods = []; static_members = [] };
+        {
+          name = "Directory";
+          members = [ "exists"; "create"; "path" ];
+          static_members = [];
+        };
         {
           name = "File";
-          methods = [ "readString"; "openRead"; "openWrite" ];
+          members = [ "readString"; "openRead"; "openWrite" ];
           static_members = [ "new" ];
         };
         {
           (* Should we have separate types for reading and writing? *)
           name = "FileDescriptor";
-          methods = [ "close"; "read"; "readAll"; "writeAll" ];
-          static_members = [];
+          members = [ "close"; "read"; "readAll"; "writeAll" ];
+          static_members = [ "pipe" ];
         };
-        {
-          name = "Directory";
-          methods = [ "exists"; "create"; "path" ];
-          static_members = [];
-        };
-        { name = "String"; methods = [ "trim" ]; static_members = [] };
-        { name = "HashMap"; methods = [ "merge" ]; static_members = [] };
+        { name = "HashMap"; members = [ "merge" ]; static_members = [] };
+        { name = "List"; members = [ "length" ]; static_members = [] };
+        { name = "Number"; members = [ (* "floor"; *) ]; static_members = [] };
+        { name = "Pipe"; members = [ "read"; "write" ]; static_members = [] };
+        { name = "Process"; members = []; static_members = [ "new" ] };
+        { name = "ProcessHandle"; members = [ "wait" ]; static_members = [] };
+        { name = "ProcessResult"; members = [ "stdout" ]; static_members = [] };
+        { name = "String"; members = [ "trim" ]; static_members = [] };
       ];
   }

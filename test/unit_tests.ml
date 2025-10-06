@@ -102,11 +102,11 @@ let stdlib_interface_and_impl_match _ =
   List.iter interface.protos ~f:(fun interface_proto ->
       let has_impl =
         List.fold impl_protos ~init:false
-          ~f:(fun found { name; methods; static_members } ->
+          ~f:(fun found { name; members; static_members } ->
             if found then true
             else if String.(name = interface_proto.name) then (
-              let impl_methods = List.map methods ~f:(fun meth -> meth.name) in
-              compare_two_string_lists interface_proto.methods impl_methods;
+              let impl_methods = List.map members ~f:(fun meth -> meth.name) in
+              compare_two_string_lists interface_proto.members impl_methods;
               let impl_statics =
                 List.map static_members ~f:(fun static -> static.name)
               in

@@ -1,0 +1,7 @@
+### Program
+let pipe = FileDescriptor.pipe()
+with ($stderr = pipe.write, $stdout = pipe.write) {
+  "git push --porcelain --set-upstream origin HEAD"!
+}
+print(pipe.read.readAll())
+

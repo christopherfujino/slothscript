@@ -7,6 +7,8 @@ type processMode =
   | BlockBuffer (* proc&! -> ProcessResult *)
 
 module type Sig = sig
+  (* TODO we should never be returning Runtime.t, but more specific types *)
+
   val file_read_all : string -> string
   val fd_read_all : Core_unix.File_descr.t -> (Runtime.t, string) Result.t
   val fd_write_all : Core_unix.File_descr.t -> string -> (unit, string) Result.t
@@ -15,6 +17,7 @@ module type Sig = sig
   val write : Core_unix.File_descr.t -> data:string -> (unit, string) Result.t
   val read : Core_unix.File_descr.t -> (Runtime.t, string) Result.t
   val wait : Runtime.process_handle -> (Runtime.t, string) Result.t
+  val pipe : unit -> Core_unix.File_descr.t * Core_unix.File_descr.t
 
   val open_file :
     mode:Core_unix.open_flag list ->
@@ -35,6 +38,7 @@ module type Sig = sig
 end
 
 module Prod : Sig = struct
+  let pipe = Core_unix.pipe ~close_on_exec:true
   let file_read_all = In_channel.read_all
 
   let fd_write_all fd contents =
@@ -320,6 +324,12 @@ module Make_test () : TestSig = struct
 
   (** Use get_next_pid *)
   let next_pid = ref 42
+
+  (* Public *)
+  let pipe () =
+    let input = get_next_fd () |> Core_unix.File_descr.of_int in
+    let output = get_next_fd () |> Core_unix.File_descr.of_int in
+    (input, output)
 
   let close fd =
     let fd_int = Core_unix.File_descr.to_int fd in
