@@ -9,10 +9,10 @@ let result2 = Process.new(["uname"]) | Process.new(["tr", "x", "s"])!
 
 let handle = "uname"&
 let result = handle.wait()
-assert(result.stdout() == "Linux")
+assert(result.stdout() == "Linux\n")
 
 result = "uname"&!
-assert(result.stdout() == "Linux")
+assert(result.stdout() == "Linux\n")
 
 ### Processes
 (((cmd
@@ -25,7 +25,7 @@ assert(result.stdout() == "Linux")
       s))
     (instructions
       ((Stdout
-        Linus))))
+        "Linus\n"))))
   ((cmd
     (uname))
     (instructions
@@ -36,17 +36,17 @@ assert(result.stdout() == "Linux")
       s))
     (instructions
       ((Stdout
-        Linus))))
+        "Linus\n"))))
   ((cmd
     (uname))
     (instructions
       ((Stdout
-        Linux))))
+        "Linux\n"))))
   ((cmd
     (uname))
     (instructions
       ((Stdout
-        Linux)))))
+        "Linux\n")))))
 
 ### Ast
 ((StmtDecl
@@ -175,7 +175,7 @@ assert(result.stdout() == "Linux")
             <opaque>)
           (String
             ((FullString
-              Linux
+              "Linux\n"
               <opaque>))
             <opaque>)
           true
@@ -215,7 +215,7 @@ assert(result.stdout() == "Linux")
             <opaque>)
           (String
             ((FullString
-              Linux
+              "Linux\n"
               <opaque>))
             <opaque>)
           true

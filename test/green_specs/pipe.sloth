@@ -10,20 +10,26 @@ with ($stderr = pipe2.write, $stdout = pipe2.write) {
 print(pipe2.read.readAll())
 
 ### Processes
-((
-  (cmd (git push --porcelain --set-upstream origin HEAD))
-  (instructions (
-    (Stdout "out1\n")
-    (Stderr "err\n")
-    (Stdout "out2\n")
-  ))
-))
+(((cmd
+  (git
+    push
+    --porcelain
+    --set-upstream
+    origin
+    HEAD))
+  (instructions
+    ((Stdout
+      "out1\n")
+      (Stderr
+        "err\n")
+      (Stdout
+        "out2\n")))))
 
 ### Ast
 ((StmtDecl
   (ExprStmt
     (LetExpr
-      pipe
+      pipe1
       (FuncInvoc
         (ObjDeref
           (IdRef
@@ -36,18 +42,77 @@ print(pipe2.read.readAll())
       <opaque>)))
   (StmtDecl
     (ExprStmt
+      (FuncInvoc
+        (ObjDeref
+          (ObjDeref
+            (IdRef
+              pipe1
+              <opaque>)
+            write
+            <opaque>)
+          writeAll
+          <opaque>)
+        ((String
+          ((FullString
+            Hello
+            <opaque>))
+          <opaque>))
+        <opaque>)))
+  (StmtDecl
+    (ExprStmt
+      (FuncInvoc
+        (IdRef
+          assert
+          <opaque>)
+        ((Equality
+          (FuncInvoc
+            (ObjDeref
+              (ObjDeref
+                (IdRef
+                  pipe1
+                  <opaque>)
+                read
+                <opaque>)
+              readAll
+              <opaque>)
+            ()
+            <opaque>)
+          (String
+            ((FullString
+              Hello
+              <opaque>))
+            <opaque>)
+          true
+          <opaque>))
+        <opaque>)))
+  (StmtDecl
+    (ExprStmt
+      (LetExpr
+        pipe2
+        (FuncInvoc
+          (ObjDeref
+            (IdRef
+              Pipe
+              <opaque>)
+            new
+            <opaque>)
+          ()
+          <opaque>)
+        <opaque>)))
+  (StmtDecl
+    (ExprStmt
       (WithExpr
         (($stderr
           (ObjDeref
             (IdRef
-              pipe
+              pipe2
               <opaque>)
             write
             <opaque>))
           ($stdout
             (ObjDeref
               (IdRef
-                pipe
+                pipe2
                 <opaque>)
               write
               <opaque>)))
@@ -74,7 +139,7 @@ print(pipe2.read.readAll())
           (ObjDeref
             (ObjDeref
               (IdRef
-                pipe
+                pipe2
                 <opaque>)
               read
               <opaque>)

@@ -306,6 +306,16 @@ module Make_test () : TestSig = struct
       Ok ()
   end
 
+  module OpenPipes = struct
+    (** [(i, o) :: ...] *)
+    let open_pipes = ref []
+
+    let add tup = open_pipes := tup :: !open_pipes
+
+    let get_output_from_input input_int =
+      List.Assoc.find !open_pipes ~equal:( = ) input_int
+  end
+
   let get_stdout () =
     match Fds.get_file 1 with
     | Ok (contents_ref, _) -> !contents_ref
@@ -327,9 +337,9 @@ module Make_test () : TestSig = struct
 
   (* Public *)
   let pipe () =
-    (* TODO we need to figure out how to link these two! *)
     let input_int = get_next_fd () in
     let output_int = get_next_fd () in
+    OpenPipes.add (input_int, output_int);
     let input = Core_unix.File_descr.of_int input_int in
     let output = Core_unix.File_descr.of_int output_int in
     Fds.set input_int (File (ref "", input));
@@ -401,6 +411,12 @@ module Make_test () : TestSig = struct
 
   let write fd ~data =
     let fd = Core_unix.File_descr.to_int fd in
+    (* Check if this is input end of a pipe... *)
+    let fd =
+      match OpenPipes.get_output_from_input fd with
+      | None -> fd
+      | Some pipe_out -> pipe_out
+    in
     let open Result.Monad_infix in
     Fds.get fd >>= function
     | File (contents, _) ->
