@@ -25,8 +25,7 @@ let make_func ~arity cb =
   in
   Func (Native { cb = wrapped_cb })
 
-let make_getter ~arity cb =
-  fun () -> make_func ~arity cb
+let make_getter ~arity cb = fun _ -> Ok (make_func ~arity cb)
 
 let make_ids m =
   let module M = (val m : Native.Sig) in
@@ -107,15 +106,14 @@ let make_ids m =
 
 type proto_t = {
   name : string;
-  getters : (string * (unit -> Runtime.t)) list;
+  getters : (string * (Runtime.t -> (Runtime.t, string) Result.t)) list;
   (* setters : (string * (Runtime.t -> unit)) list; *)
-  static_getters : (string * (unit -> Runtime.t)) list;
+  static_getters : (string * (Runtime.t -> (Runtime.t, string) Result.t)) list;
 }
 
 let make_protos m =
   let module M = (val m : Native.Sig) in
   [
-    { name = "Number"; getters = []; static_getters = [] };
     {
       name = "List";
       getters =
@@ -130,6 +128,33 @@ let make_protos m =
                 First (Runtime.Num len)) );
         ];
       static_getters = [];
+    };
+    { name = "Number"; getters = []; static_getters = [] };
+    {
+      name = "Pipe";
+      getters =
+        [
+          ( "write",
+            fun self ->
+              let i, _ =
+                Runtime.pipe_of_t self |> Option.value_exn ~message:__LOC__
+              in
+              Ok (FileDescriptor i) );
+          ( "read",
+            fun self ->
+              let _, o =
+                Runtime.pipe_of_t self |> Option.value_exn ~message:__LOC__
+              in
+              Ok (FileDescriptor o) );
+        ];
+      static_getters =
+        [
+          ( "new",
+            make_getter ~arity:(Some 1) (fun _ _ ->
+                let i, o = M.pipe () in
+                let t = Runtime.Pipe (i, o) in
+                First t) );
+        ];
     };
     {
       name = "Process";
@@ -444,13 +469,7 @@ let make_protos m =
                 | Ok () -> First Runtime.Null
                 | Error msg -> Second (Error (String msg))) );
         ];
-      static_getters =
-        [
-          ( "pipe",
-            make_getter ~arity:(Some 1) (fun _ _ ->
-                (*let read, write = M.pipe () in *)
-                failwith "TODO implement pipe") );
-        ];
+      static_getters = [];
     };
   ]
 

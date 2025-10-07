@@ -327,8 +327,13 @@ module Make_test () : TestSig = struct
 
   (* Public *)
   let pipe () =
-    let input = get_next_fd () |> Core_unix.File_descr.of_int in
-    let output = get_next_fd () |> Core_unix.File_descr.of_int in
+    (* TODO we need to figure out how to link these two! *)
+    let input_int = get_next_fd () in
+    let output_int = get_next_fd () in
+    let input = Core_unix.File_descr.of_int input_int in
+    let output = Core_unix.File_descr.of_int output_int in
+    Fds.set input_int (File (ref "", input));
+    Fds.set output_int (File (ref "", output));
     (input, output)
 
   let close fd =
@@ -397,9 +402,9 @@ module Make_test () : TestSig = struct
   let write fd ~data =
     let fd = Core_unix.File_descr.to_int fd in
     let open Result.Monad_infix in
-    (* TODO allow over-writing *)
     Fds.get fd >>= function
     | File (contents, _) ->
+        Printf.printf "prev = %s; next = %s\n%!" !contents data;
         (* TODO check permissions FD was opened with *)
         Ok (contents := !contents ^ data)
     | Directory -> internal_failure __LOC__
@@ -459,17 +464,17 @@ module Make_test () : TestSig = struct
         (* TODO should this just be a no-op? *)
         Error
           (Printf.sprintf
-             "Tried to wait the PID %d but it is not running; did you \
-              `wait()`'d it twice"
+             "Tried to wait the PID %d but it is not running; did you `wait()` \
+              it twice"
              pid)
     | Some res -> res
 
   let proc_exec ~mode proc _ =
-    let rec rec_proc_exec follower_opt (proc : Runtime.process) =
+    let rec rec_proc_exec (proc : Runtime.process) =
       (* Start from the end of the list *)
       (match proc.previous with
       | Some prev ->
-          let _ = rec_proc_exec (Some proc) prev in
+          let _ = rec_proc_exec prev in
           ()
       | None -> ());
       match !proc_expectations |> option_value ~message:__LOC__ with
@@ -482,53 +487,71 @@ module Make_test () : TestSig = struct
           let n = List.compare String.compare hd.cmd proc.cmd in
           match n with
           | 0 -> (
-              let exec_proc_spec () =
+              let exec_proc_spec stdout stderr =
                 let code = ref 0 in
-                let stdout_buf = Buffer.create 32 in
-                let stderr_buf = Buffer.create 32 in
                 List.iter hd.instructions ~f:(function
                   | Exit c -> code := c
-                  | Stdout s -> Buffer.add_string stdout_buf s
-                  | Stderr s -> Buffer.add_string stderr_buf s
+                  | Stdout s -> Result.ok_or_failwith (write stdout ~data:s)
+                  | Stderr s -> Result.ok_or_failwith (write stderr ~data:s)
                   | Stdin _ -> failwith "TODO");
-                Ok
-                  (Runtime.ProcessResult
-                     {
-                       code = !code;
-                       stdout = Buffer.contents stdout_buf;
-                       stderr = Buffer.contents stderr_buf;
-                     })
+                !code
               in
               match mode with
               | BlockInherit ->
+                  (*
+                  let _, stdout = Fds.get_file 1 |> Result.ok_or_failwith in
+                  let _, stderr = Fds.get_file 2 |> Result.ok_or_failwith in
+    *)
+                  Printf.printf "STDOUT = %d; STDERR = %d\n%!"
+                    (Core_unix.File_descr.to_int proc.stdout)
+                    (Core_unix.File_descr.to_int proc.stderr);
+                  let _ = exec_proc_spec proc.stdout proc.stderr in
+                  Ok Runtime.Null
+              | BlockBuffer ->
+                  let write_stdout, read_stdout = pipe () in
+                  let write_stderr, read_stderr = pipe () in
+                  let code = exec_proc_spec write_stdout write_stderr in
                   let open Result.Monad_infix in
-                  exec_proc_spec () >>= fun proc_res ->
-                  let proc_res =
-                    Runtime.process_result_of_val proc_res
-                    |> option_value ~message:__LOC__
+                  fd_read_all read_stdout >>= fun stdout_t ->
+                  let stdout =
+                    Runtime.string_of_val stdout_t |> Option.value_exn
                   in
-                  (* TODO stderr *)
-                  (match follower_opt with
-                  | None -> (
-                      match Fds.get_file 1 with
-                      | Ok (_, fd) -> write fd ~data:(proc_res.stdout ^ "\n")
-                      | Error msg -> failwith msg)
-                  | Some _ -> (* TODO match with stdin *) Ok ())
-                  >>= fun () -> Ok Runtime.Null
-              | BlockBuffer -> exec_proc_spec ()
+                  fd_read_all read_stderr >>= fun stderr_t ->
+                  let stderr =
+                    Runtime.string_of_val stderr_t |> Option.value_exn
+                  in
+                  let result = Runtime.ProcessResult { code; stdout; stderr } in
+                  Ok result
               | ForkBuffer ->
                   let this_pid = get_next_pid () in
-                  running_pids := (this_pid, exec_proc_spec) :: !running_pids;
-                  (* TODO remove this when we've abstracted over this exact type *)
-                  let unsafe_fd = Core_unix.File_descr.of_int 69 in
+                  let write_stdout, read_stdout = pipe () in
+                  let write_stderr, read_stderr = pipe () in
+                  let callback () =
+                    let code = exec_proc_spec write_stdout write_stderr in
+                    let open Result.Monad_infix in
+                    fd_read_all read_stdout >>= fun stdout_t ->
+                    let stdout =
+                      Runtime.string_of_val stdout_t |> Option.value_exn
+                    in
+                    fd_read_all read_stderr >>= fun stderr_t ->
+                    let stderr =
+                      Runtime.string_of_val stderr_t |> Option.value_exn
+                    in
+                    let result =
+                      Runtime.ProcessResult { code; stdout; stderr }
+                    in
+                    Ok result
+                  in
+
+                  running_pids := (this_pid, callback) :: !running_pids;
                   Ok
                     Runtime.(
                       ProcessHandle
                         (ProcessBuffered
                            {
                              pid = Pid.of_int this_pid;
-                             stdout = unsafe_fd;
-                             stderr = unsafe_fd;
+                             stdout = read_stdout;
+                             stderr = read_stderr;
                            })))
           | _ ->
               let msg =
@@ -538,7 +561,7 @@ module Make_test () : TestSig = struct
               in
               Error msg)
     in
-    rec_proc_exec None proc
+    rec_proc_exec proc
 end
 
 let make_test spec =

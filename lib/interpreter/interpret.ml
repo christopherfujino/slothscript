@@ -454,7 +454,8 @@ and interpret_expr globals expr :
               ~m:globals.l target )
           >>= fun globals fd ->
           let fd = Runtime.FileDescriptor fd in
-          let func = dereference_object globals fd "readAll" pos in
+          (globals, dereference_object globals fd "readAll" pos)
+          >>= fun globals func ->
           let receiver, func =
             match Runtime.method_of_val func with
             | None -> internal_failure __LOC__
@@ -493,7 +494,7 @@ and interpret_expr globals expr :
       (globals, interpret_block inner_globals block)
   | ObjDeref (receiver, target, pos) ->
       interpret_expr globals receiver >>= fun globals receiver ->
-      (globals, First (dereference_object globals receiver target pos))
+      (globals, dereference_object globals receiver target pos)
   | LetExpr (id, e, pos) ->
       interpret_expr globals e >>= fun globals v ->
       (match Identifiers.bind globals.identifiers id v with
@@ -770,17 +771,20 @@ and interpret_method ~globals ~pos receiver args method_name =
         class_name method_name
       |> fail ~globals pos
   | Some thunk -> (
-      match thunk () with
-      | Func func -> (
-          match func with
-          | User _ -> Sloth_common.Common.internal_failure __LOC__
-          | Native { cb; _ } ->
-              let args = receiver :: args in
-              (globals, invoke_native_func ~globals ~pos cb args))
-      | _ as t ->
-          internal_failure
-          @@ Printf.sprintf "Expected func, got %s (%s)" (Runtime.to_s t)
-               __LOC__)
+      match thunk receiver with
+      | Ok t -> (
+          match t with
+          | Func func -> (
+              match func with
+              | User _ -> Sloth_common.Common.internal_failure __LOC__
+              | Native { cb; _ } ->
+                  let args = receiver :: args in
+                  (globals, invoke_native_func ~globals ~pos cb args))
+          | _ as t ->
+              internal_failure
+              @@ Printf.sprintf "Expected func, got %s (%s)" (Runtime.to_s t)
+                   __LOC__)
+      | Error msg -> (globals, Second (Runtime.create_error msg)))
 
 and is_equal globals is_equality lhs rhs =
   let lh_s = Runtime.to_class_name lhs in
@@ -908,6 +912,14 @@ and is_equal globals is_equality lhs rhs =
               | _ -> false)
         in
         Bool.(same_handle = is_equality)
+    | Pipe (read, write) ->
+        let r_read, r_write =
+          Runtime.pipe_of_t rhs |> option_value ~message:__LOC__
+        in
+        let same_pipe =
+          Core_unix.File_descr.(equal read r_read && equal write r_write)
+        in
+        Bool.(same_pipe = is_equality)
     | ProcessResult _ -> failwith "TODO"
     | Func _ | Method _ ->
         Printf.sprintf "is_equal the type %s is not implemented" lh_s
@@ -936,11 +948,14 @@ and dereference_object globals receiver target pos =
       | None ->
           Printf.sprintf "The class %s does not have a %s field named %s"
             class_name descriptor target
-          |> fail ~globals pos
+          |> failure_obj ~globals ~pos
       | Some thunk -> (
-          match thunk () with
-          | Func func_t -> Method (receiver, func_t)
-          | _ -> fail ~globals pos "TODO"))
+          match thunk receiver with
+          | Ok t -> (
+              match t with
+              | Func func_t -> First (Method (receiver, func_t))
+              | _ as other -> First other)
+          | Error msg -> failure_obj ~globals ~pos msg))
 
 and cast_to_directory ~globals ~pos = function
   | Runtime.String path -> path
@@ -962,11 +977,10 @@ and cast_to_process ~globals ~pos v :
   match v with
   | Runtime.Process p -> First p
   | Runtime.List _ as l -> (
-      let constructor =
-        dereference_object globals
-          (Runtime.Prototype { name = "Process" })
-          "new" pos
-      in
+      dereference_object globals
+        (Runtime.Prototype { name = "Process" })
+        "new" pos
+      >>- fun constructor ->
       let callback =
         match constructor with
         | Func func_t -> (

@@ -37,12 +37,16 @@ let globals =
           (* Should we have separate types for reading and writing? *)
           name = "FileDescriptor";
           members = [ "close"; "read"; "readAll"; "writeAll" ];
-          static_members = [ "pipe" ];
+          static_members = [];
         };
         { name = "HashMap"; members = [ "merge" ]; static_members = [] };
         { name = "List"; members = [ "length" ]; static_members = [] };
         { name = "Number"; members = [ (* "floor"; *) ]; static_members = [] };
-        { name = "Pipe"; members = [ "read"; "write" ]; static_members = [] };
+        {
+          name = "Pipe";
+          members = [ "read"; "write" ];
+          static_members = [ "new" ];
+        };
         { name = "Process"; members = []; static_members = [ "new" ] };
         { name = "ProcessHandle"; members = [ "wait" ]; static_members = [] };
         { name = "ProcessResult"; members = [ "stdout" ]; static_members = [] };

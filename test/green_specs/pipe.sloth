@@ -1,7 +1,92 @@
 ### Program
-let pipe = FileDescriptor.pipe()
-with ($stderr = pipe.write, $stdout = pipe.write) {
+let pipe1 = Pipe.new()
+pipe1.write.writeAll("Hello")
+assert(pipe1.read.readAll() == "Hello")
+
+let pipe2 = Pipe.new()
+with ($stderr = pipe2.write, $stdout = pipe2.write) {
   "git push --porcelain --set-upstream origin HEAD"!
 }
-print(pipe.read.readAll())
+print(pipe2.read.readAll())
 
+### Processes
+((
+  (cmd (git push --porcelain --set-upstream origin HEAD))
+  (instructions (
+    (Stdout "out1\n")
+    (Stderr "err\n")
+    (Stdout "out2\n")
+  ))
+))
+
+### Ast
+((StmtDecl
+  (ExprStmt
+    (LetExpr
+      pipe
+      (FuncInvoc
+        (ObjDeref
+          (IdRef
+            Pipe
+            <opaque>)
+          new
+          <opaque>)
+        ()
+        <opaque>)
+      <opaque>)))
+  (StmtDecl
+    (ExprStmt
+      (WithExpr
+        (($stderr
+          (ObjDeref
+            (IdRef
+              pipe
+              <opaque>)
+            write
+            <opaque>))
+          ($stdout
+            (ObjDeref
+              (IdRef
+                pipe
+                <opaque>)
+              write
+              <opaque>)))
+        ((ExprStmt
+          (UnaryExpr
+            (target
+              (String
+                ((FullString
+                  "git push --porcelain --set-upstream origin HEAD"
+                  <opaque>))
+                <opaque>))
+            (pos
+              <opaque>)
+            (operator
+              Bang))))
+        <opaque>)))
+  (StmtDecl
+    (ExprStmt
+      (FuncInvoc
+        (IdRef
+          print
+          <opaque>)
+        ((FuncInvoc
+          (ObjDeref
+            (ObjDeref
+              (IdRef
+                pipe
+                <opaque>)
+              read
+              <opaque>)
+            readAll
+            <opaque>)
+          ()
+          <opaque>))
+        <opaque>))))
+
+### Stdout
+out1
+err
+out2
+
+### Failure
