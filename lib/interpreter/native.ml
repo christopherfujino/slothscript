@@ -203,7 +203,6 @@ module Prod : Sig = struct
             Core_unix.dup2 ~src:proc.stdout ~dst:Core_unix.stdout ();
             Core_unix.dup2 ~src:proc.stderr ~dst:Core_unix.stderr ();
             let env = List.of_array env in
-            (* TODO delete *)
             let _ =
               Core_unix.exec ~env:(`Replace_raw env) ~use_path:true ~prog
                 ~argv:proc.cmd ()
@@ -339,8 +338,6 @@ module Make_test () : TestSig = struct
   let pipe () =
     let input_int = get_next_fd () in
     let output_int = get_next_fd () in
-    Printf.printf "Creating pipe FDs %d (write) %d (read)\n" input_int
-      output_int (* TODO delete *);
     OpenPipes.add (input_int, output_int);
     let input = Core_unix.File_descr.of_int input_int in
     let output = Core_unix.File_descr.of_int output_int in
@@ -413,7 +410,6 @@ module Make_test () : TestSig = struct
 
   let write fd ~data =
     let fd = Core_unix.File_descr.to_int fd in
-    Printf.printf "syscall write(%d)\n" fd (* TODO delete *);
     (* Check if this is input end of a pipe... *)
     let fd =
       match OpenPipes.get_output_from_input fd with
@@ -423,11 +419,11 @@ module Make_test () : TestSig = struct
     let open Result.Monad_infix in
     Fds.get fd >>= function
     | File (contents, _) ->
-        Printf.printf "prev = %s; next = %s\n%!" !contents data;
         (* TODO check permissions FD was opened with *)
         Ok (contents := !contents ^ data)
     | Directory -> internal_failure __LOC__
 
+  (* TODO delete this, just use write *)
   let fd_write_all fd contents =
     let fd_int = Core_unix.File_descr.to_int fd in
     (* Check if this is input end of a pipe... *)
@@ -443,7 +439,6 @@ module Make_test () : TestSig = struct
 
   let fd_read_all fd =
     let fd_int = Core_unix.File_descr.to_int fd in
-    Printf.printf "reading test FD %d\n" fd_int (* TODO delete *);
     let open Result.Monad_infix in
     Fds.get fd_int >>= function
     | File (contents, _) -> Ok (Runtime.String !contents)
@@ -523,13 +518,6 @@ module Make_test () : TestSig = struct
               in
               match mode with
               | BlockInherit ->
-                  (*
-                  let _, stdout = Fds.get_file 1 |> Result.ok_or_failwith in
-                  let _, stderr = Fds.get_file 2 |> Result.ok_or_failwith in
-    *)
-                  Printf.printf "STDOUT = %d; STDERR = %d\n%!"
-                    (Core_unix.File_descr.to_int proc.stdout)
-                    (Core_unix.File_descr.to_int proc.stderr);
                   let _ = exec_proc_spec proc.stdout proc.stderr in
                   Ok Runtime.Null
               | BlockBuffer ->
