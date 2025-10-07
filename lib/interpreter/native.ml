@@ -339,6 +339,8 @@ module Make_test () : TestSig = struct
   let pipe () =
     let input_int = get_next_fd () in
     let output_int = get_next_fd () in
+    Printf.printf "Creating pipe FDs %d (write) %d (read)\n" input_int
+      output_int (* TODO delete *);
     OpenPipes.add (input_int, output_int);
     let input = Core_unix.File_descr.of_int input_int in
     let output = Core_unix.File_descr.of_int output_int in
@@ -411,6 +413,7 @@ module Make_test () : TestSig = struct
 
   let write fd ~data =
     let fd = Core_unix.File_descr.to_int fd in
+    Printf.printf "syscall write(%d)\n" fd (* TODO delete *);
     (* Check if this is input end of a pipe... *)
     let fd =
       match OpenPipes.get_output_from_input fd with
@@ -427,6 +430,12 @@ module Make_test () : TestSig = struct
 
   let fd_write_all fd contents =
     let fd_int = Core_unix.File_descr.to_int fd in
+    (* Check if this is input end of a pipe... *)
+    let fd_int =
+      match OpenPipes.get_output_from_input fd_int with
+      | None -> fd_int
+      | Some pipe_out -> pipe_out
+    in
     let open Result.Monad_infix in
     Fds.get fd_int >>= function
     | File (contents_ref, _) -> Ok (contents_ref := contents)
@@ -434,7 +443,7 @@ module Make_test () : TestSig = struct
 
   let fd_read_all fd =
     let fd_int = Core_unix.File_descr.to_int fd in
-
+    Printf.printf "reading test FD %d\n" fd_int (* TODO delete *);
     let open Result.Monad_infix in
     Fds.get fd_int >>= function
     | File (contents, _) -> Ok (Runtime.String !contents)

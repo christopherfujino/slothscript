@@ -1031,7 +1031,8 @@ and interpret_binary globals lhs rhs op pos =
       let either =
         cast_to_process ~globals ~pos lhs >>- fun left ->
         cast_to_process ~globals ~pos rhs >>- fun right ->
-        let read, write = Core_unix.pipe () in
+        let module M = (val globals.l) in
+        let read, write = M.pipe () in
         left.stdout <- write;
         left.pipes_to_collect <- write :: left.pipes_to_collect;
         right.stdin <- read;

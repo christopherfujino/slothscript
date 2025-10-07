@@ -1,13 +1,15 @@
 ### Program
 let pipe1 = Pipe.new()
 pipe1.write.writeAll("Hello")
-assert(pipe1.read.readAll() == "Hello")
+let pipeOut = pipe1.read.readAll()
+assert(pipeOut == "Hello", pipeOut)
 
 let pipe2 = Pipe.new()
 with ($stderr = pipe2.write, $stdout = pipe2.write) {
   "git push --porcelain --set-upstream origin HEAD"!
 }
-print(pipe2.read.readAll())
+pipeOut = pipe2.read.readAll()
+assert(pipeOut == "out1\nerr\nout2\n", pipeOut)
 
 ### Processes
 (((cmd
@@ -60,22 +62,30 @@ print(pipe2.read.readAll())
         <opaque>)))
   (StmtDecl
     (ExprStmt
+      (LetExpr
+        pipeOut
+        (FuncInvoc
+          (ObjDeref
+            (ObjDeref
+              (IdRef
+                pipe1
+                <opaque>)
+              read
+              <opaque>)
+            readAll
+            <opaque>)
+          ()
+          <opaque>)
+        <opaque>)))
+  (StmtDecl
+    (ExprStmt
       (FuncInvoc
         (IdRef
           assert
           <opaque>)
         ((Equality
-          (FuncInvoc
-            (ObjDeref
-              (ObjDeref
-                (IdRef
-                  pipe1
-                  <opaque>)
-                read
-                <opaque>)
-              readAll
-              <opaque>)
-            ()
+          (IdRef
+            pipeOut
             <opaque>)
           (String
             ((FullString
@@ -83,7 +93,10 @@ print(pipe2.read.readAll())
               <opaque>))
             <opaque>)
           true
-          <opaque>))
+          <opaque>)
+          (IdRef
+            pipeOut
+            <opaque>))
         <opaque>)))
   (StmtDecl
     (ExprStmt
@@ -131,11 +144,9 @@ print(pipe2.read.readAll())
         <opaque>)))
   (StmtDecl
     (ExprStmt
-      (FuncInvoc
-        (IdRef
-          print
-          <opaque>)
-        ((FuncInvoc
+      (AssignExpr
+        pipeOut
+        (FuncInvoc
           (ObjDeref
             (ObjDeref
               (IdRef
@@ -146,12 +157,31 @@ print(pipe2.read.readAll())
             readAll
             <opaque>)
           ()
-          <opaque>))
+          <opaque>)
+        <opaque>)))
+  (StmtDecl
+    (ExprStmt
+      (FuncInvoc
+        (IdRef
+          assert
+          <opaque>)
+        ((Equality
+          (IdRef
+            pipeOut
+            <opaque>)
+          (String
+            ((FullString
+              "out1\nerr\nout2\n"
+              <opaque>))
+            <opaque>)
+          true
+          <opaque>)
+          (IdRef
+            pipeOut
+            <opaque>))
         <opaque>))))
 
 ### Stdout
-out1
-err
-out2
+
 
 ### Failure
