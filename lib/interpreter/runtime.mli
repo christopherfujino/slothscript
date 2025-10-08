@@ -59,7 +59,7 @@ and function_t =
 
 type class_t = {
   instance_getters : (string, t -> (t, string) Result.t) Hashtbl.t;
-  instance_setters : (string, t * t -> unit) Hashtbl.t;
+  instance_setters : (string, t -> t -> (unit, string) Result.t) Hashtbl.t;
   static_getters : (string, t -> (t, string) Result.t) Hashtbl.t;
 }
 
@@ -80,7 +80,7 @@ val method_of_val : t -> (t * function_t) option
 val num_of_val : t -> float option
 val pipe_of_t : t -> (Core_unix.File_descr.t * Core_unix.File_descr.t) option
 val process_handle_of_t : t -> process_handle option
-val process_of_val : t -> process option
+val process_of_t : t -> process option
 val process_result_of_val : t -> process_result option
 val string_of_val : t -> string option
 val val_of_env : string array -> t

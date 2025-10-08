@@ -55,6 +55,6 @@ let populate env =
       l.context_ids
   in
   List.fold_left ~init:env
-    ~f:(fun env { name; members = _; static_members = _ } ->
+    ~f:(fun env { name; getters = _; setters = _; static_getters = _ } ->
       bind env name |> Option.value_exn)
     l.protos

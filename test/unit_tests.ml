@@ -102,15 +102,17 @@ let stdlib_interface_and_impl_match _ =
   List.iter interface.protos ~f:(fun interface_proto ->
       let has_impl =
         List.fold impl_protos ~init:false
-          ~f:(fun found { name; getters; static_getters } ->
+          ~f:(fun found { name; getters; setters; static_getters } ->
             if found then true
             else if String.(name = interface_proto.name) then (
-              let impl_methods = List.map getters ~f:(fun (name, _) -> name) in
-              compare_two_string_lists interface_proto.members impl_methods;
+              let impl_getters = List.map getters ~f:(fun (name, _) -> name) in
+              let impl_setters = List.map setters ~f:(fun (name, _) -> name) in
+              compare_two_string_lists interface_proto.getters impl_getters;
+              compare_two_string_lists interface_proto.setters impl_setters;
               let impl_statics =
                 List.map static_getters ~f:(fun (name, _) -> name)
               in
-              compare_two_string_lists interface_proto.static_members
+              compare_two_string_lists interface_proto.static_getters
                 impl_statics;
               true)
             else false)

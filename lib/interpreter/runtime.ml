@@ -64,7 +64,7 @@ and function_t =
 
 type class_t = {
   instance_getters : (string, t -> (t, string) Result.t) Hashtbl.t;
-  instance_setters : (string, t * t -> unit) Hashtbl.t;
+  instance_setters : (string, t -> t -> (unit, string) Result.t) Hashtbl.t;
   static_getters : (string, t -> (t, string) Result.t) Hashtbl.t;
 }
 
@@ -170,7 +170,7 @@ let pipe_of_t = function Pipe (read, write) -> Some (read, write) | _ -> None
 let bool_of_val = function Bool b' -> Some b' | _ -> None
 let list_of_val = function List l -> Some l | _ -> None
 let hashmap_of_val = function HashMap h -> Some h | _ -> None
-let process_of_val = function Process p -> Some p | _ -> None
+let process_of_t = function Process p -> Some p | _ -> None
 let process_handle_of_t = function ProcessHandle p -> Some p | _ -> None
 let process_result_of_val = function ProcessResult p -> Some p | _ -> None
 let func_of_val = function Func func -> Some func | _ -> None

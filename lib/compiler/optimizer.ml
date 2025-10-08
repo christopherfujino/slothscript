@@ -66,6 +66,12 @@ and expr =
       value : expr;
       pos : (Lexing.position[@sexp.opaque]);
     }
+  | DerefAssign of {
+      receiver : expr;
+      name : string;
+      value : expr;
+      pos : (Lexing.position[@sexp.opaque]);
+    }
   | ForLoop of expr * expr * expr * stmt list * (Lexing.position[@sexp.opaque])
   | ForInLoop of {
       iterator_name : string;
@@ -267,6 +273,10 @@ and optimize_expr (env : Environment.t) (e : Ast.expr) : Environment.t * expr =
   | ObjDeref (receiver, name, pos) ->
       let env, receiver = optimize_expr env receiver in
       (env, ObjDeref (receiver, name, pos))
+  | DerefAssign { receiver; name; value; pos } ->
+      let env, receiver = optimize_expr env receiver in
+      let env, value = optimize_expr env value in
+      (env, DerefAssign { pos; name; receiver; value })
   | LetExpr (name, expr, pos) ->
       (* TODO verify *)
       let env, e = optimize_expr env expr in

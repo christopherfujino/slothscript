@@ -514,6 +514,10 @@ and interpret_expr globals expr :
             "The name %s has not been declared yet; did you mean to declare it?"
             id
           |> fail ~globals pos)
+  | DerefAssign { receiver; name; value; pos } ->
+      interpret_expr globals receiver >>= fun globals receiver ->
+      interpret_expr globals value >>= fun globals value ->
+      (globals, reassign_object_property ~globals ~pos receiver name value)
   | SubAssignExpr { subscript; value; pos = _ } -> (
       match subscript with
       | Subscript (receiver, subscript, pos) -> (
@@ -840,7 +844,7 @@ and is_equal globals is_equality lhs rhs =
             Bool.(names_same = is_equality)
         | _ -> not is_equality)
     | Process lhs ->
-        let rhs = Runtime.process_of_val rhs |> option_value ~message:__LOC__ in
+        let rhs = Runtime.process_of_t rhs |> option_value ~message:__LOC__ in
         let rec inner_proc (lhs : Runtime.process) (rhs : Runtime.process) =
           let same_proc =
             (match
@@ -923,6 +927,36 @@ and is_equal globals is_equality lhs rhs =
     | Func _ | Method _ ->
         Printf.sprintf "is_equal the type %s is not implemented" lh_s
         |> failwith
+
+(* Actually call setter *)
+and reassign_object_property ~globals ~pos receiver target newvalue =
+  let class_name =
+    match receiver with
+    | Runtime.Prototype _ ->
+        Printf.sprintf "TODO implement prototype property re-assignment (%s)"
+          __LOC__
+        |> failwith
+    | _ -> Runtime.to_class_name receiver
+  in
+  let lookup =
+    match Hashtbl.find Globals.(globals.classes) class_name with
+    | None ->
+        internal_failure
+        @@ internal_failure_msg ~globals ~pos
+        @@ Printf.sprintf
+             "Internal error: could not find prototype for the %s class (%s)"
+             class_name __LOC__
+    | Some lookup -> lookup
+  in
+  match Hashtbl.find lookup.instance_setters target with
+  | None ->
+      Printf.sprintf "The class %s does not have a setter named %s" class_name
+        target
+      |> failure_obj ~globals ~pos
+  | Some thunk -> (
+      match thunk receiver newvalue with
+      | Ok () -> Either.first Runtime.Null
+      | Error msg -> failure_obj ~globals ~pos msg)
 
 and dereference_object globals receiver target pos =
   let descriptor, class_name, table_thunk =

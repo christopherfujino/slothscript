@@ -33,7 +33,7 @@ let make_globals m src script_path ~argv ~env =
       Context.bind context_ids name t |> Option.value_exn ~message:__LOC__);
 
   List.iter (Stdlib_impl.make_protos m)
-    ~f:(fun { name; getters; static_getters } ->
+  ~f:(fun { name; getters; setters; static_getters } ->
       let cl =
         Runtime.
           {
@@ -44,6 +44,9 @@ let make_globals m src script_path ~argv ~env =
       in
       List.iter getters ~f:(fun (name, getter) ->
           Hashtbl.add_exn cl.instance_getters ~key:name ~data:getter);
+
+      List.iter setters ~f:(fun (name, setter) ->
+          Hashtbl.add_exn cl.instance_setters ~key:name ~data:setter);
 
       List.iter static_getters ~f:(fun (name, getter) ->
           Hashtbl.add_exn cl.static_getters ~key:name ~data:getter);
