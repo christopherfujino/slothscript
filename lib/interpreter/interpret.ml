@@ -1157,11 +1157,30 @@ and interpret_right_arrow ~globals ~pos lhs rhs =
     cast_to_file_descriptor ~globals ~pos ~mode:[ Core_unix.O_WRONLY ]
       ~m:globals.l rhs )
   >>= fun globals fd ->
-  (match lhs with
-  | Process proc -> proc.stdout <- fd
-  | _ ->
-      Printf.sprintf "TODO implement %s -> File" (Runtime.to_s lhs) |> failwith);
-  (globals, Either.first lhs)
+  let proc =
+    match lhs with
+    | Process proc ->
+        proc.stdout <- fd;
+        proc
+    | _ ->
+        Printf.sprintf "TODO implement %s -> File" (Runtime.to_s lhs)
+        |> failwith
+  in
+  let env_val =
+    Context.get globals.context_ids "$env" |> option_value ~message:__LOC__
+  in
+  let env =
+    match Runtime.env_of_val env_val with
+    | Some env -> env
+    | None ->
+        Printf.sprintf "$env is the wrong type: %s" @@ Runtime.to_s env_val
+        |> fail ~globals pos
+  in
+
+  let module M = (val globals.l) in
+  match M.proc_exec ~mode:BlockInherit proc env with
+  | Ok v -> (globals, First v)
+  | Error msg -> (globals, failure_obj ~globals ~pos msg)
 
 and cast_to_file_descriptor ~globals ~pos ~mode ~m t :
     (Core_unix.File_descr.t, Runtime.breaking_type) Either.t =

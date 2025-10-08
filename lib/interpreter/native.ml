@@ -386,8 +386,8 @@ module Make_test () : TestSig = struct
       (match Hashtbl.add path_to_entity ~key:path ~data:entity with
       | `Ok -> Ok ()
       | `Duplicate ->
-          Error
-            (Printf.sprintf "duplicate path %s in test memory file system" path))
+          Printf.sprintf "duplicate path %s in test memory file system" path
+          |> failwith)
       >>= fun () ->
       let fd = Core_unix.File_descr.of_int fd in
       if
