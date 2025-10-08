@@ -451,8 +451,7 @@ module Make_test () : TestSig = struct
     let fd_int = Core_unix.File_descr.to_int fd in
     let open Result.Monad_infix in
     Fds.get fd_int >>= function
-    | File (contents, _) ->
-        Ok (Runtime.String !contents)
+    | File (contents, _) -> Ok (Runtime.String !contents)
     | Directory -> internal_failure __LOC__
 
   let read fd =
@@ -461,8 +460,10 @@ module Make_test () : TestSig = struct
     let open Result.Monad_infix in
     Fds.get fd_int >>= function
     | File (contents, _) ->
+        let str = !contents in
+        contents := "";
         (* TODO split by newlines *)
-        Ok (Runtime.String !contents)
+        Ok (Runtime.String str)
     | Directory -> internal_failure __LOC__
 
   let file_read_all path =
