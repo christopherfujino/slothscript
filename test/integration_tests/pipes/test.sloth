@@ -1,0 +1,8 @@
+#!/usr/bin/env sloth
+
+let pipe = Pipe.new()
+with ($cwd = $scriptDir, $stdout = pipe.write) {
+  "./a.out"!
+}
+print("process exited")
+print("Received from pipe = ${pipe.read.readAll()}")
