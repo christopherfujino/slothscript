@@ -491,13 +491,10 @@ module Make_test () : TestSig = struct
     let still_running_pids, res_opt =
       List.fold !running_pids ~init:([], None)
         ~f:(fun (prev_pids, res_opt) (cur_pid, cb) ->
-          match res_opt with
-          | Some _ as some -> (prev_pids, some)
-          | None ->
-              if Int.(cur_pid = pid) then
-                let res = cb () in
-                (prev_pids, Some res)
-              else ((cur_pid, cb) :: prev_pids, res_opt))
+          if Int.(cur_pid = pid) then
+            let res = cb () in
+            (prev_pids, Some res)
+          else ((cur_pid, cb) :: prev_pids, res_opt))
     in
     running_pids := still_running_pids;
     match res_opt with
@@ -506,8 +503,11 @@ module Make_test () : TestSig = struct
         Error
           (Printf.sprintf
              "Tried to wait the PID %d but it is not running; did you `wait()` \
-              it twice"
-             pid)
+              it twice?\n\n\
+              Currently Running PIDs:[%s]"
+             pid
+             (List.fold ~init:"" !running_pids ~f:(fun prev (pid, _) ->
+                  Printf.sprintf "%s %d" prev pid)))
     | Some res -> res
 
   let proc_exec ~mode proc _ =
@@ -562,8 +562,8 @@ module Make_test () : TestSig = struct
                   let result = Runtime.ProcessResult { code; stdout; stderr } in
                   Ok result
               | ForkBuffer ->
-                  Printf.printf "ForkBuffer\n%!";
                   let this_pid = get_next_pid () in
+                  Printf.printf "ForkBuffer PID %d\n%!" this_pid;
                   let read_stdout, write_stdout = pipe () in
                   let read_stderr, write_stderr = pipe () in
                   let callback () =
