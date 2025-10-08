@@ -24,7 +24,6 @@ let () =
         let proc_spec =
           Interpreter.Mock_process.spec_of_string spec.proc_spec
         in
-        Printf.printf "%d proc specs\n%!" @@ List.length proc_spec;
 
         let m = Interpreter.Native.make_test proc_spec in
         let module M = (val m) in
@@ -34,7 +33,16 @@ let () =
             spec.program test ~env:[| "UNIT_TEST=true" |] ~argv:[]
         in
 
-        let _, _ = Interpreter.Interpret.interpret_prog globals ir in
+        let _, either = Interpreter.Interpret.interpret_prog globals ir in
+        (match either with
+        | First _ -> ()
+        | Second bt -> (
+            match bt with
+            | Exit _ -> ()
+            | Error msg ->
+                Printf.eprintf "%s\n" @@ Interpreter.Runtime.to_s msg;
+                exit 1
+            | Return _ | Break _ | Continue _ -> failwith "Unreachable"));
 
         let stdout = M.get_stdout () |> String.strip in
         (* Is STDOUT correct? *)
@@ -48,7 +56,7 @@ let () =
              Received: %s\n\
              %!"
             spec.stdout_expect stdout;
-          failwith __LOC__))
+          exit 1))
   in
   match res with
   | Ok () -> ()

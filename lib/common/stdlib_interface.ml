@@ -1,8 +1,9 @@
 (* TODO move arity here *)
 type class_t = {
   name : string;
-  methods : string list;
-  static_members : string list;
+  getters : string list;
+  setters : string list;
+  static_getters : string list;
 }
 
 type t = { ids : string list; context_ids : string list; protos : class_t list }
@@ -23,28 +24,72 @@ let globals =
       ];
     protos =
       [
-        { name = "List"; methods = [ "length" ]; static_members = [] };
-        { name = "Process"; methods = []; static_members = [ "new" ] };
-        { name = "ProcessHandle"; methods = [ "wait" ]; static_members = [] };
-        { name = "ProcessResult"; methods = [ "stdout" ]; static_members = [] };
-        { name = "Number"; methods = []; static_members = [] };
+        {
+          name = "Directory";
+          getters = [ "exists"; "create"; "path" ];
+          setters = [];
+          static_getters = [];
+        };
         {
           name = "File";
-          methods = [ "readString"; "openRead"; "openWrite" ];
-          static_members = [ "new" ];
+          getters = [ "readString"; "openRead"; "openWrite" ];
+          setters = [];
+          static_getters = [ "new" ];
         };
         {
           (* Should we have separate types for reading and writing? *)
           name = "FileDescriptor";
-          methods = [ "close"; "read"; "readAll"; "writeAll" ];
-          static_members = [];
+          getters = [ "close"; "read"; (* "write";*) "readAll"; "writeAll" ];
+          setters = [];
+          static_getters = [];
         };
         {
-          name = "Directory";
-          methods = [ "exists"; "create"; "path" ];
-          static_members = [];
+          name = "HashMap";
+          getters = [ "merge" ];
+          setters = [];
+          static_getters = [];
         };
-        { name = "String"; methods = [ "trim" ]; static_members = [] };
-        { name = "HashMap"; methods = [ "merge" ]; static_members = [] };
+        {
+          name = "List";
+          getters = [ "length" ];
+          setters = [];
+          static_getters = [];
+        };
+        {
+          name = "Number";
+          getters = [ (* "floor"; *) ];
+          setters = [];
+          static_getters = [];
+        };
+        {
+          name = "Pipe";
+          getters = [ "read"; "write" ];
+          setters = [];
+          static_getters = [ "new" ];
+        };
+        {
+          name = "Process";
+          getters = [ "stdout"; "stderr" ];
+          setters = [ "stdout"; "stderr" ];
+          static_getters = [ "new" ];
+        };
+        {
+          name = "ProcessHandle";
+          getters = [ "wait" ];
+          setters = [];
+          static_getters = [];
+        };
+        {
+          name = "ProcessResult";
+          getters = [ "stderr"; "stdout" ];
+          setters = [];
+          static_getters = [];
+        };
+        {
+          name = "String";
+          getters = [ "trim" ];
+          setters = [];
+          static_getters = [];
+        };
       ];
   }

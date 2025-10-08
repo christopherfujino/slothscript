@@ -62,6 +62,13 @@ and expr =
       value : expr;
       pos : (Lexing.position[@sexp.opaque]);
     }
+  | DerefAssign of {
+      receiver : expr;
+      name : string;
+      value : expr;
+      (* TODO grab the name POS too *)
+      pos : (Lexing.position[@sexp.opaque]);
+    }
   | ForLoop of expr * expr * expr * stmt list * (Lexing.position[@sexp.opaque])
   | ForInLoop of {
       iterator_name : string;

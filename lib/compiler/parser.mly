@@ -170,6 +170,15 @@ expr1:
   | subscript = subscript; pos = EQUALS; rhs = expr1 {
     SubAssignExpr {subscript; value=rhs; pos }
   }
+  | d = deref; pos = EQUALS; rhs = expr1 {
+    let (receiver, name, _) = d in
+    DerefAssign {
+      receiver;
+      name;
+      value = rhs;
+      pos;
+    }
+  }
 
   | e = expr2 { e }
 
@@ -268,8 +277,8 @@ expr7:
     FuncInvoc (e, [], pos)
   }
   | s = subscript { s }
-  | e = expr7; pos = DOT; meth = ID {
-    let (name, _) = meth in
+  | d = deref {
+    let (e, name, pos) = d in
     ObjDeref (e, name, pos)
   }
   | e = expr8 { e }
@@ -418,6 +427,13 @@ subscript:
     Subscript (e, sub, pos)
   }
   ;
+
+(* could be assignment or reference *)
+deref:
+  | e = expr7; pos = DOT; name = ID {
+    let (name, _) = name in
+    (e, name, pos)
+  }
 
 conditional_continuation:
   | e = elif; pos = ELSE; b = block {

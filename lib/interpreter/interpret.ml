@@ -347,9 +347,8 @@ and interpret_expr globals expr :
             | _ -> fail ~globals pos (Printf.sprintf "unimplemented %s" name))
       | _ as t ->
           ( globals,
-            Second
-              (Runtime.create_error
-              @@ Printf.sprintf "Tried to invoke %s, but it is not a function"
+            failure_obj ~globals ~pos
+              (Printf.sprintf "Tried to invoke %s, but it is not a function"
               @@ Runtime.to_s t) ))
   | FuncExpr { parameters; block; pos } ->
       let parameters = List.map parameters ~f:(fun (name, _) -> name) in
@@ -454,7 +453,8 @@ and interpret_expr globals expr :
               ~m:globals.l target )
           >>= fun globals fd ->
           let fd = Runtime.FileDescriptor fd in
-          let func = dereference_object globals fd "readAll" pos in
+          (globals, dereference_object globals fd "readAll" pos)
+          >>= fun globals func ->
           let receiver, func =
             match Runtime.method_of_val func with
             | None -> internal_failure __LOC__
@@ -493,7 +493,7 @@ and interpret_expr globals expr :
       (globals, interpret_block inner_globals block)
   | ObjDeref (receiver, target, pos) ->
       interpret_expr globals receiver >>= fun globals receiver ->
-      (globals, First (dereference_object globals receiver target pos))
+      (globals, dereference_object globals receiver target pos)
   | LetExpr (id, e, pos) ->
       interpret_expr globals e >>= fun globals v ->
       (match Identifiers.bind globals.identifiers id v with
@@ -514,6 +514,10 @@ and interpret_expr globals expr :
             "The name %s has not been declared yet; did you mean to declare it?"
             id
           |> fail ~globals pos)
+  | DerefAssign { receiver; name; value; pos } ->
+      interpret_expr globals receiver >>= fun globals receiver ->
+      interpret_expr globals value >>= fun globals value ->
+      (globals, reassign_object_property ~globals ~pos receiver name value)
   | SubAssignExpr { subscript; value; pos = _ } -> (
       match subscript with
       | Subscript (receiver, subscript, pos) -> (
@@ -764,24 +768,26 @@ and interpret_method ~globals ~pos receiver args method_name =
     | None -> Sloth_common.Common.internal_failure __LOC__
     | Some klass -> klass
   in
-  match Hashtbl.find klass.instance_members method_name with
+  match Hashtbl.find klass.instance_getters method_name with
   | None ->
       Printf.sprintf "The class %s does not have an instance field named %s"
         class_name method_name
       |> fail ~globals pos
-  | Some func -> (
-      match func with
-      | Func func -> (
-          match func with
-          | User _ -> Sloth_common.Common.internal_failure __LOC__
-          | Native { cb; _ } ->
-              let args = receiver :: args in
-              (globals, invoke_native_func ~globals ~pos cb args))
-      | _ ->
-          Printf.sprintf "Internal error: %s\n\n%s"
-            (Runtime.to_class_name func)
-            __LOC__
-          |> failwith)
+  | Some thunk -> (
+      match thunk receiver with
+      | Ok t -> (
+          match t with
+          | Func func -> (
+              match func with
+              | User _ -> Sloth_common.Common.internal_failure __LOC__
+              | Native { cb; _ } ->
+                  let args = receiver :: args in
+                  (globals, invoke_native_func ~globals ~pos cb args))
+          | _ as t ->
+              internal_failure
+              @@ Printf.sprintf "Expected func, got %s (%s)" (Runtime.to_s t)
+                   __LOC__)
+      | Error msg -> (globals, Second (Runtime.create_error msg)))
 
 and is_equal globals is_equality lhs rhs =
   let lh_s = Runtime.to_class_name lhs in
@@ -838,7 +844,7 @@ and is_equal globals is_equality lhs rhs =
             Bool.(names_same = is_equality)
         | _ -> not is_equality)
     | Process lhs ->
-        let rhs = Runtime.process_of_val rhs |> option_value ~message:__LOC__ in
+        let rhs = Runtime.process_of_t rhs |> option_value ~message:__LOC__ in
         let rec inner_proc (lhs : Runtime.process) (rhs : Runtime.process) =
           let same_proc =
             (match
@@ -909,21 +915,59 @@ and is_equal globals is_equality lhs rhs =
               | _ -> false)
         in
         Bool.(same_handle = is_equality)
+    | Pipe (read, write) ->
+        let r_read, r_write =
+          Runtime.pipe_of_t rhs |> option_value ~message:__LOC__
+        in
+        let same_pipe =
+          Core_unix.File_descr.(equal read r_read && equal write r_write)
+        in
+        Bool.(same_pipe = is_equality)
     | ProcessResult _ -> failwith "TODO"
     | Func _ | Method _ ->
         Printf.sprintf "is_equal the type %s is not implemented" lh_s
         |> failwith
+
+(* Actually call setter *)
+and reassign_object_property ~globals ~pos receiver target newvalue =
+  let class_name =
+    match receiver with
+    | Runtime.Prototype _ ->
+        Printf.sprintf "TODO implement prototype property re-assignment (%s)"
+          __LOC__
+        |> failwith
+    | _ -> Runtime.to_class_name receiver
+  in
+  let lookup =
+    match Hashtbl.find Globals.(globals.classes) class_name with
+    | None ->
+        internal_failure
+        @@ internal_failure_msg ~globals ~pos
+        @@ Printf.sprintf
+             "Internal error: could not find prototype for the %s class (%s)"
+             class_name __LOC__
+    | Some lookup -> lookup
+  in
+  match Hashtbl.find lookup.instance_setters target with
+  | None ->
+      Printf.sprintf "The class %s does not have a setter named %s" class_name
+        target
+      |> failure_obj ~globals ~pos
+  | Some thunk -> (
+      match thunk receiver newvalue with
+      | Ok () -> Either.first Runtime.Null
+      | Error msg -> failure_obj ~globals ~pos msg)
 
 and dereference_object globals receiver target pos =
   let descriptor, class_name, table_thunk =
     let open Runtime in
     match receiver with
     (* Static access has different semantics *)
-    | Prototype { name } -> ("static", name, fun cl -> cl.static_members)
+    | Prototype { name } -> ("static", name, fun cl -> cl.static_getters)
     | _ ->
         ( "instance",
           Runtime.to_class_name receiver,
-          fun cl -> cl.instance_members )
+          fun cl -> cl.instance_getters )
   in
   match Hashtbl.find globals.classes class_name with
   | None ->
@@ -937,11 +981,14 @@ and dereference_object globals receiver target pos =
       | None ->
           Printf.sprintf "The class %s does not have a %s field named %s"
             class_name descriptor target
-          |> fail ~globals pos
-      | Some field -> (
-          match field with
-          | Func func_t -> Method (receiver, func_t)
-          | _ -> fail ~globals pos "TODO"))
+          |> failure_obj ~globals ~pos
+      | Some thunk -> (
+          match thunk receiver with
+          | Ok t -> (
+              match t with
+              | Func func_t -> First (Method (receiver, func_t))
+              | _ as other -> First other)
+          | Error msg -> failure_obj ~globals ~pos msg))
 
 and cast_to_directory ~globals ~pos = function
   | Runtime.String path -> path
@@ -963,11 +1010,10 @@ and cast_to_process ~globals ~pos v :
   match v with
   | Runtime.Process p -> First p
   | Runtime.List _ as l -> (
-      let constructor =
-        dereference_object globals
-          (Runtime.Prototype { name = "Process" })
-          "new" pos
-      in
+      dereference_object globals
+        (Runtime.Prototype { name = "Process" })
+        "new" pos
+      >>- fun constructor ->
       let callback =
         match constructor with
         | Func func_t -> (
@@ -1018,7 +1064,8 @@ and interpret_binary globals lhs rhs op pos =
       let either =
         cast_to_process ~globals ~pos lhs >>- fun left ->
         cast_to_process ~globals ~pos rhs >>- fun right ->
-        let read, write = Core_unix.pipe () in
+        let module M = (val globals.l) in
+        let read, write = M.pipe () in
         left.stdout <- write;
         left.pipes_to_collect <- write :: left.pipes_to_collect;
         right.stdin <- read;
@@ -1138,50 +1185,35 @@ and interpret_binary globals lhs rhs op pos =
       Sloth_common.Common.internal_failure __LOC__
 
 and interpret_right_arrow ~globals ~pos lhs rhs =
-  let rec cast_to_string ~globals ~pos t' =
-    let open Runtime in
-    match t' with
-    | String s -> s
-    | ProcessResult { stdout; _ } -> stdout
-    | Process proc -> (
-        let module M = (val Globals.(globals.l) : Native.Sig) in
-        let env_val =
-          Context.get globals.context_ids "$env"
-          |> option_value ~message:__LOC__
-        in
-        let env =
-          match Runtime.env_of_val env_val with
-          | Some env -> env
-          | None ->
-              Printf.sprintf "$env is the wrong type: %s"
-              @@ Runtime.to_s env_val
-              |> fail ~globals pos
-        in
-        (* TODO: this is sus *)
-        match M.proc_exec ~mode:Native.BlockBuffer proc env with
-        | Ok t' -> (cast_to_string [@tailcall]) ~globals ~pos t'
-        | Error err -> fail ~globals pos err)
-    | _ as t' ->
-        fail ~globals pos
-        @@ Printf.sprintf "Expected a String, but got a %s"
-        @@ Runtime.to_s t'
-  in
-  (*
-        TODO: consider:
-          - directly write a string: `"Hello" -> "hello.txt"`
-          - write output of a proc: `Process.new("uname") -> "os.txt"` (this should be optimized)
-      *)
-  let left = cast_to_string ~globals ~pos lhs in
   interpret_expr globals rhs >>= fun globals rhs ->
   (* TODO O_CREAT? *)
   ( globals,
     cast_to_file_descriptor ~globals ~pos ~mode:[ Core_unix.O_WRONLY ]
       ~m:globals.l rhs )
   >>= fun globals fd ->
+  let proc =
+    match lhs with
+    | Process proc ->
+        proc.stdout <- fd;
+        proc
+    | _ ->
+        Printf.sprintf "TODO implement %s -> File" (Runtime.to_s lhs)
+        |> failwith
+  in
+  let env_val =
+    Context.get globals.context_ids "$env" |> option_value ~message:__LOC__
+  in
+  let env =
+    match Runtime.env_of_val env_val with
+    | Some env -> env
+    | None ->
+        Printf.sprintf "$env is the wrong type: %s" @@ Runtime.to_s env_val
+        |> fail ~globals pos
+  in
+
   let module M = (val globals.l) in
-  (* TODO close after write; at least if the cast opened it *)
-  match M.write fd ~data:left with
-  | Ok () -> (globals, Either.first @@ Runtime.String left)
+  match M.proc_exec ~mode:BlockInherit proc env with
+  | Ok v -> (globals, First v)
   | Error msg -> (globals, failure_obj ~globals ~pos msg)
 
 and cast_to_file_descriptor ~globals ~pos ~mode ~m t :

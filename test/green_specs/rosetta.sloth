@@ -1,6 +1,3 @@
-### Name
-rosetta program
-
 ### Program
 with ($cwd = $scriptDir) {
   "./configure"!
@@ -8,7 +5,7 @@ with ($cwd = $scriptDir) {
   let buildDir = Directory("${$cwd}/build")
   if not buildDir.exists() { buildDir.create() }
 
-  with ($cwd = buildDir.path()) {
+  with ($cwd = buildDir.path) {
     "cmake .."!
   }
 }
@@ -103,14 +100,11 @@ with ($cwd = $scriptDir) {
         (ExprStmt
           (WithExpr
             (($cwd
-              (FuncInvoc
-                (ObjDeref
-                  (IdRef
-                    buildDir
-                    <opaque>)
-                  path
+              (ObjDeref
+                (IdRef
+                  buildDir
                   <opaque>)
-                ()
+                path
                 <opaque>)))
             ((ExprStmt
               (UnaryExpr

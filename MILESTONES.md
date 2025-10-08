@@ -31,6 +31,7 @@
 - [ ] Optional function parameters
 
 ## Stretch goals
+- [ ] Bytecode VM (this should not happen until API becomes stable)
 - [ ] Unicode strings
 - [ ] Method syntax for hash maps
 - [ ] Pattern matching

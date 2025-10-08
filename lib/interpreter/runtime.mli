@@ -32,12 +32,13 @@ type t =
   | Func of function_t
   | Method of t * function_t
   | Prototype of prototype
+  | Directory of string
+  | File of file
+  | FileDescriptor of Core_unix.File_descr.t
+  | Pipe of Core_unix.File_descr.t * Core_unix.File_descr.t
   | Process of process
   | ProcessHandle of process_handle
   | ProcessResult of process_result
-  | File of file
-  | FileDescriptor of Core_unix.File_descr.t
-  | Directory of string
 
 and breaking_type =
   | Return of t
@@ -57,8 +58,9 @@ and function_t =
     }
 
 type class_t = {
-  instance_members : (string, t) Hashtbl.t;
-  static_members : (string, t) Hashtbl.t;
+  instance_getters : (string, t -> (t, string) Result.t) Hashtbl.t;
+  instance_setters : (string, t -> t -> (unit, string) Result.t) Hashtbl.t;
+  static_getters : (string, t -> (t, string) Result.t) Hashtbl.t;
 }
 
 type class_lookup = (string, class_t) Hashtbl.t
@@ -76,8 +78,9 @@ val int_of_val : t -> int option
 val list_of_val : t -> t Array.t option
 val method_of_val : t -> (t * function_t) option
 val num_of_val : t -> float option
+val pipe_of_t : t -> (Core_unix.File_descr.t * Core_unix.File_descr.t) option
 val process_handle_of_t : t -> process_handle option
-val process_of_val : t -> process option
+val process_of_t : t -> process option
 val process_result_of_val : t -> process_result option
 val string_of_val : t -> string option
 val val_of_env : string array -> t

@@ -37,12 +37,13 @@ type t =
   (* Type *)
   | Prototype of prototype
   (* Stdlib Types *)
+  | Directory of string
+  | File of file
+  | FileDescriptor of Core_unix.File_descr.t
+  | Pipe of Core_unix.File_descr.t * Core_unix.File_descr.t
   | Process of process
   | ProcessHandle of process_handle
   | ProcessResult of process_result
-  | File of file
-  | FileDescriptor of Core_unix.File_descr.t
-  | Directory of string
 
 and breaking_type =
   | Return of t
@@ -62,8 +63,9 @@ and function_t =
     }
 
 type class_t = {
-  instance_members : (string, t) Hashtbl.t;
-  static_members : (string, t) Hashtbl.t;
+  instance_getters : (string, t -> (t, string) Result.t) Hashtbl.t;
+  instance_setters : (string, t -> t -> (unit, string) Result.t) Hashtbl.t;
+  static_getters : (string, t -> (t, string) Result.t) Hashtbl.t;
 }
 
 type class_lookup = (string, class_t) Hashtbl.t
@@ -79,6 +81,7 @@ let to_class_name = function
   | HashMap _ -> "HashMap"
   | Func _ -> "Function"
   | Method _ -> "Method"
+  | Pipe _ -> "Pipe"
   | Prototype _ -> "Prototype"
   | Process _ -> "Process"
   | ProcessHandle _ -> "ProcessHandle"
@@ -130,6 +133,10 @@ let rec to_s t' =
       s ^ "}"
   | Func _ -> "Func(TODO)"
   | Method (receiver, _) -> Printf.sprintf "%s.Method" (to_s receiver)
+  | Pipe (read, write) ->
+      Printf.sprintf "Pipe(read=%d, write=%d)"
+        (Core_unix.File_descr.to_int read)
+        (Core_unix.File_descr.to_int write)
   | Prototype { name } -> Printf.sprintf "Type(%s)" name
   (* TODO we should list out all in the group *)
   | Process { cmd; _ } ->
@@ -159,10 +166,11 @@ let int_of_val v =
   |> Option.bind ~f:(fun f ->
          if Float.is_integer f then Some (Int.of_float f) else None)
 
+let pipe_of_t = function Pipe (read, write) -> Some (read, write) | _ -> None
 let bool_of_val = function Bool b' -> Some b' | _ -> None
 let list_of_val = function List l -> Some l | _ -> None
 let hashmap_of_val = function HashMap h -> Some h | _ -> None
-let process_of_val = function Process p -> Some p | _ -> None
+let process_of_t = function Process p -> Some p | _ -> None
 let process_handle_of_t = function ProcessHandle p -> Some p | _ -> None
 let process_result_of_val = function ProcessResult p -> Some p | _ -> None
 let func_of_val = function Func func -> Some func | _ -> None
