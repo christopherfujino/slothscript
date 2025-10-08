@@ -39,7 +39,9 @@ let () =
         | Second bt -> (
             match bt with
             | Exit _ -> ()
-            | Error msg -> Printf.eprintf "%s\n" @@ Interpreter.Runtime.to_s msg; exit 1
+            | Error msg ->
+                Printf.eprintf "%s\n" @@ Interpreter.Runtime.to_s msg;
+                exit 1
             | Return _ | Break _ | Continue _ -> failwith "Unreachable"));
 
         let stdout = M.get_stdout () |> String.strip in
