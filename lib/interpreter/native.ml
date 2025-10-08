@@ -348,7 +348,6 @@ module Make_test () : TestSig = struct
   let pipe () =
     let read_int = get_next_fd () in
     let write_int = get_next_fd () in
-    Printf.printf "Pipe created: read = %d; write = %d\n%!" read_int write_int;
     OpenPipes.add ~read:read_int ~write:write_int;
     let read = Core_unix.File_descr.of_int read_int in
     let write = Core_unix.File_descr.of_int write_int in
@@ -421,14 +420,12 @@ module Make_test () : TestSig = struct
 
   let write fd ~data =
     let fd = Core_unix.File_descr.to_int fd in
-    Printf.printf "write <- %d\n%!" fd;
     (* Check if this is write end of a pipe... *)
     let fd =
       match OpenPipes.get_read_from_write fd with
       | None -> fd
       | Some write_pipe -> write_pipe
     in
-    Printf.printf "  -> %d\n%!" fd;
     let open Result.Monad_infix in
     Fds.get fd >>= function
     | File (contents, _) ->
@@ -439,14 +436,12 @@ module Make_test () : TestSig = struct
   (* TODO delete this, just use write *)
   let fd_write_all fd data =
     let fd_int = Core_unix.File_descr.to_int fd in
-    Printf.printf "fd_write_all %d\n%!" fd_int;
     (* Check if this is read end of a pipe... *)
     let fd_int =
       match OpenPipes.get_read_from_write fd_int with
       | None -> fd_int
       | Some read_end -> read_end
     in
-    Printf.printf " -> but actually writing to %d\n%!" fd_int;
     let open Result.Monad_infix in
     Fds.get fd_int >>= function
     | File (contents, _) -> Ok (contents := data)
@@ -454,11 +449,9 @@ module Make_test () : TestSig = struct
 
   let fd_read_all fd =
     let fd_int = Core_unix.File_descr.to_int fd in
-    Printf.printf "fd_read_all FD=%d " fd_int;
     let open Result.Monad_infix in
     Fds.get fd_int >>= function
     | File (contents, _) ->
-        Printf.printf "contents=\"%s\"\n%!" !contents;
         Ok (Runtime.String !contents)
     | Directory -> internal_failure __LOC__
 
@@ -511,9 +504,7 @@ module Make_test () : TestSig = struct
     | Some res -> res
 
   let proc_exec ~mode proc _ =
-    Printf.printf "TODO %s\n" __LOC__;
     let rec rec_proc_exec (proc : Runtime.process) =
-      Printf.printf "TODO %s\n" __LOC__;
       (* Start from the end of the list *)
       (match proc.previous with
       | Some prev ->
@@ -531,9 +522,6 @@ module Make_test () : TestSig = struct
           match n with
           | 0 -> (
               let exec_proc_spec stdout stderr =
-                Printf.printf "TODO %s stdout=%d stderr=%d\n%!" __LOC__
-                  (Core_unix.File_descr.to_int stdout)
-                  (Core_unix.File_descr.to_int stderr);
                 let code = ref 0 in
                 List.iter hd.instructions ~f:(function
                   | Exit c -> code := c
@@ -563,7 +551,6 @@ module Make_test () : TestSig = struct
                   Ok result
               | ForkBuffer ->
                   let this_pid = get_next_pid () in
-                  Printf.printf "ForkBuffer PID %d\n%!" this_pid;
                   let read_stdout, write_stdout = pipe () in
                   let read_stderr, write_stderr = pipe () in
                   let callback () =
