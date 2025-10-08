@@ -2,7 +2,7 @@
 let file = File("foo")
 # String -> File
 # Here we do implicit casts: Process -> ProcessResult -> String
-Process.new(["uname"]) -> file
+Process.new(["uname"]) -> file!
 
 # <- File => String
 let contents = <- file
@@ -33,27 +33,33 @@ assert(contents == "Linux\n", contents)
       <opaque>)))
   (StmtDecl
     (ExprStmt
-      (Binary
-        (FuncInvoc
-          (ObjDeref
-            (IdRef
-              Process
-              <opaque>)
-            new
-            <opaque>)
-          ((List
-            ((String
-              ((FullString
-                uname
+      (UnaryExpr
+        (target
+          (Binary
+            (FuncInvoc
+              (ObjDeref
+                (IdRef
+                  Process
+                  <opaque>)
+                new
+                <opaque>)
+              ((List
+                ((String
+                  ((FullString
+                    uname
+                    <opaque>))
+                  <opaque>))
                 <opaque>))
-              <opaque>))
+              <opaque>)
+            (IdRef
+              file
+              <opaque>)
+            RightArrow
             <opaque>))
+        (pos
           <opaque>)
-        (IdRef
-          file
-          <opaque>)
-        RightArrow
-        <opaque>)))
+        (operator
+          Bang))))
   (StmtDecl
     (ExprStmt
       (LetExpr

@@ -134,25 +134,25 @@ let make_protos m =
       name = "Pipe";
       getters =
         [
-          ( "write",
-            fun self ->
-              let i, _ =
-                Runtime.pipe_of_t self |> Option.value_exn ~message:__LOC__
-              in
-              Ok (FileDescriptor i) );
           ( "read",
             fun self ->
-              let _, o =
+              let read, _ =
                 Runtime.pipe_of_t self |> Option.value_exn ~message:__LOC__
               in
-              Ok (FileDescriptor o) );
+              Ok (FileDescriptor read) );
+          ( "write",
+            fun self ->
+              let _, write =
+                Runtime.pipe_of_t self |> Option.value_exn ~message:__LOC__
+              in
+              Ok (FileDescriptor write) );
         ];
       static_getters =
         [
           ( "new",
             make_getter ~arity:(Some 1) (fun _ _ ->
-                let i, o = M.pipe () in
-                let t = Runtime.Pipe (i, o) in
+                let read, write = M.pipe () in
+                let t = Runtime.Pipe (read, write) in
                 First t) );
         ];
     };
@@ -252,14 +252,19 @@ let make_protos m =
       name = "ProcessResult";
       getters =
         [
+          ( "stderr",
+            fun self ->
+              let Runtime.{ code = _; stdout = _; stderr } =
+                Runtime.process_result_of_val self |> Option.value_exn
+              in
+              Ok (Runtime.String stderr) );
           ( "stdout",
-            make_getter ~arity:(Some 1) (fun _ args ->
-                let proc = List.hd_exn args in
-                let result =
-                  Runtime.process_result_of_val proc
-                  |> option_value ~message:__LOC__
-                in
-                First (Runtime.String result.stdout)) );
+            fun self ->
+              let result =
+                Runtime.process_result_of_val self
+                |> option_value ~message:__LOC__
+              in
+              Ok (Runtime.String result.stdout) );
         ];
       static_getters = [];
     };

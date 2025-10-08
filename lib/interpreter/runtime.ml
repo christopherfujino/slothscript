@@ -166,7 +166,7 @@ let int_of_val v =
   |> Option.bind ~f:(fun f ->
          if Float.is_integer f then Some (Int.of_float f) else None)
 
-let pipe_of_t = function Pipe (i, o) -> Some (i, o) | _ -> None
+let pipe_of_t = function Pipe (read, write) -> Some (read, write) | _ -> None
 let bool_of_val = function Bool b' -> Some b' | _ -> None
 let list_of_val = function List l -> Some l | _ -> None
 let hashmap_of_val = function HashMap h -> Some h | _ -> None

@@ -347,9 +347,8 @@ and interpret_expr globals expr :
             | _ -> fail ~globals pos (Printf.sprintf "unimplemented %s" name))
       | _ as t ->
           ( globals,
-            Second
-              (Runtime.create_error
-              @@ Printf.sprintf "Tried to invoke %s, but it is not a function"
+            failure_obj ~globals ~pos
+              (Printf.sprintf "Tried to invoke %s, but it is not a function"
               @@ Runtime.to_s t) ))
   | FuncExpr { parameters; block; pos } ->
       let parameters = List.map parameters ~f:(fun (name, _) -> name) in
@@ -1152,51 +1151,17 @@ and interpret_binary globals lhs rhs op pos =
       Sloth_common.Common.internal_failure __LOC__
 
 and interpret_right_arrow ~globals ~pos lhs rhs =
-  let rec cast_to_string ~globals ~pos t' =
-    let open Runtime in
-    match t' with
-    | String s -> s
-    | ProcessResult { stdout; _ } -> stdout
-    | Process proc -> (
-        let module M = (val Globals.(globals.l) : Native.Sig) in
-        let env_val =
-          Context.get globals.context_ids "$env"
-          |> option_value ~message:__LOC__
-        in
-        let env =
-          match Runtime.env_of_val env_val with
-          | Some env -> env
-          | None ->
-              Printf.sprintf "$env is the wrong type: %s"
-              @@ Runtime.to_s env_val
-              |> fail ~globals pos
-        in
-        (* TODO: this is sus *)
-        match M.proc_exec ~mode:Native.BlockBuffer proc env with
-        | Ok t' -> (cast_to_string [@tailcall]) ~globals ~pos t'
-        | Error err -> fail ~globals pos err)
-    | _ as t' ->
-        fail ~globals pos
-        @@ Printf.sprintf "Expected a String, but got a %s"
-        @@ Runtime.to_s t'
-  in
-  (*
-        TODO: consider:
-          - directly write a string: `"Hello" -> "hello.txt"`
-          - write output of a proc: `Process.new("uname") -> "os.txt"` (this should be optimized)
-      *)
-  let left = cast_to_string ~globals ~pos lhs in
   interpret_expr globals rhs >>= fun globals rhs ->
   (* TODO O_CREAT? *)
   ( globals,
     cast_to_file_descriptor ~globals ~pos ~mode:[ Core_unix.O_WRONLY ]
       ~m:globals.l rhs )
   >>= fun globals fd ->
-  let module M = (val globals.l) in
-  (* TODO close after write; at least if the cast opened it *)
-  match M.write fd ~data:left with
-  | Ok () -> (globals, Either.first @@ Runtime.String left)
-  | Error msg -> (globals, failure_obj ~globals ~pos msg)
+  (match lhs with
+  | Process proc -> proc.stdout <- fd
+  | _ ->
+      Printf.sprintf "TODO implement %s -> File" (Runtime.to_s lhs) |> failwith);
+  (globals, Either.first lhs)
 
 and cast_to_file_descriptor ~globals ~pos ~mode ~m t :
     (Core_unix.File_descr.t, Runtime.breaking_type) Either.t =

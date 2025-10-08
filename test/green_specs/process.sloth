@@ -9,10 +9,10 @@ let result2 = Process.new(["uname"]) | Process.new(["tr", "x", "s"])!
 
 let handle = "uname"&
 let result = handle.wait()
-assert(result.stdout() == "Linux\n")
+assert(result.stdout == "Linux\n", "${result}")
 
 result = "uname"&!
-assert(result.stdout() == "Linux\n")
+assert(result.stdout == "Linux\n")
 
 ### Processes
 (((cmd
@@ -164,14 +164,11 @@ assert(result.stdout() == "Linux\n")
           assert
           <opaque>)
         ((Equality
-          (FuncInvoc
-            (ObjDeref
-              (IdRef
-                result
-                <opaque>)
-              stdout
+          (ObjDeref
+            (IdRef
+              result
               <opaque>)
-            ()
+            stdout
             <opaque>)
           (String
             ((FullString
@@ -179,7 +176,19 @@ assert(result.stdout() == "Linux\n")
               <opaque>))
             <opaque>)
           true
-          <opaque>))
+          <opaque>)
+          (String
+            ((StartStringInterp
+              ""
+              <opaque>)
+              (ExpressionStringInterp
+                (IdRef
+                  result
+                  <opaque>))
+              (EndStringInterp
+                ""
+                <opaque>))
+            <opaque>))
         <opaque>)))
   (StmtDecl
     (ExprStmt
@@ -204,14 +213,11 @@ assert(result.stdout() == "Linux\n")
           assert
           <opaque>)
         ((Equality
-          (FuncInvoc
-            (ObjDeref
-              (IdRef
-                result
-                <opaque>)
-              stdout
+          (ObjDeref
+            (IdRef
+              result
               <opaque>)
-            ()
+            stdout
             <opaque>)
           (String
             ((FullString

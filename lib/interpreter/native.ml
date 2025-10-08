@@ -17,7 +17,9 @@ module type Sig = sig
   val write : Core_unix.File_descr.t -> data:string -> (unit, string) Result.t
   val read : Core_unix.File_descr.t -> (Runtime.t, string) Result.t
   val wait : Runtime.process_handle -> (Runtime.t, string) Result.t
+
   val pipe : unit -> Core_unix.File_descr.t * Core_unix.File_descr.t
+  (** unit -> read * write *)
 
   val open_file :
     mode:Core_unix.open_flag list ->
@@ -41,13 +43,18 @@ module Prod : Sig = struct
   let pipe = Core_unix.pipe ~close_on_exec:true
   let file_read_all = In_channel.read_all
 
+  let close fd =
+    (* TODO catch? *)
+    Ok (Core_unix.close fd)
+
   let fd_write_all fd contents =
     let len = String.length contents in
     let buf = Bytes.of_string contents in
+    (* TODO: Should we hunk this into smaller writes for large inputs? *)
     let n = Core_unix.single_write ~len ~buf ~pos:0 fd in
     if not (n = len) then
       Error (Printf.sprintf "Tried to write %d bytes but only wrote %d" len n)
-    else (* TODO close? *) Ok ()
+    else close fd
 
   let fd_read_all fd =
     let string_buf = Buffer.create bufsiz in
@@ -69,10 +76,6 @@ module Prod : Sig = struct
     let n = Core_unix.read ~len:bufsiz fd ~buf in
     Buffer.add_subbytes string_buf buf ~pos:0 ~len:n;
     Ok (Runtime.String (Buffer.contents string_buf))
-
-  let close fd =
-    (* TODO catch? *)
-    Ok (Core_unix.close fd)
 
   let open_file ~mode path =
     try Ok (Core_unix.openfile ~mode path)
@@ -306,13 +309,20 @@ module Make_test () : TestSig = struct
   end
 
   module OpenPipes = struct
-    (** [(i, o) :: ...] *)
-    let open_pipes = ref []
+    (** [(read, write) :: ...] *)
+    let open_pipes : (int * int) list ref = ref []
 
-    let add tup = open_pipes := tup :: !open_pipes
+    let add ~read ~write = open_pipes := (read, write) :: !open_pipes
 
-    let get_output_from_input input_int =
-      List.Assoc.find !open_pipes ~equal:( = ) input_int
+    (*
+    let get_write_from_read read_int =
+      List.Assoc.find !open_pipes ~equal:( = ) read_int
+      *)
+
+    let get_read_from_write write_int =
+      let open Option.Monad_infix in
+      List.find !open_pipes ~f:(fun (_, write) -> write = write_int)
+      >>= fun (read, _) -> Some read
   end
 
   let get_stdout () =
@@ -336,14 +346,15 @@ module Make_test () : TestSig = struct
 
   (* Public *)
   let pipe () =
-    let input_int = get_next_fd () in
-    let output_int = get_next_fd () in
-    OpenPipes.add (input_int, output_int);
-    let input = Core_unix.File_descr.of_int input_int in
-    let output = Core_unix.File_descr.of_int output_int in
-    Fds.set input_int (File (ref "", input));
-    Fds.set output_int (File (ref "", output));
-    (input, output)
+    let read_int = get_next_fd () in
+    let write_int = get_next_fd () in
+    Printf.printf "Pipe created: read = %d; write = %d\n%!" read_int write_int;
+    OpenPipes.add ~read:read_int ~write:write_int;
+    let read = Core_unix.File_descr.of_int read_int in
+    let write = Core_unix.File_descr.of_int write_int in
+    Fds.set read_int (File (ref "", read));
+    Fds.set write_int (File (ref "", write));
+    (read, write)
 
   let close fd =
     let fd_int = Core_unix.File_descr.to_int fd in
@@ -410,12 +421,14 @@ module Make_test () : TestSig = struct
 
   let write fd ~data =
     let fd = Core_unix.File_descr.to_int fd in
-    (* Check if this is input end of a pipe... *)
+    Printf.printf "write <- %d\n%!" fd;
+    (* Check if this is write end of a pipe... *)
     let fd =
-      match OpenPipes.get_output_from_input fd with
+      match OpenPipes.get_read_from_write fd with
       | None -> fd
-      | Some pipe_out -> pipe_out
+      | Some write_pipe -> write_pipe
     in
+    Printf.printf "  -> %d\n%!" fd;
     let open Result.Monad_infix in
     Fds.get fd >>= function
     | File (contents, _) ->
@@ -424,24 +437,29 @@ module Make_test () : TestSig = struct
     | Directory -> internal_failure __LOC__
 
   (* TODO delete this, just use write *)
-  let fd_write_all fd contents =
+  let fd_write_all fd data =
     let fd_int = Core_unix.File_descr.to_int fd in
-    (* Check if this is input end of a pipe... *)
+    Printf.printf "fd_write_all %d\n%!" fd_int;
+    (* Check if this is read end of a pipe... *)
     let fd_int =
-      match OpenPipes.get_output_from_input fd_int with
+      match OpenPipes.get_read_from_write fd_int with
       | None -> fd_int
-      | Some pipe_out -> pipe_out
+      | Some read_end -> read_end
     in
+    Printf.printf " -> but actually writing to %d\n%!" fd_int;
     let open Result.Monad_infix in
     Fds.get fd_int >>= function
-    | File (contents_ref, _) -> Ok (contents_ref := contents)
+    | File (contents, _) -> Ok (contents := data)
     | Directory -> internal_failure __LOC__
 
   let fd_read_all fd =
     let fd_int = Core_unix.File_descr.to_int fd in
+    Printf.printf "fd_read_all FD=%d " fd_int;
     let open Result.Monad_infix in
     Fds.get fd_int >>= function
-    | File (contents, _) -> Ok (Runtime.String !contents)
+    | File (contents, _) ->
+        Printf.printf "contents=\"%s\"\n%!" !contents;
+        Ok (Runtime.String !contents)
     | Directory -> internal_failure __LOC__
 
   let read fd =
@@ -473,10 +491,13 @@ module Make_test () : TestSig = struct
     let still_running_pids, res_opt =
       List.fold !running_pids ~init:([], None)
         ~f:(fun (prev_pids, res_opt) (cur_pid, cb) ->
-          if Int.(cur_pid = pid) then
-            let res = cb () in
-            (prev_pids, Some res)
-          else ((cur_pid, cb) :: prev_pids, res_opt))
+          match res_opt with
+          | Some _ as some -> (prev_pids, some)
+          | None ->
+              if Int.(cur_pid = pid) then
+                let res = cb () in
+                (prev_pids, Some res)
+              else ((cur_pid, cb) :: prev_pids, res_opt))
     in
     running_pids := still_running_pids;
     match res_opt with
@@ -490,7 +511,9 @@ module Make_test () : TestSig = struct
     | Some res -> res
 
   let proc_exec ~mode proc _ =
+    Printf.printf "TODO %s\n" __LOC__;
     let rec rec_proc_exec (proc : Runtime.process) =
+      Printf.printf "TODO %s\n" __LOC__;
       (* Start from the end of the list *)
       (match proc.previous with
       | Some prev ->
@@ -508,6 +531,9 @@ module Make_test () : TestSig = struct
           match n with
           | 0 -> (
               let exec_proc_spec stdout stderr =
+                Printf.printf "TODO %s stdout=%d stderr=%d\n%!" __LOC__
+                  (Core_unix.File_descr.to_int stdout)
+                  (Core_unix.File_descr.to_int stderr);
                 let code = ref 0 in
                 List.iter hd.instructions ~f:(function
                   | Exit c -> code := c
@@ -521,8 +547,8 @@ module Make_test () : TestSig = struct
                   let _ = exec_proc_spec proc.stdout proc.stderr in
                   Ok Runtime.Null
               | BlockBuffer ->
-                  let write_stdout, read_stdout = pipe () in
-                  let write_stderr, read_stderr = pipe () in
+                  let read_stdout, write_stdout = pipe () in
+                  let read_stderr, write_stderr = pipe () in
                   let code = exec_proc_spec write_stdout write_stderr in
                   let open Result.Monad_infix in
                   fd_read_all read_stdout >>= fun stdout_t ->
@@ -536,9 +562,10 @@ module Make_test () : TestSig = struct
                   let result = Runtime.ProcessResult { code; stdout; stderr } in
                   Ok result
               | ForkBuffer ->
+                  Printf.printf "ForkBuffer\n%!";
                   let this_pid = get_next_pid () in
-                  let write_stdout, read_stdout = pipe () in
-                  let write_stderr, read_stderr = pipe () in
+                  let read_stdout, write_stdout = pipe () in
+                  let read_stderr, write_stderr = pipe () in
                   let callback () =
                     let code = exec_proc_spec write_stdout write_stderr in
                     let open Result.Monad_infix in
