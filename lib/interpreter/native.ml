@@ -60,12 +60,10 @@ module Prod : Sig = struct
     let string_buf = Buffer.create bufsiz in
     let buf = Bytes.create bufsiz in
     let rec loop () =
-      Printf.printf "About to read...\n%!";
       let n = Core_unix.read ~len:bufsiz fd ~buf in
       if n = 0 then Ok (Runtime.String (Buffer.contents string_buf))
       else (
         Buffer.add_subbytes string_buf buf ~pos:0 ~len:n;
-        Printf.printf "Read %d bytes, so far \"%s\"\n%!" n (Buffer.contents string_buf);
         (loop [@tailcall]) ())
     in
     let result = loop () in
