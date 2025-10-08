@@ -383,12 +383,11 @@ let make_protos m =
                 M.mkdir path;
                 First Runtime.Null) );
           ( "path",
-            make_method ~arity:(Some 1) (fun _ args ->
-                let path =
-                  List.hd_exn args |> Runtime.directory_of_t
-                  |> option_value ~message:__LOC__
-                in
-                First (Runtime.String path)) );
+            fun self ->
+              let path =
+                Runtime.directory_of_t self |> option_value ~message:__LOC__
+              in
+              Ok (Runtime.String path) );
         ];
       setters = [];
       static_getters = [];
