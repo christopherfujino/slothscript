@@ -2,7 +2,8 @@
 string methods
 
 ### Program
-assert(" foo ".trim() == "foo")
+assert(' foo '.trim() == 'foo')
+assert('one-two-three--five'.split('-'), [])
 
 ### Processes
 ()

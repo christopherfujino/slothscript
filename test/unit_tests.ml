@@ -63,11 +63,11 @@ let escape () =
           [ "this should be \"only a single\" string" ] );
   ]
 
-let compare_two_string_lists interfaces implementations =
+let compare_two_string_lists ?(prefix = "") interfaces implementations =
   List.iter interfaces ~f:(fun interface ->
       match List.find implementations ~f:(String.( = ) interface) with
       | None ->
-          Printf.sprintf "You have not implemented %s" interface
+          Printf.sprintf "You have not implemented %s%s" prefix interface
           |> assert_failure
       | Some _ -> ());
 
@@ -77,8 +77,8 @@ let compare_two_string_lists interfaces implementations =
         match List.find interfaces ~f:(String.( = ) implementation) with
         | None ->
             Printf.sprintf
-              "The implementation for %s is not defined as an interface"
-              implementation
+              "The implementation for %s%s is not defined as an interface"
+              prefix implementation
             |> assert_failure
         | Some _ -> ())
 
@@ -107,12 +107,15 @@ let stdlib_interface_and_impl_match _ =
             else if String.(name = interface_proto.name) then (
               let impl_getters = List.map getters ~f:(fun (name, _) -> name) in
               let impl_setters = List.map setters ~f:(fun (name, _) -> name) in
-              compare_two_string_lists interface_proto.getters impl_getters;
-              compare_two_string_lists interface_proto.setters impl_setters;
+              let prefix = Printf.sprintf "%s::" name in
+              compare_two_string_lists ~prefix interface_proto.getters
+                impl_getters;
+              compare_two_string_lists ~prefix interface_proto.setters
+                impl_setters;
               let impl_statics =
                 List.map static_getters ~f:(fun (name, _) -> name)
               in
-              compare_two_string_lists interface_proto.static_getters
+              compare_two_string_lists ~prefix:(Printf.sprintf "static %s." name) interface_proto.static_getters
                 impl_statics;
               true)
             else false)
