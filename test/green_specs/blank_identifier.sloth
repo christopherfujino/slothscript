@@ -1,0 +1,14 @@
+### Program
+
+_ = 1
+let _ = 'two'
+
+func foo(_, msg) {
+  print(msg)
+}
+
+foo('goodbye', 'hello')
+
+for _ in [1, 2, 3] {
+  print('goodbye')
+}
