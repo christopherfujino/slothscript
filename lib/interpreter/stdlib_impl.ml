@@ -1,10 +1,17 @@
 open Core
 open Sloth_common.Common
 
+type proto_t = {
+  name : string;
+  getters : (string * (Runtime.t -> (Runtime.t, string) Result.t)) list;
+  setters : (string * (Runtime.t -> Runtime.t -> (unit, string) Result.t)) list;
+  static_getters : (string * (Runtime.t -> (Runtime.t, string) Result.t)) list;
+}
+
 let ( >>= ) left right =
   match left with Second _ as second -> second | First first -> right first
 
-let make_func ~arity cb =
+let make_native_func ~arity cb =
   let open Runtime in
   let wrapped_cb =
    fun ctx args ->
@@ -25,13 +32,13 @@ let make_func ~arity cb =
   in
   Func (Native { cb = wrapped_cb })
 
-let make_method ~arity cb = fun _ -> Ok (make_func ~arity cb)
+let make_method ~arity cb = fun self -> Ok (make_native_func ~arity (cb self))
 
 let make_ids m =
   let module M = (val m : Native.Sig) in
   [
     ( "print",
-      make_func ~arity:(Some 1) (fun ctx args ->
+      make_native_func ~arity:(Some 1) (fun ctx args ->
           match Context.get ctx "$stdout" with
           | None ->
               let err_msg = "The context variable `$stdout` was unset" in
@@ -57,7 +64,7 @@ let make_ids m =
               | Ok () -> First Runtime.Null
               | Error msg -> Second (Runtime.create_error msg))) );
     ( "exit",
-      make_func ~arity:(Some 1) (fun _ args ->
+      make_native_func ~arity:(Some 1) (fun _ args ->
           let arg = List.hd_exn args in
           match Runtime.int_of_val arg with
           | Some code -> Second (Runtime.Exit code)
@@ -70,7 +77,7 @@ let make_ids m =
               Second (Runtime.create_error msg)) );
     ( "assert",
       (* could be 1 or 2 *)
-      make_func ~arity:None (fun _ args ->
+      make_native_func ~arity:None (fun _ args ->
           let arg = List.hd_exn args in
           let second_arg = List.nth args 1 in
           let res =
@@ -104,13 +111,6 @@ let make_ids m =
           | Error err -> Second (Runtime.create_error err)) );
   ]
 
-type proto_t = {
-  name : string;
-  getters : (string * (Runtime.t -> (Runtime.t, string) Result.t)) list;
-  setters : (string * (Runtime.t -> Runtime.t -> (unit, string) Result.t)) list;
-  static_getters : (string * (Runtime.t -> (Runtime.t, string) Result.t)) list;
-}
-
 let make_protos m =
   let module M = (val m : Native.Sig) in
   [
@@ -119,10 +119,9 @@ let make_protos m =
       getters =
         [
           ( "length",
-            make_method ~arity:(Some 1) (fun _ args ->
-                let arg = List.hd_exn args in
+            make_method ~arity:(Some 1) (fun self _ _ ->
                 let arr_of_ts =
-                  Runtime.list_of_val arg |> option_value ~message:__LOC__
+                  Runtime.list_of_val self |> option_value ~message:__LOC__
                 in
                 let len = Array.length arr_of_ts |> Float.of_int in
                 First (Runtime.Num len)) );
@@ -152,7 +151,7 @@ let make_protos m =
       static_getters =
         [
           ( "new",
-            make_method ~arity:(Some 1) (fun _ _ ->
+            make_method ~arity:(Some 1) (fun _ _ _ ->
                 let read, write = M.pipe () in
                 let t = Runtime.Pipe (read, write) in
                 First t) );
@@ -207,7 +206,7 @@ let make_protos m =
       static_getters =
         [
           ( "new",
-            make_method ~arity:(Some 2) (fun ctx args ->
+            make_method ~arity:(Some 2) (fun _ ctx args ->
                 let arg = List.nth_exn args 1 in
                 match Runtime.list_of_val arg with
                 | None ->
@@ -275,8 +274,7 @@ let make_protos m =
       getters =
         [
           ( "wait",
-            make_method ~arity:(Some 1) (fun _ args ->
-                let handle = List.hd_exn args in
+            make_method ~arity:(Some 1) (fun handle _ _ ->
                 let handle =
                   Runtime.process_handle_of_t handle
                   |> option_value ~message:__LOC__
@@ -320,9 +318,9 @@ let make_protos m =
       getters =
         [
           ( "merge",
-            make_method ~arity:(Some 2) (fun _ args ->
+            make_method ~arity:(Some 2) (fun left _ args ->
                 let left =
-                  List.hd_exn args |> Runtime.hashmap_of_val
+                  left |> Runtime.hashmap_of_val
                   |> option_value ~message:__LOC__
                 in
                 let right_v = List.nth_exn args 1 in
@@ -352,12 +350,42 @@ let make_protos m =
       getters =
         [
           ( "trim",
-            make_method ~arity:(Some 1) (fun _ args ->
-                let str = List.hd_exn args in
+            make_method ~arity:(Some 1) (fun self _ _ ->
                 let ocaml_string =
-                  Runtime.string_of_val str |> option_value ~message:__LOC__
+                  Runtime.string_of_val self |> option_value ~message:__LOC__
                 in
                 First (Runtime.String (String.strip ocaml_string))) );
+          ( "split",
+            make_method ~arity:(Some 2) (fun self _ args ->
+                let first_arg = List.nth_exn args 1 in
+                let self_string =
+                  Runtime.string_of_val self |> option_value ~message:__LOC__
+                in
+                match Runtime.string_of_val first_arg with
+                | None ->
+                    let msg =
+                      Printf.sprintf
+                        "Expected first arg to be a `String` but got %s"
+                        (Runtime.to_s first_arg)
+                    in
+                    Second (Error (Runtime.String msg))
+                | Some sep -> (
+                    let sep_len = String.length sep in
+                    match sep_len with
+                    | 1 ->
+                        let ch = sep.[0] in
+                        let str_arr =
+                          String.split self_string ~on:ch
+                          |> List.map ~f:(fun s -> Runtime.String s)
+                          |> Array.of_list
+                        in
+                        First (Runtime.List str_arr)
+                    | _ ->
+                        Printf.sprintf
+                          "Unimplemented length of separator for \
+                           String.split(%s)"
+                          sep
+                        |> failwith)) );
         ];
       setters = [];
       static_getters = [];
@@ -367,18 +395,16 @@ let make_protos m =
       getters =
         [
           ( "exists",
-            make_method ~arity:(Some 1) (fun _ args ->
+            make_method ~arity:(Some 1) (fun self _ _ ->
                 let path =
-                  List.hd_exn args |> Runtime.directory_of_t
-                  |> option_value ~message:__LOC__
+                  Runtime.directory_of_t self |> option_value ~message:__LOC__
                 in
                 let b = M.directory_exists path in
                 First (Runtime.Bool b)) );
           ( "create",
-            make_method ~arity:(Some 1) (fun _ args ->
+            make_method ~arity:(Some 1) (fun self _ _ ->
                 let path =
-                  List.hd_exn args |> Runtime.directory_of_t
-                  |> option_value ~message:__LOC__
+                  Runtime.directory_of_t self |> option_value ~message:__LOC__
                 in
                 M.mkdir path;
                 First Runtime.Null) );
@@ -397,8 +423,7 @@ let make_protos m =
       getters =
         [
           ( "openRead",
-            make_method ~arity:(Some 1) (fun _ args ->
-                let self = List.hd_exn args in
+            make_method ~arity:(Some 1) (fun self _ _ ->
                 let Runtime.{ path } =
                   match Runtime.file_of_t self with
                   | Some p -> p
@@ -411,8 +436,7 @@ let make_protos m =
                 | Ok fd -> First (Runtime.FileDescriptor fd)
                 | Error msg -> Second (Error (Runtime.String msg))) );
           ( "openWrite",
-            make_method ~arity:(Some 1) (fun _ args ->
-                let self = List.hd_exn args in
+            make_method ~arity:(Some 1) (fun self _ _ ->
                 let Runtime.{ path } =
                   match Runtime.file_of_t self with
                   | Some p -> p
@@ -429,15 +453,14 @@ let make_protos m =
                 | Ok fd -> First (Runtime.FileDescriptor fd)
                 | Error msg -> Second (Error (Runtime.String msg))) );
           ( "readString",
-            make_method ~arity:(Some 1) (fun _ args ->
-                let first_arg = List.hd_exn args in
+            make_method ~arity:(Some 1) (fun self _ _ ->
                 let Runtime.{ path } =
-                  match Runtime.file_of_t first_arg with
+                  match Runtime.file_of_t self with
                   | Some f -> f
                   | None ->
                       internal_failure
                       @@ Printf.sprintf "Expected a file, but got %s (%s)"
-                           (Runtime.to_s first_arg) __LOC__
+                           (Runtime.to_s self) __LOC__
                 in
                 (* Errors? *)
                 let contents = M.file_read_all path in
@@ -447,15 +470,14 @@ let make_protos m =
       static_getters =
         [
           ( "new",
-            make_method ~arity:(Some 2) (fun _ args ->
-                let first_arg = List.nth_exn args 1 in
-                (match Runtime.string_of_val first_arg with
+            make_method ~arity:(Some 2) (fun self _ _ ->
+                (match Runtime.string_of_val self with
                 | None ->
                     Second
                       (Runtime.create_error
                       @@ Printf.sprintf
                            "You must pass a String to File.new(), but got a %s"
-                      @@ Runtime.to_s first_arg)
+                      @@ Runtime.to_s self)
                 | Some str -> First str)
                 |> Either.map ~second:Fun.id ~first:(fun path ->
                        Runtime.File { path })) );
@@ -466,8 +488,7 @@ let make_protos m =
       getters =
         [
           ( "close",
-            make_method ~arity:(Some 1) (fun _ args ->
-                let fd_t = List.hd_exn args in
+            make_method ~arity:(Some 1) (fun fd_t _ _ ->
                 let fd =
                   match Runtime.file_descriptor_of_t fd_t with
                   | Some fd -> fd
@@ -477,8 +498,7 @@ let make_protos m =
                 | Ok () -> First Runtime.Null
                 | Error msg -> Second (Error (String msg))) );
           ( "read",
-            make_method ~arity:(Some 1) (fun _ args ->
-                let fd_t = List.hd_exn args in
+            make_method ~arity:(Some 1) (fun fd_t _ _ ->
                 let fd =
                   match Runtime.file_descriptor_of_t fd_t with
                   | Some fd -> fd
@@ -488,8 +508,7 @@ let make_protos m =
                 | Ok contents -> First contents
                 | Error msg -> Second (Error (String msg))) );
           ( "readAll",
-            make_method ~arity:(Some 1) (fun _ args ->
-                let fd_t = List.hd_exn args in
+            make_method ~arity:(Some 1) (fun fd_t _ _ ->
                 let fd =
                   match Runtime.file_descriptor_of_t fd_t with
                   | Some fd -> fd
@@ -499,8 +518,7 @@ let make_protos m =
                 | Ok contents -> First contents
                 | Error msg -> Second (Error (String msg))) );
           ( "writeAll",
-            make_method ~arity:(Some 2) (fun _ args ->
-                let fd_t = List.hd_exn args in
+            make_method ~arity:(Some 2) (fun fd_t _ args ->
                 let fd =
                   match Runtime.file_descriptor_of_t fd_t with
                   | Some fd -> fd
