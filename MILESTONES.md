@@ -1,6 +1,7 @@
 # Milestones
 
 ## v0.1 - initially tagged version
+- [ ] Add `FileDescriptor::write()`
 - [ ] Stack traces
 - [ ] Language versioning
 - [ ] Standard Library
