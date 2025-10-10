@@ -1,5 +1,4 @@
 ### Program
-
 _ = 1
 let _ = 'two'
 
@@ -12,3 +11,102 @@ foo('goodbye', 'hello')
 for _ in [1, 2, 3] {
   print('goodbye')
 }
+
+### Processes
+()
+
+### Ast
+((StmtDecl
+  (ExprStmt
+    (AssignExpr
+      _
+      (Num
+        1
+        <opaque>)
+      <opaque>)))
+  (StmtDecl
+    (ExprStmt
+      (LetExpr
+        _
+        (String
+          ((FullString
+            two
+            <opaque>))
+          <opaque>)
+        <opaque>)))
+  (FuncDecl
+    (name
+      foo)
+    (parameters
+      ((_
+        <opaque>)
+        (msg
+          <opaque>)))
+    (block
+      ((ExprStmt
+        (FuncInvoc
+          (IdRef
+            print
+            <opaque>)
+          ((IdRef
+            msg
+            <opaque>))
+          <opaque>))))
+    (pos
+      <opaque>))
+  (StmtDecl
+    (ExprStmt
+      (FuncInvoc
+        (IdRef
+          foo
+          <opaque>)
+        ((String
+          ((FullString
+            goodbye
+            <opaque>))
+          <opaque>)
+          (String
+            ((FullString
+              hello
+              <opaque>))
+            <opaque>))
+        <opaque>)))
+  (StmtDecl
+    (ExprStmt
+      (ForInLoop
+        (iterator_name
+          _)
+        (iteratee
+          (List
+            ((Num
+              1
+              <opaque>)
+              (Num
+                2
+                <opaque>)
+              (Num
+                3
+                <opaque>))
+            <opaque>))
+        (block
+          ((ExprStmt
+            (FuncInvoc
+              (IdRef
+                print
+                <opaque>)
+              ((String
+                ((FullString
+                  goodbye
+                  <opaque>))
+                <opaque>))
+              <opaque>))))
+        (pos
+          <opaque>)))))
+
+### Stdout
+hello
+goodbye
+goodbye
+goodbye
+
+### Failure

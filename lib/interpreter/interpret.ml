@@ -509,13 +509,18 @@ and interpret_expr globals expr :
       (globals, First v)
   | AssignExpr (id, e, pos) -> (
       interpret_expr globals e >>= fun globals v ->
-      match Identifiers.reassign globals.identifiers id v with
-      | Some () -> (globals, First v)
-      | None ->
-          Printf.sprintf
-            "The name %s has not been declared yet; did you mean to declare it?"
-            id
-          |> fail ~globals pos)
+      (* Don't bind _ *)
+      if String.(id = "_") then (globals, First v)
+      else
+        match Identifiers.reassign globals.identifiers id v with
+        | Some () -> (globals, First v)
+        | None ->
+            Printf.sprintf
+              "The name %s has not been declared yet; did you mean to declare \
+               it?"
+              id
+            |> internal_failure_msg ~globals ~pos
+            |> internal_failure)
   | DerefAssign { receiver; name; value; pos } ->
       interpret_expr globals receiver >>= fun globals receiver ->
       interpret_expr globals value >>= fun globals value ->
