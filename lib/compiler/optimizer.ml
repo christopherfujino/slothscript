@@ -290,7 +290,15 @@ and optimize_expr (env : Environment.t) (e : Ast.expr) : Environment.t * expr =
       in
       (env, LetExpr (name, e, pos))
   | AssignExpr (name, expr, pos) ->
-      (* TODO verify *)
+      (if String.(not (name = "_")) then
+         match Environment.find env name with
+         | Some _ -> ()
+         | None ->
+             Printf.sprintf
+               "The name \"%s\" has not been declared yet; did you mean to \
+                declare it?"
+               name
+             |> fail ~env ~pos);
       let env, e = optimize_expr env expr in
       (env, AssignExpr (name, e, pos))
   | SubAssignExpr { subscript; value; pos } ->
