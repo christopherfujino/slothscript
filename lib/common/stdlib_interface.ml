@@ -87,7 +87,7 @@ let globals =
         };
         {
           name = "String";
-          getters = [ "split"; "trim" ];
+          getters = [ "split"; "trim"; "contains" ];
           setters = [];
           static_getters = [];
         };

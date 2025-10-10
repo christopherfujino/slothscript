@@ -5,6 +5,9 @@ assert(lines == ['one', 'two', 'three', '', 'five'], String(lines))
 lines = 'one yolo two yolo three yolo'.split(' yolo ')
 assert(lines == ['one', 'two', 'three yolo'], String(lines))
 
+assert('hello, world!'.contains('World!') == false)
+assert('hello, world!'.contains('o, world'))
+
 ### Processes
 ()
 
@@ -160,6 +163,56 @@ assert(lines == ['one', 'two', 'three yolo'], String(lines))
               lines
               <opaque>))
             <opaque>))
+        <opaque>)))
+  (StmtDecl
+    (ExprStmt
+      (FuncInvoc
+        (IdRef
+          assert
+          <opaque>)
+        ((Equality
+          (FuncInvoc
+            (ObjDeref
+              (String
+                ((FullString
+                  "hello, world!"
+                  <opaque>))
+                <opaque>)
+              contains
+              <opaque>)
+            ((String
+              ((FullString
+                World!
+                <opaque>))
+              <opaque>))
+            <opaque>)
+          (Bool
+            false
+            <opaque>)
+          true
+          <opaque>))
+        <opaque>)))
+  (StmtDecl
+    (ExprStmt
+      (FuncInvoc
+        (IdRef
+          assert
+          <opaque>)
+        ((FuncInvoc
+          (ObjDeref
+            (String
+              ((FullString
+                "hello, world!"
+                <opaque>))
+              <opaque>)
+            contains
+            <opaque>)
+          ((String
+            ((FullString
+              "o, world"
+              <opaque>))
+            <opaque>))
+          <opaque>))
         <opaque>))))
 
 ### Stdout

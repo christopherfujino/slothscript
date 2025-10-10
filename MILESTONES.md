@@ -95,6 +95,6 @@
     - `fd.close()
 - [x] Reading from `$stdin`
 - [x] Mock out standard I/O for tests
-- [ ] `String` methods
+- [x] `String` methods
     - `.split(sep)`
     - `.contains(substring)`

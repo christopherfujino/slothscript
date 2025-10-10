@@ -349,6 +349,28 @@ let make_protos m =
       name = "String";
       getters =
         [
+          ( "contains",
+            make_method ~arity:(Some 2) (fun self _ args ->
+                let self_string =
+                  Runtime.string_of_val self |> option_value ~message:__LOC__
+                in
+                let first_arg = List.nth_exn args 1 in
+                let err_msg =
+                  Printf.sprintf
+                    "Expected the first argument to String::contains() to be a \
+                     `String`, but got %s"
+                    (Runtime.to_s first_arg)
+                in
+                let pattern =
+                  Runtime.string_of_val first_arg
+                  |> option_value ~message:err_msg
+                in
+                let b =
+                  match String.substr_index ~pos:0 self_string ~pattern with
+                  | Some _ -> true
+                  | None -> false
+                in
+                First (Runtime.Bool b)) );
           ( "trim",
             make_method ~arity:(Some 1) (fun self _ _ ->
                 let ocaml_string =
