@@ -1,8 +1,12 @@
-### Name
-string methods
-
 ### Program
-assert(" foo ".trim() == "foo")
+assert(' foo '.trim() == 'foo')
+let lines = 'one-two-three--five'.split('-')
+assert(lines == ['one', 'two', 'three', '', 'five'], String(lines))
+lines = 'one yolo two yolo three yolo'.split(' yolo ')
+assert(lines == ['one', 'two', 'three yolo'], String(lines))
+
+assert('hello, world!'.contains('World!') == false)
+assert('hello, world!'.contains('o, world'))
 
 ### Processes
 ()
@@ -33,7 +37,183 @@ assert(" foo ".trim() == "foo")
           <opaque>)
         true
         <opaque>))
-      <opaque>))))
+      <opaque>)))
+  (StmtDecl
+    (ExprStmt
+      (LetExpr
+        lines
+        (FuncInvoc
+          (ObjDeref
+            (String
+              ((FullString
+                one-two-three--five
+                <opaque>))
+              <opaque>)
+            split
+            <opaque>)
+          ((String
+            ((FullString
+              -
+              <opaque>))
+            <opaque>))
+          <opaque>)
+        <opaque>)))
+  (StmtDecl
+    (ExprStmt
+      (FuncInvoc
+        (IdRef
+          assert
+          <opaque>)
+        ((Equality
+          (IdRef
+            lines
+            <opaque>)
+          (List
+            ((String
+              ((FullString
+                one
+                <opaque>))
+              <opaque>)
+              (String
+                ((FullString
+                  two
+                  <opaque>))
+                <opaque>)
+              (String
+                ((FullString
+                  three
+                  <opaque>))
+                <opaque>)
+              (String
+                ((FullString
+                  ""
+                  <opaque>))
+                <opaque>)
+              (String
+                ((FullString
+                  five
+                  <opaque>))
+                <opaque>))
+            <opaque>)
+          true
+          <opaque>)
+          (FuncInvoc
+            (IdRef
+              String
+              <opaque>)
+            ((IdRef
+              lines
+              <opaque>))
+            <opaque>))
+        <opaque>)))
+  (StmtDecl
+    (ExprStmt
+      (AssignExpr
+        lines
+        (FuncInvoc
+          (ObjDeref
+            (String
+              ((FullString
+                "one yolo two yolo three yolo"
+                <opaque>))
+              <opaque>)
+            split
+            <opaque>)
+          ((String
+            ((FullString
+              " yolo "
+              <opaque>))
+            <opaque>))
+          <opaque>)
+        <opaque>)))
+  (StmtDecl
+    (ExprStmt
+      (FuncInvoc
+        (IdRef
+          assert
+          <opaque>)
+        ((Equality
+          (IdRef
+            lines
+            <opaque>)
+          (List
+            ((String
+              ((FullString
+                one
+                <opaque>))
+              <opaque>)
+              (String
+                ((FullString
+                  two
+                  <opaque>))
+                <opaque>)
+              (String
+                ((FullString
+                  "three yolo"
+                  <opaque>))
+                <opaque>))
+            <opaque>)
+          true
+          <opaque>)
+          (FuncInvoc
+            (IdRef
+              String
+              <opaque>)
+            ((IdRef
+              lines
+              <opaque>))
+            <opaque>))
+        <opaque>)))
+  (StmtDecl
+    (ExprStmt
+      (FuncInvoc
+        (IdRef
+          assert
+          <opaque>)
+        ((Equality
+          (FuncInvoc
+            (ObjDeref
+              (String
+                ((FullString
+                  "hello, world!"
+                  <opaque>))
+                <opaque>)
+              contains
+              <opaque>)
+            ((String
+              ((FullString
+                World!
+                <opaque>))
+              <opaque>))
+            <opaque>)
+          (Bool
+            false
+            <opaque>)
+          true
+          <opaque>))
+        <opaque>)))
+  (StmtDecl
+    (ExprStmt
+      (FuncInvoc
+        (IdRef
+          assert
+          <opaque>)
+        ((FuncInvoc
+          (ObjDeref
+            (String
+              ((FullString
+                "hello, world!"
+                <opaque>))
+              <opaque>)
+            contains
+            <opaque>)
+          ((String
+            ((FullString
+              "o, world"
+              <opaque>))
+            <opaque>))
+          <opaque>))
+        <opaque>))))
 
 ### Stdout
 

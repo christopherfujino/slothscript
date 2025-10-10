@@ -58,7 +58,9 @@ let invoke_native_func ~globals ~pos cb args =
       match bt with
       | Runtime.Return _ | Break _ | Continue _ -> internal_failure __LOC__
       | Exit _ -> second
-      | Error msg -> failure_obj ~globals ~pos (Runtime.to_s msg))
+      | Error msg ->
+          failure_obj ~globals ~pos
+            (Runtime.string_of_val msg |> option_value ~message:__LOC__))
 
 let rec interpret_prog globals prog =
   match prog with
@@ -963,9 +965,9 @@ and dereference_object globals receiver target pos =
     let open Runtime in
     match receiver with
     (* Static access has different semantics *)
-    | Prototype { name } -> ("static", name, fun cl -> cl.static_getters)
+    | Prototype { name } -> ("a static", name, fun cl -> cl.static_getters)
     | _ ->
-        ( "instance",
+        ( "an instance",
           Runtime.to_class_name receiver,
           fun cl -> cl.instance_getters )
   in
@@ -979,7 +981,7 @@ and dereference_object globals receiver target pos =
   | Some klass -> (
       match Hashtbl.find (table_thunk klass) target with
       | None ->
-          Printf.sprintf "The class %s does not have a %s field named %s"
+          Printf.sprintf "The class `%s` does not have %s field named \"%s\""
             class_name descriptor target
           |> failure_obj ~globals ~pos
       | Some thunk -> (

@@ -17,7 +17,7 @@ type t = {
 let make_globals m src script_path ~argv ~env =
   let module M = (val m : Native.Sig) in
   let classes = Hashtbl.create (module String) in
-  let identifiers = Identifiers.create () in
+  let identifiers : Runtime.t Identifiers.t = Identifiers.create () in
   let context_ids = Context.create () in
   List.iter (Stdlib_impl.make_ids m) ~f:(fun (name, v) ->
       Identifiers.bind identifiers name v

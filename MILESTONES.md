@@ -10,9 +10,6 @@
     - `.map(callback)`
     - `.filter(callback)`
     - `.reduce(callback)`
-  - `String` methods
-    - `.split(sep)`
-    - `.contains(substring)`
   - `$Process.allowNonzero : Bool`
 
 ## v0.2 - initial pre-release
@@ -35,6 +32,7 @@
 - [ ] Unicode strings
 - [ ] Method syntax for hash maps
 - [ ] Pattern matching
+    - Error types
 - [ ] Formatter
 - [ ] Have optimizer check that:
     - `return` always occurs in a function definition
@@ -97,3 +95,6 @@
     - `fd.close()
 - [x] Reading from `$stdin`
 - [x] Mock out standard I/O for tests
+- [x] `String` methods
+    - `.split(sep)`
+    - `.contains(substring)`
