@@ -14,7 +14,6 @@
   - `$Process.allowNonzero : Bool`
 
 ## v0.2 - initial pre-release
-- [ ] Blank identifier does not bind
 - [ ] Regular expressions
 - [ ] Test suite
 - [ ] Security policy
@@ -99,3 +98,4 @@
 - [x] `String` methods
     - `.split(sep)`
     - `.contains(substring)`
+- [x] Blank identifier does not bind
