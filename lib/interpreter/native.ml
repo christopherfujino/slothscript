@@ -314,11 +314,6 @@ module Make_test () : TestSig = struct
 
     let add ~read ~write = open_pipes := (read, write) :: !open_pipes
 
-    (*
-    let get_write_from_read read_int =
-      List.Assoc.find !open_pipes ~equal:( = ) read_int
-      *)
-
     let get_read_from_write write_int =
       let open Option.Monad_infix in
       List.find !open_pipes ~f:(fun (_, write) -> write = write_int)
@@ -357,7 +352,9 @@ module Make_test () : TestSig = struct
 
   let close fd =
     let fd_int = Core_unix.File_descr.to_int fd in
-    Fds.remove fd_int
+    match Fds.remove fd_int with
+    | Ok _ as ok -> ok
+    | Error msg -> Error (msg ^ " (did you close this FD twice?)")
 
   let open_file ~mode path =
     let fd = get_next_fd () in
@@ -435,23 +432,25 @@ module Make_test () : TestSig = struct
 
   (* TODO delete this, just use write *)
   let fd_write_all fd data =
-    let fd_int = Core_unix.File_descr.to_int fd in
+    let original_fd_int = Core_unix.File_descr.to_int fd in
     (* Check if this is read end of a pipe... *)
     let fd_int =
-      match OpenPipes.get_read_from_write fd_int with
-      | None -> fd_int
+      match OpenPipes.get_read_from_write original_fd_int with
+      | None -> original_fd_int
       | Some read_end -> read_end
     in
     let open Result.Monad_infix in
     Fds.get fd_int >>= function
-    | File (contents, _) -> Ok (contents := data)
+    | File (contents, _) ->
+        Fds.remove original_fd_int >>= fun () -> Ok (contents := data)
     | Directory -> internal_failure __LOC__
 
   let fd_read_all fd =
     let fd_int = Core_unix.File_descr.to_int fd in
     let open Result.Monad_infix in
     Fds.get fd_int >>= function
-    | File (contents, _) -> Ok (Runtime.String !contents)
+    | File (contents, _) ->
+        Fds.remove fd_int >>= fun () -> Ok (Runtime.String !contents)
     | Directory -> internal_failure __LOC__
 
   let read fd =

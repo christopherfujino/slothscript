@@ -558,6 +558,30 @@ let make_protos m =
                 match M.fd_read_all fd with
                 | Ok contents -> First contents
                 | Error msg -> Second (Error (String msg))) );
+          ( "write",
+            make_method ~arity:(Some 2) (fun fd_t _ args ->
+                let fd =
+                  match Runtime.file_descriptor_of_t fd_t with
+                  | Some fd -> fd
+                  | None -> Sloth_common.Common.internal_failure __LOC__
+                in
+                let contents = List.nth_exn args 1 in
+                (match Runtime.string_of_val contents with
+                | Some s -> First s
+                | None ->
+                    let msg =
+                      Printf.sprintf
+                        "The first argument passed to \
+                         `FileDescriptor.write(s)` should be a `String`, but \
+                         got %s"
+                      @@ Runtime.to_s contents
+                    in
+                    let runtime_t = Runtime.String msg in
+                    Second (Runtime.Error runtime_t))
+                >>= fun str ->
+                match M.write fd ~data:str with
+                | Ok () -> First Runtime.Null
+                | Error msg -> Second (Error (String msg))) );
           ( "writeAll",
             make_method ~arity:(Some 2) (fun fd_t _ args ->
                 let fd =
@@ -572,8 +596,8 @@ let make_protos m =
                     let msg =
                       Printf.sprintf
                         "The first argument passed to \
-                         `FileDescriptor.writeAll()` should be a `String`, but \
-                         got %s"
+                         `FileDescriptor.writeAll(s)` should be a `String`, \
+                         but got %s"
                       @@ Runtime.to_s contents
                     in
                     let runtime_t = Runtime.String msg in

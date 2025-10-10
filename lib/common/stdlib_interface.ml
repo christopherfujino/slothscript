@@ -39,7 +39,7 @@ let globals =
         {
           (* Should we have separate types for reading and writing? *)
           name = "FileDescriptor";
-          getters = [ "close"; "read"; (* "write";*) "readAll"; "writeAll" ];
+          getters = [ "close"; "read"; "write"; "readAll"; "writeAll" ];
           setters = [];
           static_getters = [];
         };
