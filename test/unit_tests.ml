@@ -115,8 +115,9 @@ let stdlib_interface_and_impl_match _ =
               let impl_statics =
                 List.map static_getters ~f:(fun (name, _) -> name)
               in
-              compare_two_string_lists ~prefix:(Printf.sprintf "static %s." name) interface_proto.static_getters
-                impl_statics;
+              compare_two_string_lists
+                ~prefix:(Printf.sprintf "static %s." name)
+                interface_proto.static_getters impl_statics;
               true)
             else false)
       in
