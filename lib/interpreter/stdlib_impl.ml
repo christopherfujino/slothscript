@@ -381,11 +381,30 @@ let make_protos m =
                         in
                         First (Runtime.List str_arr)
                     | _ ->
-                        Printf.sprintf
-                          "Unimplemented length of separator for \
-                           String.split(%s)"
-                          sep
-                        |> failwith)) );
+                        let indices =
+                          String.substr_index_all self_string ~pattern:sep
+                            ~may_overlap:false
+                        in
+                        let last, reversed_parts =
+                          List.fold indices ~init:(0, [])
+                            ~f:(fun (prev, parts) index ->
+                              let len = index - prev in
+                              let part =
+                                String.sub self_string ~pos:prev ~len
+                              in
+                              (index + sep_len, Runtime.String part :: parts))
+                        in
+                        let last_string =
+                          String.sub self_string ~pos:last
+                            ~len:(String.length self_string - last)
+                        in
+                        let reversed_parts =
+                          Runtime.String last_string :: reversed_parts
+                        in
+                        let parts_arr =
+                          List.rev reversed_parts |> List.to_array
+                        in
+                        First (Runtime.List parts_arr))) );
         ];
       setters = [];
       static_getters = [];

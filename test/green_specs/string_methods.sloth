@@ -2,6 +2,8 @@
 assert(' foo '.trim() == 'foo')
 let lines = 'one-two-three--five'.split('-')
 assert(lines == ['one', 'two', 'three', '', 'five'], String(lines))
+lines = 'one yolo two yolo three yolo'.split(' yolo ')
+assert(lines == ['one', 'two', 'three yolo'], String(lines))
 
 ### Processes
 ()
@@ -87,6 +89,64 @@ assert(lines == ['one', 'two', 'three', '', 'five'], String(lines))
               (String
                 ((FullString
                   five
+                  <opaque>))
+                <opaque>))
+            <opaque>)
+          true
+          <opaque>)
+          (FuncInvoc
+            (IdRef
+              String
+              <opaque>)
+            ((IdRef
+              lines
+              <opaque>))
+            <opaque>))
+        <opaque>)))
+  (StmtDecl
+    (ExprStmt
+      (AssignExpr
+        lines
+        (FuncInvoc
+          (ObjDeref
+            (String
+              ((FullString
+                "one yolo two yolo three yolo"
+                <opaque>))
+              <opaque>)
+            split
+            <opaque>)
+          ((String
+            ((FullString
+              " yolo "
+              <opaque>))
+            <opaque>))
+          <opaque>)
+        <opaque>)))
+  (StmtDecl
+    (ExprStmt
+      (FuncInvoc
+        (IdRef
+          assert
+          <opaque>)
+        ((Equality
+          (IdRef
+            lines
+            <opaque>)
+          (List
+            ((String
+              ((FullString
+                one
+                <opaque>))
+              <opaque>)
+              (String
+                ((FullString
+                  two
+                  <opaque>))
+                <opaque>)
+              (String
+                ((FullString
+                  "three yolo"
                   <opaque>))
                 <opaque>))
             <opaque>)
