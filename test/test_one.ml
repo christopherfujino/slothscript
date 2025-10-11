@@ -40,8 +40,7 @@ let () =
             match bt with
             | Exit _ -> ()
             | Error (msg, _) ->
-                Printf.eprintf "Uncaught error:\n\n%s\n"
-                @@ Option.value_exn msg;
+                Printf.eprintf "Uncaught error:\n\n%s\n" @@ Option.value_exn msg;
                 exit 1
             | Return _ | Break _ | Continue _ -> failwith "Unreachable"));
 
