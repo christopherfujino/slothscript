@@ -1,8 +1,6 @@
 # Milestones
 
 ## v0.1 - initially tagged version
-- [ ] Add `FileDescriptor::write()`
-- [ ] Stack traces
 - [ ] Language versioning
 - [ ] Standard Library
   - `List` methods
@@ -99,3 +97,5 @@
     - `.split(sep)`
     - `.contains(substring)`
 - [x] Blank identifier does not bind
+- [x] Add `FileDescriptor::write()`
+- [x] Stack traces

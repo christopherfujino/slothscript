@@ -14,19 +14,9 @@ let ( >>- ) either cb =
   match either with First t -> cb t | Second _ as second -> second
 
 let abstract_failure_msg ~globals ~pos msg type_s =
-  let pos_s = Sloth_common.Position.string_of_t pos in
-  let msg =
-    Printf.sprintf "[%s] %s\n\n%s\n%s" pos_s type_s
-      (Sloth_common.Position.summarize pos Globals.(globals.src))
-      msg
-  in
-  if debug_mode then
-    let callstack_depth = 50 in
-    Printf.sprintf "%s\n\n%s" msg
-      (* Core.Printexc does not implement .get_callstack *)
-      (Stdlib.Printexc.get_callstack callstack_depth
-      |> Stdlib.Printexc.raw_backtrace_to_string)
-  else msg
+  Runtime.backtrace_to_s ~pos
+    Globals.(globals.stack_frames)
+    globals.src msg type_s
 
 let runtime_failure_msg ~globals ~pos msg =
   abstract_failure_msg ~globals ~pos msg "Runtime error"
@@ -34,11 +24,17 @@ let runtime_failure_msg ~globals ~pos msg =
 let internal_failure_msg ~globals ~pos msg =
   abstract_failure_msg ~globals ~pos msg "Internal failure"
 
+let create_error ~globals ~pos s =
+  Runtime.Error
+    ( Some
+        (Runtime.backtrace_to_s ~pos
+           Globals.(globals.stack_frames)
+           globals.src s "Runtime error"),
+      Runtime.String s )
+
 (* TODO make this a private type so we don't accidentally create error
    messages without source summaries *)
-let failure_obj ~globals ~pos msg =
-  let msg = runtime_failure_msg ~globals ~pos msg in
-  Second (Runtime.create_error msg)
+let failure_obj ~globals ~pos msg = Second (create_error ~globals ~pos msg)
 
 (** For error cases that could potentially become compiler errors.
 
@@ -48,6 +44,8 @@ let fail ~globals pos msg =
   raise (RuntimeError msg)
 
 let invoke_native_func ~globals ~pos cb args =
+  (* We don't push a stack frame because if this errors capture the position
+     anyway *)
   let either =
     try cb Globals.(globals.context_ids) args
     with InternalFailure msg -> fail ~globals pos msg
@@ -58,18 +56,22 @@ let invoke_native_func ~globals ~pos cb args =
       match bt with
       | Runtime.Return _ | Break _ | Continue _ -> internal_failure __LOC__
       | Exit _ -> second
-      | Error msg ->
+      | Error (_, msg) ->
           failure_obj ~globals ~pos
             (Runtime.string_of_val msg |> option_value ~message:__LOC__))
 
 let rec interpret_prog globals prog =
-  match prog with
-  | [] -> (globals, First Runtime.Null)
-  | hd :: tl -> (
-      interpret_decl globals hd >>= fun new_globals v ->
-      match tl with
-      | [] -> (globals, First v) (* TODO is this right? *)
-      | _ -> (interpret_prog [@tailcall]) new_globals tl)
+  let globals, either =
+    List.fold prog ~init:(globals, First Runtime.Null)
+      ~f:(fun (globals, either) decl ->
+        (globals, either) >>= fun globals _ -> interpret_decl globals decl)
+  in
+  match either with
+  | First _ as first -> (globals, first)
+  | Second bt as second -> (
+      match bt with
+      | Break _ | Continue _ | Return _ -> internal_failure __LOC__
+      | Exit _ | Error _ -> (globals, second))
 
 and interpret_decl (globals : Globals.t) decl :
     Globals.t * (Runtime.t, Runtime.breaking_type) Either.t =
@@ -79,7 +81,8 @@ and interpret_decl (globals : Globals.t) decl :
       let parameters = List.map parameters ~f:(fun (name, _) -> name) in
       let f =
         Runtime.Func
-          (User { parameters; block; identifiers = globals.identifiers; pos })
+          (User
+             { parameters; block; identifiers = globals.identifiers; name; pos })
       in
       (match Identifiers.bind globals.identifiers name f with
       | Some () -> ()
@@ -105,7 +108,7 @@ and interpret_stmt (globals : Globals.t) stmt :
   let open Compiler.Optimizer in
   match stmt with
   | ExprStmt expr -> interpret_expr globals expr
-  | BreakingStmt (break_type, expr_opt, _) -> (
+  | BreakingStmt (break_type, expr_opt, pos) -> (
       match expr_opt with
       | None -> (globals, First Runtime.Null)
       | Some e ->
@@ -115,7 +118,13 @@ and interpret_stmt (globals : Globals.t) stmt :
             | Break -> Runtime.Break v
             | Continue -> Continue v
             | Return -> Return v
-            | Error -> Error v
+            | Error ->
+                let msg = Runtime.to_s v in
+                Error
+                  ( Some
+                      (Runtime.backtrace_to_s ~pos globals.stack_frames
+                         globals.src msg "Uncaught error"),
+                    Runtime.String msg )
           in
           (globals, Second wrapped_type))
 
@@ -258,7 +267,7 @@ and interpret_expr globals expr :
       interpret_expr globals receiver >>= fun globals -> function
       | Func f -> (
           match f with
-          | User { parameters; block; identifiers; pos = _ } ->
+          | User { parameters; block; identifiers; name; pos = _ } ->
               let identifiers2 = Identifiers.push_empty identifiers in
               (* Bind args to env *)
               let or_unequal =
@@ -281,6 +290,8 @@ and interpret_expr globals expr :
                   |> fail ~globals pos)
               >>= fun globals () ->
               let temp_globals = { globals with identifiers = identifiers2 } in
+              (* Note this is the invocation pos, not the func decl pos *)
+              let temp_globals = Globals.push_frame temp_globals name pos in
               let rec traverse_stmts globals stmts =
                 match stmts with
                 | [] -> (globals, First Runtime.Null)
@@ -299,7 +310,7 @@ and interpret_expr globals expr :
               (* Note, Return has already been unwrapped *)
               let _, either = traverse_stmts temp_globals block in
               (globals, either)
-          | Native { cb } ->
+          | Native { cb; name = _ } ->
               List.fold args ~init:(globals, First []) ~f:(fun acc arg ->
                   acc >>= fun globals prev ->
                   interpret_expr globals arg >>= fun globals arg ->
@@ -311,7 +322,7 @@ and interpret_expr globals expr :
               (globals, invoke_native_func ~globals ~pos cb args))
       | Method (receiver, func_t) -> (
           match func_t with
-          | Native { cb } ->
+          | Native { cb; name = _ } ->
               List.fold args ~init:(globals, First []) ~f:(fun acc arg ->
                   acc >>= fun globals prev ->
                   interpret_expr globals arg >>= fun globals arg ->
@@ -356,7 +367,13 @@ and interpret_expr globals expr :
       let parameters = List.map parameters ~f:(fun (name, _) -> name) in
       let u =
         Runtime.User
-          { parameters; block; identifiers = globals.identifiers; pos }
+          {
+            parameters;
+            block;
+            identifiers = globals.identifiers;
+            pos;
+            name = "(anonymous)";
+          }
       in
       let f = Runtime.Func u in
       (globals, First f)
@@ -374,80 +391,51 @@ and interpret_expr globals expr :
                     got %s"
               |> fail ~globals pos
           | Some b -> (globals, First (Runtime.Bool (not b))))
-      | Ampersand ->
+      | Ampersand -> (
           interpret_expr globals target >>= fun globals target ->
-          let either =
-            cast_to_process ~globals ~pos target
-            |> Either.map
-                 ~first:(fun proc ->
-                   let module M = (val globals.l : Native.Sig) in
-                   (* TODO add error handling *)
-                   let env =
-                     Context.get globals.context_ids "$env"
-                     |> option_value ~message:__LOC__
-                     |> Runtime.env_of_val
-                     |> option_value ~message:__LOC__
-                   in
-                   match M.proc_exec ~mode:Native.ForkBuffer proc env with
-                   | Ok t' -> t'
-                   | Error err -> fail ~globals pos err)
-                 ~second:Fun.id
+          (globals, cast_to_process ~globals ~pos target)
+          >>= fun globals target ->
+          let target = Runtime.Process target in
+          (globals, dereference_object globals target "forkBuffer" pos)
+          >>= fun globals f ->
+          let _, func_t =
+            Runtime.method_of_val f |> option_value ~message:__LOC__
           in
-          (globals, either)
-      | AmpersandBang ->
+          match func_t with
+          | User _ ->
+              internal_failure_msg ~globals ~pos __LOC__ |> internal_failure
+          | Native { cb; name = _ } ->
+              (globals, invoke_native_func ~globals ~pos cb [ target ]))
+      | AmpersandBang -> (
           interpret_expr globals target >>= fun globals target ->
-          let either =
-            cast_to_process ~globals ~pos target
-            |> Either.map
-                 ~first:(fun proc ->
-                   let module M = (val globals.l : Native.Sig) in
-                   let env =
-                     let t' =
-                       Context.get globals.context_ids "$env"
-                       |> option_value
-                            ~message:"The context variable `$env` was not set!"
-                     in
-                     Runtime.env_of_val t'
-                     |> option_value
-                          ~message:
-                            (Printf.sprintf
-                               "Expected `$env` to be of type \
-                                `HashMap[String]String`, but got %s"
-                            @@ Runtime.to_s t')
-                   in
-                   match M.proc_exec ~mode:Native.BlockBuffer proc env with
-                   | Ok t' -> t'
-                   | Error err -> fail ~globals pos err)
-                 ~second:Fun.id
+          (globals, cast_to_process ~globals ~pos target)
+          >>= fun globals target ->
+          let target = Runtime.Process target in
+          (globals, dereference_object globals target "blockBuffer" pos)
+          >>= fun globals f ->
+          let _, func_t =
+            Runtime.method_of_val f |> option_value ~message:__LOC__
           in
-          (globals, either)
-      | Bang ->
+          match func_t with
+          | User _ ->
+              internal_failure_msg ~globals ~pos __LOC__ |> internal_failure
+          | Native { cb; name = _ } ->
+              (globals, invoke_native_func ~globals ~pos cb [ target ]))
+      | Bang -> (
           interpret_expr globals target >>= fun globals target ->
-          let either =
-            cast_to_process ~globals ~pos target
-            |> Either.map
-                 ~first:(fun proc ->
-                   let module M = (val globals.l : Native.Sig) in
-                   let env =
-                     let t' =
-                       Context.get globals.context_ids "$env"
-                       |> option_value
-                            ~message:"The context variable `$env` was not set!"
-                     in
-                     Runtime.env_of_val t'
-                     |> option_value
-                          ~message:
-                            (Printf.sprintf
-                               "Expected `$env` to be of type \
-                                `HashMap[String]String`, but got %s"
-                            @@ Runtime.to_s t')
-                   in
-                   match M.proc_exec ~mode:Native.BlockInherit proc env with
-                   | Ok t' -> t'
-                   | Error err -> fail ~globals pos err)
-                 ~second:Fun.id
+          (globals, cast_to_process ~globals ~pos target)
+          >>= fun globals target_proc ->
+          let target = Runtime.Process target_proc in
+          (globals, dereference_object globals target "blockInherit" pos)
+          >>= fun globals f ->
+          let _, func_t =
+            Runtime.method_of_val f |> option_value ~message:__LOC__
           in
-          (globals, either)
+          match func_t with
+          | User _ ->
+              internal_failure_msg ~globals ~pos __LOC__ |> internal_failure
+          | Native { cb; name = _ } ->
+              (globals, invoke_native_func ~globals ~pos cb [ target ]))
       | LeftArrow ->
           interpret_expr globals target >>= fun globals target ->
           ( globals,
@@ -731,7 +719,7 @@ and interpret_expr globals expr :
       | First _ as first -> (globals, first)
       | Second bt as second -> (
           match bt with
-          | Error msg ->
+          | Error (_, msg) ->
               let inner_ids = Identifiers.push_empty globals.identifiers in
               (match Identifiers.bind inner_ids capture msg with
               | None -> failwith "TODO"
@@ -794,7 +782,7 @@ and interpret_method ~globals ~pos receiver args method_name =
               internal_failure
               @@ Printf.sprintf "Expected func, got %s (%s)" (Runtime.to_s t)
                    __LOC__)
-      | Error msg -> (globals, Second (Runtime.create_error msg)))
+      | Error msg -> (globals, Second (create_error ~globals ~pos msg)))
 
 and is_equal globals is_equality lhs rhs =
   let lh_s = Runtime.to_class_name lhs in
@@ -1096,9 +1084,7 @@ and interpret_binary globals lhs rhs op pos =
       let left = cast_to_number lhs in
       let right = cast_to_number rhs in
       if Float.(right = 0.0) then
-        ( globals,
-          Either.second @@ Runtime.create_error
-          @@ runtime_failure_msg ~globals ~pos "Divide by zero" )
+        (globals, Either.second @@ create_error ~globals ~pos "Divide by zero")
       else (globals, Either.first @@ Runtime.Num (left /. right))
   | Product ->
       interpret_expr globals rhs >>= fun globals rhs ->

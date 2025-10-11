@@ -11,7 +11,7 @@ type proto_t = {
 let ( >>= ) left right =
   match left with Second _ as second -> second | First first -> right first
 
-let make_native_func ~arity cb =
+let make_native_func ~arity ~name cb =
   let open Runtime in
   let wrapped_cb =
    fun ctx args ->
@@ -21,28 +21,32 @@ let make_native_func ~arity cb =
         let arg_len = List.length args in
         if not (Int.equal (List.length args) arity) then
           Second
-            (Runtime.create_error
-               (Printf.sprintf
-                  "You passed %d arguments (%s) but %d were expected" arg_len
-                  (List.fold_left args ~init:"" ~f:(fun msg arg ->
-                       msg ^ Runtime.to_s arg ^ ", "))
-                  arity))
+            (Runtime.Error
+               ( None,
+                 Runtime.String
+                   (Printf.sprintf
+                      "You passed %d arguments (%s) but %d were expected"
+                      arg_len
+                      (List.fold_left args ~init:"" ~f:(fun msg arg ->
+                           msg ^ Runtime.to_s arg ^ ", "))
+                      arity) ))
         else First ())
     >>= fun () -> cb ctx args
   in
-  Func (Native { cb = wrapped_cb })
+  Func (Native { cb = wrapped_cb; name })
 
-let make_method ~arity cb = fun self -> Ok (make_native_func ~arity (cb self))
+let make_method ~arity ~name cb =
+ fun self -> Ok (make_native_func ~arity ~name (cb self))
 
 let make_ids m =
   let module M = (val m : Native.Sig) in
   [
     ( "print",
-      make_native_func ~arity:(Some 1) (fun ctx args ->
+      make_native_func ~arity:(Some 1) ~name:"print" (fun ctx args ->
           match Context.get ctx "$stdout" with
           | None ->
               let err_msg = "The context variable `$stdout` was unset" in
-              Second (Runtime.create_error err_msg)
+              Second (Runtime.Error (None, Runtime.String err_msg))
           | Some stdout -> (
               let open Result.Monad_infix in
               let res =
@@ -62,9 +66,10 @@ let make_ids m =
 
               match res with
               | Ok () -> First Runtime.Null
-              | Error msg -> Second (Runtime.create_error msg))) );
+              | Error msg -> Second (Runtime.Error (None, Runtime.String msg))))
+    );
     ( "exit",
-      make_native_func ~arity:(Some 1) (fun _ args ->
+      make_native_func ~arity:(Some 1) ~name:"exit" (fun _ args ->
           let arg = List.hd_exn args in
           match Runtime.int_of_val arg with
           | Some code -> Second (Runtime.Exit code)
@@ -74,10 +79,10 @@ let make_ids m =
                   "The argument passed to `exit()` must be an integer, got %s"
                 @@ Runtime.to_s arg
               in
-              Second (Runtime.create_error msg)) );
+              Second (Runtime.Error (None, Runtime.String msg))) );
     ( "assert",
       (* could be 1 or 2 *)
-      make_native_func ~arity:None (fun _ args ->
+      make_native_func ~arity:None ~name:"assert" (fun _ args ->
           let arg = List.hd_exn args in
           let second_arg = List.nth args 1 in
           let res =
@@ -108,7 +113,7 @@ let make_ids m =
           in
           match res with
           | Ok v -> First v
-          | Error err -> Second (Runtime.create_error err)) );
+          | Error err -> Second (Runtime.Error (None, Runtime.String err))) );
   ]
 
 let make_protos m =
@@ -119,7 +124,7 @@ let make_protos m =
       getters =
         [
           ( "length",
-            make_method ~arity:(Some 1) (fun self _ _ ->
+            make_method ~arity:(Some 1) ~name:"List.length" (fun self _ _ ->
                 let arr_of_ts =
                   Runtime.list_of_val self |> option_value ~message:__LOC__
                 in
@@ -151,7 +156,7 @@ let make_protos m =
       static_getters =
         [
           ( "new",
-            make_method ~arity:(Some 1) (fun _ _ _ ->
+            make_method ~arity:(Some 1) ~name:"Pipe::new" (fun _ _ _ ->
                 let read, write = M.pipe () in
                 let t = Runtime.Pipe (read, write) in
                 First t) );
@@ -161,6 +166,75 @@ let make_protos m =
       name = "Process";
       getters =
         [
+          ( "forkBuffer",
+            make_method ~arity:(Some 1) ~name:"Process.forkBuffer"
+              (fun self ctx _ ->
+                let self =
+                  Runtime.process_of_t self |> option_value ~message:__LOC__
+                in
+                let env =
+                  Context.get ctx "$env"
+                  |> option_value
+                       ~message:"The context variable `$env` was not set!"
+                in
+                let env =
+                  Runtime.env_of_val env
+                  |> option_value
+                       ~message:
+                         (Printf.sprintf
+                            "Expected `$env` to be of type \
+                             `HashMap[String]String`, but got %s"
+                         @@ Runtime.to_s env)
+                in
+                match M.proc_exec ~mode:Native.ForkBuffer self env with
+                | Ok t' -> First t'
+                | Error err -> Second (Runtime.Error (None, String err))) );
+          ( "blockBuffer",
+            make_method ~arity:(Some 1) ~name:"Process.blockBuffer"
+              (fun self ctx _ ->
+                let self =
+                  Runtime.process_of_t self |> option_value ~message:__LOC__
+                in
+                let env =
+                  Context.get ctx "$env"
+                  |> option_value
+                       ~message:"The context variable `$env` was not set!"
+                in
+                let env =
+                  Runtime.env_of_val env
+                  |> option_value
+                       ~message:
+                         (Printf.sprintf
+                            "Expected `$env` to be of type \
+                             `HashMap[String]String`, but got %s"
+                         @@ Runtime.to_s env)
+                in
+                match M.proc_exec ~mode:Native.BlockBuffer self env with
+                | Ok t' -> First t'
+                | Error err -> Second (Runtime.Error (None, String err))) );
+          ( "blockInherit",
+            make_method ~arity:(Some 1) ~name:"Process.blockInherit"
+              (fun self ctx _ ->
+                let self =
+                  Runtime.process_of_t self |> option_value ~message:__LOC__
+                in
+                let env =
+                  Context.get ctx "$env"
+                  |> option_value
+                       ~message:"The context variable `$env` was not set!"
+                in
+                let env =
+                  Runtime.env_of_val env
+                  |> option_value
+                       ~message:
+                         (Printf.sprintf
+                            "Expected `$env` to be of type \
+                             `HashMap[String]String`, but got %s"
+                         @@ Runtime.to_s env)
+                in
+                match M.proc_exec ~mode:Native.BlockInherit self env with
+                | Ok t' -> First t'
+                | Error err -> Second (Runtime.Error (None, String err))) );
           ( "stdout",
             fun self ->
               let proc =
@@ -206,17 +280,17 @@ let make_protos m =
       static_getters =
         [
           ( "new",
-            make_method ~arity:(Some 2) (fun _ ctx args ->
+            make_method ~arity:(Some 2) ~name:"Process::new" (fun _ ctx args ->
                 let arg = List.nth_exn args 1 in
                 match Runtime.list_of_val arg with
                 | None ->
                     let err_msg =
                       Printf.sprintf
-                        "Expected the first argument to `Process.new` to be a \
+                        "Expected the first argument to `Process::new` to be a \
                          List[String] but got `%s`"
                       @@ Runtime.to_s arg
                     in
-                    Second (Runtime.create_error err_msg)
+                    Second (Runtime.Error (None, Runtime.String err_msg))
                 | Some arr ->
                     List.of_array arr (* Not efficient *)
                     |> List.fold_right ~init:(First []) ~f:(fun t acc ->
@@ -227,11 +301,14 @@ let make_protos m =
                                | Some s -> First (s :: prev)
                                | None ->
                                    Second
-                                     (Runtime.create_error
-                                     @@ Printf.sprintf
-                                          "Expected the first argument to \
-                                           `Process.new` to be a List[String], \
-                                           but got a non-String element"))
+                                     (Runtime.Error
+                                        ( None,
+                                          Runtime.String
+                                            (Printf.sprintf
+                                               "Expected the first argument to \
+                                                `Process.new` to be a \
+                                                List[String], but got a \
+                                                non-String element") )))
                            | Second _ as sec -> sec)
                     >>= fun cmd ->
                     let unwrap_fd identifier =
@@ -274,7 +351,8 @@ let make_protos m =
       getters =
         [
           ( "wait",
-            make_method ~arity:(Some 1) (fun handle _ _ ->
+            make_method ~arity:(Some 1) ~name:"ProcessHandle.wait"
+              (fun handle _ _ ->
                 let handle =
                   Runtime.process_handle_of_t handle
                   |> option_value ~message:__LOC__
@@ -287,7 +365,8 @@ let make_protos m =
                 in
                 match res with
                 | Ok proc_result -> First proc_result
-                | Error msg -> Second (Runtime.create_error msg)) );
+                | Error msg -> Second (Runtime.Error (None, Runtime.String msg)))
+          );
         ];
       setters = [];
       static_getters = [];
@@ -318,7 +397,8 @@ let make_protos m =
       getters =
         [
           ( "merge",
-            make_method ~arity:(Some 2) (fun left _ args ->
+            make_method ~arity:(Some 2) ~name:"HashMap.merge"
+              (fun left _ args ->
                 let left =
                   left |> Runtime.hashmap_of_val
                   |> option_value ~message:__LOC__
@@ -333,7 +413,7 @@ let make_protos m =
                          `HashMap`, but received %s"
                         (Runtime.to_s right_v)
                     in
-                    let bt = Runtime.create_error msg in
+                    let bt = Runtime.Error (None, Runtime.String msg) in
                     Second bt)
                 >>= fun right ->
                 let left_copy = Stdlib.Hashtbl.copy left in
@@ -350,7 +430,8 @@ let make_protos m =
       getters =
         [
           ( "contains",
-            make_method ~arity:(Some 2) (fun self _ args ->
+            make_method ~arity:(Some 2) ~name:"String.contains"
+              (fun self _ args ->
                 let self_string =
                   Runtime.string_of_val self |> option_value ~message:__LOC__
                 in
@@ -372,13 +453,13 @@ let make_protos m =
                 in
                 First (Runtime.Bool b)) );
           ( "trim",
-            make_method ~arity:(Some 1) (fun self _ _ ->
+            make_method ~arity:(Some 1) ~name:"String.trim" (fun self _ _ ->
                 let ocaml_string =
                   Runtime.string_of_val self |> option_value ~message:__LOC__
                 in
                 First (Runtime.String (String.strip ocaml_string))) );
           ( "split",
-            make_method ~arity:(Some 2) (fun self _ args ->
+            make_method ~arity:(Some 2) ~name:"String.split" (fun self _ args ->
                 let first_arg = List.nth_exn args 1 in
                 let self_string =
                   Runtime.string_of_val self |> option_value ~message:__LOC__
@@ -390,7 +471,7 @@ let make_protos m =
                         "Expected first arg to be a `String` but got %s"
                         (Runtime.to_s first_arg)
                     in
-                    Second (Error (Runtime.String msg))
+                    Second (Error (None, Runtime.String msg))
                 | Some sep -> (
                     let sep_len = String.length sep in
                     match sep_len with
@@ -436,14 +517,16 @@ let make_protos m =
       getters =
         [
           ( "exists",
-            make_method ~arity:(Some 1) (fun self _ _ ->
+            make_method ~arity:(Some 1) ~name:"Directory.exists"
+              (fun self _ _ ->
                 let path =
                   Runtime.directory_of_t self |> option_value ~message:__LOC__
                 in
                 let b = M.directory_exists path in
                 First (Runtime.Bool b)) );
           ( "create",
-            make_method ~arity:(Some 1) (fun self _ _ ->
+            make_method ~arity:(Some 1) ~name:"Directory.create"
+              (fun self _ _ ->
                 let path =
                   Runtime.directory_of_t self |> option_value ~message:__LOC__
                 in
@@ -464,7 +547,7 @@ let make_protos m =
       getters =
         [
           ( "openRead",
-            make_method ~arity:(Some 1) (fun self _ _ ->
+            make_method ~arity:(Some 1) ~name:"File.openRead" (fun self _ _ ->
                 let Runtime.{ path } =
                   match Runtime.file_of_t self with
                   | Some p -> p
@@ -475,9 +558,9 @@ let make_protos m =
                 in
                 match M.open_file ~mode:[ Core_unix.O_RDONLY ] path with
                 | Ok fd -> First (Runtime.FileDescriptor fd)
-                | Error msg -> Second (Error (Runtime.String msg))) );
+                | Error msg -> Second (Error (None, Runtime.String msg))) );
           ( "openWrite",
-            make_method ~arity:(Some 1) (fun self _ _ ->
+            make_method ~arity:(Some 1) ~name:"File.openWrite" (fun self _ _ ->
                 let Runtime.{ path } =
                   match Runtime.file_of_t self with
                   | Some p -> p
@@ -492,9 +575,9 @@ let make_protos m =
                     path
                 with
                 | Ok fd -> First (Runtime.FileDescriptor fd)
-                | Error msg -> Second (Error (Runtime.String msg))) );
+                | Error msg -> Second (Error (None, Runtime.String msg))) );
           ( "readString",
-            make_method ~arity:(Some 1) (fun self _ _ ->
+            make_method ~arity:(Some 1) ~name:"File.readString" (fun self _ _ ->
                 let Runtime.{ path } =
                   match Runtime.file_of_t self with
                   | Some f -> f
@@ -511,14 +594,17 @@ let make_protos m =
       static_getters =
         [
           ( "new",
-            make_method ~arity:(Some 2) (fun self _ _ ->
+            make_method ~arity:(Some 2) ~name:"File::new" (fun self _ _ ->
                 (match Runtime.string_of_val self with
                 | None ->
                     Second
-                      (Runtime.create_error
-                      @@ Printf.sprintf
-                           "You must pass a String to File.new(), but got a %s"
-                      @@ Runtime.to_s self)
+                      (Runtime.Error
+                         ( None,
+                           Runtime.String
+                             (Printf.sprintf
+                                "You must pass a String to File::new(), but \
+                                 got a %s"
+                             @@ Runtime.to_s self) ))
                 | Some str -> First str)
                 |> Either.map ~second:Fun.id ~first:(fun path ->
                        Runtime.File { path })) );
@@ -529,7 +615,8 @@ let make_protos m =
       getters =
         [
           ( "close",
-            make_method ~arity:(Some 1) (fun fd_t _ _ ->
+            make_method ~arity:(Some 1) ~name:"FileDescriptor.close"
+              (fun fd_t _ _ ->
                 let fd =
                   match Runtime.file_descriptor_of_t fd_t with
                   | Some fd -> fd
@@ -537,9 +624,10 @@ let make_protos m =
                 in
                 match M.close fd with
                 | Ok () -> First Runtime.Null
-                | Error msg -> Second (Error (String msg))) );
+                | Error msg -> Second (Error (None, String msg))) );
           ( "read",
-            make_method ~arity:(Some 1) (fun fd_t _ _ ->
+            make_method ~arity:(Some 1) ~name:"FileDescriptor.read"
+              (fun fd_t _ _ ->
                 let fd =
                   match Runtime.file_descriptor_of_t fd_t with
                   | Some fd -> fd
@@ -547,9 +635,10 @@ let make_protos m =
                 in
                 match M.read fd with
                 | Ok contents -> First contents
-                | Error msg -> Second (Error (String msg))) );
+                | Error msg -> Second (Error (None, String msg))) );
           ( "readAll",
-            make_method ~arity:(Some 1) (fun fd_t _ _ ->
+            make_method ~arity:(Some 1) ~name:"FileDescriptor.readAll"
+              (fun fd_t _ _ ->
                 let fd =
                   match Runtime.file_descriptor_of_t fd_t with
                   | Some fd -> fd
@@ -557,9 +646,10 @@ let make_protos m =
                 in
                 match M.fd_read_all fd with
                 | Ok contents -> First contents
-                | Error msg -> Second (Error (String msg))) );
-          ( "writeAll",
-            make_method ~arity:(Some 2) (fun fd_t _ args ->
+                | Error msg -> Second (Error (None, String msg))) );
+          ( "write",
+            make_method ~arity:(Some 2) ~name:"FileDescriptor.write"
+              (fun fd_t _ args ->
                 let fd =
                   match Runtime.file_descriptor_of_t fd_t with
                   | Some fd -> fd
@@ -572,16 +662,41 @@ let make_protos m =
                     let msg =
                       Printf.sprintf
                         "The first argument passed to \
-                         `FileDescriptor.writeAll()` should be a `String`, but \
+                         `FileDescriptor.write(s)` should be a `String`, but \
                          got %s"
                       @@ Runtime.to_s contents
                     in
                     let runtime_t = Runtime.String msg in
-                    Second (Runtime.Error runtime_t))
+                    Second (Runtime.Error (None, runtime_t)))
+                >>= fun str ->
+                match M.write fd ~data:str with
+                | Ok () -> First Runtime.Null
+                | Error msg -> Second (Error (None, String msg))) );
+          ( "writeAll",
+            make_method ~arity:(Some 2) ~name:"FileDescriptor.writeAll"
+              (fun fd_t _ args ->
+                let fd =
+                  match Runtime.file_descriptor_of_t fd_t with
+                  | Some fd -> fd
+                  | None -> Sloth_common.Common.internal_failure __LOC__
+                in
+                let contents = List.nth_exn args 1 in
+                (match Runtime.string_of_val contents with
+                | Some s -> First s
+                | None ->
+                    let msg =
+                      Printf.sprintf
+                        "The first argument passed to \
+                         `FileDescriptor.writeAll(s)` should be a `String`, \
+                         but got %s"
+                      @@ Runtime.to_s contents
+                    in
+                    let runtime_t = Runtime.String msg in
+                    Second (Runtime.Error (None, runtime_t)))
                 >>= fun str ->
                 match M.fd_write_all fd str with
                 | Ok () -> First Runtime.Null
-                | Error msg -> Second (Error (String msg))) );
+                | Error msg -> Second (Error (None, String msg))) );
         ];
       setters = [];
       static_getters = [];

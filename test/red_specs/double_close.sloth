@@ -1,0 +1,17 @@
+### Program
+
+let fd = File('msg.txt').openWrite()
+fd.writeAll("message\n")
+fd.close()
+
+### Ast
+((StmtDecl(ExprStmt(LetExpr fd(FuncInvoc(ObjDeref(FuncInvoc(IdRef File <opaque>)((String((FullString msg.txt <opaque>))<opaque>))<opaque>)openWrite <opaque>)()<opaque>)<opaque>)))(StmtDecl(ExprStmt(FuncInvoc(ObjDeref(IdRef fd <opaque>)writeAll <opaque>)((String((FullString"message\n"<opaque>))<opaque>))<opaque>)))(StmtDecl(ExprStmt(FuncInvoc(ObjDeref(IdRef fd <opaque>)close <opaque>)()<opaque>))))
+
+### Failure
+[3:8] Runtime error
+
+ 1 | let fd = File('msg.txt').openWrite()
+ 2 | fd.writeAll("message\n")
+ 3 | fd.close()
+             ^
+File descriptor 3 not found (did you close this FD twice?)

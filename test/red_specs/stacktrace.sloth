@@ -1,0 +1,39 @@
+### Program
+func rec(n) {
+  if n == 0 {
+    throw "Boom"
+  }
+  rec(n - 1)
+}
+
+let anonymous = func(n) {
+  rec(n)
+}
+
+anonymous(2)
+
+### Ast
+((FuncDecl(name rec)(parameters((n <opaque>)))(block((ExprStmt(IfExpr(IfCont(conditional(Equality(IdRef n <opaque>)(Num 0 <opaque>)true <opaque>))(block((BreakingStmt Error((String((FullString Boom <opaque>))<opaque>))<opaque>)))(continuation())(pos <opaque>))<opaque>))(ExprStmt(FuncInvoc(IdRef rec <opaque>)((Binary(IdRef n <opaque>)(Num 1 <opaque>)Minus <opaque>))<opaque>))))(pos <opaque>))(StmtDecl(ExprStmt(LetExpr anonymous(FuncExpr(parameters((n <opaque>)))(block((ExprStmt(FuncInvoc(IdRef rec <opaque>)((IdRef n <opaque>))<opaque>))))(pos <opaque>))<opaque>)))(StmtDecl(ExprStmt(FuncInvoc(IdRef anonymous <opaque>)((Num 2 <opaque>))<opaque>))))
+
+### Failure
+Stacktrace:
+ ↳ (top-level) [12:9]
+   12 | anonymous(2)
+                 ^
+ ↳ (anonymous) [9:5]
+   9 |   rec(n)
+            ^
+ ↳ rec [5:5]
+   5 |   rec(n - 1)
+            ^
+ ↳ rec [5:5]
+   5 |   rec(n - 1)
+            ^
+
+[3:4] Uncaught error
+
+ 1 | func rec(n) {
+ 2 |   if n == 0 {
+ 3 |     throw "Boom"
+         ^
+Boom

@@ -2,11 +2,9 @@
 let f = File("newfile.ext")
 let fd = f.openWrite()
 fd.writeAll("yolo")
-fd.close()
 
 let fd2 = f.openRead()
 assert(fd2.readAll() == "yolo")
-fd2.close()
 
 ### Processes
 ()
@@ -58,17 +56,6 @@ fd2.close()
         <opaque>)))
   (StmtDecl
     (ExprStmt
-      (FuncInvoc
-        (ObjDeref
-          (IdRef
-            fd
-            <opaque>)
-          close
-          <opaque>)
-        ()
-        <opaque>)))
-  (StmtDecl
-    (ExprStmt
       (LetExpr
         fd2
         (FuncInvoc
@@ -104,17 +91,6 @@ fd2.close()
             <opaque>)
           true
           <opaque>))
-        <opaque>)))
-  (StmtDecl
-    (ExprStmt
-      (FuncInvoc
-        (ObjDeref
-          (IdRef
-            fd2
-            <opaque>)
-          close
-          <opaque>)
-        ()
         <opaque>))))
 
 ### Stdout

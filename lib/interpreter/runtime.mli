@@ -21,6 +21,10 @@ type process_handle =
 
 type file = { path : string }
 type process_result = { code : int; stdout : string; stderr : string }
+type backtrace = (string * Lexing.position) list
+
+val backtrace_to_s :
+  pos:Lexing.position -> backtrace -> string -> string -> string -> string
 
 type t =
   | String of string
@@ -44,16 +48,20 @@ and breaking_type =
   | Return of t
   | Break of t
   | Continue of t
-  | Error of t
+  | Error of string option * t
   | Exit of int
 
 (* TODO make this hidden *)
 and function_t =
-  | Native of { cb : t Context.t -> t list -> (t, breaking_type) Either.t }
+  | Native of {
+      cb : t Context.t -> t list -> (t, breaking_type) Either.t;
+      name : string;
+    }
   | User of {
       parameters : string list;
       block : Compiler.Optimizer.stmt list;
       identifiers : t Identifiers.t;
+      name : string; (* This is specifically for stacktraces *)
       pos : Lexing.position;
     }
 
@@ -65,7 +73,6 @@ type class_t = {
 
 type class_lookup = (string, class_t) Hashtbl.t
 
-val create_error : string -> breaking_type
 val to_s : t -> string
 val bool_of_val : t -> bool option
 val directory_of_t : t -> string option
