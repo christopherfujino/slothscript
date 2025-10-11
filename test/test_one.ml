@@ -40,7 +40,7 @@ let () =
             match bt with
             | Exit _ -> ()
             | Error msg ->
-                Printf.eprintf "%s\n" @@ Interpreter.Runtime.to_s msg;
+                Printf.eprintf "Uncaught error:\n\n%s\n" @@ Interpreter.Runtime.to_s msg;
                 exit 1
             | Return _ | Break _ | Continue _ -> failwith "Unreachable"));
 

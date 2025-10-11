@@ -7,9 +7,8 @@ let rec indent_str b i s =
     (indent_str [@tailcall]) b (i - 1) s)
 
 (* t' src *)
-let summarize (t' : Lexing.position) src =
-  (* For terminal spacing *)
-  let left_margin_length = 1 in
+let summarize (t' : Lexing.position) ?(context = 3) ?(show_cursor = true)
+    ?(margin_width = 1) src =
   let line_num_col = Printf.sprintf "%d | " t'.pos_lnum in
   let line_num_len = String.length line_num_col in
   let buffer = Buffer.create ((80 * 2) + 2) in
@@ -31,7 +30,7 @@ let summarize (t' : Lexing.position) src =
         (compute_line_nums [@tailcall]) (cur_line_num :: prev) (count - 1)
           (cur_line_num - 1)
     in
-    let line_nums = compute_line_nums [] 3 last_line_num in
+    let line_nums = compute_line_nums [] context last_line_num in
 
     let line_num_strings = List.map line_nums ~f:Int.to_string in
     let width =
@@ -41,7 +40,7 @@ let summarize (t' : Lexing.position) src =
     in
     List.iter2 line_nums line_num_strings ~f:(fun num num_str ->
         let formatted_num_str =
-          String.pad_left ~char:' ' num_str ~len:(width + left_margin_length)
+          String.pad_left ~char:' ' num_str ~len:(width + margin_width)
         in
         Buffer.add_string buffer
         @@ Printf.sprintf "%s | %s\n" formatted_num_str
@@ -50,11 +49,11 @@ let summarize (t' : Lexing.position) src =
   match render_line_with_context t'.pos_lnum with
   | Unequal_lengths -> Common.internal_failure __LOC__
   | Ok () ->
-      ();
-      let line_col =
-        t'.pos_cnum - t'.pos_bol + line_num_len + left_margin_length
-      in
-      indent_str buffer line_col "^";
+      (if show_cursor then
+         let line_col =
+           t'.pos_cnum - t'.pos_bol + line_num_len + margin_width
+         in
+         indent_str buffer line_col "^");
       Buffer.contents buffer
 
 let string_of_t (t' : Lexing.position) =

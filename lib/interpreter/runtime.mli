@@ -44,16 +44,20 @@ and breaking_type =
   | Return of t
   | Break of t
   | Continue of t
-  | Error of t
+  | Error of Globals.backtrace * t
   | Exit of int
 
 (* TODO make this hidden *)
 and function_t =
-  | Native of { cb : t Context.t -> t list -> (t, breaking_type) Either.t }
+  | Native of {
+      cb : t Context.t -> t list -> (t, breaking_type) Either.t;
+      name : string;
+    }
   | User of {
       parameters : string list;
       block : Compiler.Optimizer.stmt list;
       identifiers : t Identifiers.t;
+      name : string; (* This is specifically for stacktraces *)
       pos : Lexing.position;
     }
 

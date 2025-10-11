@@ -1,5 +1,7 @@
 open Core
 
+type backtrace = (string * Lexing.position) list
+
 type t = {
   l : (module Native.Sig);
   identifiers : Runtime.t Identifiers.t;
@@ -11,7 +13,17 @@ type t = {
   src : string;
   script_path : string;
   argv : string list;
+  stack_frames : backtrace;
+  current_function_name : string;
+      (* Store this since stack_frames stores the name of the enclosing func *)
 }
+
+let push_frame t next_func pos =
+  {
+    t with
+    stack_frames = (t.current_function_name, pos) :: t.stack_frames;
+    current_function_name = next_func;
+  }
 
 (* TODO memoize *)
 let make_globals m src script_path ~argv ~env =
@@ -60,4 +72,14 @@ let make_globals m src script_path ~argv ~env =
       Identifiers.bind identifiers name (Runtime.Prototype { name })
       |> Option.value_exn);
 
-  { l = m; identifiers; src; classes; context_ids; script_path; argv }
+  {
+    l = m;
+    identifiers;
+    src;
+    classes;
+    context_ids;
+    script_path;
+    argv;
+    stack_frames = [];
+    current_function_name = "(top-level)";
+  }

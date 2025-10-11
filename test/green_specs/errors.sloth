@@ -14,7 +14,7 @@ func willThrow() {
 }
 
 result = willThrow() catch (msg) do {
-  assert(msg == "oops!")
+  assert(msg == "oops!", msg)
   "all good"
 }
 assert(result == "all good")

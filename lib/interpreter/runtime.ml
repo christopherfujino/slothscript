@@ -52,13 +52,16 @@ and breaking_type =
   | Error of t
   | Exit of int
 
-(* TODO add positions for error messages *)
 and function_t =
-  | Native of { cb : t Context.t -> t list -> (t, breaking_type) Either.t }
+  | Native of {
+      cb : t Context.t -> t list -> (t, breaking_type) Either.t;
+      name : string;
+    }
   | User of {
       parameters : string list;
       block : Compiler.Optimizer.stmt list;
       identifiers : t Identifiers.t;
+      name : string; (* This is specifically for stacktraces *)
       pos : Lexing.position;
     }
 
