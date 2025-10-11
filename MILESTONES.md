@@ -98,4 +98,4 @@
     - `.contains(substring)`
 - [x] Blank identifier does not bind
 - [x] Add `FileDescriptor::write()`
-- [ ] Stack traces
+- [x] Stack traces
