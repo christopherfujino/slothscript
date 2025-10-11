@@ -39,9 +39,9 @@ let () =
         | Second bt -> (
             match bt with
             | Exit _ -> ()
-            | Error msg ->
+            | Error (msg, _) ->
                 Printf.eprintf "Uncaught error:\n\n%s\n"
-                @@ Interpreter.Runtime.to_s msg;
+                @@ Option.value_exn msg;
                 exit 1
             | Return _ | Break _ | Continue _ -> failwith "Unreachable"));
 
