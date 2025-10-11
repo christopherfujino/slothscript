@@ -392,85 +392,51 @@ and interpret_expr globals expr :
                     got %s"
               |> fail ~globals pos
           | Some b -> (globals, First (Runtime.Bool (not b))))
-      | Ampersand ->
+      | Ampersand -> (
           interpret_expr globals target >>= fun globals target ->
-          let either =
-            cast_to_process ~globals ~pos target
-            |> Either.map
-                 ~first:(fun proc ->
-                   let module M = (val globals.l : Native.Sig) in
-                   (* TODO add error handling *)
-                   let env =
-                     Context.get globals.context_ids "$env"
-                     |> option_value ~message:__LOC__
-                     |> Runtime.env_of_val
-                     |> option_value ~message:__LOC__
-                   in
-                   match M.proc_exec ~mode:Native.ForkBuffer proc env with
-                   | Ok t' -> t'
-                   | Error err -> fail ~globals pos err)
-                 ~second:Fun.id
+          (globals, cast_to_process ~globals ~pos target)
+          >>= fun globals target ->
+          let target = Runtime.Process target in
+          (globals, dereference_object globals target "forkBuffer" pos)
+          >>= fun globals f ->
+          let _, func_t =
+            Runtime.method_of_val f |> option_value ~message:__LOC__
           in
-          (globals, either)
-      | AmpersandBang ->
+          match func_t with
+          | User _ ->
+              internal_failure_msg ~globals ~pos __LOC__ |> internal_failure
+          | Native { cb; name } ->
+              (globals, invoke_native_func ~globals ~pos cb [ target ] name))
+      | AmpersandBang -> (
           interpret_expr globals target >>= fun globals target ->
-          let either =
-            cast_to_process ~globals ~pos target
-            |> Either.map
-                 ~first:(fun proc ->
-                   let module M = (val globals.l : Native.Sig) in
-                   let env =
-                     let t' =
-                       Context.get globals.context_ids "$env"
-                       |> option_value
-                            ~message:"The context variable `$env` was not set!"
-                     in
-                     Runtime.env_of_val t'
-                     |> option_value
-                          ~message:
-                            (Printf.sprintf
-                               "Expected `$env` to be of type \
-                                `HashMap[String]String`, but got %s"
-                            @@ Runtime.to_s t')
-                   in
-                   match M.proc_exec ~mode:Native.BlockBuffer proc env with
-                   | Ok t' -> t'
-                   | Error err -> fail ~globals pos err)
-                 ~second:Fun.id
+          (globals, cast_to_process ~globals ~pos target)
+          >>= fun globals target ->
+          let target = Runtime.Process target in
+          (globals, dereference_object globals target "blockBuffer" pos)
+          >>= fun globals f ->
+          let _, func_t =
+            Runtime.method_of_val f |> option_value ~message:__LOC__
           in
-          (globals, either)
-      | Bang ->
+          match func_t with
+          | User _ ->
+              internal_failure_msg ~globals ~pos __LOC__ |> internal_failure
+          | Native { cb; name } ->
+              (globals, invoke_native_func ~globals ~pos cb [ target ] name))
+      | Bang -> (
           interpret_expr globals target >>= fun globals target ->
-          let either =
-            cast_to_process ~globals ~pos target
-            |> Either.map
-                 ~first:(fun proc ->
-                   let module M = (val globals.l : Native.Sig) in
-                   let env =
-                     let t' =
-                       Context.get globals.context_ids "$env"
-                       |> option_value
-                            ~message:"The context variable `$env` was not set!"
-                     in
-                     Runtime.env_of_val t'
-                     |> option_value
-                          ~message:
-                            (Printf.sprintf
-                               "Expected `$env` to be of type \
-                                `HashMap[String]String`, but got %s"
-                            @@ Runtime.to_s t')
-                   in
-                   let globals =
-                     Globals.push_frame globals
-                       "TODO: migrate BANG implementation to a native function"
-                       pos
-                   in
-                   match M.proc_exec ~mode:Native.BlockInherit proc env with
-                   | Ok t' -> t'
-                   | Error err -> fail ~globals pos err)
-                 ~second:Fun.id
+          (globals, cast_to_process ~globals ~pos target)
+          >>= fun globals target_proc ->
+          let target = Runtime.Process target_proc in
+          (globals, dereference_object globals target "blockInherit" pos)
+          >>= fun globals f ->
+          let _, func_t =
+            Runtime.method_of_val f |> option_value ~message:__LOC__
           in
-          (globals, either)
+          match func_t with
+          | User _ ->
+              internal_failure_msg ~globals ~pos __LOC__ |> internal_failure
+          | Native { cb; name } ->
+              (globals, invoke_native_func ~globals ~pos cb [ target ] name))
       | LeftArrow ->
           interpret_expr globals target >>= fun globals target ->
           ( globals,

@@ -207,8 +207,23 @@ module Prod : Sig = struct
             Core_unix.dup2 ~src:proc.stderr ~dst:Core_unix.stderr ();
             let env = List.of_array env in
             let _ =
-              Core_unix.exec ~env:(`Replace_raw env) ~use_path:true ~prog
-                ~argv:proc.cmd ()
+              try
+                Core_unix.exec ~env:(`Replace_raw env) ~use_path:true ~prog
+                  ~argv:proc.cmd ()
+              with Core_unix.Unix_error (err, syscall, _) ->
+                let _, buf =
+                  List.fold proc.cmd
+                    ~init:(true, Buffer.create 100)
+                    ~f:(fun (is_first, buf) cur ->
+                      if not is_first then Buffer.add_string buf " ";
+                      Buffer.add_string buf cur;
+                      (false, buf))
+                in
+
+                Printf.eprintf "Failed to `%s` process `%s`: \"%s\"\n\n%!" syscall
+                  (Buffer.contents buf)
+                  (Core_unix.Error.message err);
+                exit 1
             in
             failwith "Unreachable"
         | `In_the_parent pid ->

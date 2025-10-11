@@ -166,6 +166,75 @@ let make_protos m =
       name = "Process";
       getters =
         [
+          ( "forkBuffer",
+            make_method ~arity:(Some 1) ~name:"Process.forkBuffer"
+              (fun self ctx _ ->
+                let self =
+                  Runtime.process_of_t self |> option_value ~message:__LOC__
+                in
+                let env =
+                  Context.get ctx "$env"
+                  |> option_value
+                       ~message:"The context variable `$env` was not set!"
+                in
+                let env =
+                  Runtime.env_of_val env
+                  |> option_value
+                       ~message:
+                         (Printf.sprintf
+                            "Expected `$env` to be of type \
+                             `HashMap[String]String`, but got %s"
+                         @@ Runtime.to_s env)
+                in
+                match M.proc_exec ~mode:Native.ForkBuffer self env with
+                | Ok t' -> First t'
+                | Error err -> Second (Runtime.Error (None, String err))) );
+          ( "blockBuffer",
+            make_method ~arity:(Some 1) ~name:"Process.blockBuffer"
+              (fun self ctx _ ->
+                let self =
+                  Runtime.process_of_t self |> option_value ~message:__LOC__
+                in
+                let env =
+                  Context.get ctx "$env"
+                  |> option_value
+                       ~message:"The context variable `$env` was not set!"
+                in
+                let env =
+                  Runtime.env_of_val env
+                  |> option_value
+                       ~message:
+                         (Printf.sprintf
+                            "Expected `$env` to be of type \
+                             `HashMap[String]String`, but got %s"
+                         @@ Runtime.to_s env)
+                in
+                match M.proc_exec ~mode:Native.BlockBuffer self env with
+                | Ok t' -> First t'
+                | Error err -> Second (Runtime.Error (None, String err))) );
+          ( "blockInherit",
+            make_method ~arity:(Some 1) ~name:"Process.blockInherit"
+              (fun self ctx _ ->
+                let self =
+                  Runtime.process_of_t self |> option_value ~message:__LOC__
+                in
+                let env =
+                  Context.get ctx "$env"
+                  |> option_value
+                       ~message:"The context variable `$env` was not set!"
+                in
+                let env =
+                  Runtime.env_of_val env
+                  |> option_value
+                       ~message:
+                         (Printf.sprintf
+                            "Expected `$env` to be of type \
+                             `HashMap[String]String`, but got %s"
+                         @@ Runtime.to_s env)
+                in
+                match M.proc_exec ~mode:Native.BlockInherit self env with
+                | Ok t' -> First t'
+                | Error err -> Second (Runtime.Error (None, String err))) );
           ( "stdout",
             fun self ->
               let proc =

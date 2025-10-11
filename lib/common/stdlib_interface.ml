@@ -69,8 +69,8 @@ let globals =
         };
         {
           name = "Process";
-          getters = [ "stdout"; "stderr" ];
-          setters = [ "stdout"; "stderr" ];
+          getters = [ "blockBuffer"; "blockInherit"; "forkBuffer"; "stderr"; "stdout" ];
+          setters = [ "stderr"; "stdout" ];
           static_getters = [ "new" ];
         };
         {
