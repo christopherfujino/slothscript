@@ -119,7 +119,6 @@ and interpret_stmt (globals : Globals.t) stmt :
             | Continue -> Continue v
             | Return -> Return v
             | Error ->
-                (*let msg = uncaught_error_msg ~globals ~pos (Runtime.to_s v) in*)
                 let msg = Runtime.to_s v in
                 Error
                   ( Some
