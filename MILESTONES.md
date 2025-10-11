@@ -99,3 +99,4 @@
 - [x] Blank identifier does not bind
 - [x] Add `FileDescriptor::write()`
 - [x] Stack traces
+- [x] Blank identifier does not bind
