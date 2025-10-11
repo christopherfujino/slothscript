@@ -82,7 +82,7 @@ val file_descriptor_of_t : t -> Core_unix.File_descr.t option
 val func_of_val : t -> function_t option
 val hashmap_of_val : t -> (t, t) Stdlib.Hashtbl.t option
 val int_of_val : t -> int option
-val list_of_val : t -> t Array.t option
+val list_of_t : t -> t Array.t option
 val method_of_val : t -> (t * function_t) option
 val num_of_val : t -> float option
 val pipe_of_t : t -> (Core_unix.File_descr.t * Core_unix.File_descr.t) option
@@ -92,3 +92,4 @@ val process_result_of_val : t -> process_result option
 val string_of_val : t -> string option
 val val_of_env : string array -> t
 val to_class_name : t -> string
+val is_equal : bool -> t -> t -> bool

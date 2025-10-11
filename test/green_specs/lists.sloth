@@ -141,6 +141,48 @@ assert(l.contains(6) == false)
             <opaque>)
           true
           <opaque>))
+        <opaque>)))
+  (StmtDecl
+    (ExprStmt
+      (FuncInvoc
+        (IdRef
+          assert
+          <opaque>)
+        ((FuncInvoc
+          (ObjDeref
+            (IdRef
+              l
+              <opaque>)
+            contains
+            <opaque>)
+          ((Num
+            5
+            <opaque>))
+          <opaque>))
+        <opaque>)))
+  (StmtDecl
+    (ExprStmt
+      (FuncInvoc
+        (IdRef
+          assert
+          <opaque>)
+        ((Equality
+          (FuncInvoc
+            (ObjDeref
+              (IdRef
+                l
+                <opaque>)
+              contains
+              <opaque>)
+            ((Num
+              6
+              <opaque>))
+            <opaque>)
+          (Bool
+            false
+            <opaque>)
+          true
+          <opaque>))
         <opaque>))))
 
 ### Stdout

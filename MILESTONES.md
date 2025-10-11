@@ -94,8 +94,10 @@
 - [x] Add `FileDescriptor::write()`
 - [x] Stack traces
 - [ ] `List` methods
-    - `.contains(element)`
+    - [x] `.contains(element)`
     - `.forEach(callback)`
     - `.map(callback)`
     - `.filter(callback)`
     - `.reduce(callback)`
+    - `.push(element)`
+    - `.pop(element)`

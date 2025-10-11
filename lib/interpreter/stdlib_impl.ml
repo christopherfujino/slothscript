@@ -123,10 +123,21 @@ let make_protos m =
       name = "List";
       getters =
         [
+          ( "contains",
+            make_method ~arity:(Some 2) ~name:"List.contains"
+              (fun self _ args ->
+                let self =
+                  Runtime.list_of_t self |> option_value ~message:__LOC__
+                in
+                let target = List.nth_exn args 1 in
+                match Array.find self ~f:(Runtime.is_equal true target) with
+                | None -> First (Runtime.Bool false)
+                | Some _ -> First (Runtime.Bool true)) );
           ( "length",
+            (* TODO make a getter *)
             make_method ~arity:(Some 1) ~name:"List.length" (fun self _ _ ->
                 let arr_of_ts =
-                  Runtime.list_of_val self |> option_value ~message:__LOC__
+                  Runtime.list_of_t self |> option_value ~message:__LOC__
                 in
                 let len = Array.length arr_of_ts |> Float.of_int in
                 First (Runtime.Num len)) );
@@ -282,7 +293,7 @@ let make_protos m =
           ( "new",
             make_method ~arity:(Some 2) ~name:"Process::new" (fun _ ctx args ->
                 let arg = List.nth_exn args 1 in
-                match Runtime.list_of_val arg with
+                match Runtime.list_of_t arg with
                 | None ->
                     let err_msg =
                       Printf.sprintf
