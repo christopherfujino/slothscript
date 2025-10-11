@@ -27,8 +27,8 @@ type backtrace = (string * Lexing.position) list
 let backtrace_to_s ~pos bt src msg type_s =
   let buf = Buffer.create 256 in
 
-  (* Don't print the stacktrace if the stack is empty or only 1 call long *)
-  if List.length bt > 1 then (
+  (* Don't print the stacktrace if the stack is empty *)
+  if List.length bt > 0 then (
     Buffer.add_string buf "Stacktrace:\n";
     let _ =
       List.fold ~init:0 bt ~f:(fun width (fname, _) ->
@@ -99,7 +99,7 @@ and breaking_type =
 and function_t =
   | Native of {
       cb : t Context.t -> t list -> (t, breaking_type) Either.t;
-      name : string;
+      name : string (* TODO: can we delete this? *);
     }
   | User of {
       parameters : string list;

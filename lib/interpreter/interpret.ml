@@ -43,9 +43,9 @@ let fail ~globals pos msg =
   let msg = runtime_failure_msg ~globals ~pos msg in
   raise (RuntimeError msg)
 
-let invoke_native_func ~globals ~pos cb args name =
-  (* This will not escape this function *)
-  let globals = Globals.push_frame globals name pos in
+let invoke_native_func ~globals ~pos cb args =
+  (* We don't push a stack frame because if this errors capture the position
+     anyway *)
   let either =
     try cb Globals.(globals.context_ids) args
     with InternalFailure msg -> fail ~globals pos msg
@@ -310,7 +310,7 @@ and interpret_expr globals expr :
               (* Note, Return has already been unwrapped *)
               let _, either = traverse_stmts temp_globals block in
               (globals, either)
-          | Native { cb; name } ->
+          | Native { cb; name = _ } ->
               List.fold args ~init:(globals, First []) ~f:(fun acc arg ->
                   acc >>= fun globals prev ->
                   interpret_expr globals arg >>= fun globals arg ->
@@ -319,10 +319,10 @@ and interpret_expr globals expr :
               >>= fun globals reversed_args ->
               let args = List.rev reversed_args in
 
-              (globals, invoke_native_func ~globals ~pos cb args name))
+              (globals, invoke_native_func ~globals ~pos cb args))
       | Method (receiver, func_t) -> (
           match func_t with
-          | Native { cb; name } ->
+          | Native { cb; name = _ } ->
               List.fold args ~init:(globals, First []) ~f:(fun acc arg ->
                   acc >>= fun globals prev ->
                   interpret_expr globals arg >>= fun globals arg ->
@@ -331,8 +331,7 @@ and interpret_expr globals expr :
               >>= fun globals reversed_args ->
               let args = List.rev reversed_args in
 
-              ( globals,
-                invoke_native_func ~globals ~pos cb (receiver :: args) name )
+              (globals, invoke_native_func ~globals ~pos cb (receiver :: args))
           | User _ ->
               (* I think this is unreachable... *)
               internal_failure __LOC__)
@@ -405,8 +404,8 @@ and interpret_expr globals expr :
           match func_t with
           | User _ ->
               internal_failure_msg ~globals ~pos __LOC__ |> internal_failure
-          | Native { cb; name } ->
-              (globals, invoke_native_func ~globals ~pos cb [ target ] name))
+          | Native { cb; name = _ } ->
+              (globals, invoke_native_func ~globals ~pos cb [ target ]))
       | AmpersandBang -> (
           interpret_expr globals target >>= fun globals target ->
           (globals, cast_to_process ~globals ~pos target)
@@ -420,8 +419,8 @@ and interpret_expr globals expr :
           match func_t with
           | User _ ->
               internal_failure_msg ~globals ~pos __LOC__ |> internal_failure
-          | Native { cb; name } ->
-              (globals, invoke_native_func ~globals ~pos cb [ target ] name))
+          | Native { cb; name = _ } ->
+              (globals, invoke_native_func ~globals ~pos cb [ target ]))
       | Bang -> (
           interpret_expr globals target >>= fun globals target ->
           (globals, cast_to_process ~globals ~pos target)
@@ -435,8 +434,8 @@ and interpret_expr globals expr :
           match func_t with
           | User _ ->
               internal_failure_msg ~globals ~pos __LOC__ |> internal_failure
-          | Native { cb; name } ->
-              (globals, invoke_native_func ~globals ~pos cb [ target ] name))
+          | Native { cb; name = _ } ->
+              (globals, invoke_native_func ~globals ~pos cb [ target ]))
       | LeftArrow ->
           interpret_expr globals target >>= fun globals target ->
           ( globals,
@@ -457,9 +456,7 @@ and interpret_expr globals expr :
             | Native { cb; _ } -> cb
           in
           (* TODO close fd *)
-          ( globals,
-            invoke_native_func ~globals ~pos cb [ receiver ]
-              "FileDescriptor.readAll" )
+          (globals, invoke_native_func ~globals ~pos cb [ receiver ])
       | Minus ->
           interpret_expr globals target >>= fun globals target ->
           let f_opt = Runtime.num_of_val target in
@@ -780,9 +777,7 @@ and interpret_method ~globals ~pos receiver args method_name =
               | User _ -> Sloth_common.Common.internal_failure __LOC__
               | Native { cb; _ } ->
                   let args = receiver :: args in
-                  ( globals,
-                    invoke_native_func ~globals ~pos cb args
-                      (Printf.sprintf "%s::%s" class_name method_name) ))
+                  (globals, invoke_native_func ~globals ~pos cb args))
           | _ as t ->
               internal_failure
               @@ Printf.sprintf "Expected func, got %s (%s)" (Runtime.to_s t)
@@ -1028,7 +1023,7 @@ and cast_to_process ~globals ~pos v :
                 fun () -> invoke_native_func ~globals ~pos cb [ receiver; l ])
         | _ -> Sloth_common.Common.internal_failure __LOC__
       in
-      match callback () "Process.new" with
+      match callback () with
       | Second _ as second -> second
       | First proc -> (cast_to_process [@tailcall]) ~globals ~pos proc)
   | Runtime.String s ->
