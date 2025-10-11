@@ -3,12 +3,6 @@
 ## v0.1 - initially tagged version
 - [ ] Language versioning
 - [ ] Standard Library
-  - `List` methods
-    - `.contains(element)`
-    - `.forEach(callback)`
-    - `.map(callback)`
-    - `.filter(callback)`
-    - `.reduce(callback)`
   - `$Process.allowNonzero : Bool`
 
 ## v0.2 - initial pre-release
@@ -99,3 +93,9 @@
 - [x] Blank identifier does not bind
 - [x] Add `FileDescriptor::write()`
 - [x] Stack traces
+- [ ] `List` methods
+    - `.contains(element)`
+    - `.forEach(callback)`
+    - `.map(callback)`
+    - `.filter(callback)`
+    - `.reduce(callback)`

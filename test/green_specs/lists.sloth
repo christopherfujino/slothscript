@@ -9,6 +9,8 @@ print(l[2 + 3]);
 l[1] = 2.5;
 print(l);
 assert(l.length() == 6)
+assert(l.contains(5))
+assert(l.contains(6) == false)
 
 ### Processes
 ()
