@@ -11,6 +11,9 @@ print(l);
 assert(l.length() == 6)
 assert(l.contains(5))
 assert(l.contains(6) == false)
+l.forEach(func (el) {
+  print(el)
+})
 
 ### Processes
 ()
