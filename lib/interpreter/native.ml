@@ -220,8 +220,8 @@ module Prod : Sig = struct
                       (false, buf))
                 in
 
-                Printf.eprintf "Failed to `%s` process `%s`: \"%s\"\n\n%!" syscall
-                  (Buffer.contents buf)
+                Printf.eprintf "Failed to `%s` process `%s`: \"%s\"\n\n%!"
+                  syscall (Buffer.contents buf)
                   (Core_unix.Error.message err);
                 exit 1
             in
