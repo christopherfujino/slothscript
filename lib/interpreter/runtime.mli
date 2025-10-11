@@ -21,6 +21,10 @@ type process_handle =
 
 type file = { path : string }
 type process_result = { code : int; stdout : string; stderr : string }
+type backtrace = (string * Lexing.position) list
+
+val backtrace_to_s :
+  pos:Lexing.position -> backtrace -> string -> string -> string -> string
 
 type t =
   | String of string
@@ -44,7 +48,7 @@ and breaking_type =
   | Return of t
   | Break of t
   | Continue of t
-  | Error of Globals.backtrace * t
+  | Error of string option * t
   | Exit of int
 
 (* TODO make this hidden *)
@@ -69,7 +73,6 @@ type class_t = {
 
 type class_lookup = (string, class_t) Hashtbl.t
 
-val create_error : string -> breaking_type
 val to_s : t -> string
 val bool_of_val : t -> bool option
 val directory_of_t : t -> string option

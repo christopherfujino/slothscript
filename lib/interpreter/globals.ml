@@ -1,7 +1,5 @@
 open Core
 
-type backtrace = (string * Lexing.position) list
-
 type t = {
   l : (module Native.Sig);
   identifiers : Runtime.t Identifiers.t;
@@ -13,7 +11,7 @@ type t = {
   src : string;
   script_path : string;
   argv : string list;
-  stack_frames : backtrace;
+  stack_frames : Runtime.backtrace;
   current_function_name : string;
       (* Store this since stack_frames stores the name of the enclosing func *)
 }

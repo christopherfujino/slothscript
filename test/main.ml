@@ -68,7 +68,7 @@ let make_test spec =
   | Second bt -> (
       match bt with
       | Exit _ -> ()
-      | Error msg ->
+      | Error (_, msg) ->
           assert_failure
           @@ Printf.sprintf "Uncaught exception:\n\n%s\n"
           @@ Interpreter.Runtime.to_s msg
@@ -162,7 +162,7 @@ let make_failing_test spec =
         match bt with
         | Return _ | Break _ | Continue _ ->
             Sloth_common.Common.internal_failure __LOC__
-        | Error msg -> handle_failure @@ Interpreter.Runtime.to_s msg
+        | Error (msg, _) -> Option.value_exn msg |> handle_failure
         | Exit code ->
             assert_failure
             @@ Printf.sprintf

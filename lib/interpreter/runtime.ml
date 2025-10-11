@@ -1,4 +1,5 @@
 open Core
+open Sloth_common.Common
 
 type prototype = { name : string }
 
@@ -21,6 +22,48 @@ type process_handle =
 
 type process_result = { code : int; stdout : string; stderr : string }
 type file = { path : string }
+type backtrace = (string * Lexing.position) list
+
+let backtrace_to_s ~pos bt src msg type_s =
+  let buf = Buffer.create 256 in
+
+  (* Don't print the stacktrace if the stack is empty or only 1 call long *)
+  if List.length bt > 1 then (
+    Buffer.add_string buf "Stacktrace:\n";
+    let _ =
+      List.fold ~init:0 bt ~f:(fun width (fname, _) ->
+          let cur_width = String.length fname in
+          if cur_width > width then cur_width else width)
+    in
+    let rec print_stack = function
+      | [] -> ()
+      | (fname, pos) :: tl ->
+          print_stack tl;
+          let down_right_arrow = "\u{21B3}" in
+          (* let down_right_arrow = "->" in *)
+          Buffer.add_string buf
+          @@ Printf.sprintf " %s %s [%s]\n" down_right_arrow fname
+          @@ Sloth_common.Position.string_of_t pos;
+          Buffer.add_string buf
+          @@ Sloth_common.Position.summarize pos ~context:1 ~margin_width:3 src;
+          Buffer.add_string buf "\n"
+    in
+    print_stack bt;
+    Buffer.add_char buf '\n');
+
+  Buffer.add_string buf
+    (Printf.sprintf "[%s] %s\n\n%s\n%s"
+       (Sloth_common.Position.string_of_t pos)
+       type_s
+       (Sloth_common.Position.summarize pos src)
+       msg);
+  (if debug_mode then
+     let callstack_depth = 50 in
+     Buffer.add_string buf
+       (* Core.Printexc does not implement .get_callstack *)
+       (Stdlib.Printexc.get_callstack callstack_depth
+       |> Stdlib.Printexc.raw_backtrace_to_string));
+  Buffer.contents buf
 
 type t =
   (* Primitives *)
@@ -49,7 +92,8 @@ and breaking_type =
   | Return of t
   | Break of t
   | Continue of t
-  | Error of t
+  | Error of string option * t
+  (* This is an option so native implementations can leave it None *)
   | Exit of int
 
 and function_t =
@@ -72,8 +116,6 @@ type class_t = {
 }
 
 type class_lookup = (string, class_t) Hashtbl.t
-
-let create_error s = Error (String s)
 
 let to_class_name = function
   | String _ -> "String"

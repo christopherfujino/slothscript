@@ -1,10 +1,6 @@
 ### Program
 let result = 1 / 0 catch (foo) do {
-  assert(foo == "[1:15] Runtime error
-
- 1 | let result = 1 / 0 catch (foo) do {
-                    ^
-Divide by zero")
+  assert(foo == "Divide by zero", foo)
   42
 }
 assert(result == 42, "${result} != 42")
@@ -53,11 +49,14 @@ assert(result == "all good")
                     <opaque>)
                   (String
                     ((FullString
-                      "[1:15] Runtime error\n\n 1 | let result = 1 / 0 catch (foo) do {\n                    ^\nDivide by zero"
+                      "Divide by zero"
                       <opaque>))
                     <opaque>)
                   true
-                  <opaque>))
+                  <opaque>)
+                  (IdRef
+                    foo
+                    <opaque>))
                 <opaque>))
               (ExprStmt
                 (Num
@@ -142,7 +141,10 @@ assert(result == "all good")
                         <opaque>))
                       <opaque>)
                     true
-                    <opaque>))
+                    <opaque>)
+                    (IdRef
+                      msg
+                      <opaque>))
                   <opaque>))
                 (ExprStmt
                   (String

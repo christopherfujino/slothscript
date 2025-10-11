@@ -46,7 +46,7 @@ let repl () =
           Result.return (globals, env)
       | Second bt -> (
           match bt with
-          | Error msg -> Result.Error (Interpreter.Runtime.to_s msg)
+          | Error (bt_msg, _) -> Result.Error (Option.value_exn bt_msg)
           | Exit code -> exit code
           | Return _ | Break _ | Continue _ ->
               Sloth_common.Common.internal_failure __LOC__)
@@ -84,7 +84,7 @@ let interpreter path argv =
     | Second bt -> (
         match bt with
         | Exit code -> Ok code
-        | Error msg -> Error (Interpreter.Runtime.to_s msg)
+        | Error (bt_msg, _) -> Error (Option.value_exn bt_msg)
         | Return _ | Break _ | Continue _ ->
             Sloth_common.Common.internal_failure __LOC__)
   in

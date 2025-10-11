@@ -14,45 +14,9 @@ let ( >>- ) either cb =
   match either with First t -> cb t | Second _ as second -> second
 
 let abstract_failure_msg ~globals ~pos msg type_s =
-  let pos_s = Sloth_common.Position.string_of_t pos in
-  let buf = Buffer.create 256 in
-
-  (* Don't print the stacktrace if the stack is empty or only 1 call long *)
-  if List.length Globals.(globals.stack_frames) > 1 then (
-    Buffer.add_string buf "Stacktrace:\n";
-    let _ =
-      List.fold ~init:0 globals.stack_frames ~f:(fun width (fname, _) ->
-          let cur_width = String.length fname in
-          if cur_width > width then cur_width else width)
-    in
-    let rec print_stack = function
-      | [] -> ()
-      | (fname, pos) :: tl ->
-          print_stack tl;
-          let down_right_arrow = "\u{21B3}" in
-          (* let down_right_arrow = "->" in *)
-          Buffer.add_string buf
-          @@ Printf.sprintf " %s %s [%s]\n" down_right_arrow fname
-          @@ Sloth_common.Position.string_of_t pos;
-          Buffer.add_string buf
-          @@ Sloth_common.Position.summarize pos ~context:1 ~margin_width:3
-               globals.src;
-          Buffer.add_string buf "\n"
-    in
-    print_stack globals.stack_frames;
-    Buffer.add_char buf '\n');
-
-  Buffer.add_string buf
-    (Printf.sprintf "[%s] %s\n\n%s\n%s" pos_s type_s
-       (Sloth_common.Position.summarize pos Globals.(globals.src))
-       msg);
-  (if debug_mode then
-     let callstack_depth = 50 in
-     Buffer.add_string buf
-       (* Core.Printexc does not implement .get_callstack *)
-       (Stdlib.Printexc.get_callstack callstack_depth
-       |> Stdlib.Printexc.raw_backtrace_to_string));
-  Buffer.contents buf
+  Runtime.backtrace_to_s ~pos
+    Globals.(globals.stack_frames)
+    globals.src msg type_s
 
 let runtime_failure_msg ~globals ~pos msg =
   abstract_failure_msg ~globals ~pos msg "Runtime error"
@@ -60,14 +24,17 @@ let runtime_failure_msg ~globals ~pos msg =
 let internal_failure_msg ~globals ~pos msg =
   abstract_failure_msg ~globals ~pos msg "Internal failure"
 
-let uncaught_error_msg ~globals ~pos msg =
-  abstract_failure_msg ~globals ~pos msg "Uncaught error"
+let create_error ~globals ~pos s =
+  Runtime.Error
+    ( Some
+        (Runtime.backtrace_to_s ~pos
+           Globals.(globals.stack_frames)
+           globals.src s "Runtime error"),
+      Runtime.String s )
 
 (* TODO make this a private type so we don't accidentally create error
    messages without source summaries *)
-let failure_obj ~globals ~pos msg =
-  let msg = runtime_failure_msg ~globals ~pos msg in
-  Second (Runtime.create_error msg)
+let failure_obj ~globals ~pos msg = Second (create_error ~globals ~pos msg)
 
 (** For error cases that could potentially become compiler errors.
 
@@ -89,18 +56,22 @@ let invoke_native_func ~globals ~pos cb args name =
       match bt with
       | Runtime.Return _ | Break _ | Continue _ -> internal_failure __LOC__
       | Exit _ -> second
-      | Error msg ->
+      | Error (_, msg) ->
           failure_obj ~globals ~pos
             (Runtime.string_of_val msg |> option_value ~message:__LOC__))
 
 let rec interpret_prog globals prog =
-  match prog with
-  | [] -> (globals, First Runtime.Null)
-  | hd :: tl -> (
-      interpret_decl globals hd >>= fun new_globals v ->
-      match tl with
-      | [] -> (globals, First v) (* TODO is this right? *)
-      | _ -> (interpret_prog [@tailcall]) new_globals tl)
+  let globals, either =
+    List.fold prog ~init:(globals, First Runtime.Null)
+      ~f:(fun (globals, either) decl ->
+        (globals, either) >>= fun globals _ -> interpret_decl globals decl)
+  in
+  match either with
+  | First _ as first -> (globals, first)
+  | Second bt as second -> (
+      match bt with
+      | Break _ | Continue _ | Return _ -> internal_failure __LOC__
+      | Exit _ | Error _ -> (globals, second))
 
 and interpret_decl (globals : Globals.t) decl :
     Globals.t * (Runtime.t, Runtime.breaking_type) Either.t =
@@ -148,9 +119,13 @@ and interpret_stmt (globals : Globals.t) stmt :
             | Continue -> Continue v
             | Return -> Return v
             | Error ->
+                (*let msg = uncaught_error_msg ~globals ~pos (Runtime.to_s v) in*)
+                let msg = Runtime.to_s v in
                 Error
-                  (Runtime.String
-                     (uncaught_error_msg ~globals ~pos (Runtime.to_s v)))
+                  ( Some
+                      (Runtime.backtrace_to_s ~pos globals.stack_frames
+                         globals.src msg "Uncaught error"),
+                    Runtime.String msg )
           in
           (globals, Second wrapped_type))
 
@@ -782,7 +757,7 @@ and interpret_expr globals expr :
       | First _ as first -> (globals, first)
       | Second bt as second -> (
           match bt with
-          | Error msg ->
+          | Error (_, msg) ->
               let inner_ids = Identifiers.push_empty globals.identifiers in
               (match Identifiers.bind inner_ids capture msg with
               | None -> failwith "TODO"
@@ -847,7 +822,7 @@ and interpret_method ~globals ~pos receiver args method_name =
               internal_failure
               @@ Printf.sprintf "Expected func, got %s (%s)" (Runtime.to_s t)
                    __LOC__)
-      | Error msg -> (globals, Second (Runtime.create_error msg)))
+      | Error msg -> (globals, Second (create_error ~globals ~pos msg)))
 
 and is_equal globals is_equality lhs rhs =
   let lh_s = Runtime.to_class_name lhs in
@@ -1149,9 +1124,7 @@ and interpret_binary globals lhs rhs op pos =
       let left = cast_to_number lhs in
       let right = cast_to_number rhs in
       if Float.(right = 0.0) then
-        ( globals,
-          Either.second @@ Runtime.create_error
-          @@ runtime_failure_msg ~globals ~pos "Divide by zero" )
+        (globals, Either.second @@ create_error ~globals ~pos "Divide by zero")
       else (globals, Either.first @@ Runtime.Num (left /. right))
   | Product ->
       interpret_expr globals rhs >>= fun globals rhs ->
