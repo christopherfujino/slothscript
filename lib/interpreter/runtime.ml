@@ -99,7 +99,7 @@ and breaking_type =
 and function_t =
   | Native of {
       cb : t Context.t -> t list -> (t, breaking_type) Either.t;
-      name : string (* TODO: can we delete this? *);
+      name : string; (* TODO: can we delete this? *)
     }
   | User of {
       parameters : string list;
