@@ -21,6 +21,10 @@ let el = l.pop()
 assert(el == 17)
 assert(l.length == 6)
 
+l = l.filter(func (el) {
+  el % 2 == 0
+})
+
 ### Processes
 ()
 
@@ -296,6 +300,42 @@ assert(l.length == 6)
             <opaque>)
           true
           <opaque>))
+        <opaque>)))
+  (StmtDecl
+    (ExprStmt
+      (AssignExpr
+        l
+        (FuncInvoc
+          (ObjDeref
+            (IdRef
+              l
+              <opaque>)
+            filter
+            <opaque>)
+          ((FuncExpr
+            (parameters
+              ((el
+                <opaque>)))
+            (block
+              ((ExprStmt
+                (Equality
+                  (Binary
+                    (IdRef
+                      el
+                      <opaque>)
+                    (Num
+                      2
+                      <opaque>)
+                    Modulo
+                    <opaque>)
+                  (Num
+                    0
+                    <opaque>)
+                  true
+                  <opaque>))))
+            (pos
+              <opaque>)))
+          <opaque>)
         <opaque>))))
 
 ### Stdout

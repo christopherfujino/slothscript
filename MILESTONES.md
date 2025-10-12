@@ -98,7 +98,7 @@
     - [x] `.contains(element)`
     - [x] `.forEach(callback)`
     - `.map(callback)`
-    - `.filter(callback)`
+    - [ ] `.filter(callback)`
     - `.reduce(callback)`
     - [x] `.push(element)`
     - [x] `.pop(element)`
