@@ -95,9 +95,9 @@
 - [x] Stack traces
 - [ ] `List` methods
     - [x] `.contains(element)`
-    - `.forEach(callback)`
+    - [x] `.forEach(callback)`]
     - `.map(callback)`
     - `.filter(callback)`
     - `.reduce(callback)`
-    - `.push(element)`
+    - [ ] `.push(element)`]
     - `.pop(element)`
