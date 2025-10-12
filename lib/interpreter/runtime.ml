@@ -298,7 +298,7 @@ let rec is_equal is_equality lhs rhs =
               acc :=
                 !acc >>= fun () ->
                 let right = Dynarray.get rhs i in
-                is_equal is_equality left right)
+                is_equal true left right)
             lhs;
           !acc
         in
