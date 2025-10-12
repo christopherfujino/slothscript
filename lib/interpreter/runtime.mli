@@ -54,7 +54,11 @@ and breaking_type =
 (* TODO make this hidden *)
 and function_t =
   | Native of {
-      cb : t Context.t -> t list -> (t, breaking_type) Either.t;
+      cb :
+        t Context.t ->
+        (args:t list -> function_t -> (t, breaking_type) Either.t) ->
+        t list ->
+        (t, breaking_type) Either.t;
       name : string;
     }
   | User of {

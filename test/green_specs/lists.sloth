@@ -186,11 +186,43 @@ l.forEach(func (el) {
             <opaque>)
           true
           <opaque>))
+        <opaque>)))
+  (StmtDecl
+    (ExprStmt
+      (FuncInvoc
+        (ObjDeref
+          (IdRef
+            l
+            <opaque>)
+          forEach
+          <opaque>)
+        ((FuncExpr
+          (parameters
+            ((el
+              <opaque>)))
+          (block
+            ((ExprStmt
+              (FuncInvoc
+                (IdRef
+                  print
+                  <opaque>)
+                ((IdRef
+                  el
+                  <opaque>))
+                <opaque>))))
+          (pos
+            <opaque>)))
         <opaque>))))
 
 ### Stdout
 5
 13
 [2, 2.5, 5, 7, 11, 13]
+2
+2.5
+5
+7
+11
+13
 
 ### Failure

@@ -43,11 +43,18 @@ let fail ~globals pos msg =
   let msg = runtime_failure_msg ~globals ~pos msg in
   raise (RuntimeError msg)
 
-let invoke_native_func ~globals ~pos cb args =
+let rec invoke_native_func ~globals ~pos cb args =
   (* We don't push a stack frame because if this errors capture the position
      anyway *)
+  let eval ~args f =
+    (* We must hide the globals type from Stdlib_impl *)
+    (* TODO: Do we need to create a synthetic pos? *)
+    (* Do we need to push a stack frame for native funcs? *)
+    let _, either = invoke_func ~globals ~pos ~args f in
+    either
+  in
   let either =
-    try cb Globals.(globals.context_ids) args
+    try cb Globals.(globals.context_ids) eval args
     with InternalFailure msg -> fail ~globals pos msg
   in
   match either with
@@ -60,7 +67,58 @@ let invoke_native_func ~globals ~pos cb args =
           failure_obj ~globals ~pos
             (Runtime.string_of_val msg |> option_value ~message:__LOC__))
 
-let rec interpret_prog globals prog =
+and invoke_func ~globals ~pos ~args = function
+  | Runtime.User { parameters; block; identifiers; name; pos = _ } ->
+      let identifiers2 = Identifiers.push_empty identifiers in
+      (* Bind args to env *)
+      let or_unequal =
+        List.fold2 parameters args ~init:(globals, First ()) ~f:(fun acc p a ->
+            acc >>= fun globals () ->
+            (* This must not throw *)
+            Identifiers.bind identifiers2 p a |> option_value ~message:__LOC__;
+            (globals, First ()))
+      in
+      (match or_unequal with
+      | Ok tuple -> tuple
+      | Unequal_lengths ->
+          (* TODO use the User.pos field *)
+          Printf.sprintf
+            "You passed %d arguments to a function that expected %d"
+            (List.length args) (List.length parameters)
+          |> fail ~globals pos)
+      >>= fun globals () ->
+      let temp_globals = { globals with identifiers = identifiers2 } in
+      (* Note this is the invocation pos, not the func decl pos *)
+      let temp_globals = Globals.push_frame temp_globals name pos in
+      let rec traverse_stmts globals stmts =
+        match stmts with
+        | [] -> (globals, First Runtime.Null)
+        | hd :: tl -> (
+            let globals, either = interpret_stmt globals hd in
+            match either with
+            | First return_val ->
+                if List.is_empty tl then (globals, First return_val)
+                else (traverse_stmts [@tailrec]) globals tl
+            | Second bt as either -> (
+                match bt with
+                | Return return_val -> (globals, First return_val)
+                | _ -> (globals, either)))
+      in
+      (* discard context *)
+      (* Note, Return has already been unwrapped *)
+      let _, either = traverse_stmts temp_globals block in
+      (globals, either)
+  | Native { cb; name = _ } ->
+      List.fold args ~init:(globals, First []) ~f:(fun acc arg ->
+          acc >>= fun globals prev ->
+          (* This is reversed... *)
+          (globals, First (arg :: prev)))
+      >>= fun globals reversed_args ->
+      let args = List.rev reversed_args in
+
+      (globals, invoke_native_func ~globals ~pos cb args)
+
+and interpret_prog globals prog =
   let globals, either =
     List.fold prog ~init:(globals, First Runtime.Null)
       ~f:(fun (globals, either) decl ->
@@ -160,8 +218,7 @@ and interpret_cond globals cond =
       in
       (globals, interpret_block inner_globals stmts)
 
-and interpret_expr globals expr :
-    Globals.t * (Runtime.t, Runtime.breaking_type) Either.t =
+and interpret_expr globals (expr : Compiler.Optimizer.expr) =
   let open Compiler.Optimizer in
   match expr with
   | Num (f, _) -> (globals, First (Runtime.Num f))

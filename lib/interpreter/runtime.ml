@@ -98,7 +98,11 @@ and breaking_type =
 
 and function_t =
   | Native of {
-      cb : t Context.t -> t list -> (t, breaking_type) Either.t;
+      cb :
+        t Context.t ->
+        (args:t list -> function_t -> (t, breaking_type) Either.t) ->
+        t list ->
+        (t, breaking_type) Either.t;
       name : string; (* TODO: can we delete this? *)
     }
   | User of {
@@ -287,8 +291,7 @@ let rec is_equal is_equality lhs rhs =
         let left_len = Array.length lhs in
         let right_len = Array.length rhs in
         let same_list =
-          left_len = right_len >>= fun () ->
-          Array.equal (is_equal true) lhs rhs
+          left_len = right_len >>= fun () -> Array.equal (is_equal true) lhs rhs
         in
         Bool.(same_list = is_equality)
     | HashMap lhs ->
@@ -303,8 +306,7 @@ let rec is_equal is_equality lhs rhs =
               else
                 match Stdlib.Hashtbl.find_opt rhs key with
                 | None -> false
-                | Some right_value ->
-                    is_equal true left_value right_value)
+                | Some right_value -> is_equal true left_value right_value)
             lhs true
         in
         Bool.(same_table = is_equality)
@@ -347,9 +349,7 @@ let rec is_equal is_equality lhs rhs =
         in
         inner_proc lhs rhs
     | FileDescriptor lhs ->
-        let rhs =
-          file_descriptor_of_t rhs |> option_value ~message:__LOC__
-        in
+        let rhs = file_descriptor_of_t rhs |> option_value ~message:__LOC__ in
         let same_fd = Core_unix.File_descr.equal lhs rhs in
         Bool.(same_fd = is_equality)
     | File { path = lhs } ->
@@ -361,9 +361,7 @@ let rec is_equal is_equality lhs rhs =
         let same_dir = String.(lhs = rhs) in
         Bool.(same_dir = is_equality)
     | ProcessHandle lhs ->
-        let rhs =
-          process_handle_of_t rhs |> option_value ~message:__LOC__
-        in
+        let rhs = process_handle_of_t rhs |> option_value ~message:__LOC__ in
         let same_handle =
           match lhs with
           | ProcessInherited left_pid -> (
@@ -388,9 +386,7 @@ let rec is_equal is_equality lhs rhs =
         in
         Bool.(same_handle = is_equality)
     | Pipe (read, write) ->
-        let r_read, r_write =
-          pipe_of_t rhs |> option_value ~message:__LOC__
-        in
+        let r_read, r_write = pipe_of_t rhs |> option_value ~message:__LOC__ in
         let same_pipe =
           Core_unix.File_descr.(equal read r_read && equal write r_write)
         in
@@ -399,6 +395,3 @@ let rec is_equal is_equality lhs rhs =
     | Func _ | Method _ ->
         Printf.sprintf "is_equal the type %s is not implemented" lh_s
         |> failwith
-
-
-
