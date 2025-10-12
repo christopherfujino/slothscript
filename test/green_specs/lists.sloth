@@ -26,6 +26,10 @@ assert(l.length == 1)
 assert(l[0] == 2)
 l = l.map(func (el) { String(el) })
 assert(l == ["2"])
+let s = [1, 2, 3, 4].reduce(func (acc, el) {
+  "${acc}${el}"
+})
+assert(s == "1234")
 
 ### Processes
 ()

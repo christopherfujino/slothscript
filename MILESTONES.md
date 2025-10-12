@@ -97,8 +97,8 @@
 - [ ] `List` methods
     - [x] `.contains(element)`
     - [x] `.forEach(callback)`
-    - [ ] `.map(callback)`
+    - [x] `.map(callback)`
     - [x] `.filter(callback)`
-    - `.reduce(callback)`
+    - [ ] `.reduce(callback)`
     - [x] `.push(element)`
     - [x] `.pop(element)`
