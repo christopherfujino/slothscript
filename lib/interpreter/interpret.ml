@@ -36,9 +36,6 @@ let create_error ~globals ~pos s =
    messages without source summaries *)
 let failure_obj ~globals ~pos msg = Second (create_error ~globals ~pos msg)
 
-(** For error cases that could potentially become compiler errors.
-
-    These should not be recoverable, you need to fix your code. *)
 let fail ~globals pos msg =
   let msg = runtime_failure_msg ~globals ~pos msg in
   raise (RuntimeError msg)
@@ -46,9 +43,6 @@ let fail ~globals pos msg =
 let rec invoke_native_func ~globals ~pos cb args =
   (* We don't push a stack frame because if this errors capture the position
      anyway *)
-  (* TODO: Or do?!
-  let globals = Globals.push_frame globals
-  *)
   let eval ~args f =
     (* We must hide the globals type from Stdlib_impl *)
     (* TODO: Do we need to create a synthetic pos? *)
@@ -112,13 +106,6 @@ and invoke_func ~globals ~pos ~args = function
       let _, either = traverse_stmts temp_globals block in
       (globals, either)
   | Native { cb; name = _ } ->
-      List.fold args ~init:(globals, First []) ~f:(fun acc arg ->
-          acc >>= fun globals prev ->
-          (* This is reversed... *)
-          (globals, First (arg :: prev)))
-      >>= fun globals reversed_args ->
-      let args = List.rev reversed_args in
-
       (globals, invoke_native_func ~globals ~pos cb args)
 
 and interpret_prog globals prog =
@@ -325,61 +312,14 @@ and interpret_expr globals (expr : Compiler.Optimizer.expr) =
       interpret_method ~globals ~pos receiver args target
   | FuncInvoc (receiver, args, pos) -> (
       interpret_expr globals receiver >>= fun globals -> function
-      | Func f -> (
-          match f with
-          | User { parameters; block; identifiers; name; pos = _ } ->
-              let identifiers2 = Identifiers.push_empty identifiers in
-              (* Bind args to env *)
-              let or_unequal =
-                List.fold2 parameters args ~init:(globals, First ())
-                  ~f:(fun acc p a ->
-                    acc >>= fun globals () ->
-                    interpret_expr globals a >>= fun globals arg_val ->
-                    (* This must not throw *)
-                    Identifiers.bind identifiers2 p arg_val
-                    |> option_value ~message:__LOC__;
-                    (globals, First ()))
-              in
-              (match or_unequal with
-              | Ok tuple -> tuple
-              | Unequal_lengths ->
-                  (* TODO use the User.pos field *)
-                  Printf.sprintf
-                    "You passed %d arguments to a function that expected %d"
-                    (List.length args) (List.length parameters)
-                  |> fail ~globals pos)
-              >>= fun globals () ->
-              let temp_globals = { globals with identifiers = identifiers2 } in
-              (* Note this is the invocation pos, not the func decl pos *)
-              let temp_globals = Globals.push_frame temp_globals name pos in
-              let rec traverse_stmts globals stmts =
-                match stmts with
-                | [] -> (globals, First Runtime.Null)
-                | hd :: tl -> (
-                    let globals, either = interpret_stmt globals hd in
-                    match either with
-                    | First return_val ->
-                        if List.is_empty tl then (globals, First return_val)
-                        else (traverse_stmts [@tailrec]) globals tl
-                    | Second bt as either -> (
-                        match bt with
-                        | Return return_val -> (globals, First return_val)
-                        | _ -> (globals, either)))
-              in
-              (* discard context *)
-              (* Note, Return has already been unwrapped *)
-              let _, either = traverse_stmts temp_globals block in
-              (globals, either)
-          | Native { cb; name = _ } ->
-              List.fold args ~init:(globals, First []) ~f:(fun acc arg ->
-                  acc >>= fun globals prev ->
-                  interpret_expr globals arg >>= fun globals arg ->
-                  (* This is reversed... *)
-                  (globals, First (arg :: prev)))
-              >>= fun globals reversed_args ->
-              let args = List.rev reversed_args in
-
-              (globals, invoke_native_func ~globals ~pos cb args))
+      | Func f ->
+          List.fold args ~init:(globals, First []) ~f:(fun acc arg ->
+              acc >>= fun globals prev ->
+              interpret_expr globals arg >>= fun globals arg ->
+              (globals, First (arg :: prev)))
+          >>= fun globals reversed_args ->
+          let args = List.rev reversed_args in
+          invoke_func ~globals ~pos ~args f
       | Method (receiver, func_t) -> (
           match func_t with
           | Native { cb; name = _ } ->
@@ -417,7 +357,10 @@ and interpret_expr globals (expr : Compiler.Optimizer.expr) =
                 in
                 (globals, either)
             | "String" -> (globals, First (Runtime.String (Runtime.to_s arg)))
-            | _ -> fail ~globals pos (Printf.sprintf "unimplemented %s" name))
+            | _ ->
+                internal_failure_msg ~globals ~pos
+                  (Printf.sprintf "unimplemented %s (%s)" name __LOC__)
+                |> internal_failure)
       | _ as t ->
           ( globals,
             failure_obj ~globals ~pos
