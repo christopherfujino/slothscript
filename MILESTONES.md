@@ -2,15 +2,16 @@
 
 ## v0.1 - initially tagged version
 - [ ] Language versioning
-- [ ] Standard Library
-  - `$Process.allowNonzero : Bool`
 
 ## v0.2 - initial pre-release
 - [ ] Migrate AST to use actual Ast module
 - [ ] Regular expressions
 - [ ] Test suite
-- [ ] Security policy
+- [ ] Constraint system
+    - language version
+    - permissions
 - [ ] JSON module
+- [ ] Allow non-zero exit codes on sub-processes
 
 ## v1.0
 - [ ] Formatter
@@ -19,6 +20,7 @@
 - [ ] statically link readline
 - [ ] optimize binary size
 - [ ] Optional function parameters
+- [ ] Network stack
 
 ## Stretch goals
 - [ ] Bytecode VM (this should not happen until API becomes stable)
@@ -94,11 +96,11 @@
 - [x] Blank identifier does not bind
 - [x] Add `FileDescriptor::write()`
 - [x] Stack traces
-- [ ] `List` methods
-    - [x] `.contains(element)`
-    - [x] `.forEach(callback)`
-    - [x] `.map(callback)`
-    - [x] `.filter(callback)`
-    - [ ] `.reduce(callback)`
-    - [x] `.push(element)`
-    - [x] `.pop(element)`
+- [x] `List` methods
+    - `.contains(element)`
+    - `.forEach(callback)`
+    - `.map(callback)`
+    - `.filter(callback)`
+    - `.reduce(callback)`
+    - `.push(element)`
+    - `.pop(element)`
