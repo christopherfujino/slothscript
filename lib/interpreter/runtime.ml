@@ -72,7 +72,7 @@ type t =
   | Num of float
   | Null
   (* Collections *)
-  | List of t Array.t
+  | List of t Dynarray.t
   | HashMap of (t, t) Stdlib.Hashtbl.t
   (* Functions *)
   | Func of function_t
@@ -165,7 +165,7 @@ let rec to_s t' =
           acc ^ to_s cur)
         else Printf.sprintf "%s, %s" acc (to_s cur)
       in
-      Array.fold ~f:cb ~init:"[" l ^ "]"
+      Dynarray.fold_left cb "[" l ^ "]"
   | Null -> "null"
   | Bool b -> if b then "true" else "false"
   | HashMap tbl ->
@@ -288,10 +288,19 @@ let rec is_equal is_equality lhs rhs =
         Bool.( = ) same_bool is_equality
     | List lhs ->
         let rhs = list_of_t rhs |> option_value ~message:__LOC__ in
-        let left_len = Array.length lhs in
-        let right_len = Array.length rhs in
+        let left_len = Dynarray.length lhs in
+        let right_len = Dynarray.length rhs in
         let same_list =
-          left_len = right_len >>= fun () -> Array.equal (is_equal true) lhs rhs
+          left_len = right_len >>= fun () ->
+          let acc = ref true in
+          Dynarray.iteri
+            (fun i left ->
+              acc :=
+                !acc >>= fun () ->
+                let right = Dynarray.get rhs i in
+                is_equal is_equality left right)
+            lhs;
+          !acc
         in
         Bool.(same_list = is_equality)
     | HashMap lhs ->

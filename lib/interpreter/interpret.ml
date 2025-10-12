@@ -46,6 +46,9 @@ let fail ~globals pos msg =
 let rec invoke_native_func ~globals ~pos cb args =
   (* We don't push a stack frame because if this errors capture the position
      anyway *)
+  (* TODO: Or do?!
+  let globals = Globals.push_frame globals
+  *)
   let eval ~args f =
     (* We must hide the globals type from Stdlib_impl *)
     (* TODO: Do we need to create a synthetic pos? *)
@@ -255,7 +258,7 @@ and interpret_expr globals (expr : Compiler.Optimizer.expr) =
                el :: prev) ))
       >>= fun globals reversed_elements ->
       let els = List.rev reversed_elements in
-      let arr = Array.of_list els in
+      let arr = Dynarray.of_list els in
       (globals, First (Runtime.List arr))
   | HashMap (kvps, _) ->
       List.fold kvps ~init:(globals, First []) ~f:(fun acc (k, v) ->
@@ -279,7 +282,7 @@ and interpret_expr globals (expr : Compiler.Optimizer.expr) =
           | Runtime.Num idx ->
               if Float.is_integer idx then
                 let i = Stdlib.int_of_float idx in
-                (globals, First (Array.get elements i))
+                (globals, First (Dynarray.get elements i))
               else
                 Printf.sprintf
                   "Lists can only be subscripted by integers, you used %s"
@@ -583,7 +586,7 @@ and interpret_expr globals (expr : Compiler.Optimizer.expr) =
           | List elements -> (
               match Runtime.int_of_val subscript' with
               | Some i ->
-                  Array.set elements i value';
+                  Dynarray.set elements i value';
                   (globals, First receiver')
               | None ->
                   Printf.sprintf
@@ -704,8 +707,8 @@ and interpret_expr globals (expr : Compiler.Optimizer.expr) =
             |> fail ~globals pos
       in
       ( globals,
-        Array.fold iteratee_array ~init:(First Runtime.Null)
-          ~f:(fun prev element ->
+        Dynarray.fold_left
+          (fun prev element ->
             if Either.is_second prev then prev
             else
               let temp_globals =
@@ -717,7 +720,8 @@ and interpret_expr globals (expr : Compiler.Optimizer.expr) =
               Identifiers.bind temp_globals.identifiers iterator_name element
               |> option_value
                    ~message:(internal_failure_msg ~globals ~pos __LOC__);
-              interpret_block temp_globals block) )
+              interpret_block temp_globals block)
+          (First Runtime.Null) iteratee_array )
       >>= fun _ ret_val -> (globals, First ret_val)
   | WithExpr (assignments, block, pos) ->
       let module M = (val globals.l) in
@@ -948,7 +952,7 @@ and cast_to_process ~globals ~pos v :
       let list =
         shell_like_escape s
         |> List.map ~f:(fun s -> Runtime.String s)
-        |> Array.of_list
+        |> Dynarray.of_list
       in
       (cast_to_process [@tailcall]) ~globals ~pos (Runtime.List list)
   | _ as t' ->

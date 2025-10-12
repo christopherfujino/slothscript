@@ -129,9 +129,14 @@ let make_protos m =
                   Runtime.list_of_t self |> option_value ~message:__LOC__
                 in
                 let target = List.nth_exn args 1 in
-                match Array.find self ~f:(Runtime.is_equal true target) with
-                | None -> First (Runtime.Bool false)
-                | Some _ -> First (Runtime.Bool true)) );
+                let b =
+                  Dynarray.fold_left
+                    (fun contains cur ->
+                      if contains then true
+                      else Runtime.is_equal true cur target)
+                    false self
+                in
+                First (Runtime.Bool b)) );
           ( "forEach",
             make_method ~arity:(Some 2) ~name:"List.forEach"
               (fun self _ eval args ->
@@ -150,8 +155,9 @@ let make_protos m =
                     Second (Runtime.Error (None, Runtime.String msg))
                 | Some f -> First f)
                 >>= fun f ->
-                Array.fold self ~init:(First Runtime.Null) ~f:(fun either el ->
-                    either >>= fun _ -> eval ~args:[ el ] f)
+                Dynarray.fold_left
+                  (fun either el -> either >>= fun _ -> eval ~args:[ el ] f)
+                  (First Runtime.Null) self
                 >>= fun _ -> First Runtime.Null) );
           ( "length",
             (* TODO make a getter *)
@@ -159,8 +165,18 @@ let make_protos m =
                 let arr_of_ts =
                   Runtime.list_of_t self |> option_value ~message:__LOC__
                 in
-                let len = Array.length arr_of_ts |> Float.of_int in
+                let len = Dynarray.length arr_of_ts |> Float.of_int in
                 First (Runtime.Num len)) );
+          ( "push",
+            make_method ~arity:(Some 2) ~name:"List.push" (fun self _ _ args ->
+                let self_arr =
+                  Runtime.list_of_t self |> option_value ~message:__LOC__
+                in
+                let arg = List.nth_exn args 1 in
+                Dynarray.add_last self_arr arg;
+
+                (* TODO would it be useful to return the value pushed? Or the list itself, so these can be chained? *)
+                First (Runtime.Null) ));
         ];
       setters = [];
       static_getters = [];
@@ -324,24 +340,22 @@ let make_protos m =
                     in
                     Second (Runtime.Error (None, Runtime.String err_msg))
                 | Some arr ->
-                    List.of_array arr (* Not efficient *)
-                    |> List.fold_right ~init:(First []) ~f:(fun t acc ->
-                           match acc with
-                           | First prev -> (
-                               let string_opt = Runtime.string_of_val t in
-                               match string_opt with
-                               | Some s -> First (s :: prev)
-                               | None ->
-                                   Second
-                                     (Runtime.Error
-                                        ( None,
-                                          Runtime.String
-                                            (Printf.sprintf
-                                               "Expected the first argument to \
-                                                `Process.new` to be a \
-                                                List[String], but got a \
-                                                non-String element") )))
-                           | Second _ as sec -> sec)
+                    (* Not efficient *)
+                    Dynarray.fold_right
+                      (fun t acc ->
+                        acc >>= fun prev ->
+                        let string_opt = Runtime.string_of_val t in
+                        match string_opt with
+                        | Some s -> First (s :: prev)
+                        | None ->
+                            let msg =
+                              Printf.sprintf
+                                "Expected the first argument to `Process.new` \
+                                 to be a List[String], but got a non-String \
+                                 element"
+                            in
+                            Second (Runtime.Error (None, Runtime.String msg)))
+                      arr (First [])
                     >>= fun cmd ->
                     let unwrap_fd identifier =
                       let t' =
@@ -513,7 +527,7 @@ let make_protos m =
                         let str_arr =
                           String.split self_string ~on:ch
                           |> List.map ~f:(fun s -> Runtime.String s)
-                          |> Array.of_list
+                          |> Dynarray.of_list
                         in
                         First (Runtime.List str_arr)
                     | _ ->
@@ -538,7 +552,7 @@ let make_protos m =
                           Runtime.String last_string :: reversed_parts
                         in
                         let parts_arr =
-                          List.rev reversed_parts |> List.to_array
+                          List.rev reversed_parts |> Dynarray.of_list
                         in
                         First (Runtime.List parts_arr))) );
         ];
@@ -742,7 +756,7 @@ let context_ids ~cwd ~env ~script_path ~argv =
   [
     ( "$argv",
       Runtime.List
-        (List.to_array @@ List.map argv ~f:(fun s -> Runtime.String s)) );
+        (Dynarray.of_list @@ List.map argv ~f:(fun s -> Runtime.String s)) );
     ("$cwd", Runtime.String cwd);
     ("$env", Runtime.val_of_env env);
     ("$script", Runtime.String script_path);

@@ -31,7 +31,7 @@ type t =
   | Bool of bool
   | Num of float
   | Null
-  | List of t Array.t
+  | List of t Dynarray.t
   | HashMap of (t, t) Stdlib.Hashtbl.t
   | Func of function_t
   | Method of t * function_t
@@ -86,7 +86,7 @@ val file_descriptor_of_t : t -> Core_unix.File_descr.t option
 val func_of_val : t -> function_t option
 val hashmap_of_val : t -> (t, t) Stdlib.Hashtbl.t option
 val int_of_val : t -> int option
-val list_of_t : t -> t Array.t option
+val list_of_t : t -> t Dynarray.t option
 val method_of_val : t -> (t * function_t) option
 val num_of_val : t -> float option
 val pipe_of_t : t -> (Core_unix.File_descr.t * Core_unix.File_descr.t) option

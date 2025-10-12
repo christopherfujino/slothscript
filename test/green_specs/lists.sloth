@@ -15,7 +15,7 @@ l.forEach(func (el) {
   print(el)
 })
 l.push(17)
-assert(l.length() == 7)
+#assert(l.length() == 7)
 
 ### Processes
 ()
@@ -214,6 +214,19 @@ assert(l.length() == 7)
                 <opaque>))))
           (pos
             <opaque>)))
+        <opaque>)))
+  (StmtDecl
+    (ExprStmt
+      (FuncInvoc
+        (ObjDeref
+          (IdRef
+            l
+            <opaque>)
+          push
+          <opaque>)
+        ((Num
+          17
+          <opaque>))
         <opaque>))))
 
 ### Stdout

@@ -51,7 +51,7 @@ let globals =
         };
         {
           name = "List";
-          getters = [ "contains"; "forEach"; "length" ];
+          getters = [ "contains"; "forEach"; "length"; "push" ];
           setters = [];
           static_getters = [];
         };
