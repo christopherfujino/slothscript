@@ -251,6 +251,39 @@ let make_protos m =
                 Dynarray.add_last self_arr arg;
 
                 First Runtime.Null) );
+          ( "reduce",
+            make_method ~arity:(Some 2) ~name:"List.reduce"
+              (fun self _ eval args ->
+                let self =
+                  Runtime.list_of_t self |> option_value ~message:__LOC__
+                in
+                let target = List.nth_exn args 1 in
+                (match Runtime.func_of_val target with
+                | None ->
+                    let msg =
+                      Printf.sprintf
+                        "Expected the first argument to `List.reduce()` to be \
+                         a function, but got %s"
+                      @@ Runtime.to_s target
+                    in
+                    Second (Runtime.Error (None, Runtime.String msg))
+                | Some f -> First f)
+                >>= fun f ->
+                match Dynarray.length self with
+                | 0 -> First Runtime.Null
+                | 1 -> First (Dynarray.get self 0)
+                | _ ->
+                    Dynarray.fold_left
+                      (fun either cur ->
+                        either >>= fun prev_opt ->
+                        match prev_opt with
+                        | None -> First (Some cur)
+                        | Some prev ->
+                            eval ~args:[ prev; cur ] f >>= fun v ->
+                            First (Some v))
+                      (* Use an option here so we know how to handle the first iteration *)
+                      (First None) self
+                    >>= fun opt -> First (option_value ~message:__LOC__ opt)) );
         ];
       setters = [];
       static_getters = [];

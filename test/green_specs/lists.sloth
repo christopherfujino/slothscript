@@ -29,7 +29,7 @@ assert(l == ["2"])
 let s = [1, 2, 3, 4].reduce(func (acc, el) {
   "${acc}${el}"
 })
-assert(s == "1234")
+assert(s == "1234", s)
 
 ### Processes
 ()
@@ -442,6 +442,80 @@ assert(s == "1234")
             <opaque>)
           true
           <opaque>))
+        <opaque>)))
+  (StmtDecl
+    (ExprStmt
+      (LetExpr
+        s
+        (FuncInvoc
+          (ObjDeref
+            (List
+              ((Num
+                1
+                <opaque>)
+                (Num
+                  2
+                  <opaque>)
+                (Num
+                  3
+                  <opaque>)
+                (Num
+                  4
+                  <opaque>))
+              <opaque>)
+            reduce
+            <opaque>)
+          ((FuncExpr
+            (parameters
+              ((acc
+                <opaque>)
+                (el
+                  <opaque>)))
+            (block
+              ((ExprStmt
+                (String
+                  ((StartStringInterp
+                    ""
+                    <opaque>)
+                    (ExpressionStringInterp
+                      (IdRef
+                        acc
+                        <opaque>))
+                    (MiddleStringInterp
+                      ""
+                      <opaque>)
+                    (ExpressionStringInterp
+                      (IdRef
+                        el
+                        <opaque>))
+                    (EndStringInterp
+                      ""
+                      <opaque>))
+                  <opaque>))))
+            (pos
+              <opaque>)))
+          <opaque>)
+        <opaque>)))
+  (StmtDecl
+    (ExprStmt
+      (FuncInvoc
+        (IdRef
+          assert
+          <opaque>)
+        ((Equality
+          (IdRef
+            s
+            <opaque>)
+          (String
+            ((FullString
+              1234
+              <opaque>))
+            <opaque>)
+          true
+          <opaque>)
+          (IdRef
+            s
+            <opaque>))
         <opaque>))))
 
 ### Stdout
