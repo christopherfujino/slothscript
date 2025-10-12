@@ -21,11 +21,11 @@ let el = l.pop()
 assert(el == 17)
 assert(l.length == 6)
 
-l = [2, 3, 5, 7].filter(func (el) {
-  el % 2 == 0
-})
+l = [2, 3, 5, 7].filter(func (el) { el % 2 == 0 })
 assert(l.length == 1)
 assert(l[0] == 2)
+l = l.map(func (el) { String(el) })
+assert(l == ["2"])
 
 ### Processes
 ()
@@ -386,6 +386,55 @@ assert(l[0] == 2)
             <opaque>)
           (Num
             2
+            <opaque>)
+          true
+          <opaque>))
+        <opaque>)))
+  (StmtDecl
+    (ExprStmt
+      (AssignExpr
+        l
+        (FuncInvoc
+          (ObjDeref
+            (IdRef
+              l
+              <opaque>)
+            map
+            <opaque>)
+          ((FuncExpr
+            (parameters
+              ((el
+                <opaque>)))
+            (block
+              ((ExprStmt
+                (FuncInvoc
+                  (IdRef
+                    String
+                    <opaque>)
+                  ((IdRef
+                    el
+                    <opaque>))
+                  <opaque>))))
+            (pos
+              <opaque>)))
+          <opaque>)
+        <opaque>)))
+  (StmtDecl
+    (ExprStmt
+      (FuncInvoc
+        (IdRef
+          assert
+          <opaque>)
+        ((Equality
+          (IdRef
+            l
+            <opaque>)
+          (List
+            ((String
+              ((FullString
+                2
+                <opaque>))
+              <opaque>))
             <opaque>)
           true
           <opaque>))

@@ -207,6 +207,32 @@ let make_protos m =
               in
               let len = Dynarray.length arr_of_ts |> Float.of_int in
               Ok (Runtime.Num len) );
+          ( "map",
+            make_method ~arity:(Some 2) ~name:"List.map"
+              (fun self _ eval args ->
+                let self =
+                  Runtime.list_of_t self |> option_value ~message:__LOC__
+                in
+                let target = List.nth_exn args 1 in
+                (match Runtime.func_of_val target with
+                | None ->
+                    let msg =
+                      Printf.sprintf
+                        "Expected the first argument to `List.map()` to be a \
+                         function, but got %s"
+                      @@ Runtime.to_s target
+                    in
+                    Second (Runtime.Error (None, Runtime.String msg))
+                | Some f -> First f)
+                >>= fun f ->
+                let new_arr = Dynarray.create () in
+                Dynarray.fold_left
+                  (fun either el ->
+                    either >>= fun () ->
+                    eval ~args:[ el ] f >>= fun v ->
+                    First (Dynarray.add_last new_arr v))
+                  (First ()) self
+                >>= fun () -> First (Runtime.List new_arr)) );
           ( "pop",
             make_method ~arity:(Some 1) ~name:"List.pop" (fun self _ _ _ ->
                 let self_arr =
