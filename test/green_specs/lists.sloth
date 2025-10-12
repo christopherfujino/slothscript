@@ -8,18 +8,18 @@ print(l[getTwo()]);
 print(l[2 + 3]);
 l[1] = 2.5;
 print(l);
-assert(l.length() == 6)
+assert(l.length == 6)
 assert(l.contains(5))
 assert(l.contains(6) == false)
 l.forEach(func (el) {
   print(el)
 })
 l.push(17)
-assert(l.length() == 7)
+assert(l.length == 7)
 
 let el = l.pop()
 assert(el == 17)
-assert(l.length() == 6)
+assert(l.length == 6)
 
 ### Processes
 ()
@@ -136,14 +136,11 @@ assert(l.length() == 6)
           assert
           <opaque>)
         ((Equality
-          (FuncInvoc
-            (ObjDeref
-              (IdRef
-                l
-                <opaque>)
-              length
+          (ObjDeref
+            (IdRef
+              l
               <opaque>)
-            ()
+            length
             <opaque>)
           (Num
             6
@@ -239,14 +236,11 @@ assert(l.length() == 6)
           assert
           <opaque>)
         ((Equality
-          (FuncInvoc
-            (ObjDeref
-              (IdRef
-                l
-                <opaque>)
-              length
+          (ObjDeref
+            (IdRef
+              l
               <opaque>)
-            ()
+            length
             <opaque>)
           (Num
             7
@@ -291,14 +285,11 @@ assert(l.length() == 6)
           assert
           <opaque>)
         ((Equality
-          (FuncInvoc
-            (ObjDeref
-              (IdRef
-                l
-                <opaque>)
-              length
+          (ObjDeref
+            (IdRef
+              l
               <opaque>)
-            ()
+            length
             <opaque>)
           (Num
             6

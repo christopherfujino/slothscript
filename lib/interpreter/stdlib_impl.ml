@@ -160,13 +160,12 @@ let make_protos m =
                   (First Runtime.Null) self
                 >>= fun _ -> First Runtime.Null) );
           ( "length",
-            (* TODO make a getter *)
-            make_method ~arity:(Some 1) ~name:"List.length" (fun self _ _ _ ->
+            (fun self ->
                 let arr_of_ts =
                   Runtime.list_of_t self |> option_value ~message:__LOC__
                 in
                 let len = Dynarray.length arr_of_ts |> Float.of_int in
-                First (Runtime.Num len)) );
+                Ok (Runtime.Num len)) );
           ( "pop",
             make_method ~arity:(Some 1) ~name:"List.pop" (fun self _ _ _ ->
                 let self_arr =
