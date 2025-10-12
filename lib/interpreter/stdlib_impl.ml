@@ -167,6 +167,15 @@ let make_protos m =
                 in
                 let len = Dynarray.length arr_of_ts |> Float.of_int in
                 First (Runtime.Num len)) );
+          ( "pop",
+            make_method ~arity:(Some 1) ~name:"List.pop" (fun self _ _ _ ->
+                let self_arr =
+                  Runtime.list_of_t self |> option_value ~message:__LOC__
+                in
+                if Dynarray.is_empty self_arr then First Runtime.Null
+                else
+                  let el = Dynarray.pop_last self_arr in
+                  First el) );
           ( "push",
             make_method ~arity:(Some 2) ~name:"List.push" (fun self _ _ args ->
                 let self_arr =
@@ -175,8 +184,7 @@ let make_protos m =
                 let arg = List.nth_exn args 1 in
                 Dynarray.add_last self_arr arg;
 
-                (* TODO would it be useful to return the value pushed? Or the list itself, so these can be chained? *)
-                First (Runtime.Null) ));
+                First Runtime.Null) );
         ];
       setters = [];
       static_getters = [];

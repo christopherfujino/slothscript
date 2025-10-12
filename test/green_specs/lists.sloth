@@ -15,7 +15,11 @@ l.forEach(func (el) {
   print(el)
 })
 l.push(17)
-#assert(l.length() == 7)
+assert(l.length() == 7)
+
+let el = l.pop()
+assert(el == 17)
+assert(l.length() == 6)
 
 ### Processes
 ()
@@ -226,6 +230,80 @@ l.push(17)
           <opaque>)
         ((Num
           17
+          <opaque>))
+        <opaque>)))
+  (StmtDecl
+    (ExprStmt
+      (FuncInvoc
+        (IdRef
+          assert
+          <opaque>)
+        ((Equality
+          (FuncInvoc
+            (ObjDeref
+              (IdRef
+                l
+                <opaque>)
+              length
+              <opaque>)
+            ()
+            <opaque>)
+          (Num
+            7
+            <opaque>)
+          true
+          <opaque>))
+        <opaque>)))
+  (StmtDecl
+    (ExprStmt
+      (LetExpr
+        el
+        (FuncInvoc
+          (ObjDeref
+            (IdRef
+              l
+              <opaque>)
+            pop
+            <opaque>)
+          ()
+          <opaque>)
+        <opaque>)))
+  (StmtDecl
+    (ExprStmt
+      (FuncInvoc
+        (IdRef
+          assert
+          <opaque>)
+        ((Equality
+          (IdRef
+            el
+            <opaque>)
+          (Num
+            17
+            <opaque>)
+          true
+          <opaque>))
+        <opaque>)))
+  (StmtDecl
+    (ExprStmt
+      (FuncInvoc
+        (IdRef
+          assert
+          <opaque>)
+        ((Equality
+          (FuncInvoc
+            (ObjDeref
+              (IdRef
+                l
+                <opaque>)
+              length
+              <opaque>)
+            ()
+            <opaque>)
+          (Num
+            6
+            <opaque>)
+          true
           <opaque>))
         <opaque>))))
 
