@@ -6,6 +6,7 @@
   - `$Process.allowNonzero : Bool`
 
 ## v0.2 - initial pre-release
+- [ ] Migrate AST to use actual Ast module
 - [ ] Regular expressions
 - [ ] Test suite
 - [ ] Security policy
@@ -95,9 +96,9 @@
 - [x] Stack traces
 - [ ] `List` methods
     - [x] `.contains(element)`
-    - [x] `.forEach(callback)`]
+    - [x] `.forEach(callback)`
     - `.map(callback)`
     - `.filter(callback)`
     - `.reduce(callback)`
-    - [ ] `.push(element)`]
-    - `.pop(element)`
+    - [x] `.push(element)`
+    - [x] `.pop(element)`
