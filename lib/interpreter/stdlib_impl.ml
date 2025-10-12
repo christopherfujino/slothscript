@@ -137,6 +137,47 @@ let make_protos m =
                     false self
                 in
                 First (Runtime.Bool b)) );
+          ( "filter",
+            make_method ~arity:(Some 2) ~name:"List.filter"
+              (fun self _ eval args ->
+                let self =
+                  Runtime.list_of_t self |> option_value ~message:__LOC__
+                in
+                let target = List.nth_exn args 1 in
+                (match Runtime.func_of_val target with
+                | None ->
+                    let msg =
+                      Printf.sprintf
+                        "Expected the first argument to `List.filter()` to be \
+                         a function, but got %s"
+                      @@ Runtime.to_s target
+                    in
+                    Second (Runtime.Error (None, Runtime.String msg))
+                | Some f -> First f)
+                >>= fun f ->
+                Dynarray.fold_left
+                  (fun either el ->
+                    either >>= fun new_arr ->
+                    eval ~args:[ el ] f >>= fun b ->
+                    (match Runtime.bool_of_val b with
+                    | Some b -> First b
+                    | None ->
+                        let msg =
+                          Printf.sprintf
+                            "The return value of the callback passed to \
+                             `List.filter()` should be `Bool`, but got %s"
+                            (Runtime.to_s b)
+                        in
+                        Second Runtime.(Error (None, String msg)))
+                    >>= fun b ->
+                    First
+                      (if b then (
+                         Dynarray.add_last new_arr el;
+                         new_arr)
+                       else new_arr))
+                  (First (Dynarray.create ()))
+                  self
+                >>= fun new_arr -> First (Runtime.List new_arr)) );
           ( "forEach",
             make_method ~arity:(Some 2) ~name:"List.forEach"
               (fun self _ eval args ->
@@ -160,12 +201,12 @@ let make_protos m =
                   (First Runtime.Null) self
                 >>= fun _ -> First Runtime.Null) );
           ( "length",
-            (fun self ->
-                let arr_of_ts =
-                  Runtime.list_of_t self |> option_value ~message:__LOC__
-                in
-                let len = Dynarray.length arr_of_ts |> Float.of_int in
-                Ok (Runtime.Num len)) );
+            fun self ->
+              let arr_of_ts =
+                Runtime.list_of_t self |> option_value ~message:__LOC__
+              in
+              let len = Dynarray.length arr_of_ts |> Float.of_int in
+              Ok (Runtime.Num len) );
           ( "pop",
             make_method ~arity:(Some 1) ~name:"List.pop" (fun self _ _ _ ->
                 let self_arr =

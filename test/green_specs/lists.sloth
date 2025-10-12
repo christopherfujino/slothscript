@@ -21,9 +21,11 @@ let el = l.pop()
 assert(el == 17)
 assert(l.length == 6)
 
-l = l.filter(func (el) {
+l = [2, 3, 5, 7].filter(func (el) {
   el % 2 == 0
 })
+assert(l.length == 1)
+assert(l[0] == 2)
 
 ### Processes
 ()
@@ -307,8 +309,19 @@ l = l.filter(func (el) {
         l
         (FuncInvoc
           (ObjDeref
-            (IdRef
-              l
+            (List
+              ((Num
+                2
+                <opaque>)
+                (Num
+                  3
+                  <opaque>)
+                (Num
+                  5
+                  <opaque>)
+                (Num
+                  7
+                  <opaque>))
               <opaque>)
             filter
             <opaque>)
@@ -336,6 +349,46 @@ l = l.filter(func (el) {
             (pos
               <opaque>)))
           <opaque>)
+        <opaque>)))
+  (StmtDecl
+    (ExprStmt
+      (FuncInvoc
+        (IdRef
+          assert
+          <opaque>)
+        ((Equality
+          (ObjDeref
+            (IdRef
+              l
+              <opaque>)
+            length
+            <opaque>)
+          (Num
+            1
+            <opaque>)
+          true
+          <opaque>))
+        <opaque>)))
+  (StmtDecl
+    (ExprStmt
+      (FuncInvoc
+        (IdRef
+          assert
+          <opaque>)
+        ((Equality
+          (Subscript
+            (IdRef
+              l
+              <opaque>)
+            (Num
+              0
+              <opaque>)
+            <opaque>)
+          (Num
+            2
+            <opaque>)
+          true
+          <opaque>))
         <opaque>))))
 
 ### Stdout
