@@ -72,7 +72,7 @@ type t =
   | Num of float
   | Null
   (* Collections *)
-  | List of t Array.t
+  | List of t Dynarray.t
   | HashMap of (t, t) Stdlib.Hashtbl.t
   (* Functions *)
   | Func of function_t
@@ -98,7 +98,11 @@ and breaking_type =
 
 and function_t =
   | Native of {
-      cb : t Context.t -> t list -> (t, breaking_type) Either.t;
+      cb :
+        t Context.t ->
+        (args:t list -> function_t -> (t, breaking_type) Either.t) ->
+        t list ->
+        (t, breaking_type) Either.t;
       name : string; (* TODO: can we delete this? *)
     }
   | User of {
@@ -161,7 +165,7 @@ let rec to_s t' =
           acc ^ to_s cur)
         else Printf.sprintf "%s, %s" acc (to_s cur)
       in
-      Array.fold ~f:cb ~init:"[" l ^ "]"
+      Dynarray.fold_left cb "[" l ^ "]"
   | Null -> "null"
   | Bool b -> if b then "true" else "false"
   | HashMap tbl ->
@@ -213,7 +217,7 @@ let int_of_val v =
 
 let pipe_of_t = function Pipe (read, write) -> Some (read, write) | _ -> None
 let bool_of_val = function Bool b' -> Some b' | _ -> None
-let list_of_val = function List l -> Some l | _ -> None
+let list_of_t = function List l -> Some l | _ -> None
 let hashmap_of_val = function HashMap h -> Some h | _ -> None
 let process_of_t = function Process p -> Some p | _ -> None
 let process_handle_of_t = function ProcessHandle p -> Some p | _ -> None
@@ -260,3 +264,143 @@ let env_of_val = function
       in
       Some arr
   | _ -> None
+
+let rec is_equal is_equality lhs rhs =
+  let lh_s = to_class_name lhs in
+  let rh_s = to_class_name rhs in
+  let same_class = String.equal lh_s rh_s in
+  (* if ==, then return false; if !=, then return true *)
+  if not same_class then not is_equality
+  else
+    let ( >>= ) left right = if not left then left else right () in
+    match lhs with
+    | String lh_s ->
+        let rh_s = string_of_val rhs |> option_value ~message:__LOC__ in
+        let same_string = String.equal lh_s rh_s in
+        Bool.(same_string = is_equality)
+    | Num lhs ->
+        let rhs = num_of_val rhs |> option_value ~message:__LOC__ in
+        let same_float = Float.equal lhs rhs in
+        Bool.(same_float = is_equality)
+    | Bool lhs ->
+        let rhs = bool_of_val rhs |> option_value ~message:__LOC__ in
+        let same_bool = Bool.( = ) lhs rhs in
+        Bool.( = ) same_bool is_equality
+    | List lhs ->
+        let rhs = list_of_t rhs |> option_value ~message:__LOC__ in
+        let left_len = Dynarray.length lhs in
+        let right_len = Dynarray.length rhs in
+        let same_list =
+          left_len = right_len >>= fun () ->
+          let acc = ref true in
+          Dynarray.iteri
+            (fun i left ->
+              acc :=
+                !acc >>= fun () ->
+                let right = Dynarray.get rhs i in
+                is_equal true left right)
+            lhs;
+          !acc
+        in
+        Bool.(same_list = is_equality)
+    | HashMap lhs ->
+        let rhs = hashmap_of_val rhs |> option_value ~message:__LOC__ in
+        let left_len = Stdlib.Hashtbl.length lhs in
+        let right_len = Stdlib.Hashtbl.length rhs in
+        let same_table =
+          left_len = right_len >>= fun () ->
+          Stdlib.Hashtbl.fold
+            (fun key left_value equal_so_far ->
+              if not equal_so_far then false
+              else
+                match Stdlib.Hashtbl.find_opt rhs key with
+                | None -> false
+                | Some right_value -> is_equal true left_value right_value)
+            lhs true
+        in
+        Bool.(same_table = is_equality)
+    | Null -> ( match rhs with Null -> is_equality | _ -> not is_equality)
+    | Prototype { name = left_name } -> (
+        match rhs with
+        | Prototype { name = right_name } ->
+            let names_same = String.(left_name = right_name) in
+            Bool.(names_same = is_equality)
+        | _ -> not is_equality)
+    | Process lhs ->
+        let rhs = process_of_t rhs |> option_value ~message:__LOC__ in
+        let rec inner_proc (lhs : process) (rhs : process) =
+          let same_proc =
+            (match
+               List.fold2 lhs.cmd rhs.cmd ~init:true
+                 ~f:(fun all_same left right ->
+                   if all_same then String.(left = right) else false)
+             with
+            | Ok b -> b
+            | Unequal_lengths -> false)
+            >>= fun () ->
+            Core_unix.File_descr.equal lhs.stdout rhs.stdout >>= fun () ->
+            Core_unix.File_descr.equal lhs.stderr rhs.stderr >>= fun () ->
+            Core_unix.File_descr.equal lhs.stdin rhs.stdin >>= fun () ->
+            match
+              List.fold2 lhs.pipes_to_collect rhs.pipes_to_collect ~init:true
+                ~f:(fun all_same left right ->
+                  if all_same then Core_unix.File_descr.equal left right
+                  else false)
+            with
+            | Ok b -> b
+            | Unequal_lengths ->
+                false >>= fun () ->
+                Option.equal
+                  (fun proc1 proc2 -> inner_proc proc1 proc2)
+                  lhs.previous rhs.previous
+          in
+          Bool.(same_proc = is_equality)
+        in
+        inner_proc lhs rhs
+    | FileDescriptor lhs ->
+        let rhs = file_descriptor_of_t rhs |> option_value ~message:__LOC__ in
+        let same_fd = Core_unix.File_descr.equal lhs rhs in
+        Bool.(same_fd = is_equality)
+    | File { path = lhs } ->
+        let rhs = file_of_t rhs |> option_value ~message:__LOC__ in
+        let same_file = String.(lhs = rhs.path) in
+        Bool.(same_file = is_equality)
+    | Directory lhs ->
+        let rhs = directory_of_t rhs |> option_value ~message:__LOC__ in
+        let same_dir = String.(lhs = rhs) in
+        Bool.(same_dir = is_equality)
+    | ProcessHandle lhs ->
+        let rhs = process_handle_of_t rhs |> option_value ~message:__LOC__ in
+        let same_handle =
+          match lhs with
+          | ProcessInherited left_pid -> (
+              match rhs with
+              | ProcessInherited right_pid -> Pid.(left_pid = right_pid)
+              | _ -> false)
+          | ProcessBuffered
+              { pid = left_pid; stdout = left_stdout; stderr = left_stderr }
+            -> (
+              match rhs with
+              | ProcessBuffered
+                  {
+                    pid = right_pid;
+                    stdout = right_stdout;
+                    stderr = right_stderr;
+                  } ->
+                  Pid.(left_pid = right_pid) >>= fun () ->
+                  Core_unix.File_descr.equal left_stdout right_stdout
+                  >>= fun () ->
+                  Core_unix.File_descr.equal left_stderr right_stderr
+              | _ -> false)
+        in
+        Bool.(same_handle = is_equality)
+    | Pipe (read, write) ->
+        let r_read, r_write = pipe_of_t rhs |> option_value ~message:__LOC__ in
+        let same_pipe =
+          Core_unix.File_descr.(equal read r_read && equal write r_write)
+        in
+        Bool.(same_pipe = is_equality)
+    | ProcessResult _ -> failwith "TODO"
+    | Func _ | Method _ ->
+        Printf.sprintf "is_equal the type %s is not implemented" lh_s
+        |> failwith

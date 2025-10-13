@@ -8,7 +8,28 @@ print(l[getTwo()]);
 print(l[2 + 3]);
 l[1] = 2.5;
 print(l);
-assert(l.length() == 6)
+assert(l.length == 6)
+assert(l.contains(5))
+assert(l.contains(6) == false)
+l.forEach(func (el) {
+  print(el)
+})
+l.push(17)
+assert(l.length == 7)
+
+let el = l.pop()
+assert(el == 17)
+assert(l.length == 6)
+
+l = [2, 3, 5, 7].filter(func (el) { el % 2 == 0 })
+assert(l.length == 1)
+assert(l[0] == 2)
+l = l.map(func (el) { String(el) })
+assert(l == ["2"])
+let s = [1, 2, 3, 4].reduce(func (acc, el) {
+  "${acc}${el}"
+})
+assert(s == "1234", s)
 
 ### Processes
 ()
@@ -125,25 +146,387 @@ assert(l.length() == 6)
           assert
           <opaque>)
         ((Equality
-          (FuncInvoc
-            (ObjDeref
-              (IdRef
-                l
-                <opaque>)
-              length
+          (ObjDeref
+            (IdRef
+              l
               <opaque>)
-            ()
+            length
             <opaque>)
           (Num
             6
             <opaque>)
           true
           <opaque>))
+        <opaque>)))
+  (StmtDecl
+    (ExprStmt
+      (FuncInvoc
+        (IdRef
+          assert
+          <opaque>)
+        ((FuncInvoc
+          (ObjDeref
+            (IdRef
+              l
+              <opaque>)
+            contains
+            <opaque>)
+          ((Num
+            5
+            <opaque>))
+          <opaque>))
+        <opaque>)))
+  (StmtDecl
+    (ExprStmt
+      (FuncInvoc
+        (IdRef
+          assert
+          <opaque>)
+        ((Equality
+          (FuncInvoc
+            (ObjDeref
+              (IdRef
+                l
+                <opaque>)
+              contains
+              <opaque>)
+            ((Num
+              6
+              <opaque>))
+            <opaque>)
+          (Bool
+            false
+            <opaque>)
+          true
+          <opaque>))
+        <opaque>)))
+  (StmtDecl
+    (ExprStmt
+      (FuncInvoc
+        (ObjDeref
+          (IdRef
+            l
+            <opaque>)
+          forEach
+          <opaque>)
+        ((FuncExpr
+          (parameters
+            ((el
+              <opaque>)))
+          (block
+            ((ExprStmt
+              (FuncInvoc
+                (IdRef
+                  print
+                  <opaque>)
+                ((IdRef
+                  el
+                  <opaque>))
+                <opaque>))))
+          (pos
+            <opaque>)))
+        <opaque>)))
+  (StmtDecl
+    (ExprStmt
+      (FuncInvoc
+        (ObjDeref
+          (IdRef
+            l
+            <opaque>)
+          push
+          <opaque>)
+        ((Num
+          17
+          <opaque>))
+        <opaque>)))
+  (StmtDecl
+    (ExprStmt
+      (FuncInvoc
+        (IdRef
+          assert
+          <opaque>)
+        ((Equality
+          (ObjDeref
+            (IdRef
+              l
+              <opaque>)
+            length
+            <opaque>)
+          (Num
+            7
+            <opaque>)
+          true
+          <opaque>))
+        <opaque>)))
+  (StmtDecl
+    (ExprStmt
+      (LetExpr
+        el
+        (FuncInvoc
+          (ObjDeref
+            (IdRef
+              l
+              <opaque>)
+            pop
+            <opaque>)
+          ()
+          <opaque>)
+        <opaque>)))
+  (StmtDecl
+    (ExprStmt
+      (FuncInvoc
+        (IdRef
+          assert
+          <opaque>)
+        ((Equality
+          (IdRef
+            el
+            <opaque>)
+          (Num
+            17
+            <opaque>)
+          true
+          <opaque>))
+        <opaque>)))
+  (StmtDecl
+    (ExprStmt
+      (FuncInvoc
+        (IdRef
+          assert
+          <opaque>)
+        ((Equality
+          (ObjDeref
+            (IdRef
+              l
+              <opaque>)
+            length
+            <opaque>)
+          (Num
+            6
+            <opaque>)
+          true
+          <opaque>))
+        <opaque>)))
+  (StmtDecl
+    (ExprStmt
+      (AssignExpr
+        l
+        (FuncInvoc
+          (ObjDeref
+            (List
+              ((Num
+                2
+                <opaque>)
+                (Num
+                  3
+                  <opaque>)
+                (Num
+                  5
+                  <opaque>)
+                (Num
+                  7
+                  <opaque>))
+              <opaque>)
+            filter
+            <opaque>)
+          ((FuncExpr
+            (parameters
+              ((el
+                <opaque>)))
+            (block
+              ((ExprStmt
+                (Equality
+                  (Binary
+                    (IdRef
+                      el
+                      <opaque>)
+                    (Num
+                      2
+                      <opaque>)
+                    Modulo
+                    <opaque>)
+                  (Num
+                    0
+                    <opaque>)
+                  true
+                  <opaque>))))
+            (pos
+              <opaque>)))
+          <opaque>)
+        <opaque>)))
+  (StmtDecl
+    (ExprStmt
+      (FuncInvoc
+        (IdRef
+          assert
+          <opaque>)
+        ((Equality
+          (ObjDeref
+            (IdRef
+              l
+              <opaque>)
+            length
+            <opaque>)
+          (Num
+            1
+            <opaque>)
+          true
+          <opaque>))
+        <opaque>)))
+  (StmtDecl
+    (ExprStmt
+      (FuncInvoc
+        (IdRef
+          assert
+          <opaque>)
+        ((Equality
+          (Subscript
+            (IdRef
+              l
+              <opaque>)
+            (Num
+              0
+              <opaque>)
+            <opaque>)
+          (Num
+            2
+            <opaque>)
+          true
+          <opaque>))
+        <opaque>)))
+  (StmtDecl
+    (ExprStmt
+      (AssignExpr
+        l
+        (FuncInvoc
+          (ObjDeref
+            (IdRef
+              l
+              <opaque>)
+            map
+            <opaque>)
+          ((FuncExpr
+            (parameters
+              ((el
+                <opaque>)))
+            (block
+              ((ExprStmt
+                (FuncInvoc
+                  (IdRef
+                    String
+                    <opaque>)
+                  ((IdRef
+                    el
+                    <opaque>))
+                  <opaque>))))
+            (pos
+              <opaque>)))
+          <opaque>)
+        <opaque>)))
+  (StmtDecl
+    (ExprStmt
+      (FuncInvoc
+        (IdRef
+          assert
+          <opaque>)
+        ((Equality
+          (IdRef
+            l
+            <opaque>)
+          (List
+            ((String
+              ((FullString
+                2
+                <opaque>))
+              <opaque>))
+            <opaque>)
+          true
+          <opaque>))
+        <opaque>)))
+  (StmtDecl
+    (ExprStmt
+      (LetExpr
+        s
+        (FuncInvoc
+          (ObjDeref
+            (List
+              ((Num
+                1
+                <opaque>)
+                (Num
+                  2
+                  <opaque>)
+                (Num
+                  3
+                  <opaque>)
+                (Num
+                  4
+                  <opaque>))
+              <opaque>)
+            reduce
+            <opaque>)
+          ((FuncExpr
+            (parameters
+              ((acc
+                <opaque>)
+                (el
+                  <opaque>)))
+            (block
+              ((ExprStmt
+                (String
+                  ((StartStringInterp
+                    ""
+                    <opaque>)
+                    (ExpressionStringInterp
+                      (IdRef
+                        acc
+                        <opaque>))
+                    (MiddleStringInterp
+                      ""
+                      <opaque>)
+                    (ExpressionStringInterp
+                      (IdRef
+                        el
+                        <opaque>))
+                    (EndStringInterp
+                      ""
+                      <opaque>))
+                  <opaque>))))
+            (pos
+              <opaque>)))
+          <opaque>)
+        <opaque>)))
+  (StmtDecl
+    (ExprStmt
+      (FuncInvoc
+        (IdRef
+          assert
+          <opaque>)
+        ((Equality
+          (IdRef
+            s
+            <opaque>)
+          (String
+            ((FullString
+              1234
+              <opaque>))
+            <opaque>)
+          true
+          <opaque>)
+          (IdRef
+            s
+            <opaque>))
         <opaque>))))
 
 ### Stdout
 5
 13
 [2, 2.5, 5, 7, 11, 13]
+2
+2.5
+5
+7
+11
+13
 
 ### Failure

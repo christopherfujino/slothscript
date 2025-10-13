@@ -36,18 +36,22 @@ let create_error ~globals ~pos s =
    messages without source summaries *)
 let failure_obj ~globals ~pos msg = Second (create_error ~globals ~pos msg)
 
-(** For error cases that could potentially become compiler errors.
-
-    These should not be recoverable, you need to fix your code. *)
 let fail ~globals pos msg =
   let msg = runtime_failure_msg ~globals ~pos msg in
   raise (RuntimeError msg)
 
-let invoke_native_func ~globals ~pos cb args =
+let rec invoke_native_func ~globals ~pos cb args =
   (* We don't push a stack frame because if this errors capture the position
      anyway *)
+  let eval ~args f =
+    (* We must hide the globals type from Stdlib_impl *)
+    (* TODO: Do we need to create a synthetic pos? *)
+    (* Do we need to push a stack frame for native funcs? *)
+    let _, either = invoke_func ~globals ~pos ~args f in
+    either
+  in
   let either =
-    try cb Globals.(globals.context_ids) args
+    try cb Globals.(globals.context_ids) eval args
     with InternalFailure msg -> fail ~globals pos msg
   in
   match either with
@@ -60,7 +64,51 @@ let invoke_native_func ~globals ~pos cb args =
           failure_obj ~globals ~pos
             (Runtime.string_of_val msg |> option_value ~message:__LOC__))
 
-let rec interpret_prog globals prog =
+and invoke_func ~globals ~pos ~args = function
+  | Runtime.User { parameters; block; identifiers; name; pos = _ } ->
+      let identifiers2 = Identifiers.push_empty identifiers in
+      (* Bind args to env *)
+      let or_unequal =
+        List.fold2 parameters args ~init:(globals, First ()) ~f:(fun acc p a ->
+            acc >>= fun globals () ->
+            (* This must not throw *)
+            Identifiers.bind identifiers2 p a |> option_value ~message:__LOC__;
+            (globals, First ()))
+      in
+      (match or_unequal with
+      | Ok tuple -> tuple
+      | Unequal_lengths ->
+          (* TODO use the User.pos field *)
+          Printf.sprintf
+            "You passed %d arguments to a function that expected %d"
+            (List.length args) (List.length parameters)
+          |> fail ~globals pos)
+      >>= fun globals () ->
+      let temp_globals = { globals with identifiers = identifiers2 } in
+      (* Note this is the invocation pos, not the func decl pos *)
+      let temp_globals = Globals.push_frame temp_globals name pos in
+      let rec traverse_stmts globals stmts =
+        match stmts with
+        | [] -> (globals, First Runtime.Null)
+        | hd :: tl -> (
+            let globals, either = interpret_stmt globals hd in
+            match either with
+            | First return_val ->
+                if List.is_empty tl then (globals, First return_val)
+                else (traverse_stmts [@tailrec]) globals tl
+            | Second bt as either -> (
+                match bt with
+                | Return return_val -> (globals, First return_val)
+                | _ -> (globals, either)))
+      in
+      (* discard context *)
+      (* Note, Return has already been unwrapped *)
+      let _, either = traverse_stmts temp_globals block in
+      (globals, either)
+  | Native { cb; name = _ } ->
+      (globals, invoke_native_func ~globals ~pos cb args)
+
+and interpret_prog globals prog =
   let globals, either =
     List.fold prog ~init:(globals, First Runtime.Null)
       ~f:(fun (globals, either) decl ->
@@ -160,8 +208,7 @@ and interpret_cond globals cond =
       in
       (globals, interpret_block inner_globals stmts)
 
-and interpret_expr globals expr :
-    Globals.t * (Runtime.t, Runtime.breaking_type) Either.t =
+and interpret_expr globals (expr : Compiler.Optimizer.expr) =
   let open Compiler.Optimizer in
   match expr with
   | Num (f, _) -> (globals, First (Runtime.Num f))
@@ -198,7 +245,7 @@ and interpret_expr globals expr :
                el :: prev) ))
       >>= fun globals reversed_elements ->
       let els = List.rev reversed_elements in
-      let arr = Array.of_list els in
+      let arr = Dynarray.of_list els in
       (globals, First (Runtime.List arr))
   | HashMap (kvps, _) ->
       List.fold kvps ~init:(globals, First []) ~f:(fun acc (k, v) ->
@@ -222,7 +269,7 @@ and interpret_expr globals expr :
           | Runtime.Num idx ->
               if Float.is_integer idx then
                 let i = Stdlib.int_of_float idx in
-                (globals, First (Array.get elements i))
+                (globals, First (Dynarray.get elements i))
               else
                 Printf.sprintf
                   "Lists can only be subscripted by integers, you used %s"
@@ -259,67 +306,20 @@ and interpret_expr globals expr :
   | Equality (lhs, rhs, is_equality, _) ->
       interpret_expr globals lhs >>= fun globals lhs ->
       interpret_expr globals rhs >>= fun globals rhs ->
-      (globals, First (Runtime.Bool (is_equal globals is_equality lhs rhs)))
+      (globals, First (Runtime.Bool (Runtime.is_equal is_equality lhs rhs)))
   | Binary (lhs, rhs, op, pos) -> interpret_binary globals lhs rhs op pos
   | MethodInvoc { receiver; target; args; pos } ->
       interpret_method ~globals ~pos receiver args target
   | FuncInvoc (receiver, args, pos) -> (
       interpret_expr globals receiver >>= fun globals -> function
-      | Func f -> (
-          match f with
-          | User { parameters; block; identifiers; name; pos = _ } ->
-              let identifiers2 = Identifiers.push_empty identifiers in
-              (* Bind args to env *)
-              let or_unequal =
-                List.fold2 parameters args ~init:(globals, First ())
-                  ~f:(fun acc p a ->
-                    acc >>= fun globals () ->
-                    interpret_expr globals a >>= fun globals arg_val ->
-                    (* This must not throw *)
-                    Identifiers.bind identifiers2 p arg_val
-                    |> option_value ~message:__LOC__;
-                    (globals, First ()))
-              in
-              (match or_unequal with
-              | Ok tuple -> tuple
-              | Unequal_lengths ->
-                  (* TODO use the User.pos field *)
-                  Printf.sprintf
-                    "You passed %d arguments to a function that expected %d"
-                    (List.length args) (List.length parameters)
-                  |> fail ~globals pos)
-              >>= fun globals () ->
-              let temp_globals = { globals with identifiers = identifiers2 } in
-              (* Note this is the invocation pos, not the func decl pos *)
-              let temp_globals = Globals.push_frame temp_globals name pos in
-              let rec traverse_stmts globals stmts =
-                match stmts with
-                | [] -> (globals, First Runtime.Null)
-                | hd :: tl -> (
-                    let globals, either = interpret_stmt globals hd in
-                    match either with
-                    | First return_val ->
-                        if List.is_empty tl then (globals, First return_val)
-                        else (traverse_stmts [@tailrec]) globals tl
-                    | Second bt as either -> (
-                        match bt with
-                        | Return return_val -> (globals, First return_val)
-                        | _ -> (globals, either)))
-              in
-              (* discard context *)
-              (* Note, Return has already been unwrapped *)
-              let _, either = traverse_stmts temp_globals block in
-              (globals, either)
-          | Native { cb; name = _ } ->
-              List.fold args ~init:(globals, First []) ~f:(fun acc arg ->
-                  acc >>= fun globals prev ->
-                  interpret_expr globals arg >>= fun globals arg ->
-                  (* This is reversed... *)
-                  (globals, First (arg :: prev)))
-              >>= fun globals reversed_args ->
-              let args = List.rev reversed_args in
-
-              (globals, invoke_native_func ~globals ~pos cb args))
+      | Func f ->
+          List.fold args ~init:(globals, First []) ~f:(fun acc arg ->
+              acc >>= fun globals prev ->
+              interpret_expr globals arg >>= fun globals arg ->
+              (globals, First (arg :: prev)))
+          >>= fun globals reversed_args ->
+          let args = List.rev reversed_args in
+          invoke_func ~globals ~pos ~args f
       | Method (receiver, func_t) -> (
           match func_t with
           | Native { cb; name = _ } ->
@@ -357,7 +357,10 @@ and interpret_expr globals expr :
                 in
                 (globals, either)
             | "String" -> (globals, First (Runtime.String (Runtime.to_s arg)))
-            | _ -> fail ~globals pos (Printf.sprintf "unimplemented %s" name))
+            | _ ->
+                internal_failure_msg ~globals ~pos
+                  (Printf.sprintf "unimplemented %s (%s)" name __LOC__)
+                |> internal_failure)
       | _ as t ->
           ( globals,
             failure_obj ~globals ~pos
@@ -526,7 +529,7 @@ and interpret_expr globals expr :
           | List elements -> (
               match Runtime.int_of_val subscript' with
               | Some i ->
-                  Array.set elements i value';
+                  Dynarray.set elements i value';
                   (globals, First receiver')
               | None ->
                   Printf.sprintf
@@ -647,8 +650,8 @@ and interpret_expr globals expr :
             |> fail ~globals pos
       in
       ( globals,
-        Array.fold iteratee_array ~init:(First Runtime.Null)
-          ~f:(fun prev element ->
+        Dynarray.fold_left
+          (fun prev element ->
             if Either.is_second prev then prev
             else
               let temp_globals =
@@ -660,7 +663,8 @@ and interpret_expr globals expr :
               Identifiers.bind temp_globals.identifiers iterator_name element
               |> option_value
                    ~message:(internal_failure_msg ~globals ~pos __LOC__);
-              interpret_block temp_globals block) )
+              interpret_block temp_globals block)
+          (First Runtime.Null) iteratee_array )
       >>= fun _ ret_val -> (globals, First ret_val)
   | WithExpr (assignments, block, pos) ->
       let module M = (val globals.l) in
@@ -784,145 +788,6 @@ and interpret_method ~globals ~pos receiver args method_name =
                    __LOC__)
       | Error msg -> (globals, Second (create_error ~globals ~pos msg)))
 
-and is_equal globals is_equality lhs rhs =
-  let lh_s = Runtime.to_class_name lhs in
-  let rh_s = Runtime.to_class_name rhs in
-  let same_class = String.equal lh_s rh_s in
-  (* if ==, then return false; if !=, then return true *)
-  if not same_class then not is_equality
-  else
-    let ( >>= ) left right = if not left then left else right () in
-    match lhs with
-    | String lh_s ->
-        let rh_s = Runtime.string_of_val rhs |> option_value ~message:__LOC__ in
-        let same_string = String.equal lh_s rh_s in
-        Bool.(same_string = is_equality)
-    | Num lhs ->
-        let rhs = Runtime.num_of_val rhs |> option_value ~message:__LOC__ in
-        let same_float = Float.equal lhs rhs in
-        Bool.(same_float = is_equality)
-    | Bool lhs ->
-        let rhs = Runtime.bool_of_val rhs |> option_value ~message:__LOC__ in
-        let same_bool = Bool.( = ) lhs rhs in
-        Bool.( = ) same_bool is_equality
-    | List lhs ->
-        let rhs = Runtime.list_of_val rhs |> option_value ~message:__LOC__ in
-        let left_len = Array.length lhs in
-        let right_len = Array.length rhs in
-        let same_list =
-          left_len = right_len >>= fun () ->
-          Array.equal (is_equal globals true) lhs rhs
-        in
-        Bool.(same_list = is_equality)
-    | HashMap lhs ->
-        let rhs = Runtime.hashmap_of_val rhs |> option_value ~message:__LOC__ in
-        let left_len = Stdlib.Hashtbl.length lhs in
-        let right_len = Stdlib.Hashtbl.length rhs in
-        let same_table =
-          left_len = right_len >>= fun () ->
-          Stdlib.Hashtbl.fold
-            (fun key left_value equal_so_far ->
-              if not equal_so_far then false
-              else
-                match Stdlib.Hashtbl.find_opt rhs key with
-                | None -> false
-                | Some right_value ->
-                    is_equal globals true left_value right_value)
-            lhs true
-        in
-        Bool.(same_table = is_equality)
-    | Null -> ( match rhs with Null -> is_equality | _ -> not is_equality)
-    | Prototype { name = left_name } -> (
-        match rhs with
-        | Prototype { name = right_name } ->
-            let names_same = String.(left_name = right_name) in
-            Bool.(names_same = is_equality)
-        | _ -> not is_equality)
-    | Process lhs ->
-        let rhs = Runtime.process_of_t rhs |> option_value ~message:__LOC__ in
-        let rec inner_proc (lhs : Runtime.process) (rhs : Runtime.process) =
-          let same_proc =
-            (match
-               List.fold2 lhs.cmd rhs.cmd ~init:true
-                 ~f:(fun all_same left right ->
-                   if all_same then String.(left = right) else false)
-             with
-            | Ok b -> b
-            | Unequal_lengths -> false)
-            >>= fun () ->
-            Core_unix.File_descr.equal lhs.stdout rhs.stdout >>= fun () ->
-            Core_unix.File_descr.equal lhs.stderr rhs.stderr >>= fun () ->
-            Core_unix.File_descr.equal lhs.stdin rhs.stdin >>= fun () ->
-            match
-              List.fold2 lhs.pipes_to_collect rhs.pipes_to_collect ~init:true
-                ~f:(fun all_same left right ->
-                  if all_same then Core_unix.File_descr.equal left right
-                  else false)
-            with
-            | Ok b -> b
-            | Unequal_lengths ->
-                false >>= fun () ->
-                Option.equal
-                  (fun proc1 proc2 -> inner_proc proc1 proc2)
-                  lhs.previous rhs.previous
-          in
-          Bool.(same_proc = is_equality)
-        in
-        inner_proc lhs rhs
-    | FileDescriptor lhs ->
-        let rhs =
-          Runtime.file_descriptor_of_t rhs |> option_value ~message:__LOC__
-        in
-        let same_fd = Core_unix.File_descr.equal lhs rhs in
-        Bool.(same_fd = is_equality)
-    | File { path = lhs } ->
-        let rhs = Runtime.file_of_t rhs |> option_value ~message:__LOC__ in
-        let same_file = String.(lhs = rhs.path) in
-        Bool.(same_file = is_equality)
-    | Directory lhs ->
-        let rhs = Runtime.directory_of_t rhs |> option_value ~message:__LOC__ in
-        let same_dir = String.(lhs = rhs) in
-        Bool.(same_dir = is_equality)
-    | ProcessHandle lhs ->
-        let rhs =
-          Runtime.process_handle_of_t rhs |> option_value ~message:__LOC__
-        in
-        let same_handle =
-          match lhs with
-          | ProcessInherited left_pid -> (
-              match rhs with
-              | ProcessInherited right_pid -> Pid.(left_pid = right_pid)
-              | _ -> false)
-          | ProcessBuffered
-              { pid = left_pid; stdout = left_stdout; stderr = left_stderr }
-            -> (
-              match rhs with
-              | ProcessBuffered
-                  {
-                    pid = right_pid;
-                    stdout = right_stdout;
-                    stderr = right_stderr;
-                  } ->
-                  Pid.(left_pid = right_pid) >>= fun () ->
-                  Core_unix.File_descr.equal left_stdout right_stdout
-                  >>= fun () ->
-                  Core_unix.File_descr.equal left_stderr right_stderr
-              | _ -> false)
-        in
-        Bool.(same_handle = is_equality)
-    | Pipe (read, write) ->
-        let r_read, r_write =
-          Runtime.pipe_of_t rhs |> option_value ~message:__LOC__
-        in
-        let same_pipe =
-          Core_unix.File_descr.(equal read r_read && equal write r_write)
-        in
-        Bool.(same_pipe = is_equality)
-    | ProcessResult _ -> failwith "TODO"
-    | Func _ | Method _ ->
-        Printf.sprintf "is_equal the type %s is not implemented" lh_s
-        |> failwith
-
 (* Actually call setter *)
 and reassign_object_property ~globals ~pos receiver target newvalue =
   let class_name =
@@ -1030,7 +895,7 @@ and cast_to_process ~globals ~pos v :
       let list =
         shell_like_escape s
         |> List.map ~f:(fun s -> Runtime.String s)
-        |> Array.of_list
+        |> Dynarray.of_list
       in
       (cast_to_process [@tailcall]) ~globals ~pos (Runtime.List list)
   | _ as t' ->

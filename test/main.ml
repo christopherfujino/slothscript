@@ -68,10 +68,10 @@ let make_test spec =
   | Second bt -> (
       match bt with
       | Exit _ -> ()
-      | Error (_, msg) ->
+      | Error (msg_opt, _) ->
           assert_failure
           @@ Printf.sprintf "Uncaught exception:\n\n%s\n"
-          @@ Interpreter.Runtime.to_s msg
+          @@ option_value ~message:__LOC__ msg_opt
       | Return _ | Break _ | Continue _ -> failwith "Unreachable"));
 
   let stdout = Lib.get_stdout () in
