@@ -1,0 +1,8 @@
+### Program
+
+let l = [func() {}]
+
+l.forEach(func() {})
+
+### Ast
+((StmtDecl(ExprStmt(LetExpr l(List((FuncExpr(parameters())(block())(pos <opaque>)))<opaque>)<opaque>)))(StmtDecl(ExprStmt(FuncInvoc(ObjDeref(IdRef l <opaque>)forEach <opaque>)((FuncExpr(parameters())(block())(pos <opaque>)))<opaque>))))

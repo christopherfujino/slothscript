@@ -12,6 +12,7 @@
     - permissions
 - [ ] JSON module
 - [ ] Allow non-zero exit codes on sub-processes
+- [ ] Bug: stacktrace printing is wrong in REPL
 
 ## v1.0
 - [ ] Formatter
