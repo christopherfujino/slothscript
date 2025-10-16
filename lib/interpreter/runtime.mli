@@ -60,7 +60,7 @@ and function_t =
         t list ->
         (t, breaking_type) Either.t;
       arity : int option;
-      name: string;
+      name : string;
     }
   | User of {
       parameters : string list;
