@@ -67,13 +67,14 @@ jobs:
         working-directory: ./slothscript
         run: |
           eval $(opam env --switch=default-switch)
-          PATH="../db:$PATH"
+          PATH="$(realpath ../db):$PATH"
           make docs
           make yolos
           make get
           make build
-          PATH="./_build/default/bin:$PATH"
           ln -s "$(realpath ./_build/default/bin/main.exe)" ./_build/default/bin/sloth
+          PATH="$(realpath ./_build/default/bin):$PATH"
+          ls _build/default/bin
           make check-format
           make test
           make integration-tests
