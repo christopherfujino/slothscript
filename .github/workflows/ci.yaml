@@ -72,6 +72,7 @@ jobs:
           make yolos
           make get
           make build
+          PATH="./_build/default/bin:$PATH"
           make check-format
           make test
           make integration-tests
