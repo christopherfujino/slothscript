@@ -2,7 +2,6 @@
 
 ## v0.1 - initially tagged version
 - [ ] Language versioning
-- [ ] Bug: $scriptDir and $cwd should be absolute, so they can be chained
 
 ## v0.2 - initial pre-release
 - [ ] Migrate AST to use actual Ast module
@@ -106,3 +105,4 @@
     - `.reduce(callback)`
     - `.push(element)`
     - `.pop(element)`
+- [x] Bug: $scriptDir and $cwd should be absolute, so they can be chained

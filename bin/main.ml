@@ -4,17 +4,18 @@ open Sloth_common.Common
 
 let ( let* ) r f = Result.bind r ~f
 
-let repl () =
+let repl cwd =
   (match Sys.getenv "HOME" with
   | None -> Readline.init ()
   | Some home ->
       let history_file = Printf.sprintf "%s/.sloth_repl.history" home in
       Readline.init ~history_file ());
 
+  let script_path = Printf.sprintf "%s/REPL" cwd in
   let globals =
     Globals.make_globals
       (module Native.Prod)
-      "" "REPL" ~env:(Core_unix.environment ()) ~argv:[]
+      "" script_path ~env:(Core_unix.environment ()) ~argv:[]
   in
   let env = Compiler.Environment.create "" |> Compiler.Environment.populate in
   let rec repl_inner globals env =
@@ -102,10 +103,16 @@ let interpreter path argv =
 let () =
   let argv = Sys.get_argv () in
   let argc = Array.length argv in
+  let cwd = Sys_unix.getcwd () in
   match argc with
-  | 1 -> repl ()
+  | 1 -> repl cwd
   | _ when argc > 1 ->
       let script = Array.get argv 1 in
+      let script =
+        if Filename.is_absolute script then script
+        else Filename.to_absolute_exn script ~relative_to:cwd
+      in
+
       let actual_args = Array.to_list argv |> List.sub ~pos:2 ~len:(argc - 2) in
       interpreter script actual_args
   | _ -> Sloth_common.Common.internal_failure __LOC__
