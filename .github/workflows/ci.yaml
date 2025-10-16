@@ -76,6 +76,7 @@ jobs:
           export PATH="$(realpath ./_build/default/bin):$PATH"
           ls -al "$(realpath _build/default/bin)"
           which -a sloth
+          echo 'print(42)' | sloth
           make check-format
           make test
           make integration-tests
