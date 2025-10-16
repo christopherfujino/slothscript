@@ -2,6 +2,7 @@
 
 ## v0.1 - initially tagged version
 - [ ] Language versioning
+- [ ] Bug: $scriptDir and $cwd should be absolute, so they can be chained
 
 ## v0.2 - initial pre-release
 - [ ] Migrate AST to use actual Ast module
@@ -12,6 +13,7 @@
     - permissions
 - [ ] JSON module
 - [ ] Allow non-zero exit codes on sub-processes
+- [ ] Bug: stacktrace printing is wrong in REPL
 
 ## v1.0
 - [ ] Formatter

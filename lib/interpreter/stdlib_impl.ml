@@ -18,21 +18,20 @@ let make_native_func ~arity ~name cb =
     | None -> Either.First ()
     | Some arity ->
         let arg_len = List.length args in
+        (* TODO is this reachable now that we check in invoke_native_func? *)
         if not (Int.equal (List.length args) arity) then
-          Second
-            (Runtime.Error
-               ( None,
-                 Runtime.String
-                   (Printf.sprintf
-                      "You passed %d arguments (%s) but %d were expected"
-                      arg_len
-                      (List.fold_left args ~init:"" ~f:(fun msg arg ->
-                           msg ^ Runtime.to_s arg ^ ", "))
-                      arity) ))
+          let msg =
+            Printf.sprintf "You passed %d arguments (%s) but %d were expected"
+              arg_len
+              (List.fold_left args ~init:"" ~f:(fun msg arg ->
+                   msg ^ Runtime.to_s arg ^ ", "))
+              arity
+          in
+          Second (Runtime.Error (None, Runtime.String msg))
         else First ())
     >>= fun () -> cb ctx eval args
   in
-  Func (Native { cb = wrapped_cb; name })
+  Func (Native { cb = wrapped_cb; name; arity })
 
 let make_method ~arity ~name cb =
  fun self -> Ok (make_native_func ~arity ~name (cb self))

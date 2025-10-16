@@ -44,11 +44,31 @@ let rec invoke_native_func ~globals ~pos cb args =
   (* We don't push a stack frame because if this errors capture the position
      anyway *)
   let eval ~args f =
-    (* We must hide the globals type from Stdlib_impl *)
-    (* TODO: Do we need to create a synthetic pos? *)
-    (* Do we need to push a stack frame for native funcs? *)
-    let _, either = invoke_func ~globals ~pos ~args f in
-    either
+    let arity_opt =
+      match f with
+      | Runtime.Native { arity; _ } -> arity
+      | User { parameters; _ } -> Some (List.length parameters)
+    in
+
+    let err_opt =
+      match arity_opt with
+      | Some arity ->
+          let arg_len = List.length args in
+          if not (arity = arg_len) then
+            let msg = Printf.sprintf "this function expected to take a callback taking %d arguments but received a function that takes %d" arg_len arity in
+            Option.some @@ failure_obj ~globals ~pos msg
+          else None
+      | None -> None
+    in
+
+    match err_opt with
+    | Some e -> e
+    | None ->
+        (* We must hide the globals type from Stdlib_impl *)
+        (* TODO: Do we need to create a synthetic pos? *)
+        (* Do we need to push a stack frame for native funcs? *)
+        let _, either = invoke_func ~globals ~pos ~args f in
+        either
   in
   let either =
     try cb Globals.(globals.context_ids) eval args
@@ -105,7 +125,7 @@ and invoke_func ~globals ~pos ~args = function
       (* Note, Return has already been unwrapped *)
       let _, either = traverse_stmts temp_globals block in
       (globals, either)
-  | Native { cb; name = _ } ->
+  | Native { cb; name = _; arity = _ } ->
       (globals, invoke_native_func ~globals ~pos cb args)
 
 and interpret_prog globals prog =
@@ -322,7 +342,7 @@ and interpret_expr globals (expr : Compiler.Optimizer.expr) =
           invoke_func ~globals ~pos ~args f
       | Method (receiver, func_t) -> (
           match func_t with
-          | Native { cb; name = _ } ->
+          | Native { cb; name = _; arity = _ } ->
               List.fold args ~init:(globals, First []) ~f:(fun acc arg ->
                   acc >>= fun globals prev ->
                   interpret_expr globals arg >>= fun globals arg ->
@@ -407,7 +427,7 @@ and interpret_expr globals (expr : Compiler.Optimizer.expr) =
           match func_t with
           | User _ ->
               internal_failure_msg ~globals ~pos __LOC__ |> internal_failure
-          | Native { cb; name = _ } ->
+          | Native { cb; name = _; arity = _ } ->
               (globals, invoke_native_func ~globals ~pos cb [ target ]))
       | AmpersandBang -> (
           interpret_expr globals target >>= fun globals target ->
@@ -422,7 +442,7 @@ and interpret_expr globals (expr : Compiler.Optimizer.expr) =
           match func_t with
           | User _ ->
               internal_failure_msg ~globals ~pos __LOC__ |> internal_failure
-          | Native { cb; name = _ } ->
+          | Native { cb; name = _; arity = _ } ->
               (globals, invoke_native_func ~globals ~pos cb [ target ]))
       | Bang -> (
           interpret_expr globals target >>= fun globals target ->
@@ -437,7 +457,7 @@ and interpret_expr globals (expr : Compiler.Optimizer.expr) =
           match func_t with
           | User _ ->
               internal_failure_msg ~globals ~pos __LOC__ |> internal_failure
-          | Native { cb; name = _ } ->
+          | Native { cb; name = _; arity = _ } ->
               (globals, invoke_native_func ~globals ~pos cb [ target ]))
       | LeftArrow ->
           interpret_expr globals target >>= fun globals target ->

@@ -103,7 +103,8 @@ and function_t =
         (args:t list -> function_t -> (t, breaking_type) Either.t) ->
         t list ->
         (t, breaking_type) Either.t;
-      name : string; (* TODO: can we delete this? *)
+      arity : int option;
+      name : string;
     }
   | User of {
       parameters : string list;

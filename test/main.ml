@@ -112,10 +112,14 @@ let make_failing_test spec =
         if String.(redacted_msg = expectation) then ()
         else
           let print_hint = String.(not (actual_msg = redacted_msg)) in
+          let escape s =
+            let pattern = String.Search_pattern.create "\n" in
+            String.Search_pattern.replace_all pattern ~in_:s ~with_:"\\n\n"
+          in
           let base_msg =
             Printf.sprintf
-              "Received unexpected error\n\nExpected: \"%s\"\n\nReceived:\n\n%s"
-              expectation actual_msg
+              "Received unexpected error\n\nExpected:\n\n%s\n\nReceived:\n\n%s"
+              (escape expectation) (escape actual_msg)
           in
           let msg =
             if print_hint then

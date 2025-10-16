@@ -1,0 +1,17 @@
+### Program
+
+let l = [func() {}]
+
+l.forEach(func() {})
+
+### Ast
+((StmtDecl(ExprStmt(LetExpr l(List((FuncExpr(parameters())(block())(pos <opaque>)))<opaque>)<opaque>)))(StmtDecl(ExprStmt(FuncInvoc(ObjDeref(IdRef l <opaque>)forEach <opaque>)((FuncExpr(parameters())(block())(pos <opaque>)))<opaque>))))
+
+### Failure
+[3:9] Runtime error
+
+ 1 | let l = [func() {}]
+ 2 | 
+ 3 | l.forEach(func() {})
+              ^
+this function expected to take a callback taking 1 arguments but received a function that takes 0
