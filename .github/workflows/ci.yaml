@@ -73,7 +73,7 @@ jobs:
           make get
           make build
           PATH="./_build/default/bin:$PATH"
-          ln -s ./_build/default/bin/main.exe ./_build/default/bin/sloth
+          ln -s "$(realpath ./_build/default/bin/main.exe)" ./_build/default/bin/sloth
           make check-format
           make test
           make integration-tests
