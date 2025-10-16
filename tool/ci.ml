@@ -116,6 +116,7 @@ let () =
     let* () = create "build" None |> Target.run in
     let* () = create "check-format" None |> Target.run in
     let* () = create "test" None |> Target.run in
+    let* () = create "integration-tests" None |> Target.run in
     create "docs" None |> Target.run
   in
   match res with
