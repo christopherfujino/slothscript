@@ -73,6 +73,7 @@ jobs:
           make get
           make build
           PATH="./_build/default/bin:$PATH"
+          ls -alh ./_build/default/bin
           make check-format
           make test
           make integration-tests
