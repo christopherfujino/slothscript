@@ -1,0 +1,10 @@
+#!/usr/bin/env sloth
+
+with ($cwd = $scriptDir) {
+  "pwd"!
+
+  let sub = Directory("${$cwd}/sub")
+  with ($cwd = sub.path) {
+    "pwd"!
+  }
+}
