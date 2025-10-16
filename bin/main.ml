@@ -64,15 +64,14 @@ let repl cwd =
   in
   repl_inner globals env
 
-let interpreter path argv =
-  let program = In_channel.read_all path in
+let interpreter program program_name argv =
   let env =
     Compiler.Environment.create program |> Compiler.Environment.populate
   in
   let globals =
     Globals.make_globals
       (module Native.Prod)
-      ~argv program path ~env:(Core_unix.environment ())
+      ~argv program program_name ~env:(Core_unix.environment ())
   in
 
   let result =
@@ -104,8 +103,14 @@ let () =
   let argv = Sys.get_argv () in
   let argc = Array.length argv in
   let cwd = Sys_unix.getcwd () in
+  let isatty = Core_unix.isatty Core_unix.stdin in
   match argc with
-  | 1 -> repl cwd
+  | 1 ->
+      if isatty then repl cwd
+      else
+        let script_path = Printf.sprintf "%s/REPL" cwd in
+        (* TODO: Should we chunk this into smaller reads? *)
+        interpreter (In_channel.input_all In_channel.stdin) script_path []
   | _ when argc > 1 ->
       let script = Array.get argv 1 in
       let script =
@@ -114,5 +119,5 @@ let () =
       in
 
       let actual_args = Array.to_list argv |> List.sub ~pos:2 ~len:(argc - 2) in
-      interpreter script actual_args
+      interpreter (In_channel.read_all script) script actual_args
   | _ -> Sloth_common.Common.internal_failure __LOC__
