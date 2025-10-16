@@ -16,12 +16,12 @@ jobs:
       image: ocaml/opam:debian-12-ocaml-5.3
 
     steps:
-      #- name: Install OS deps
-      #  shell: bash -exo pipefail {0}
-      #  run: |
-      #    sudo apt-get update
-      #    sudo apt-get --yes upgrade
-      #    sudo apt-get install --yes golang libreadline-dev
+      - name: Install OS deps
+        shell: bash -exo pipefail {0}
+        run: |
+          sudo apt-get update
+          sudo apt-get --yes upgrade
+          sudo apt-get install --yes golang libreadline-dev
 
       - name: Chmod dirs
         shell: bash -exuo pipefail {0}
