@@ -77,6 +77,7 @@ jobs:
           ls -al "$(realpath _build/default/bin)"
           which -a sloth
           echo 'print(42)' | sloth
+          echo 'print("1 + 1 is ${ 1 + 1 }")' | /usr/bin/env sloth
           make check-format
           make test
           make integration-tests
