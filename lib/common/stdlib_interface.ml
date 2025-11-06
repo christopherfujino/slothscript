@@ -26,7 +26,7 @@ let globals =
       [
         {
           name = "Directory";
-          getters = [ "exists"; "create"; "path" ];
+          getters = [ "exists"; "create"; "path" (* "remove" *) ];
           setters = [];
           static_getters = [];
         };

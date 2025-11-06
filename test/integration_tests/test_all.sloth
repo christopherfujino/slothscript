@@ -1,0 +1,13 @@
+#!/usr/bin/env sloth
+
+with ($cwd = $scriptDir) {
+  let tests = ("find -name 'test.sloth'"&!).
+    stdout.
+    trim().
+    split("\n")
+
+  for test in tests {
+    print("Executing ${test}...")
+    "${test}"!
+  }
+}

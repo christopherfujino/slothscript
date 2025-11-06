@@ -1,0 +1,17 @@
+#!/usr/bin/env sloth
+
+with ($cwd = $scriptDir) {
+  let cwd = ("pwd"&!).stdout.trim()
+  assert(cwd == $cwd)
+
+  let sub = Directory("${$cwd}/sub")
+  sub.create()
+  with ($cwd = sub.path) {
+    cwd = ("pwd"&!).stdout.trim()
+    assert(cwd == $cwd)
+  }
+
+  cwd = ("pwd"&!).stdout.trim()
+  assert(cwd == $cwd)
+  "rmdir ${sub.path}"!
+}

@@ -15,20 +15,20 @@ let make_native_func ~arity ~name cb =
   let open Runtime in
   let wrapped_cb ctx eval args =
     (match arity with
-    | None -> Either.First ()
-    | Some arity ->
-        let arg_len = List.length args in
-        (* TODO is this reachable now that we check in invoke_native_func? *)
-        if not (Int.equal (List.length args) arity) then
-          let msg =
-            Printf.sprintf "You passed %d arguments (%s) but %d were expected"
-              arg_len
-              (List.fold_left args ~init:"" ~f:(fun msg arg ->
-                   msg ^ Runtime.to_s arg ^ ", "))
-              arity
-          in
-          Second (Runtime.Error (None, Runtime.String msg))
-        else First ())
+      | None -> Either.First ()
+      | Some arity ->
+          let arg_len = List.length args in
+          (* TODO is this reachable now that we check in invoke_native_func? *)
+          if not (Int.equal (List.length args) arity) then
+            let msg =
+              Printf.sprintf "You passed %d arguments (%s) but %d were expected"
+                arg_len
+                (List.fold_left args ~init:"" ~f:(fun msg arg ->
+                     msg ^ Runtime.to_s arg ^ ", "))
+                arity
+            in
+            Second (Runtime.Error (None, Runtime.String msg))
+          else First ())
     >>= fun () -> cb ctx eval args
   in
   Func (Native { cb = wrapped_cb; name; arity })
@@ -49,13 +49,13 @@ let make_ids m =
               let open Result.Monad_infix in
               let res =
                 (match Runtime.file_descriptor_of_t stdout with
-                | Some s -> Ok s
-                | None ->
-                    Error
-                      (Printf.sprintf
-                         "Expected `$stdout` to be of type `FileDescriptor`, \
-                          but instead it was %s"
-                         (Runtime.to_s stdout)))
+                  | Some s -> Ok s
+                  | None ->
+                      Error
+                        (Printf.sprintf
+                           "Expected `$stdout` to be of type `FileDescriptor`, \
+                            but instead it was %s"
+                           (Runtime.to_s stdout)))
                 >>= fun stdout ->
                 let arg = List.hd_exn args in
                 let data = Runtime.to_s arg ^ "\n" in
@@ -85,29 +85,28 @@ let make_ids m =
           let second_arg = List.nth args 1 in
           let res =
             (match second_arg with
-            | Some msg -> (
-                match Runtime.string_of_val msg with
-                | None ->
-                    let msg =
-                      Printf.sprintf
-                        "The second argument to assert() must be a String, got \
-                         %s"
-                      @@ Runtime.to_s msg
-                    in
-                    Error msg
-                | Some msg -> Ok (Printf.sprintf "Assertion failed: %s" msg))
-            | None -> Ok "Assertion failed")
+              | Some msg -> (
+                  match Runtime.string_of_val msg with
+                  | None ->
+                      let msg =
+                        Printf.sprintf
+                          "The second argument to assert() must be a String, \
+                           got %s"
+                        @@ Runtime.to_s msg
+                      in
+                      Error msg
+                  | Some msg -> Ok (Printf.sprintf "Assertion failed: %s" msg))
+              | None -> Ok "Assertion failed")
             |> Result.bind ~f:(fun err_msg ->
-                   match Runtime.bool_of_val arg with
-                   | Some condition ->
-                       if condition then Ok (Runtime.Bool true)
-                       else Error err_msg
-                   | None ->
-                       Error
-                         (Printf.sprintf
-                            "The first argument to assert() must be a Bool \
-                             value, got %s"
-                         @@ Runtime.to_s arg))
+                match Runtime.bool_of_val arg with
+                | Some condition ->
+                    if condition then Ok (Runtime.Bool true) else Error err_msg
+                | None ->
+                    Error
+                      (Printf.sprintf
+                         "The first argument to assert() must be a Bool value, \
+                          got %s"
+                      @@ Runtime.to_s arg))
           in
           match res with
           | Ok v -> First v
@@ -144,30 +143,30 @@ let make_protos m =
                 in
                 let target = List.nth_exn args 1 in
                 (match Runtime.func_of_val target with
-                | None ->
-                    let msg =
-                      Printf.sprintf
-                        "Expected the first argument to `List.filter()` to be \
-                         a function, but got %s"
-                      @@ Runtime.to_s target
-                    in
-                    Second (Runtime.Error (None, Runtime.String msg))
-                | Some f -> First f)
+                  | None ->
+                      let msg =
+                        Printf.sprintf
+                          "Expected the first argument to `List.filter()` to \
+                           be a function, but got %s"
+                        @@ Runtime.to_s target
+                      in
+                      Second (Runtime.Error (None, Runtime.String msg))
+                  | Some f -> First f)
                 >>= fun f ->
                 Dynarray.fold_left
                   (fun either el ->
                     either >>= fun new_arr ->
                     eval ~args:[ el ] f >>= fun b ->
                     (match Runtime.bool_of_val b with
-                    | Some b -> First b
-                    | None ->
-                        let msg =
-                          Printf.sprintf
-                            "The return value of the callback passed to \
-                             `List.filter()` should be `Bool`, but got %s"
-                            (Runtime.to_s b)
-                        in
-                        Second Runtime.(Error (None, String msg)))
+                      | Some b -> First b
+                      | None ->
+                          let msg =
+                            Printf.sprintf
+                              "The return value of the callback passed to \
+                               `List.filter()` should be `Bool`, but got %s"
+                              (Runtime.to_s b)
+                          in
+                          Second Runtime.(Error (None, String msg)))
                     >>= fun b ->
                     First
                       (if b then (
@@ -185,15 +184,15 @@ let make_protos m =
                 in
                 let target = List.nth_exn args 1 in
                 (match Runtime.func_of_val target with
-                | None ->
-                    let msg =
-                      Printf.sprintf
-                        "Expected the first argument to `List.forEach()` to be \
-                         a function, but got %s"
-                      @@ Runtime.to_s target
-                    in
-                    Second (Runtime.Error (None, Runtime.String msg))
-                | Some f -> First f)
+                  | None ->
+                      let msg =
+                        Printf.sprintf
+                          "Expected the first argument to `List.forEach()` to \
+                           be a function, but got %s"
+                        @@ Runtime.to_s target
+                      in
+                      Second (Runtime.Error (None, Runtime.String msg))
+                  | Some f -> First f)
                 >>= fun f ->
                 Dynarray.fold_left
                   (fun either el -> either >>= fun _ -> eval ~args:[ el ] f)
@@ -214,15 +213,15 @@ let make_protos m =
                 in
                 let target = List.nth_exn args 1 in
                 (match Runtime.func_of_val target with
-                | None ->
-                    let msg =
-                      Printf.sprintf
-                        "Expected the first argument to `List.map()` to be a \
-                         function, but got %s"
-                      @@ Runtime.to_s target
-                    in
-                    Second (Runtime.Error (None, Runtime.String msg))
-                | Some f -> First f)
+                  | None ->
+                      let msg =
+                        Printf.sprintf
+                          "Expected the first argument to `List.map()` to be a \
+                           function, but got %s"
+                        @@ Runtime.to_s target
+                      in
+                      Second (Runtime.Error (None, Runtime.String msg))
+                  | Some f -> First f)
                 >>= fun f ->
                 let new_arr = Dynarray.create () in
                 Dynarray.fold_left
@@ -258,15 +257,15 @@ let make_protos m =
                 in
                 let target = List.nth_exn args 1 in
                 (match Runtime.func_of_val target with
-                | None ->
-                    let msg =
-                      Printf.sprintf
-                        "Expected the first argument to `List.reduce()` to be \
-                         a function, but got %s"
-                      @@ Runtime.to_s target
-                    in
-                    Second (Runtime.Error (None, Runtime.String msg))
-                | Some f -> First f)
+                  | None ->
+                      let msg =
+                        Printf.sprintf
+                          "Expected the first argument to `List.reduce()` to \
+                           be a function, but got %s"
+                        @@ Runtime.to_s target
+                      in
+                      Second (Runtime.Error (None, Runtime.String msg))
+                  | Some f -> First f)
                 >>= fun f ->
                 match Dynarray.length self with
                 | 0 -> First Runtime.Null
@@ -557,16 +556,16 @@ let make_protos m =
                 in
                 let right_v = List.nth_exn args 1 in
                 (match Runtime.hashmap_of_val right_v with
-                | Some right -> First right
-                | None ->
-                    let msg =
-                      Printf.sprintf
-                        "HashMap.merge() expects an argument of type \
-                         `HashMap`, but received %s"
-                        (Runtime.to_s right_v)
-                    in
-                    let bt = Runtime.Error (None, Runtime.String msg) in
-                    Second bt)
+                  | Some right -> First right
+                  | None ->
+                      let msg =
+                        Printf.sprintf
+                          "HashMap.merge() expects an argument of type \
+                           `HashMap`, but received %s"
+                          (Runtime.to_s right_v)
+                      in
+                      let bt = Runtime.Error (None, Runtime.String msg) in
+                      Second bt)
                 >>= fun right ->
                 let left_copy = Stdlib.Hashtbl.copy left in
                 Stdlib.Hashtbl.iter
@@ -751,18 +750,18 @@ let make_protos m =
           ( "new",
             make_method ~arity:(Some 2) ~name:"File::new" (fun self _ _ _ ->
                 (match Runtime.string_of_val self with
-                | None ->
-                    Second
-                      (Runtime.Error
-                         ( None,
-                           Runtime.String
-                             (Printf.sprintf
-                                "You must pass a String to File::new(), but \
-                                 got a %s"
-                             @@ Runtime.to_s self) ))
-                | Some str -> First str)
+                  | None ->
+                      Second
+                        (Runtime.Error
+                           ( None,
+                             Runtime.String
+                               (Printf.sprintf
+                                  "You must pass a String to File::new(), but \
+                                   got a %s"
+                               @@ Runtime.to_s self) ))
+                  | Some str -> First str)
                 |> Either.map ~second:Fun.id ~first:(fun path ->
-                       Runtime.File { path })) );
+                    Runtime.File { path })) );
         ];
     };
     {
@@ -812,17 +811,17 @@ let make_protos m =
                 in
                 let contents = List.nth_exn args 1 in
                 (match Runtime.string_of_val contents with
-                | Some s -> First s
-                | None ->
-                    let msg =
-                      Printf.sprintf
-                        "The first argument passed to \
-                         `FileDescriptor.write(s)` should be a `String`, but \
-                         got %s"
-                      @@ Runtime.to_s contents
-                    in
-                    let runtime_t = Runtime.String msg in
-                    Second (Runtime.Error (None, runtime_t)))
+                  | Some s -> First s
+                  | None ->
+                      let msg =
+                        Printf.sprintf
+                          "The first argument passed to \
+                           `FileDescriptor.write(s)` should be a `String`, but \
+                           got %s"
+                        @@ Runtime.to_s contents
+                      in
+                      let runtime_t = Runtime.String msg in
+                      Second (Runtime.Error (None, runtime_t)))
                 >>= fun str ->
                 match M.write fd ~data:str with
                 | Ok () -> First Runtime.Null
@@ -837,17 +836,17 @@ let make_protos m =
                 in
                 let contents = List.nth_exn args 1 in
                 (match Runtime.string_of_val contents with
-                | Some s -> First s
-                | None ->
-                    let msg =
-                      Printf.sprintf
-                        "The first argument passed to \
-                         `FileDescriptor.writeAll(s)` should be a `String`, \
-                         but got %s"
-                      @@ Runtime.to_s contents
-                    in
-                    let runtime_t = Runtime.String msg in
-                    Second (Runtime.Error (None, runtime_t)))
+                  | Some s -> First s
+                  | None ->
+                      let msg =
+                        Printf.sprintf
+                          "The first argument passed to \
+                           `FileDescriptor.writeAll(s)` should be a `String`, \
+                           but got %s"
+                        @@ Runtime.to_s contents
+                      in
+                      let runtime_t = Runtime.String msg in
+                      Second (Runtime.Error (None, runtime_t)))
                 >>= fun str ->
                 match M.fd_write_all fd str with
                 | Ok () -> First Runtime.Null

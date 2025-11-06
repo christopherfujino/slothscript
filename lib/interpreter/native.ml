@@ -34,7 +34,7 @@ module type Sig = sig
     string array ->
     (Runtime.t, string) Result.t
 
-  val chdir : string -> unit
+  val chdir : string -> (unit, string) Result.t
   val directory_exists : string -> bool
   val mkdir : string -> unit
 end
@@ -91,7 +91,12 @@ module Prod : Sig = struct
            actual_len)
     else Ok ()
 
-  let chdir = Core_unix.chdir
+  let chdir path =
+    try Ok (Core_unix.chdir path)
+    with Core_unix.Unix_error (err, _, _) ->
+      let err_msg = Core_unix.Error.message err in
+      Error (Printf.sprintf "`chdir(%s)` failed with \"%s\"" path err_msg)
+
   let mkdir = Core_unix.mkdir ~perm:0o775
 
   let directory_exists path =
@@ -395,10 +400,10 @@ module Make_test () : TestSig = struct
       let entity = File (ref "", Core_unix.File_descr.of_int fd) in
       Fds.set fd entity;
       (match Hashtbl.add path_to_entity ~key:path ~data:entity with
-      | `Ok -> Ok ()
-      | `Duplicate ->
-          Printf.sprintf "duplicate path %s in test memory file system" path
-          |> failwith)
+        | `Ok -> Ok ()
+        | `Duplicate ->
+            Printf.sprintf "duplicate path %s in test memory file system" path
+            |> failwith)
       >>= fun () ->
       let fd = Core_unix.File_descr.of_int fd in
       if
@@ -414,7 +419,7 @@ module Make_test () : TestSig = struct
     this_pid
 
   let proc_expectations : Mock_process.spec option ref = ref None
-  let chdir _ = ()
+  let chdir _ = Ok ()
   (* This function only exists to cause OS side-effects, no-op in tests *)
 
   let mkdir path =

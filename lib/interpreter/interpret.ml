@@ -55,7 +55,12 @@ let rec invoke_native_func ~globals ~pos cb args =
       | Some arity ->
           let arg_len = List.length args in
           if not (arity = arg_len) then
-            let msg = Printf.sprintf "this function expected to take a callback taking %d arguments but received a function that takes %d" arg_len arity in
+            let msg =
+              Printf.sprintf
+                "this function expected to take a callback taking %d arguments \
+                 but received a function that takes %d"
+                arg_len arity
+            in
             Option.some @@ failure_obj ~globals ~pos msg
           else None
       | None -> None
@@ -96,13 +101,13 @@ and invoke_func ~globals ~pos ~args = function
             (globals, First ()))
       in
       (match or_unequal with
-      | Ok tuple -> tuple
-      | Unequal_lengths ->
-          (* TODO use the User.pos field *)
-          Printf.sprintf
-            "You passed %d arguments to a function that expected %d"
-            (List.length args) (List.length parameters)
-          |> fail ~globals pos)
+        | Ok tuple -> tuple
+        | Unequal_lengths ->
+            (* TODO use the User.pos field *)
+            Printf.sprintf
+              "You passed %d arguments to a function that expected %d"
+              (List.length args) (List.length parameters)
+            |> fail ~globals pos)
       >>= fun globals () ->
       let temp_globals = { globals with identifiers = identifiers2 } in
       (* Note this is the invocation pos, not the func decl pos *)
@@ -692,25 +697,34 @@ and interpret_expr globals (expr : Compiler.Optimizer.expr) =
       let inner_globals =
         { globals with context_ids = Context.push_empty globals.context_ids }
       in
-      (* Process side effects for certain context variables *)
+      (*
+      Process side effects for certain context variables
+      These can't be recovered from, we must fail immediately
+      *)
       let middleware name prev next =
         match name with
         | "$cwd" ->
-            (* TODO: catch type error *)
             (match Runtime.string_of_val next with
-            | Some s -> M.chdir s
+            | Some s -> (
+                match M.chdir s with
+                | Ok () -> ()
+                | Error msg -> fail ~globals pos msg)
             | None ->
                 fail ~globals pos
                 @@ Printf.sprintf
                      "cannot assign %s to $cwd, it must be a String"
                 @@ Runtime.to_s next);
-
             post_block_hook :=
               Some
                 (fun () ->
-                  Runtime.string_of_val prev
-                  |> option_value ~message:__LOC__
-                  |> M.chdir)
+                  let unit_res =
+                    Runtime.string_of_val prev
+                    |> option_value ~message:__LOC__
+                    |> M.chdir
+                  in
+                  match unit_res with
+                  | Ok () -> ()
+                  | Error msg -> fail ~globals pos msg)
         | _ -> ()
       in
 
@@ -718,7 +732,7 @@ and interpret_expr globals (expr : Compiler.Optimizer.expr) =
         List.fold assignments ~init:(inner_globals, First ())
           ~f:(fun prev (name, expr) ->
             prev >>= fun globals () ->
-            interpret_expr globals expr >>= fun globals v ->
+            interpret_expr globals expr >>= fun globals next_path ->
             let prev =
               match Context.get globals.context_ids name with
               | Some prev -> prev
@@ -727,8 +741,8 @@ and interpret_expr globals (expr : Compiler.Optimizer.expr) =
                     name
                   |> fail ~globals pos
             in
-            middleware name prev v;
-            (match Context.reassign globals.context_ids name v with
+            middleware name prev next_path;
+            (match Context.reassign globals.context_ids name next_path with
             | Some () -> ()
             | None -> internal_failure __LOC__);
             (globals, First ()))

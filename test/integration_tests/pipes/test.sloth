@@ -1,9 +1,8 @@
 #!/usr/bin/env sloth
 
-let pipe = Pipe.new()
-with ($cwd = $scriptDir, $stdout = pipe.write, $stderr = pipe.write) {
-  "./a.out"!
+with ($cwd = $scriptDir) {
+  # compile C app
+  "make"!
+  # run integration test
+  "./fixture.sloth"!
 }
-print("process exited")
-pipe.write.close()
-print("Received from pipe = ${pipe.read.readAll()}")

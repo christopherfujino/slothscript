@@ -67,11 +67,17 @@ jobs:
         working-directory: ./slothscript
         run: |
           eval $(opam env --switch=default-switch)
-          PATH="../db:$PATH"
+          export PATH="$(realpath ../db):$PATH"
           make docs
           make yolos
           make get
           make build
+          ln -s "$(realpath ./_build/default/bin/main.exe)" ./_build/default/bin/sloth
+          export PATH="$(realpath ./_build/default/bin):$PATH"
+          ls -al "$(realpath _build/default/bin)"
+          which -a sloth
+          echo 'print("1 + 1 is ${ 1 + 1 }")' | /usr/bin/env sloth
+          ./test/integration_tests/test_all.sloth
           make check-format
           make test
       # TODO use tool/ci.exe

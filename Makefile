@@ -4,6 +4,10 @@
 test:
 	OUNIT_CI=true dune build @runtest --force
 
+.PHONY: integration-tests
+integration-tests:
+	./test/integration_tests/test_all.sloth
+
 .PHONY: train
 train:
 	TEST_DIR=$(PWD)/test dune build @train
