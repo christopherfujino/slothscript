@@ -1,6 +1,8 @@
 ### Program
 let file = File("foo")
 
+assert(file.path == "foo")
+
 assert(file.exists() == false)
 
 # String -> File
@@ -36,6 +38,27 @@ assert(contents == "Linux\n", contents)
           <opaque>))
         <opaque>)
       <opaque>)))
+  (StmtDecl
+    (ExprStmt
+      (FuncInvoc
+        (IdRef
+          assert
+          <opaque>)
+        ((Equality
+          (ObjDeref
+            (IdRef
+              file
+              <opaque>)
+            path
+            <opaque>)
+          (String
+            ((FullString
+              foo
+              <opaque>))
+            <opaque>)
+          true
+          <opaque>))
+        <opaque>)))
   (StmtDecl
     (ExprStmt
       (FuncInvoc

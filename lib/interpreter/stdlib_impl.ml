@@ -736,6 +736,12 @@ let make_protos m =
                 with
                 | Ok fd -> First (Runtime.FileDescriptor fd)
                 | Error msg -> Second (Error (None, Runtime.String msg))) );
+          ( "path",
+            fun self ->
+              let Runtime.{ path } =
+                Runtime.file_of_t self |> option_value ~message:__LOC__
+              in
+              Ok (Runtime.String path) );
           ( "readString",
             make_method ~arity:(Some 1) ~name:"File.readString"
               (fun self _ _ _ ->
