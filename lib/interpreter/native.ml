@@ -400,10 +400,10 @@ module Make_test () : TestSig = struct
       let entity = File (ref "", Core_unix.File_descr.of_int fd) in
       Fds.set fd entity;
       (match Hashtbl.add path_to_entity ~key:path ~data:entity with
-      | `Ok -> Ok ()
-      | `Duplicate ->
-          Printf.sprintf "duplicate path %s in test memory file system" path
-          |> failwith)
+        | `Ok -> Ok ()
+        | `Duplicate ->
+            Printf.sprintf "duplicate path %s in test memory file system" path
+            |> failwith)
       >>= fun () ->
       let fd = Core_unix.File_descr.of_int fd in
       if

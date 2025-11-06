@@ -101,13 +101,13 @@ and invoke_func ~globals ~pos ~args = function
             (globals, First ()))
       in
       (match or_unequal with
-      | Ok tuple -> tuple
-      | Unequal_lengths ->
-          (* TODO use the User.pos field *)
-          Printf.sprintf
-            "You passed %d arguments to a function that expected %d"
-            (List.length args) (List.length parameters)
-          |> fail ~globals pos)
+        | Ok tuple -> tuple
+        | Unequal_lengths ->
+            (* TODO use the User.pos field *)
+            Printf.sprintf
+              "You passed %d arguments to a function that expected %d"
+              (List.length args) (List.length parameters)
+            |> fail ~globals pos)
       >>= fun globals () ->
       let temp_globals = { globals with identifiers = identifiers2 } in
       (* Note this is the invocation pos, not the func decl pos *)

@@ -214,7 +214,7 @@ let string_of_val = function String s -> Some s | _ -> None
 let int_of_val v =
   num_of_val v
   |> Option.bind ~f:(fun f ->
-         if Float.is_integer f then Some (Int.of_float f) else None)
+      if Float.is_integer f then Some (Int.of_float f) else None)
 
 let pipe_of_t = function Pipe (read, write) -> Some (read, write) | _ -> None
 let bool_of_val = function Bool b' -> Some b' | _ -> None
@@ -336,8 +336,8 @@ let rec is_equal is_equality lhs rhs =
                  ~f:(fun all_same left right ->
                    if all_same then String.(left = right) else false)
              with
-            | Ok b -> b
-            | Unequal_lengths -> false)
+              | Ok b -> b
+              | Unequal_lengths -> false)
             >>= fun () ->
             Core_unix.File_descr.equal lhs.stdout rhs.stdout >>= fun () ->
             Core_unix.File_descr.equal lhs.stderr rhs.stderr >>= fun () ->
