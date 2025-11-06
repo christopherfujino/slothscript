@@ -29,6 +29,7 @@ module type Sig = sig
 
   val chdir : string -> (unit, string) Result.t
   val directory_exists : string -> bool
+  val file_exists : string -> bool
   val mkdir : string -> unit
 end
 

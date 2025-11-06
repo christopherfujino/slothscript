@@ -1,8 +1,13 @@
 ### Program
 let file = File("foo")
+
+assert(file.exists() == false)
+
 # String -> File
 # Here we do implicit casts: Process -> ProcessResult -> String
 Process.new(["uname"]) -> file
+
+assert(file.exists() == true)
 
 # <- File => String
 let contents = <- file
@@ -33,6 +38,28 @@ assert(contents == "Linux\n", contents)
       <opaque>)))
   (StmtDecl
     (ExprStmt
+      (FuncInvoc
+        (IdRef
+          assert
+          <opaque>)
+        ((Equality
+          (FuncInvoc
+            (ObjDeref
+              (IdRef
+                file
+                <opaque>)
+              exists
+              <opaque>)
+            ()
+            <opaque>)
+          (Bool
+            false
+            <opaque>)
+          true
+          <opaque>))
+        <opaque>)))
+  (StmtDecl
+    (ExprStmt
       (Binary
         (FuncInvoc
           (ObjDeref
@@ -53,6 +80,28 @@ assert(contents == "Linux\n", contents)
           file
           <opaque>)
         RightArrow
+        <opaque>)))
+  (StmtDecl
+    (ExprStmt
+      (FuncInvoc
+        (IdRef
+          assert
+          <opaque>)
+        ((Equality
+          (FuncInvoc
+            (ObjDeref
+              (IdRef
+                file
+                <opaque>)
+              exists
+              <opaque>)
+            ()
+            <opaque>)
+          (Bool
+            true
+            <opaque>)
+          true
+          <opaque>))
         <opaque>)))
   (StmtDecl
     (ExprStmt

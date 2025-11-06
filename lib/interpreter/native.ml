@@ -36,6 +36,7 @@ module type Sig = sig
 
   val chdir : string -> (unit, string) Result.t
   val directory_exists : string -> bool
+  val file_exists : string -> bool
   val mkdir : string -> unit
 end
 
@@ -99,11 +100,17 @@ module Prod : Sig = struct
 
   let mkdir = Core_unix.mkdir ~perm:0o775
 
+  let file_exists path =
+    match Sys_unix.file_exists ~follow_symlinks:true path with
+    | `No -> false
+    | `Yes -> true
+    | `Unknown -> Printf.sprintf "TODO %s %s" path __LOC__ |> failwith
+
   let directory_exists path =
     match Sys_unix.is_directory ~follow_symlinks:true path with
     | `Yes -> true
     | `No -> false
-    | `Unknown -> false (* TODO? *)
+    | `Unknown -> Printf.sprintf "TODO %s %s" path __LOC__ |> failwith
 
   let rec select input_fds read_stdout read_stderr stdout_buf stderr_buf =
     (* Should this even have a timeout? *)
@@ -428,6 +435,12 @@ module Make_test () : TestSig = struct
     | `Duplicate ->
         Printf.sprintf "EEXIST: the directory %s already exists" path
         |> failwith
+
+  let file_exists path =
+    let entity_opt = Hashtbl.find path_to_entity path in
+    match entity_opt with
+    | None -> false
+    | Some entity -> ( match entity with File _ -> true | Directory -> false)
 
   let directory_exists path =
     let entity_opt = Hashtbl.find path_to_entity path in

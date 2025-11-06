@@ -32,7 +32,7 @@ let globals =
         };
         {
           name = "File";
-          getters = [ "readString"; "openRead"; "openWrite" ];
+          getters = [ "exists"; "openRead"; "openWrite"; "readString" ];
           setters = [];
           static_getters = [ "new" ];
         };

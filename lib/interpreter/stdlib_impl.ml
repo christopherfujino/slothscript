@@ -698,6 +698,13 @@ let make_protos m =
       name = "File";
       getters =
         [
+          ( "exists",
+            make_method ~arity:(Some 1) ~name:"File.exists" (fun self _ _ _ ->
+                let Runtime.{ path } =
+                  Runtime.file_of_t self |> option_value ~message:__LOC__
+                in
+                let b = M.file_exists path in
+                First (Runtime.Bool b)) );
           ( "openRead",
             make_method ~arity:(Some 1) ~name:"File.openRead" (fun self _ _ _ ->
                 let Runtime.{ path } =
