@@ -11,9 +11,8 @@ jobs:
     # This is the VM image
     runs-on: ubuntu-latest
     container:
-      # As of May 2025, debian 12 is stable
-      # As of May 2025, OCaml 5.3 is stable
-      image: ocaml/opam:debian-12-ocaml-5.3
+      # As of 2025-08-09, debian 13 is stable
+      image: ocaml/opam:debian-13-ocaml-5.5
 
     steps:
       - name: Install OS deps
@@ -59,7 +58,8 @@ jobs:
         shell: bash -exuo pipefail {0}
         run: |
           opam init --bare --disable-sandboxing
-          opam switch create default-switch 5.2.0
+          # Latest stable as of 2025-11-06
+          opam switch create default-switch 5.4.0
           opam install --yes dune ocamlformat
 
       - name: Run CI
@@ -74,9 +74,6 @@ jobs:
           make build
           ln -s "$(realpath ./_build/default/bin/main.exe)" ./_build/default/bin/sloth
           export PATH="$(realpath ./_build/default/bin):$PATH"
-          ls -al "$(realpath _build/default/bin)"
-          which -a sloth
-          echo 'print("1 + 1 is ${ 1 + 1 }")' | /usr/bin/env sloth
           ./test/integration_tests/test_all.sloth
           make check-format
           make test
