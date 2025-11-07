@@ -21,7 +21,9 @@
  (synopsis "A slow scripting language")
  (description "A longer description")
  (depends
-   ocaml
+   ; Dynarray module requires 5.2.0
+   ; 5.4.0 latest stable as of 2025-11-06
+   (ocaml (and (>= 5.4.0) (< 5.5.0)))
    dune
    ounit2
    (core (and (>= v0.17.1) (< v0.18)))
