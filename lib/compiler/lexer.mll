@@ -293,6 +293,16 @@ and read_string delimiter buf pos state =
       (read_string[@tailcall]) delimiter buf pos state lexbuf
     )
   }
+  | '\\' 'e' {
+    if delimiter = '\'' then (
+      Buffer.add_string buf (Lexing.lexeme lexbuf);
+      (read_string[@tailcall]) delimiter buf pos state lexbuf)
+    else (
+      (* escape *)
+      Buffer.add_char buf '\x1b';
+      (read_string[@tailcall]) delimiter buf pos state lexbuf
+    )
+  }
   | '\\' 'r' {
     if delimiter = '\'' then (
       Buffer.add_string buf (Lexing.lexeme lexbuf);
