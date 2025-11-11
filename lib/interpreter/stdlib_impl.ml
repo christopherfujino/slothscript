@@ -231,6 +231,20 @@ let make_protos m =
                     First (Dynarray.add_last new_arr v))
                   (First ()) self
                 >>= fun () -> First (Runtime.List new_arr)) );
+          ( "merge",
+            make_method ~arity:(Some 2) ~name:"List.merge" (fun self _ _ args ->
+                let self_arr =
+                  Runtime.list_of_t self |> option_value ~message:__LOC__
+                in
+                let other_opt = List.nth_exn args 1 |> Runtime.list_of_t in
+                (match other_opt with
+                  | None ->
+                      Second (Runtime.Error (None, Runtime.String "foo bar"))
+                  | Some other -> First other)
+                >>= fun other ->
+                let new_dynarr = Dynarray.copy self_arr in
+                Dynarray.append new_dynarr other;
+                First (Runtime.List new_dynarr)) );
           ( "pop",
             make_method ~arity:(Some 1) ~name:"List.pop" (fun self _ _ _ ->
                 let self_arr =

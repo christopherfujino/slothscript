@@ -65,6 +65,7 @@ let globals =
               "forEach";
               "length";
               "map";
+              "merge";
               "pop";
               "push";
               "reduce";

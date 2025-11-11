@@ -30,6 +30,8 @@ let s = [1, 2, 3, 4].reduce(func (acc, el) {
   "${acc}${el}"
 })
 assert(s == "1234", s)
+let l2 = l.merge(['3', '4'])
+assert(l2 == ['2', '3', '4'])
 
 ### Processes
 ()
@@ -516,6 +518,61 @@ assert(s == "1234", s)
           (IdRef
             s
             <opaque>))
+        <opaque>)))
+  (StmtDecl
+    (ExprStmt
+      (LetExpr
+        l2
+        (FuncInvoc
+          (ObjDeref
+            (IdRef
+              l
+              <opaque>)
+            merge
+            <opaque>)
+          ((List
+            ((String
+              ((FullString
+                3
+                <opaque>))
+              <opaque>)
+              (String
+                ((FullString
+                  4
+                  <opaque>))
+                <opaque>))
+            <opaque>))
+          <opaque>)
+        <opaque>)))
+  (StmtDecl
+    (ExprStmt
+      (FuncInvoc
+        (IdRef
+          assert
+          <opaque>)
+        ((Equality
+          (IdRef
+            l2
+            <opaque>)
+          (List
+            ((String
+              ((FullString
+                2
+                <opaque>))
+              <opaque>)
+              (String
+                ((FullString
+                  3
+                  <opaque>))
+                <opaque>)
+              (String
+                ((FullString
+                  4
+                  <opaque>))
+                <opaque>))
+            <opaque>)
+          true
+          <opaque>))
         <opaque>))))
 
 ### Stdout
