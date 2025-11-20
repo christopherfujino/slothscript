@@ -1,0 +1,9 @@
+### Program
+func f() {
+  if true {
+    return
+  }
+  throw 'Unreachable'
+}
+
+f()
