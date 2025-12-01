@@ -80,7 +80,11 @@ module Prod : Sig = struct
 
   let open_file ~mode path =
     try Ok (Core_unix.openfile ~mode path)
-    with _ -> Error (Printf.sprintf "failed to open %s" path)
+    with
+    | Core_unix.Unix_error (err, _, _) ->
+      let err_msg = Core_unix.Error.message err in
+      Error (Printf.sprintf "`open_file(%s)` failed with \"%s\"" path err_msg)
+    | exn -> Exn.to_string exn |> failwith
 
   let write fd ~data =
     let buf = Bytes.of_string data in
@@ -386,6 +390,7 @@ module Make_test () : TestSig = struct
   let open_file ~mode path =
     let fd = get_next_fd () in
     let open Result.Monad_infix in
+    (* TODO exhaustively h andle all flags in mode *)
     if List.exists mode ~f:(function Core_unix.O_RDONLY -> true | _ -> false)
     then
       match Hashtbl.find path_to_entity path with

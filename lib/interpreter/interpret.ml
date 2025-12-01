@@ -1080,33 +1080,34 @@ and interpret_right_arrow ~globals ~pos lhs rhs =
   interpret_expr globals rhs >>= fun globals rhs ->
   (* TODO O_CREAT? *)
   ( globals,
-    cast_to_file_descriptor ~globals ~pos ~mode:[ Core_unix.O_WRONLY ]
+    cast_to_file_descriptor ~globals ~pos ~mode:[ Core_unix.O_WRONLY; Core_unix.O_CREAT ]
       ~m:globals.l rhs )
   >>= fun globals fd ->
-  let proc =
-    match lhs with
-    | Process proc ->
-        proc.stdout <- fd;
-        proc
-    | _ ->
-        Printf.sprintf "TODO implement %s -> File" (Runtime.to_s lhs)
-        |> failwith
-  in
-  let env_val =
-    Context.get globals.context_ids "$env" |> option_value ~message:__LOC__
-  in
-  let env =
-    match Runtime.env_of_val env_val with
-    | Some env -> env
-    | None ->
-        Printf.sprintf "$env is the wrong type: %s" @@ Runtime.to_s env_val
-        |> fail ~globals pos
-  in
-
   let module M = (val globals.l) in
-  match M.proc_exec ~mode:BlockInherit proc env with
-  | Ok v -> (globals, First v)
-  | Error msg -> (globals, failure_obj ~globals ~pos msg)
+  match lhs with
+  | Process proc -> (
+      proc.stdout <- fd;
+      let env_val =
+        Context.get globals.context_ids "$env" |> option_value ~message:__LOC__
+      in
+      let env =
+        match Runtime.env_of_val env_val with
+        | Some env -> env
+        | None ->
+            Printf.sprintf "$env is the wrong type: %s" @@ Runtime.to_s env_val
+            |> fail ~globals pos
+      in
+
+      match M.proc_exec ~mode:BlockInherit proc env with
+      | Ok _ -> (globals, First Runtime.Null)
+      | Error msg -> (globals, failure_obj ~globals ~pos msg))
+  | String txt -> (
+      match M.fd_write_all fd txt with
+      | Ok () -> (globals, First Runtime.Null)
+      | Error msg -> (globals, failure_obj ~globals ~pos msg))
+  | _ ->
+      Printf.sprintf "TODO implement %s -> File" (Runtime.to_class_name lhs)
+      |> failwith
 
 and cast_to_file_descriptor ~globals ~pos ~mode ~m t :
     (Core_unix.File_descr.t, Runtime.breaking_type) Either.t =
