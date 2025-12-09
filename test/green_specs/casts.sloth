@@ -1,0 +1,35 @@
+### Program
+assert(42 == Number("42"))
+
+### Processes
+()
+
+### Ast
+((StmtDecl
+  (ExprStmt
+    (FuncInvoc
+      (IdRef
+        assert
+        <opaque>)
+      ((Equality
+        (Num
+          42
+          <opaque>)
+        (FuncInvoc
+          (IdRef
+            Number
+            <opaque>)
+          ((String
+            ((FullString
+              42
+              <opaque>))
+            <opaque>))
+          <opaque>)
+        true
+        <opaque>))
+      <opaque>))))
+
+### Stdout
+
+
+### Failure

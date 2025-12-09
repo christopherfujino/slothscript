@@ -375,6 +375,7 @@ and interpret_expr globals (expr : Compiler.Optimizer.expr) =
                     (Runtime.Directory (cast_to_directory ~globals ~pos arg)) )
             | "Process" ->
                 let either =
+                  (* TODO This should be a separate implementation *)
                   cast_to_process ~globals ~pos arg
                   |> Either.map
                        ~first:(fun proc -> Runtime.Process proc)
@@ -382,9 +383,26 @@ and interpret_expr globals (expr : Compiler.Optimizer.expr) =
                 in
                 (globals, either)
             | "String" -> (globals, First (Runtime.String (Runtime.to_s arg)))
+            | "Number" -> (
+                match arg with
+                | Runtime.String s -> (
+                    match Float.of_string_opt s with
+                    | Some f -> (globals, First (Runtime.Num f))
+                    | None ->
+                        ( globals,
+                          failure_obj ~globals ~pos
+                            (Printf.sprintf
+                               "Cannot cast the string \"%s\" to a `Number`" s)
+                        ))
+                | Runtime.Num n -> (globals, First (Runtime.Num n))
+                | _ ->
+                    ( globals,
+                      failure_obj ~globals ~pos @@ Printf.sprintf "Cannot cast a %s to a `Number`" (Runtime.to_class_name arg)
+                    ))
             | _ ->
                 internal_failure_msg ~globals ~pos
-                  (Printf.sprintf "unimplemented %s (%s)" name __LOC__)
+                  (Printf.sprintf "unimplemented constructor %s (%s)" name
+                     __LOC__)
                 |> internal_failure)
       | _ as t ->
           ( globals,
@@ -933,6 +951,7 @@ and cast_to_process ~globals ~pos v :
       in
       (cast_to_process [@tailcall]) ~globals ~pos (Runtime.List list)
   | _ as t' ->
+      (* TODO: this should be a first class error *)
       fail ~globals pos
       @@ Printf.sprintf "Expected a Process, but got a %s"
       @@ Runtime.to_s t'
@@ -1080,7 +1099,8 @@ and interpret_right_arrow ~globals ~pos lhs rhs =
   interpret_expr globals rhs >>= fun globals rhs ->
   (* TODO O_CREAT? *)
   ( globals,
-    cast_to_file_descriptor ~globals ~pos ~mode:[ Core_unix.O_WRONLY; Core_unix.O_CREAT ]
+    cast_to_file_descriptor ~globals ~pos
+      ~mode:[ Core_unix.O_WRONLY; Core_unix.O_CREAT ]
       ~m:globals.l rhs )
   >>= fun globals fd ->
   let module M = (val globals.l) in
