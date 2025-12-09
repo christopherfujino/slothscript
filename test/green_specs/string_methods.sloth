@@ -8,6 +8,8 @@ assert(lines == ['one', 'two', 'three yolo'], String(lines))
 assert('hello, world!'.contains('World!') == false)
 assert('hello, world!'.contains('o, world'))
 
+assert('Hello, world!'.length == 13)
+
 ### Processes
 ()
 
@@ -212,6 +214,27 @@ assert('hello, world!'.contains('o, world'))
               "o, world"
               <opaque>))
             <opaque>))
+          <opaque>))
+        <opaque>)))
+  (StmtDecl
+    (ExprStmt
+      (FuncInvoc
+        (IdRef
+          assert
+          <opaque>)
+        ((Equality
+          (ObjDeref
+            (String
+              ((FullString
+                "Hello, world!"
+                <opaque>))
+              <opaque>)
+            length
+            <opaque>)
+          (Num
+            13
+            <opaque>)
+          true
           <opaque>))
         <opaque>))))
 

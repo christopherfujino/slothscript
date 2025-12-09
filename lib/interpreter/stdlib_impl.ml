@@ -617,6 +617,13 @@ let make_protos m =
                   | None -> false
                 in
                 First (Runtime.Bool b)) );
+          ( "length",
+            fun self ->
+              let s =
+                Runtime.string_of_val self |> option_value ~message:__LOC__
+              in
+              let v = Runtime.Num (String.length s |> Float.of_int) in
+              Ok v );
           ( "trim",
             make_method ~arity:(Some 1) ~name:"String.trim" (fun self _ _ _ ->
                 let ocaml_string =
