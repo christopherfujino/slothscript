@@ -75,7 +75,7 @@ let globals =
         };
         {
           name = "Number";
-          getters = [ (* "floor"; *) ];
+          getters = [ "floor" ];
           setters = [];
           static_getters = [];
         };

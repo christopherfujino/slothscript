@@ -1,0 +1,34 @@
+### Program
+assert(1.5.floor() == 1)
+
+### Processes
+()
+
+### Ast
+((StmtDecl
+  (ExprStmt
+    (FuncInvoc
+      (IdRef
+        assert
+        <opaque>)
+      ((Equality
+        (FuncInvoc
+          (ObjDeref
+            (Num
+              1.5
+              <opaque>)
+            floor
+            <opaque>)
+          ()
+          <opaque>)
+        (Num
+          1
+          <opaque>)
+        true
+        <opaque>))
+      <opaque>))))
+
+### Stdout
+
+
+### Failure

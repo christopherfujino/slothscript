@@ -300,7 +300,20 @@ let make_protos m =
       setters = [];
       static_getters = [];
     };
-    { name = "Number"; getters = []; setters = []; static_getters = [] };
+    {
+      name = "Number";
+      getters =
+        [
+          ( "floor",
+            make_method ~arity:(Some 1) ~name:"Number::floor" (fun self _ _ _ ->
+                let f =
+                  Runtime.num_of_val self |> Option.value_exn ~message:__LOC__
+                in
+                First (Runtime.Num (Float.round_down f))) );
+        ];
+      setters = [];
+      static_getters = [];
+    };
     {
       name = "Pipe";
       getters =
