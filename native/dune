@@ -1,0 +1,25 @@
+(library
+ ; name must be different from the foreign archive name
+ (name sn)
+ (foreign_archives sloth_native))
+
+; TODO read: https://dune.readthedocs.io/en/stable/foreign-code.html#foreign-sandboxing
+
+(data_only_dirs cpp)
+
+(rule
+ (mode promote)
+ (deps
+  (source_tree cpp))
+ (targets libsloth_native.a compile_commands.json)
+ (action
+  ; https://dune.readthedocs.io/en/stable/reference/actions/no-infer.html
+  ; no infer because dune doesn't know how the targets are being created
+  (no-infer
+   ; run several commands in sequence
+   (progn
+    (chdir
+     cpp
+     (run ./compile_native.sh))
+    (copy cpp/libsloth_native.a libsloth_native.a)
+    (copy cpp/compile_commands.json compile_commands.json)))))

@@ -1,0 +1,16 @@
+#!/usr/bin/env sloth
+
+let release = "Debug"
+
+let build = Directory("${$scriptDir}/build")
+if not build.exists() {
+  build.create()
+}
+
+with ($cwd = build.path) {
+  [
+    "cmake", "..",
+    "-DCMAKE_BUILD_TYPE=${release}",
+    "-GNinja",
+  ]!
+}

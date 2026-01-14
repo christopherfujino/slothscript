@@ -5,3 +5,8 @@
  (name main)
  ; deps, depends on sloth_script from //lib/dune
  (libraries sloth_script readline))
+
+(executable
+ (public_name native)
+ (name native_test)
+ (libraries sloth_script sn))
