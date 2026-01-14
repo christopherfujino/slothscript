@@ -177,29 +177,36 @@ and interpret_decl (globals : Globals.t) decl :
 
 and interpret_stmt (globals : Globals.t) stmt :
     Globals.t * (Runtime.t, Runtime.breaking_type) Either.t =
-  (* Globals.t * Compiler.Ast.breaking_type option * Runtime.t = *)
   let open Compiler.Optimizer in
   match stmt with
   | ExprStmt expr -> interpret_expr globals expr
   | BreakingStmt (break_type, expr_opt, pos) -> (
-      match expr_opt with
-      | None -> (globals, First Runtime.Null)
-      | Some e ->
-          interpret_expr globals e >>= fun globals v ->
-          let wrapped_type =
-            match break_type with
-            | Break -> Runtime.Break v
-            | Continue -> Continue v
-            | Return -> Return v
-            | Error ->
-                let msg = Runtime.to_s v in
-                Error
-                  ( Some
-                      (Runtime.backtrace_to_s ~pos globals.stack_frames
-                         globals.src msg "Uncaught error"),
-                    Runtime.String msg )
-          in
-          (globals, Second wrapped_type))
+      match break_type with
+      | Break -> (
+          match expr_opt with
+          | None -> (globals, Second (Runtime.Break Runtime.Null))
+          | Some e ->
+              interpret_expr globals e >>= fun globals v ->
+              (globals, Second (Runtime.Break v)))
+      | Return -> (
+          match expr_opt with
+          | None -> (globals, Second (Runtime.Return Runtime.Null))
+          | Some e ->
+              interpret_expr globals e >>= fun globals v ->
+              (globals, Second (Runtime.Return v)))
+      | Continue -> (
+          match expr_opt with
+          | None -> (globals, Second (Runtime.Continue Runtime.Null))
+          | Some e ->
+              interpret_expr globals e >>= fun globals v ->
+              (globals, Second (Runtime.Continue v)))
+      | Error -> (
+          match expr_opt with
+          | None -> (globals, failure_obj ~globals ~pos "")
+          | Some e ->
+              interpret_expr globals e >>= fun globals v ->
+              let msg = Runtime.to_s v in
+              (globals, failure_obj ~globals ~pos msg)))
 
 and interpret_cond globals cond =
   match cond with
@@ -397,8 +404,9 @@ and interpret_expr globals (expr : Compiler.Optimizer.expr) =
                 | Runtime.Num n -> (globals, First (Runtime.Num n))
                 | _ ->
                     ( globals,
-                      failure_obj ~globals ~pos @@ Printf.sprintf "Cannot cast a %s to a `Number`" (Runtime.to_class_name arg)
-                    ))
+                      failure_obj ~globals ~pos
+                      @@ Printf.sprintf "Cannot cast a %s to a `Number`"
+                           (Runtime.to_class_name arg) ))
             | _ ->
                 internal_failure_msg ~globals ~pos
                   (Printf.sprintf "unimplemented constructor %s (%s)" name

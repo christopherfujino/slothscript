@@ -30,7 +30,7 @@ Stacktrace:
    5 |   rec(n - 1)
             ^
 
-[3:4] Uncaught error
+[3:4] Runtime error
 
  1 | func rec(n) {
  2 |   if n == 0 {

@@ -1,0 +1,60 @@
+### Program
+func f() {
+  if true {
+    return
+  }
+  throw 'Unreachable'
+}
+
+f()
+
+### Processes
+()
+
+### Ast
+((FuncDecl
+  (name
+    f)
+  (parameters
+    ())
+  (block
+    ((ExprStmt
+      (IfExpr
+        (IfCont
+          (conditional
+            (Bool
+              true
+              <opaque>))
+          (block
+            ((BreakingStmt
+              Return
+              ()
+              <opaque>)))
+          (continuation
+            ())
+          (pos
+            <opaque>))
+        <opaque>))
+      (BreakingStmt
+        Error
+        ((String
+          ((FullString
+            Unreachable
+            <opaque>))
+          <opaque>))
+        <opaque>)))
+  (pos
+    <opaque>))
+  (StmtDecl
+    (ExprStmt
+      (FuncInvoc
+        (IdRef
+          f
+          <opaque>)
+        ()
+        <opaque>))))
+
+### Stdout
+
+
+### Failure

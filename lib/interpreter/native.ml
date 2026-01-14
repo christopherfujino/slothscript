@@ -79,11 +79,10 @@ module Prod : Sig = struct
     Ok (Runtime.String (Buffer.contents string_buf))
 
   let open_file ~mode path =
-    try Ok (Core_unix.openfile ~mode path)
-    with
+    try Ok (Core_unix.openfile ~mode path) with
     | Core_unix.Unix_error (err, _, _) ->
-      let err_msg = Core_unix.Error.message err in
-      Error (Printf.sprintf "`open_file(%s)` failed with \"%s\"" path err_msg)
+        let err_msg = Core_unix.Error.message err in
+        Error (Printf.sprintf "`open_file(%s)` failed with \"%s\"" path err_msg)
     | exn -> Exn.to_string exn |> failwith
 
   let write fd ~data =
