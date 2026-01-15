@@ -5,9 +5,14 @@
 
 extern "C" {
 
+// string -> string option
 value file_read_all(value path) {
-  value contents = _file_read_all(String_val(path));
-  return contents;
+  return _file_read_all(String_val(path));
+}
+
+// string -> (unit, string) Result.t
+value _chdir(value newpath) {
+  return __chdir(String_val(newpath));
 }
 
 } // extern "C"
