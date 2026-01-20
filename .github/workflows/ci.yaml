@@ -20,7 +20,11 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get --yes upgrade
-          sudo apt-get install --yes golang libreadline-dev cmake
+          sudo apt-get install --yes \
+            golang \
+            libreadline-dev \
+            cmake \
+            ninja
 
       - name: Chmod dirs
         shell: bash -exuo pipefail {0}

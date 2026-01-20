@@ -6,7 +6,7 @@ set -euo pipefail
 # Intended to be called by dune
 
 # configure
-cmake .
+cmake . -GNinja
 
 # build
 cmake --build .
