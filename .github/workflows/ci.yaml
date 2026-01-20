@@ -24,7 +24,7 @@ jobs:
             golang \
             libreadline-dev \
             cmake \
-            ninja
+            ninja-build
 
       - name: Chmod dirs
         shell: bash -exuo pipefail {0}
