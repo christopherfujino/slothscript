@@ -24,7 +24,7 @@ String interpolation was started but never finished
 
 prog: LPAREN STRING_MIDDLE
 
-You have an unclosed parenthesis in the middle of string interpolation
+What is in between parentheses is not an expression (or you have an unclosed parenthesis in the middle of string interpolation)
 
 prog: LET WITH
 

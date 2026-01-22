@@ -1,0 +1,10 @@
+### Program
+
+(throw 'Unreachable')
+
+### Failure
+[1:1] Parser error (code ##)
+
+ 1 | (throw 'Unreachable')
+      ^
+What is in between parentheses is not an expression (or you have an unclosed parenthesis in the middle of string interpolation)
