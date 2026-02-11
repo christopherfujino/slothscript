@@ -1,9 +1,9 @@
 # Slothscript
 
-A slow scripting language.
+A scripting language for automation and system administration.
 
 ```sloth
-{{ .test_green_specs_fibonacci_sloth }}
+{{ .test_green_specs_configure_cmake_sloth }}
 ```
 
 ## Installation

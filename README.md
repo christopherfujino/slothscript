@@ -1,14 +1,38 @@
 # Slothscript
 
-A slow scripting language.
+A scripting language for automation and system administration.
 
 ```sloth
-func fib(n) {
-  if n <= 1 { return n }
-  fib(n - 1) + fib(n - 2)
+# Single quotes delimit raw string literals, not supporting escapes or
+# interpolation
+let cxx = 'clang++'
+let build_mode = 'Debug'
+let generator = 'Ninja'
+
+# $scriptDir is set by the runtime to be the directory containing the
+# currently running script (not necessarily the working directory).
+#
+# Double quotes delimit rich string literals, `${ expression }` is used for string
+# interpolation
+let build = Directory("${$scriptDir}/build")
+
+if not build.exists() {
+  build.create()
 }
 
-print(fib(20))
+# Within this block, set the current working directory to be our build
+# directory
+with ($cwd = build.path) {
+  # The `!` postfix operator means spawn a sub-process, using the expression
+  # preceding it as a command and argument list, then block until the process
+  # exits
+  [
+    'cmake', $scriptDir,
+    "-DCMAKE_CXX_COMPILER=${cxx}",
+    "-DCMAKE_BUILD_TYPE=${build_mode}",
+    '-G', generator,
+  ]!
+}
 ```
 
 ## Installation
