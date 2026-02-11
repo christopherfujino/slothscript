@@ -620,8 +620,8 @@ module Make_test () : TestSig = struct
           | _ ->
               let msg =
                 Printf.sprintf "Tried to execute sub-process %s but expected %s"
-                  (List.to_string ~f:Fun.id hd.cmd)
                   (List.to_string ~f:Fun.id proc.cmd)
+                  (List.to_string ~f:Fun.id hd.cmd)
               in
               Error msg)
     in

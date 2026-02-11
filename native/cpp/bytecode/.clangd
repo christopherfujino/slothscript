@@ -1,0 +1,4 @@
+CompileFlags:
+  # Un-comment this when we start building from Dune
+  #CompilationDatabase: ../..
+  CompilationDatabase: build/

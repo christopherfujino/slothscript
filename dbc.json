@@ -4,14 +4,14 @@
       "output": "README.md",
       "template": "README.tmpl.md",
       "inputs": [
-        "test/green_specs/fibonacci.sloth",
+        "test/green_specs/configure_cmake.sloth",
         "test/green_specs/var_reference.sloth",
         "test/green_specs/first_class_func.sloth",
         "docs/context.md"
       ]
     },
     {
-      "output": "test/green_specs/fibonacci.sloth",
+      "output": "test/green_specs/configure_cmake.sloth",
       "filter": "awk '/### Program/{f=1; next} /### /{f=0} f'"
     },
     {

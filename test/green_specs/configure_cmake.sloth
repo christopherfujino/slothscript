@@ -1,0 +1,197 @@
+### Program
+# Single quotes delimit raw string literals, not supporting escapes or
+# interpolation
+let cxx = 'clang++'
+let build_mode = 'Debug'
+let generator = 'Ninja'
+
+# $scriptDir is set by the runtime to be the directory containing the
+# currently running script (not necessarily the working directory).
+#
+# Double quotes delimit rich string literals, `${ expression }` is used for string
+# interpolation
+let build = Directory("${$scriptDir}/build")
+
+if not build.exists() {
+  build.create()
+}
+
+# Within this block, set the current working directory to be our build
+# directory
+with ($cwd = build.path) {
+  # The `!` postfix operator means spawn a sub-process, using the expression
+  # preceding it as a command and argument list, then block until the process
+  # exits
+  [
+    'cmake', $scriptDir,
+    "-DCMAKE_CXX_COMPILER=${cxx}",
+    "-DCMAKE_BUILD_TYPE=${build_mode}",
+    '-G', generator,
+  ]!
+}
+
+### Processes
+(((cmd
+  (cmake
+    /parent
+    -DCMAKE_CXX_COMPILER=clang++
+    -DCMAKE_BUILD_TYPE=Debug
+    -G
+    Ninja))
+  (instructions
+    ())))
+
+### Ast
+((StmtDecl
+  (ExprStmt
+    (LetExpr
+      cxx
+      (String
+        ((FullString
+          clang++
+          <opaque>))
+        <opaque>)
+      <opaque>)))
+  (StmtDecl
+    (ExprStmt
+      (LetExpr
+        build_mode
+        (String
+          ((FullString
+            Debug
+            <opaque>))
+          <opaque>)
+        <opaque>)))
+  (StmtDecl
+    (ExprStmt
+      (LetExpr
+        generator
+        (String
+          ((FullString
+            Ninja
+            <opaque>))
+          <opaque>)
+        <opaque>)))
+  (StmtDecl
+    (ExprStmt
+      (LetExpr
+        build
+        (FuncInvoc
+          (IdRef
+            Directory
+            <opaque>)
+          ((String
+            ((StartStringInterp
+              ""
+              <opaque>)
+              (ExpressionStringInterp
+                (ContextId
+                  $scriptDir
+                  <opaque>))
+              (EndStringInterp
+                /build
+                <opaque>))
+            <opaque>))
+          <opaque>)
+        <opaque>)))
+  (StmtDecl
+    (ExprStmt
+      (IfExpr
+        (IfCont
+          (conditional
+            (UnaryExpr
+              (target
+                (FuncInvoc
+                  (ObjDeref
+                    (IdRef
+                      build
+                      <opaque>)
+                    exists
+                    <opaque>)
+                  ()
+                  <opaque>))
+              (pos
+                <opaque>)
+              (operator
+                Not)))
+          (block
+            ((ExprStmt
+              (FuncInvoc
+                (ObjDeref
+                  (IdRef
+                    build
+                    <opaque>)
+                  create
+                  <opaque>)
+                ()
+                <opaque>))))
+          (continuation
+            ())
+          (pos
+            <opaque>))
+        <opaque>)))
+  (StmtDecl
+    (ExprStmt
+      (WithExpr
+        (($cwd
+          (ObjDeref
+            (IdRef
+              build
+              <opaque>)
+            path
+            <opaque>)))
+        ((ExprStmt
+          (UnaryExpr
+            (target
+              (List
+                ((String
+                  ((FullString
+                    cmake
+                    <opaque>))
+                  <opaque>)
+                  (ContextId
+                    $scriptDir
+                    <opaque>)
+                  (String
+                    ((StartStringInterp
+                      -DCMAKE_CXX_COMPILER=
+                      <opaque>)
+                      (ExpressionStringInterp
+                        (IdRef
+                          cxx
+                          <opaque>))
+                      (EndStringInterp
+                        ""
+                        <opaque>))
+                    <opaque>)
+                  (String
+                    ((StartStringInterp
+                      -DCMAKE_BUILD_TYPE=
+                      <opaque>)
+                      (ExpressionStringInterp
+                        (IdRef
+                          build_mode
+                          <opaque>))
+                      (EndStringInterp
+                        ""
+                        <opaque>))
+                    <opaque>)
+                  (String
+                    ((FullString
+                      -G
+                      <opaque>))
+                    <opaque>)
+                  (IdRef
+                    generator
+                    <opaque>))
+                <opaque>))
+            (pos
+              <opaque>)
+            (operator
+              Bang))))
+        <opaque>))))
+
+### Stdout
+
+
+### Failure
