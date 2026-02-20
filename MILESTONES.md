@@ -5,7 +5,7 @@
 
 ## v0.2 - initial pre-release
 - [ ] Migrate AST to use actual Ast module
-- [ ] Regular expressions
+- [ ] Regular expressions (libpcre?)
 - [ ] Test suite
 - [ ] Constraint system
     - language version
@@ -25,6 +25,7 @@
 
 ## Stretch goals
 - [ ] Bytecode VM (this should not happen until API becomes stable)
+- [ ] From scratch regular expression engine
 - [ ] Unicode strings
 - [ ] Method syntax for hash maps
 - [ ] Pattern matching
