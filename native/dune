@@ -8,10 +8,10 @@
 (data_only_dirs cpp)
 
 (rule
+ (targets libsloth_native.a compile_commands.json)
  (mode promote)
  (deps
   (source_tree cpp))
- (targets libsloth_native.a compile_commands.json)
  (action
   ; https://dune.readthedocs.io/en/stable/reference/actions/no-infer.html
   ; no infer because dune doesn't know how the targets are being created

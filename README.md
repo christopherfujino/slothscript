@@ -94,6 +94,7 @@ print(counter())
 - `false` - `Bool` literal
 - `null` - `Null` literal singleton
 - `not` - prefix logical NOT operator; `assert(not false)`
+- `throw` - raise an exception
 
 ### Context Variables
 

@@ -2,8 +2,8 @@
 opam-version: "2.0"
 synopsis: "A slow scripting language"
 description: "A longer description"
-maintainer: ["Christopher Fujino"]
-authors: ["Christopher Fujino"]
+maintainer: ["Christopher Fujino <christopherfujino@gmail.com>"]
+authors: ["Christopher Fujino <christopherfujino@gmail.com>"]
 license: "BSD-3-Clause"
 tags: ["topics" "to describe" "your" "project"]
 homepage: "https://github.com/christopherfujino/slothscript"

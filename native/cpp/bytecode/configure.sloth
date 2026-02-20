@@ -1,0 +1,31 @@
+#!/usr/bin/env sloth
+
+func ensureTestHpp() {
+  let testHppDir = Directory("${$scriptDir}/../../../ignore/test.hpp")
+  if not testHppDir.exists() {
+    let monorepoDir = Directory("${$scriptDir}/../../../../../cpp/test.hpp")
+    if monorepoDir.exists() {
+      # TODO make these realpaths
+      ['ln', '-s', monorepoDir.path, testHppDir.path]!
+    } else {
+      let remote = 'git@github.com:christopherfujino/test.hpp.git'
+      ['git', 'clone', '--depth=1', remote, testHppDir.path]!
+    }
+  }
+}
+
+ensureTestHpp()
+
+let build = Directory("${$scriptDir}/build")
+if not build.exists() {
+  build.create()
+}
+
+with ($cwd = build.path) {
+  [
+    'cmake', '..',
+    '-GNinja',
+    '-DCMAKE_CXX_COMPILER=clang++',
+  ]!
+  'cmake --build .'!
+}
