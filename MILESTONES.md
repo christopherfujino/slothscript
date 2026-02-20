@@ -3,14 +3,16 @@
 ## v0.1 - initially tagged version
 - [ ] Language versioning
 
-## v0.2 - initial pre-release
+## v0.2
+- [ ] Test suite
+- [ ] JSON module
+
+## v0.3 - initial pre-release
 - [ ] Migrate AST to use actual Ast module
 - [ ] Regular expressions (libpcre?)
-- [ ] Test suite
 - [ ] Constraint system
     - language version
     - permissions
-- [ ] JSON module
 - [ ] Allow non-zero exit codes on sub-processes
 - [ ] Bug: stacktrace printing is wrong in REPL
 

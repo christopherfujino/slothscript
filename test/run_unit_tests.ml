@@ -141,4 +141,5 @@ let get () =
     "pretty" >::: List.map pretty ~f;
     "STDLIB interface & implementation match"
     >:: stdlib_interface_and_impl_match;
+    "semver" >::: Unit_tests.Semver_test.tests;
   ]

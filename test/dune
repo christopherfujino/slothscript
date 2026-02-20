@@ -2,7 +2,7 @@
 
 (test
  (name main)
- (libraries ounit2 sloth_script re core_unix)
+ (libraries ounit2 sloth_script re core_unix unit_tests)
  (deps
   (source_tree green_specs)
   (source_tree red_specs))

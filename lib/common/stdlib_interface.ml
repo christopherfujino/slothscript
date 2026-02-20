@@ -110,5 +110,11 @@ let globals =
           setters = [];
           static_getters = [];
         };
+        {
+          name = "Version";
+          getters = [ "toString" ];
+          setters = [];
+          static_getters = [ "current" ];
+        };
       ];
   }

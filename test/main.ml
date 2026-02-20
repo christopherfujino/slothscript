@@ -184,7 +184,7 @@ let tests =
   >::: [
          "green" >::: List.map ~f:make_test (Specs.green ());
          "red" >::: List.map ~f:make_failing_test (Specs.red ());
-         "unit" >::: Unit_tests.get ();
+         "unit" >::: Run_unit_tests.get ();
        ]
 
 let () = run_test_tt_main tests
