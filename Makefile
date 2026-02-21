@@ -31,7 +31,7 @@ build:
 
 .PHONY: get
 get:
-	opam install . --deps-only --with-test --with-doc -vv
+	opam install . --yes --deps-only --with-test --with-doc -vv
 
 .PHONY: list-errors
 list-errors:

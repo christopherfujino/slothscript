@@ -12,11 +12,11 @@ bug-reports: "https://github.com/christopherfujino/slothscript/issues"
 depends: [
   "ocaml" {>= "5.4.0" & < "5.5.0"}
   "dune" {>= "3.16"}
-  "ounit2"
+  "ounit2" {>= "2.2.7" & < "3.0.0"}
   "core" {>= "v0.17.1" & < "v0.18"}
   "core_unix" {>= "v0.17.1" & < "v0.18"}
-  "ppx_jane" {>= "v0.17" & < "v0.18"}
-  "re" {>= "1.12.0"}
+  "ppx_jane" {>= "v0.17.0" & < "v0.18"}
+  "re" {>= "1.14.0" & < "2.0.0"}
   "readline" {>= "0.2"}
   "odoc" {with-doc}
 ]

@@ -1,5 +1,8 @@
 on:
-  - push
+  push:
+    branches: ['*']
+    # TODO publish on tags
+    # tags: ['v*']
 
 jobs:
   # Set the job key. The key is displayed as the job name when a job name is
@@ -11,8 +14,8 @@ jobs:
     # This is the VM image
     runs-on: ubuntu-latest
     container:
-      # As of 2025-08-09, debian 13 is stable
-      image: ocaml/opam:debian-13-ocaml-5.5
+      # Updated 2026-02-20
+      image: ocaml/opam:debian-13-opam
 
     steps:
       - name: Install OS deps
@@ -53,6 +56,7 @@ jobs:
 
       - name: Check out repo
         shell: bash -exuo pipefail {0}
+        # TODO: support when GITHUB_REF is a tag (e.g. `refs/tags/v0.1.0`)
         run: |
           env
           REF=$(echo "${GITHUB_REF}" | sed -n 's/refs\/heads\/\(.*\)/\1/p')
