@@ -402,8 +402,7 @@ let rec is_equal is_equality lhs rhs =
         Bool.(same_pipe = is_equality)
     | Version left_ver ->
         let right_ver = version_of_t rhs |> option_value ~message:__LOC__ in
-        let same_version =
-          Sloth_common.Semver.is_equal left_ver right_ver in
+        let same_version = Sloth_common.Semver.is_equal left_ver right_ver in
         Bool.(same_version = is_equality)
     | ProcessResult _ | Func _ | Method _ ->
         Printf.sprintf "is_equal the type %s is not implemented" lh_s

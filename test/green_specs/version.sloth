@@ -1,4 +1,48 @@
 ### Program
+assert($version.toString() == "0.1.0", "actual: ${$version}")
 
-let ver = Version.current()
-assert(ver.toString() == "1.2.3")
+### Processes
+()
+
+### Ast
+((StmtDecl
+  (ExprStmt
+    (FuncInvoc
+      (IdRef
+        assert
+        <opaque>)
+      ((Equality
+        (FuncInvoc
+          (ObjDeref
+            (ContextId
+              $version
+              <opaque>)
+            toString
+            <opaque>)
+          ()
+          <opaque>)
+        (String
+          ((FullString
+            0.1.0
+            <opaque>))
+          <opaque>)
+        true
+        <opaque>)
+        (String
+          ((StartStringInterp
+            "actual: "
+            <opaque>)
+            (ExpressionStringInterp
+              (ContextId
+                $version
+                <opaque>))
+            (EndStringInterp
+              ""
+              <opaque>))
+          <opaque>))
+      <opaque>))))
+
+### Stdout
+
+
+### Failure

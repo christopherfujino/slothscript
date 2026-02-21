@@ -21,6 +21,7 @@ let globals =
         "$stderr";
         "$stdin";
         "$stdout";
+        "$version";
       ];
     protos =
       [

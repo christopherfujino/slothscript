@@ -39,7 +39,8 @@ let make_globals m src script_path ~argv ~env ~version =
 
   (* TODO inject cwd *)
   List.iter
-    (Stdlib_impl.context_ids ~cwd:(Sys_unix.getcwd ()) ~env ~script_path ~argv)
+    (Stdlib_impl.context_ids ~cwd:(Sys_unix.getcwd ()) ~env ~script_path ~argv
+       ~version)
     ~f:(fun (name, t) ->
       Context.bind context_ids name t |> Option.value_exn ~message:__LOC__);
 

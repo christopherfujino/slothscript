@@ -1,8 +1,5 @@
 # Milestones
 
-## v0.1 - initially tagged version
-- [ ] Language versioning
-
 ## v0.2
 - [ ] Test suite
 - [ ] JSON module
@@ -38,6 +35,9 @@
 - [ ] Yaml module
 
 # Done
+
+## v0.1 - initially tagged version
+- [x] Language versioning
 
 ## pre-v0.1
 - [x] Lexical scoping

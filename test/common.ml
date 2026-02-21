@@ -23,3 +23,5 @@ let find_child_specs dir_path =
   (* TODO handle whether or not dir_path ends in path separator *)
   List.map (inner_rec [] dir_fd) ~f:(fun base ->
       Printf.sprintf "%s/%s" dir_path base)
+
+let version = Sloth_common.Common.version

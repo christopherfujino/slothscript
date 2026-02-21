@@ -3,9 +3,6 @@ open Sloth_common.Common
 open Common
 open Core
 
-let test_version =
-  Sloth_common.Semver.create ~minor:1 () |> Result.ok_or_failwith
-
 let rec indent buf n =
   if n = 0 then Buffer.contents buf
   else (
@@ -57,7 +54,7 @@ let make_test spec =
     Interpreter.Globals.make_globals
       (module Lib)
       spec.program "/parent/unit_test.sloth" ~env:[| "UNIT_TEST=true" |]
-      ~argv:[] ~version:test_version
+      ~argv:[] ~version:Common.version
   in
   let either =
     match
@@ -151,7 +148,8 @@ let make_failing_test spec =
     let globals =
       Interpreter.Globals.make_globals
         (module Lib)
-        spec.program "unit_test.sloth" ~env:[||] ~argv:[] ~version:test_version
+        spec.program "unit_test.sloth" ~env:[||] ~argv:[]
+        ~version:Common.version
     in
     let _, either = Interpreter.Interpret.interpret_prog globals prog in
     match either with

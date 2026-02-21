@@ -907,7 +907,7 @@ let make_protos m =
       getters =
         [
           ( "toString",
-            make_method ~arity:(Some 0) ~name:"Version.toString"
+            make_method ~arity:(Some 1) ~name:"Version.toString"
               (fun self _ _ _ ->
                 let version =
                   Runtime.version_of_t self |> Option.value_exn ~message:__LOC__
@@ -919,13 +919,24 @@ let make_protos m =
       static_getters =
         [
           ( "current",
-            make_method ~arity:(Some 1) ~name:"Version.current" (fun _ _ _ _ ->
-                failwith "TODO") );
+            make_method ~arity:(Some 1) ~name:"Version.current"
+              (fun _ ctx _ _ ->
+                let ver =
+                  Context.get ctx "$version"
+                  |> Option.value_exn ~message:__LOC__
+                in
+                (* This is just a type check *)
+                match Runtime.version_of_t ver with
+                | Some _ -> First ver
+                | None ->
+                    Printf.sprintf "type error at %s: %s" __LOC__
+                      (Runtime.to_s ver)
+                    |> Sloth_common.Common.internal_failure) );
         ];
     };
   ]
 
-let context_ids ~cwd ~env ~script_path ~argv =
+let context_ids ~cwd ~env ~script_path ~argv ~version =
   [
     ( "$argv",
       Runtime.List
@@ -937,4 +948,5 @@ let context_ids ~cwd ~env ~script_path ~argv =
     ("$stderr", Runtime.FileDescriptor Core_unix.stderr);
     ("$stdin", Runtime.FileDescriptor Core_unix.stdin);
     ("$stdout", Runtime.FileDescriptor Core_unix.stdout);
+    ("$version", Runtime.Version version);
   ]

@@ -15,7 +15,7 @@ let repl cwd =
   let globals =
     Globals.make_globals
       (module Native.Prod)
-      "" script_path ~env:(Core_unix.environment ()) ~argv:[]
+      "" script_path ~env:(Core_unix.environment ()) ~argv:[] ~version
   in
   let env = Compiler.Environment.create "" |> Compiler.Environment.populate in
   let rec repl_inner globals env =
@@ -71,7 +71,7 @@ let interpreter program program_name argv =
   let globals =
     Globals.make_globals
       (module Native.Prod)
-      ~argv program program_name ~env:(Core_unix.environment ())
+      ~argv program program_name ~env:(Core_unix.environment ()) ~version
   in
 
   let result =

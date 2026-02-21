@@ -33,3 +33,10 @@ let debug_mode = false
 
 (* See BUFSIZ in stdio.h = 8192; although apparently OCaml's IO buffers are 65536? *)
 let bufsiz = 65536
+
+(*
+TODO generate this at build time, from git
+https://discuss.ocaml.org/t/how-to-generate-different-code-based-on-an-environmental-variable-at-build-time/16104
+*)
+let version =
+  Semver.create ~major:0 ~minor:1 ~patch:0 () |> Core.Result.ok_or_failwith
