@@ -14,6 +14,7 @@ type t = {
   stack_frames : Runtime.backtrace;
   current_function_name : string;
       (* Store this since stack_frames stores the name of the enclosing func *)
+  version : Sloth_common.Semver.t;
 }
 
 let push_frame t next_func pos =
@@ -24,7 +25,7 @@ let push_frame t next_func pos =
   }
 
 (* TODO memoize *)
-let make_globals m src script_path ~argv ~env =
+let make_globals m src script_path ~argv ~env ~version =
   let module M = (val m : Native.Sig) in
   let classes = Hashtbl.create (module String) in
   let identifiers : Runtime.t Identifiers.t = Identifiers.create () in
@@ -80,4 +81,5 @@ let make_globals m src script_path ~argv ~env =
     argv;
     stack_frames = [];
     current_function_name = "(top-level)";
+    version;
   }

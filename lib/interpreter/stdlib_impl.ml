@@ -902,6 +902,27 @@ let make_protos m =
       setters = [];
       static_getters = [];
     };
+    {
+      name = "Version";
+      getters =
+        [
+          ( "toString",
+            make_method ~arity:(Some 0) ~name:"Version.toString"
+              (fun self _ _ _ ->
+                let version =
+                  Runtime.version_of_t self |> Option.value_exn ~message:__LOC__
+                in
+                First (Runtime.String (Sloth_common.Semver.to_string version)))
+          );
+        ];
+      setters = [];
+      static_getters =
+        [
+          ( "current",
+            make_method ~arity:(Some 1) ~name:"Version.current" (fun _ _ _ _ ->
+                failwith "TODO") );
+        ];
+    };
   ]
 
 let context_ids ~cwd ~env ~script_path ~argv =

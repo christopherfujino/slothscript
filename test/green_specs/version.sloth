@@ -1,0 +1,4 @@
+### Program
+
+let ver = Version.current()
+assert(ver.toString() == "1.2.3")

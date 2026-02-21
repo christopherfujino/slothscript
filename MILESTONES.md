@@ -14,7 +14,6 @@
     - language version
     - permissions
 - [ ] Allow non-zero exit codes on sub-processes
-- [ ] Bug: stacktrace printing is wrong in REPL
 
 ## v1.0
 - [ ] Formatter
@@ -109,3 +108,7 @@
     - `.push(element)`
     - `.pop(element)`
 - [x] Bug: $scriptDir and $cwd should be absolute, so they can be chained
+
+## Bugs
+- [ ] bug: stacktrace printing is wrong in REPL
+- [ ] bug: Do static methods need to take self as first arg?
