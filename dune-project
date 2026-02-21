@@ -22,15 +22,20 @@
  (description "A longer description")
  (depends
    ; Dynarray module requires 5.2.0
-   ; 5.4.0 latest stable as of 2025-11-06
+   ; Checked 2026-02-20
    (ocaml (and (>= 5.4.0) (< 5.5.0)))
    dune
-   ounit2
+   ; Checked 2026-02-20
+   (ounit2 (and (>= 2.2.7) (< 3.0.0)))
+   ; Checked 2026-02-20
    (core (and (>= v0.17.1) (< v0.18)))
+   ; Checked 2026-02-20
    (core_unix (and (>= v0.17.1) (< v0.18)))
-   (ppx_jane (and (>= v0.17) (< v0.18)))
-   ; Sep 3, 2024
-   (re (>= 1.12.0))
+   ; Checked 2026-02-20
+   (ppx_jane (and (>= v0.17.0) (< v0.18)))
+   ; Checked 2026-02-20
+   (re (and (>= 1.14.0) (< 2.0.0)))
+   ; Checked 2026-02-20
    (readline (>= 0.2))
  )
  (tags
