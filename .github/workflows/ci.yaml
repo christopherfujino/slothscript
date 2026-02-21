@@ -11,8 +11,8 @@ jobs:
     # This is the VM image
     runs-on: ubuntu-latest
     container:
-      # As of 2025-08-09, debian 13 is stable
-      image: ocaml/opam:debian-13-ocaml-5.5
+      # Updated 2026-02-20
+      image: ocaml/opam:debian-13-opam
 
     steps:
       - name: Install OS deps

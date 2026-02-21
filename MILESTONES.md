@@ -1,22 +1,22 @@
 # Milestones
 
 ## v0.2
-- [ ] Test suite
-- [ ] JSON module
+- [ ] Binary builds
+- [ ] statically link readline
 
 ## v0.3 - initial pre-release
-- [ ] Migrate AST to use actual Ast module
-- [ ] Regular expressions (libpcre?)
+- [ ] Test suite
+- [ ] JSON module
 - [ ] Constraint system
     - language version
     - permissions
+- [ ] Migrate AST to use actual Ast module
+- [ ] Regular expressions (libpcre?)
 - [ ] Allow non-zero exit codes on sub-processes
 
 ## v1.0
 - [ ] Formatter
 - [ ] LSP server
-- [ ] Binary builds
-- [ ] statically link readline
 - [ ] optimize binary size
 - [ ] Optional function parameters
 - [ ] Network stack
