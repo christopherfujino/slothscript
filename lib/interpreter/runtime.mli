@@ -43,6 +43,7 @@ type t =
   | Process of process
   | ProcessHandle of process_handle
   | ProcessResult of process_result
+  | Version of Sloth_common.Semver.t
 
 and breaking_type =
   | Return of t
@@ -94,6 +95,7 @@ val pipe_of_t : t -> (Core_unix.File_descr.t * Core_unix.File_descr.t) option
 val process_handle_of_t : t -> process_handle option
 val process_of_t : t -> process option
 val process_result_of_val : t -> process_result option
+val version_of_t : t -> Sloth_common.Semver.t option
 val string_of_val : t -> string option
 val val_of_env : string array -> t
 val to_class_name : t -> string

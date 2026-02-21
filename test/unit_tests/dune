@@ -1,0 +1,4 @@
+(library
+ (name unit_tests)
+ ; i.e. deps
+ (libraries sloth_script ounit2))

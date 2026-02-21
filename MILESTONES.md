@@ -1,18 +1,16 @@
 # Milestones
 
-## v0.1 - initially tagged version
-- [ ] Language versioning
-
-## v0.2 - initial pre-release
-- [ ] Migrate AST to use actual Ast module
-- [ ] Regular expressions
+## v0.2
 - [ ] Test suite
+- [ ] JSON module
+
+## v0.3 - initial pre-release
+- [ ] Migrate AST to use actual Ast module
+- [ ] Regular expressions (libpcre?)
 - [ ] Constraint system
     - language version
     - permissions
-- [ ] JSON module
 - [ ] Allow non-zero exit codes on sub-processes
-- [ ] Bug: stacktrace printing is wrong in REPL
 
 ## v1.0
 - [ ] Formatter
@@ -25,6 +23,7 @@
 
 ## Stretch goals
 - [ ] Bytecode VM (this should not happen until API becomes stable)
+- [ ] From scratch regular expression engine
 - [ ] Unicode strings
 - [ ] Method syntax for hash maps
 - [ ] Pattern matching
@@ -37,72 +36,79 @@
 
 # Done
 
+## v0.1 - initially tagged version
+- [x] Language versioning
+
 ## pre-v0.1
-- [x] Lexical scoping
-- [x] Closures
-- [x] Variable re-assignment
-- [x] Function arguments
-- [x] Invoking function expressions
-- [x] Conditionals
-- [x] Tooling to diagnose shift/reduce conflicts
-- [x] Infix functions
-- [x] Recursion (depends on conditionals)
-- [x] Comments
-- [x] Lists
-- [x] Loops
-- [x] Hashmaps
-- [x] Updating lists
-- [x] String interpolation
-- [x] Implement all arithmetic operators
-- [x] Automatic semicolon insertion
-- [x] HashMap literals
-- [x] Store locs in runtime values
-- [x] Assertions
-- [x] Classes
-- [x] Comments
-- [x] For-in loops
-- [x] Do blocks
-- [x] README.md
-- [x] Process class
-- [x] Class static methods
-- [x] Class prototypes
-- [x] Use readline for REPL
-- [x] operators are top level functions that DO one thing, but allow for implicit casting of its operands
-- [x] raw string literals
-- [x] Files
-- [x] Return statements
-- [x] Allow single statement blocks to omit semicolons
-- [x] Migrate var declarations and reassignment to expressions
-- [x] First class for loops
-- [x] Break and continue statements
-- [x] Context variables, with statements; $cwd
-- [x] Mock out processes, files for unit tests
-- [x] $script & $scriptDir
-- [x] $env
-- [x] Parser errors
-- [x] Implement exit function
-- [x] `&` and `&!` operators for spawning sub-processes
-- [x] CLI args
-- [x] $stdin, $stderr
-- [x] error handling (`let result = mayError() catch (e) DEFAULT;`)
-- [x] `throw` keyword
-- [x] `File::open()` -> `FileDescriptor`
-    - `fd.writeAll("Hello, World!\n")`
-    - `fd.close()
-- [x] Reading from `$stdin`
-- [x] Mock out standard I/O for tests
-- [x] `String` methods
-    - `.split(sep)`
-    - `.contains(substring)`
-- [x] Blank identifier does not bind
-- [x] Add `FileDescriptor::write()`
-- [x] Stack traces
-- [x] `List` methods
-    - `.contains(element)`
-    - `.forEach(callback)`
-    - `.map(callback)`
-    - `.filter(callback)`
-    - `.reduce(callback)`
-    - `.push(element)`
-    - `.pop(element)`
 - [x] Bug: $scriptDir and $cwd should be absolute, so they can be chained
+- [x] `List` methods
+    - `.pop(element)`
+    - `.push(element)`
+    - `.reduce(callback)`
+    - `.filter(callback)`
+    - `.map(callback)`
+    - `.forEach(callback)`
+    - `.contains(element)`
+- [x] Stack traces
+- [x] Add `FileDescriptor::write()`
+- [x] Blank identifier does not bind
+- [x] `String` methods
+    - `.contains(substring)`
+    - `.split(sep)`
+- [x] Mock out standard I/O for tests
+- [x] Reading from `$stdin`
+- [x] `File::open()` -> `FileDescriptor`
+    - `fd.close()
+    - `fd.writeAll("Hello, World!\n")`
+- [x] `throw` keyword
+- [x] error handling (`let result = mayError() catch (e) DEFAULT;`)
+- [x] $stdin, $stderr
+- [x] CLI args
+- [x] `&` and `&!` operators for spawning sub-processes
+- [x] Implement exit function
+- [x] Parser errors
+- [x] $env
+- [x] $script & $scriptDir
+- [x] Mock out processes, files for unit tests
+- [x] Context variables, with statements; $cwd
+- [x] Break and continue statements
+- [x] First class for loops
+- [x] Migrate var declarations and reassignment to expressions
+- [x] Allow single statement blocks to omit semicolons
+- [x] Return statements
+- [x] Files
+- [x] raw string literals
+- [x] operators are top level functions that DO one thing, but allow for implicit casting of its operands
+- [x] Use readline for REPL
+- [x] Class prototypes
+- [x] Class static methods
+- [x] Process class
+- [x] README.md
+- [x] Do blocks
+- [x] For-in loops
+- [x] Comments
+- [x] Classes
+- [x] Assertions
+- [x] Store locs in runtime values
+- [x] HashMap literals
+- [x] Automatic semicolon insertion
+- [x] Implement all arithmetic operators
+- [x] String interpolation
+- [x] Updating lists
+- [x] Hashmaps
+- [x] Loops
+- [x] Lists
+- [x] Comments
+- [x] Recursion (depends on conditionals)
+- [x] Infix functions
+- [x] Tooling to diagnose shift/reduce conflicts
+- [x] Conditionals
+- [x] Invoking function expressions
+- [x] Function arguments
+- [x] Variable re-assignment
+- [x] Closures
+- [x] Lexical scoping
+
+## Bugs
+- [ ] bug: stacktrace printing is wrong in REPL
+- [ ] bug: Do static methods need to take self as first arg?

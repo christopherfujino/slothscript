@@ -21,6 +21,7 @@ let globals =
         "$stderr";
         "$stdin";
         "$stdout";
+        "$version";
       ];
     protos =
       [
@@ -109,6 +110,12 @@ let globals =
           getters = [ "contains"; "length"; "split"; "trim" ];
           setters = [];
           static_getters = [];
+        };
+        {
+          name = "Version";
+          getters = [ "toString" ];
+          setters = [];
+          static_getters = [ "current" ];
         };
       ];
   }

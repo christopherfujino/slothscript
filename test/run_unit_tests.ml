@@ -93,6 +93,7 @@ let stdlib_interface_and_impl_match _ =
   let impl_context_ids =
     Interpreter.Stdlib_impl.context_ids ~cwd:"/home/user"
       ~env:[| "USER=sloth" |] ~script_path:"/home/user/script.sloth" ~argv:[]
+      ~version:Common.version
     |> List.map ~f:(fun (name, _) -> name)
   in
   compare_two_string_lists interface.ids impl_ids;
@@ -141,4 +142,5 @@ let get () =
     "pretty" >::: List.map pretty ~f;
     "STDLIB interface & implementation match"
     >:: stdlib_interface_and_impl_match;
+    "semver" >::: Unit_tests.Semver_test.tests;
   ]

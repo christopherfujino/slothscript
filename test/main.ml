@@ -54,7 +54,7 @@ let make_test spec =
     Interpreter.Globals.make_globals
       (module Lib)
       spec.program "/parent/unit_test.sloth" ~env:[| "UNIT_TEST=true" |]
-      ~argv:[]
+      ~argv:[] ~version:Common.version
   in
   let either =
     match
@@ -149,6 +149,7 @@ let make_failing_test spec =
       Interpreter.Globals.make_globals
         (module Lib)
         spec.program "unit_test.sloth" ~env:[||] ~argv:[]
+        ~version:Common.version
     in
     let _, either = Interpreter.Interpret.interpret_prog globals prog in
     match either with
@@ -184,7 +185,7 @@ let tests =
   >::: [
          "green" >::: List.map ~f:make_test (Specs.green ());
          "red" >::: List.map ~f:make_failing_test (Specs.red ());
-         "unit" >::: Unit_tests.get ();
+         "unit" >::: Run_unit_tests.get ();
        ]
 
 let () = run_test_tt_main tests

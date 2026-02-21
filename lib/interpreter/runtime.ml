@@ -66,20 +66,15 @@ let backtrace_to_s ~pos bt src msg type_s =
   Buffer.contents buf
 
 type t =
-  (* Primitives *)
   | String of string
   | Bool of bool
   | Num of float
   | Null
-  (* Collections *)
   | List of t Dynarray.t
   | HashMap of (t, t) Stdlib.Hashtbl.t
-  (* Functions *)
   | Func of function_t
   | Method of t * function_t  (** This is created by Object de-referencing *)
-  (* Type *)
   | Prototype of prototype
-  (* Stdlib Types *)
   | Directory of string
   | File of file
   | FileDescriptor of Core_unix.File_descr.t
@@ -87,6 +82,7 @@ type t =
   | Process of process
   | ProcessHandle of process_handle
   | ProcessResult of process_result
+  | Version of Sloth_common.Semver.t
 
 and breaking_type =
   | Return of t
@@ -139,6 +135,7 @@ let to_class_name = function
   | File _ -> "File"
   | FileDescriptor _ -> "FileDescriptor"
   | Directory _ -> "Directory"
+  | Version _ -> "Version"
 
 let rec to_s t' =
   let stringify_list l =
@@ -207,6 +204,7 @@ let rec to_s t' =
   | FileDescriptor fd ->
       Printf.sprintf "FileDescriptor(fd=%d)" @@ Core_unix.File_descr.to_int fd
   | Directory path -> Printf.sprintf "Directory(path=%s)" path
+  | Version ver -> Sloth_common.Semver.to_string ver
 
 let num_of_val = function Num f -> Some f | _ -> None
 let string_of_val = function String s -> Some s | _ -> None
@@ -223,6 +221,7 @@ let hashmap_of_val = function HashMap h -> Some h | _ -> None
 let process_of_t = function Process p -> Some p | _ -> None
 let process_handle_of_t = function ProcessHandle p -> Some p | _ -> None
 let process_result_of_val = function ProcessResult p -> Some p | _ -> None
+let version_of_t = function Version v -> Some v | _ -> None
 let func_of_val = function Func func -> Some func | _ -> None
 
 let method_of_val = function
@@ -401,7 +400,10 @@ let rec is_equal is_equality lhs rhs =
           Core_unix.File_descr.(equal read r_read && equal write r_write)
         in
         Bool.(same_pipe = is_equality)
-    | ProcessResult _ -> failwith "TODO"
-    | Func _ | Method _ ->
+    | Version left_ver ->
+        let right_ver = version_of_t rhs |> option_value ~message:__LOC__ in
+        let same_version = Sloth_common.Semver.is_equal left_ver right_ver in
+        Bool.(same_version = is_equality)
+    | ProcessResult _ | Func _ | Method _ ->
         Printf.sprintf "is_equal the type %s is not implemented" lh_s
         |> failwith
