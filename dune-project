@@ -25,17 +25,17 @@
    ; Checked 2026-02-20
    (ocaml (and (>= 5.4.0) (< 5.5.0)))
    dune
-   ; Checked 2026-02-20
+   ; Checked 2026-03-25
    (ounit2 (and (>= 2.2.7) (< 3.0.0)))
-   ; Checked 2026-02-20
+   ; Checked 2026-03-25
    (core (and (>= v0.17.1) (< v0.18)))
-   ; Checked 2026-02-20
+   ; Checked 2026-03-25
    (core_unix (and (>= v0.17.1) (< v0.18)))
-   ; Checked 2026-02-20
+   ; Checked 2026-03-25
    (ppx_jane (and (>= v0.17.0) (< v0.18)))
-   ; Checked 2026-02-20
+   ; Checked 2026-03-25
    (re (and (>= 1.14.0) (< 2.0.0)))
-   ; Checked 2026-02-20
+   ; Checked 2026-03-25
    (readline (>= 0.2))
  )
  (tags
