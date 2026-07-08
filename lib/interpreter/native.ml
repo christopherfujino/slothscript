@@ -3,6 +3,7 @@ open Sloth_common.Common
 
 type processMode =
   | BlockInherit (* proc! -> null *)
+  | ForkInherit (* ? -> ProcessHandle *)
   | ForkBuffer (* proc& -> ProcessHandle *)
   | BlockBuffer (* proc&! -> ProcessResult *)
 
@@ -177,8 +178,9 @@ module Prod : Sig = struct
   let proc_exec ~mode (proc : Runtime.process) env =
     let read_stdout, write_stdout, read_stderr, write_stderr =
       match mode with
-      | BlockInherit -> (None, None, None, None)
+      | BlockInherit | ForkInherit -> (None, None, None, None)
       | BlockBuffer | ForkBuffer ->
+          (* TODO: this should not be a pipe, but a growable buffer to avoid deadlock! *)
           let read_stdout, write_stdout =
             Core_unix.pipe ~close_on_exec:true ()
           in
@@ -204,7 +206,7 @@ module Prod : Sig = struct
         match Core_unix.fork () with
         | `In_the_child ->
             (match mode with
-            | BlockInherit -> ()
+            | BlockInherit | ForkInherit -> ()
             | BlockBuffer | ForkBuffer ->
                 let read_stdout = option_value read_stdout ~message:__LOC__ in
                 let read_stderr = option_value read_stderr ~message:__LOC__ in
@@ -252,7 +254,7 @@ module Prod : Sig = struct
     let pids = get_pids proc in
 
     (match mode with
-    | BlockInherit -> ()
+    | BlockInherit | ForkInherit -> ()
     | BlockBuffer | ForkBuffer ->
         Core_unix.close @@ option_value write_stdout ~message:__LOC__;
         Core_unix.close @@ option_value write_stderr ~message:__LOC__);
@@ -266,6 +268,8 @@ module Prod : Sig = struct
         let handle = Runtime.ProcessInherited last_pid in
         (* This should already return Ok Runtime.Null on success *)
         wait handle
+    | ForkInherit ->
+        Ok (Runtime.ProcessHandle (Runtime.ProcessInherited last_pid))
     | ForkBuffer ->
         Ok
           (Runtime.ProcessHandle
@@ -586,6 +590,16 @@ module Make_test () : TestSig = struct
                   in
                   let result = Runtime.ProcessResult { code; stdout; stderr } in
                   Ok result
+              | ForkInherit ->
+                  let this_pid = get_next_pid () in
+                  let callback () =
+                    let _ = exec_proc_spec proc.stdout proc.stderr in
+                    Ok Runtime.Null
+                  in
+                  running_pids := (this_pid, callback) :: !running_pids;
+                  Ok
+                    Runtime.(
+                      ProcessHandle (ProcessInherited (Pid.of_int this_pid)))
               | ForkBuffer ->
                   let this_pid = get_next_pid () in
                   let read_stdout, write_stdout = pipe () in

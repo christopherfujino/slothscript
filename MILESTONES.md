@@ -33,8 +33,12 @@
     - `return` always occurs in a function definition
     - `break` and `continue` always occur in loops
 - [ ] Yaml module
+- [ ] operator for Process.forkInherit
 
 # Done
+
+## next
+- [x] Feature: Process.forkInherit()
 
 ## v0.1 - initially tagged version
 - [x] Language versioning
@@ -43,6 +47,7 @@
 - [x] Bug: $scriptDir and $cwd should be absolute, so they can be chained
 - [x] `List` methods
     - `.pop(element)`
+<<<<<<< Updated upstream
     - `.push(element)`
     - `.reduce(callback)`
     - `.filter(callback)`

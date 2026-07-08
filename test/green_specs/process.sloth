@@ -14,6 +14,11 @@ assert(result.stdout == "Linux\n", "${result}")
 result = "uname"&!
 assert(result.stdout == "Linux\n")
 
+let proc = Process.new(["uname"])
+proc.stdout = $stdout
+handle = proc.forkInherit()
+handle.wait()
+
 ### Processes
 (((cmd
   (uname))
@@ -37,6 +42,11 @@ assert(result.stdout == "Linux\n")
     (instructions
       ((Stdout
         "Linus\n"))))
+  ((cmd
+    (uname))
+    (instructions
+      ((Stdout
+        "Linux\n"))))
   ((cmd
     (uname))
     (instructions
@@ -226,10 +236,71 @@ assert(result.stdout == "Linux\n")
             <opaque>)
           true
           <opaque>))
+        <opaque>)))
+  (StmtDecl
+    (ExprStmt
+      (LetExpr
+        proc
+        (FuncInvoc
+          (ObjDeref
+            (IdRef
+              Process
+              <opaque>)
+            new
+            <opaque>)
+          ((List
+            ((String
+              ((FullString
+                uname
+                <opaque>))
+              <opaque>))
+            <opaque>))
+          <opaque>)
+        <opaque>)))
+  (StmtDecl
+    (ExprStmt
+      (DerefAssign
+        (receiver
+          (IdRef
+            proc
+            <opaque>))
+        (name
+          stdout)
+        (value
+          (ContextId
+            $stdout
+            <opaque>))
+        (pos
+          <opaque>))))
+  (StmtDecl
+    (ExprStmt
+      (AssignExpr
+        handle
+        (FuncInvoc
+          (ObjDeref
+            (IdRef
+              proc
+              <opaque>)
+            forkInherit
+            <opaque>)
+          ()
+          <opaque>)
+        <opaque>)))
+  (StmtDecl
+    (ExprStmt
+      (FuncInvoc
+        (ObjDeref
+          (IdRef
+            handle
+            <opaque>)
+          wait
+          <opaque>)
+        ()
         <opaque>))))
 
 ### Stdout
 Linus
 Linus
+Linux
 
 ### Failure

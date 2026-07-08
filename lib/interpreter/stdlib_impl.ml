@@ -368,6 +368,29 @@ let make_protos m =
                 match M.proc_exec ~mode:Native.ForkBuffer self env with
                 | Ok t' -> First t'
                 | Error err -> Second (Runtime.Error (None, String err))) );
+          ( "forkInherit",
+            make_method ~arity:(Some 1) ~name:"Process.forkInherit"
+              (fun self ctx _ _ ->
+                let self =
+                  Runtime.process_of_t self |> option_value ~message:__LOC__
+                in
+                let env =
+                  Context.get ctx "$env"
+                  |> option_value
+                       ~message:"The context variable `$env` was not set!"
+                in
+                let env =
+                  Runtime.env_of_val env
+                  |> option_value
+                       ~message:
+                         (Printf.sprintf
+                            "Expected `$env` to be of type \
+                             `HashMap[String]String`, but got %s"
+                         @@ Runtime.to_s env)
+                in
+                match M.proc_exec ~mode:Native.ForkInherit self env with
+                | Ok t' -> First t'
+                | Error err -> Second (Runtime.Error (None, String err))) );
           ( "blockBuffer",
             make_method ~arity:(Some 1) ~name:"Process.blockBuffer"
               (fun self ctx _ _ ->
@@ -536,10 +559,13 @@ let make_protos m =
                   |> option_value ~message:__LOC__
                 in
                 let res =
+                  M.wait handle
+                  (*
                   match handle with
                   | ProcessInherited _ ->
                       Sloth_common.Common.internal_failure __LOC__
                   | ProcessBuffered _ -> M.wait handle
+                  *)
                 in
                 match res with
                 | Ok proc_result -> First proc_result

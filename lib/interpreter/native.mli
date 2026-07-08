@@ -2,6 +2,7 @@ open Core
 
 type processMode =
   | BlockInherit (* proc! -> null *)
+  | ForkInherit (* ? -> ProcessHandle *)
   | ForkBuffer (* proc& -> ProcessHandle *)
   | BlockBuffer (* proc&! -> ProcessResult *)
 
