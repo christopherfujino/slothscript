@@ -12,6 +12,8 @@
     - permissions
 - [ ] Migrate AST to use actual Ast module
 - [ ] Regular expressions (libpcre?)
+- [ ] Network requests
+- [ ] Iteration over HashMap
 - [ ] Allow non-zero exit codes on sub-processes
 
 ## v1.0
