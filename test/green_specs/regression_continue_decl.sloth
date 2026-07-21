@@ -1,0 +1,68 @@
+### Program
+let l = [""]
+#for file in l {
+#  continue
+#}
+for let i = 0; i < l.length; i = i + 1 {
+  continue
+}
+
+### Processes
+()
+
+### Ast
+((StmtDecl
+  (ExprStmt
+    (LetExpr
+      l
+      (List
+        ((String
+          ((FullString
+            ""
+            <opaque>))
+          <opaque>))
+        <opaque>)
+      <opaque>)))
+  (StmtDecl
+    (ExprStmt
+      (ForLoop
+        (LetExpr
+          i
+          (Num
+            0
+            <opaque>)
+          <opaque>)
+        (Binary
+          (IdRef
+            i
+            <opaque>)
+          (ObjDeref
+            (IdRef
+              l
+              <opaque>)
+            length
+            <opaque>)
+          Less
+          <opaque>)
+        (AssignExpr
+          i
+          (Binary
+            (IdRef
+              i
+              <opaque>)
+            (Num
+              1
+              <opaque>)
+            Plus
+            <opaque>)
+          <opaque>)
+        ((BreakingStmt
+          Continue
+          ()
+          <opaque>))
+        <opaque>))))
+
+### Stdout
+
+
+### Failure

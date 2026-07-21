@@ -670,7 +670,7 @@ and interpret_expr globals (expr : Compiler.Optimizer.expr) =
                     | Break break_val ->
                         (* Done with loop, return break_val *)
                         (globals, First break_val)
-                    | Continue v -> recurse v
+                    | Continue v -> (globals, First v)
                     | Error _ | Exit _ -> (globals, either)))
           | None ->
               Printf.sprintf
