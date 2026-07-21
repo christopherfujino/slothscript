@@ -1,10 +1,16 @@
 ### Program
-let l = [""]
-#for file in l {
-#  continue
-#}
+let l = ["hi", ""]
+let res = for file in l {
+  continue 42
+}
+
+assert(res == 42)
+
+# This was never broken, let's ensure it never does
 for let i = 0; i < l.length; i = i + 1 {
-  continue
+  if l[i] == "" {
+    continue
+  }
 }
 
 ### Processes
@@ -18,11 +24,53 @@ for let i = 0; i < l.length; i = i + 1 {
       (List
         ((String
           ((FullString
-            ""
+            hi
             <opaque>))
-          <opaque>))
+          <opaque>)
+          (String
+            ((FullString
+              ""
+              <opaque>))
+            <opaque>))
         <opaque>)
       <opaque>)))
+  (StmtDecl
+    (ExprStmt
+      (LetExpr
+        res
+        (ForInLoop
+          (iterator_name
+            file)
+          (iteratee
+            (IdRef
+              l
+              <opaque>))
+          (block
+            ((BreakingStmt
+              Continue
+              ((Num
+                42
+                <opaque>))
+              <opaque>)))
+          (pos
+            <opaque>))
+        <opaque>)))
+  (StmtDecl
+    (ExprStmt
+      (FuncInvoc
+        (IdRef
+          assert
+          <opaque>)
+        ((Equality
+          (IdRef
+            res
+            <opaque>)
+          (Num
+            42
+            <opaque>)
+          true
+          <opaque>))
+        <opaque>)))
   (StmtDecl
     (ExprStmt
       (ForLoop
@@ -56,10 +104,36 @@ for let i = 0; i < l.length; i = i + 1 {
             Plus
             <opaque>)
           <opaque>)
-        ((BreakingStmt
-          Continue
-          ()
-          <opaque>))
+        ((ExprStmt
+          (IfExpr
+            (IfCont
+              (conditional
+                (Equality
+                  (Subscript
+                    (IdRef
+                      l
+                      <opaque>)
+                    (IdRef
+                      i
+                      <opaque>)
+                    <opaque>)
+                  (String
+                    ((FullString
+                      ""
+                      <opaque>))
+                    <opaque>)
+                  true
+                  <opaque>))
+              (block
+                ((BreakingStmt
+                  Continue
+                  ()
+                  <opaque>)))
+              (continuation
+                ())
+              (pos
+                <opaque>))
+            <opaque>)))
         <opaque>))))
 
 ### Stdout
