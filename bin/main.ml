@@ -104,6 +104,7 @@ let () =
   let argc = Array.length argv in
   let cwd = Sys_unix.getcwd () in
   let isatty = Core_unix.isatty Core_unix.stdin in
+  (* TODO: implement arg parsing *)
   match argc with
   | 1 ->
       if isatty then repl cwd
