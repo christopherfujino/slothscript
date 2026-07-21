@@ -684,7 +684,7 @@ and interpret_expr globals (expr : Compiler.Optimizer.expr) =
       in
       (globals, either)
       (* for <iterator_name> in <iteratee> { <block> } *)
-  | ForInLoop { iterator_name; iteratee; block; pos } ->
+  | ForInLoop { iterator_name; iteratee; block; pos } -> (
       let globals =
         {
           globals with
@@ -700,23 +700,33 @@ and interpret_expr globals (expr : Compiler.Optimizer.expr) =
               (Runtime.to_class_name iteratee)
             |> fail ~globals pos
       in
-      ( globals,
-        Dynarray.fold_left
-          (fun prev element ->
-            if Either.is_second prev then prev
-            else
-              let temp_globals =
-                {
-                  globals with
-                  identifiers = Identifiers.push_empty globals.identifiers;
-                }
-              in
-              Identifiers.bind temp_globals.identifiers iterator_name element
-              |> option_value
-                   ~message:(internal_failure_msg ~globals ~pos __LOC__);
-              interpret_block temp_globals block)
-          (First Runtime.Null) iteratee_array )
-      >>= fun _ ret_val -> (globals, First ret_val)
+      let globals, either =
+        ( globals,
+          Dynarray.fold_left
+            (fun prev element ->
+              if Either.is_second prev then prev
+              else
+                let temp_globals =
+                  {
+                    globals with
+                    identifiers = Identifiers.push_empty globals.identifiers;
+                  }
+                in
+                Identifiers.bind temp_globals.identifiers iterator_name element
+                |> option_value
+                     ~message:(internal_failure_msg ~globals ~pos __LOC__);
+                interpret_block temp_globals block)
+            (First Runtime.Null) iteratee_array )
+      in
+      match either with
+      | First ret_val -> (globals, First ret_val)
+      | Second breaking_type -> (
+          match breaking_type with
+          | Break v -> (globals, First v)
+          | Continue v -> (globals, First v)
+          | Error _ -> (globals, either)
+          | Exit _ -> (globals, either)
+          | Return _ -> (globals, either)))
   | WithExpr (assignments, block, pos) ->
       let module M = (val globals.l) in
       let post_block_hook = ref None in

@@ -1,0 +1,142 @@
+### Program
+let l = ["hi", ""]
+let res = for file in l {
+  continue 42
+}
+
+assert(res == 42)
+
+# This was never broken, let's ensure it never does
+for let i = 0; i < l.length; i = i + 1 {
+  if l[i] == "" {
+    continue
+  }
+}
+
+### Processes
+()
+
+### Ast
+((StmtDecl
+  (ExprStmt
+    (LetExpr
+      l
+      (List
+        ((String
+          ((FullString
+            hi
+            <opaque>))
+          <opaque>)
+          (String
+            ((FullString
+              ""
+              <opaque>))
+            <opaque>))
+        <opaque>)
+      <opaque>)))
+  (StmtDecl
+    (ExprStmt
+      (LetExpr
+        res
+        (ForInLoop
+          (iterator_name
+            file)
+          (iteratee
+            (IdRef
+              l
+              <opaque>))
+          (block
+            ((BreakingStmt
+              Continue
+              ((Num
+                42
+                <opaque>))
+              <opaque>)))
+          (pos
+            <opaque>))
+        <opaque>)))
+  (StmtDecl
+    (ExprStmt
+      (FuncInvoc
+        (IdRef
+          assert
+          <opaque>)
+        ((Equality
+          (IdRef
+            res
+            <opaque>)
+          (Num
+            42
+            <opaque>)
+          true
+          <opaque>))
+        <opaque>)))
+  (StmtDecl
+    (ExprStmt
+      (ForLoop
+        (LetExpr
+          i
+          (Num
+            0
+            <opaque>)
+          <opaque>)
+        (Binary
+          (IdRef
+            i
+            <opaque>)
+          (ObjDeref
+            (IdRef
+              l
+              <opaque>)
+            length
+            <opaque>)
+          Less
+          <opaque>)
+        (AssignExpr
+          i
+          (Binary
+            (IdRef
+              i
+              <opaque>)
+            (Num
+              1
+              <opaque>)
+            Plus
+            <opaque>)
+          <opaque>)
+        ((ExprStmt
+          (IfExpr
+            (IfCont
+              (conditional
+                (Equality
+                  (Subscript
+                    (IdRef
+                      l
+                      <opaque>)
+                    (IdRef
+                      i
+                      <opaque>)
+                    <opaque>)
+                  (String
+                    ((FullString
+                      ""
+                      <opaque>))
+                    <opaque>)
+                  true
+                  <opaque>))
+              (block
+                ((BreakingStmt
+                  Continue
+                  ()
+                  <opaque>)))
+              (continuation
+                ())
+              (pos
+                <opaque>))
+            <opaque>)))
+        <opaque>))))
+
+### Stdout
+
+
+### Failure
