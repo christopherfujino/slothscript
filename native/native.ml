@@ -2,7 +2,7 @@
    Check for correctness if switching to Core! *)
 
 external file_read_all : string -> string option = "file_read_all"
-external chdir : string -> (string, string) Result.t = "_chdir"
+external chdir : string -> (unit, string) Result.t = "_chdir"
 (*
   val fd_read_all : Core_unix.File_descr.t -> (Runtime.t, string) Result.t
   val fd_write_all : Core_unix.File_descr.t -> string -> (unit, string) Result.t
