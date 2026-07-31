@@ -734,13 +734,6 @@ and interpret_expr globals (expr : Compiler.Optimizer.expr) =
       let inner_globals =
         { globals with context_ids = Context.push_empty globals.context_ids }
       in
-      let debug tag =
-        let cwd =
-          Context.get inner_globals.context_ids "$cwd"
-          |> Option.value_exn |> Runtime.to_s
-        in
-        Printf.printf "[DEBUG] %s\t$CWD = %s\n" tag cwd
-      in
       (*
       Process side effects for certain context variables
       These can't be recovered from, we must fail immediately
@@ -751,15 +744,7 @@ and interpret_expr globals (expr : Compiler.Optimizer.expr) =
         | "$cwd" ->
             let cd_wrapper p =
               match M.chdir p with
-              | Ok new_p -> (
-                  match
-                    Context.reassign globals.context_ids "$cwd"
-                      (Runtime.String new_p)
-                  with
-                  | Some () ->
-                      debug "B";
-                      ()
-                  | None -> internal_failure "Failed to re-assign $cwd")
+              | Ok _ -> ()
               | Error msg -> fail ~globals pos msg
             in
             (match Runtime.string_of_val next with
@@ -778,7 +763,6 @@ and interpret_expr globals (expr : Compiler.Optimizer.expr) =
         | _ -> ()
       in
 
-      debug "C";
       let _, either =
         List.fold assignments ~init:(inner_globals, First ())
           ~f:(fun prev (name, expr) ->
@@ -792,19 +776,27 @@ and interpret_expr globals (expr : Compiler.Optimizer.expr) =
                     name
                   |> fail ~globals pos
             in
-            debug "D";
+            let next_value =
+              match name with
+              | "$cwd" -> (
+                  match Runtime.string_of_val next_value with
+                  | Some path -> Runtime.String (M.realpath path)
+                  | None ->
+                      fail ~globals pos
+                      @@ Printf.sprintf
+                           "Cannot assign %s to $cwd because it must be a \
+                            `String`"
+                      @@ Runtime.to_s next_value)
+              | _ -> next_value
+            in
+            Context.reassign globals.context_ids name next_value
+            |> option_value ~message:__LOC__;
             middleware name prev next_value;
-            debug "E";
-            (match Context.reassign globals.context_ids name next_value with
-            | Some () -> ()
-            | None -> internal_failure __LOC__);
             (globals, First ()))
         >>= fun globals () -> (globals, interpret_block globals block)
       in
-      debug "F";
       (* This needs to run regardless of either's state *)
       let _ = Option.map !post_block_hook ~f:(fun hook -> hook ()) in
-      debug "G";
       (globals, either)
   | CatchExpr { subject; capture; catch; pos = _ } -> (
       let globals, subject_either = interpret_expr globals subject in

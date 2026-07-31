@@ -58,12 +58,13 @@ module Prod : Native_sig.Sig = struct
     else Ok ()
 
   let chdir path =
-    let open Result.Monad_infix in
-    (try Ok (Core_unix.chdir path)
-     with Core_unix.Unix_error (err, _, _) ->
-       let err_msg = Core_unix.Error.message err in
-       Error (Printf.sprintf "`chdir(%s)` failed with \"%s\"" path err_msg))
-    >>= fun () -> Ok (Filename_unix.realpath path)
+    try Ok (Core_unix.chdir path)
+    with Core_unix.Unix_error (err, _, _) ->
+      let err_msg = Core_unix.Error.message err in
+      Error (Printf.sprintf "`chdir(%s)` failed with \"%s\"" path err_msg)
+
+  (** TODO make a Result.t *)
+  let realpath path = Filename_unix.realpath path
 
   let mkdir = Core_unix.mkdir ~perm:0o775
 
@@ -397,8 +398,11 @@ module Make_test () : TestSig = struct
     this_pid
 
   let proc_expectations : Mock_process.spec option ref = ref None
-  let chdir path = Ok path
-  (* Note: this will not normalize paths as the real one does *)
+  let chdir _ = Ok ()
+  (* Note: this function only exists to cause side effects *)
+
+  let realpath _ = "TODO normalize test realpath"
+  (* TODO: write test normalization algorithm? *)
 
   let mkdir path =
     match Hashtbl.add path_to_entity ~key:path ~data:Directory with

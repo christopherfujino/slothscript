@@ -37,8 +37,9 @@ module type Sig = sig
     string array ->
     (Runtime.t, string) Result.t
 
-  val chdir : string -> (string, string) Result.t
+  val chdir : string -> (unit, string) Result.t
   val directory_exists : string -> bool
   val file_exists : string -> bool
   val mkdir : string -> unit
+  val realpath : string -> string
 end
