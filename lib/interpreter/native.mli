@@ -7,13 +7,18 @@ type processMode =
   | BlockBuffer (* proc&! -> ProcessResult *)
 
 module type Sig = sig
+  (* TODO we should never be returning Runtime.t, but more specific types *)
+
   val file_read_all : string -> string
   val fd_read_all : Core_unix.File_descr.t -> (Runtime.t, string) Result.t
   val fd_write_all : Core_unix.File_descr.t -> string -> (unit, string) Result.t
+
+  (* TODO does this type of `data` need to be more generic to support binary? *)
   val write : Core_unix.File_descr.t -> data:string -> (unit, string) Result.t
   val read : Core_unix.File_descr.t -> (Runtime.t, string) Result.t
   val wait : Runtime.process_handle -> (Runtime.t, string) Result.t
   val pipe : unit -> Core_unix.File_descr.t * Core_unix.File_descr.t
+  (** unit -> read * write *)
 
   val open_file :
     mode:Core_unix.open_flag list ->

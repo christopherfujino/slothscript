@@ -747,7 +747,7 @@ and interpret_expr globals (expr : Compiler.Optimizer.expr) =
                     Context.reassign globals.context_ids "$cwd"
                       (Runtime.String new_p)
                   with
-                  | Some () -> ()
+                  | Some () -> Printf.printf "[DEBUG] %s\n" new_p; ()
                   | None -> internal_failure "Failed to re-assign $cwd")
               | Error msg -> fail ~globals pos msg
             in
@@ -771,7 +771,7 @@ and interpret_expr globals (expr : Compiler.Optimizer.expr) =
         List.fold assignments ~init:(inner_globals, First ())
           ~f:(fun prev (name, expr) ->
             prev >>= fun globals () ->
-            interpret_expr globals expr >>= fun globals next_path ->
+            interpret_expr globals expr >>= fun globals next_value ->
             let prev =
               match Context.get globals.context_ids name with
               | Some prev -> prev
@@ -780,8 +780,8 @@ and interpret_expr globals (expr : Compiler.Optimizer.expr) =
                     name
                   |> fail ~globals pos
             in
-            middleware name prev next_path;
-            (match Context.reassign globals.context_ids name next_path with
+            middleware name prev next_value;
+            (match Context.reassign globals.context_ids name next_value with
             | Some () -> ()
             | None -> internal_failure __LOC__);
             (globals, First ()))

@@ -8,13 +8,10 @@ type processMode =
   | BlockBuffer (* proc&! -> ProcessResult *)
 
 module type Sig = sig
-  (* TODO we should never be returning Runtime.t, but more specific types *)
-
   val file_read_all : string -> string
   val fd_read_all : Core_unix.File_descr.t -> (Runtime.t, string) Result.t
   val fd_write_all : Core_unix.File_descr.t -> string -> (unit, string) Result.t
 
-  (* TODO does this type of `data` need to be more generic to support binary? *)
   val write : Core_unix.File_descr.t -> data:string -> (unit, string) Result.t
   val read : Core_unix.File_descr.t -> (Runtime.t, string) Result.t
   val wait : Runtime.process_handle -> (Runtime.t, string) Result.t
@@ -102,7 +99,7 @@ module Prod : Sig = struct
      with Core_unix.Unix_error (err, _, _) ->
        let err_msg = Core_unix.Error.message err in
        Error (Printf.sprintf "`chdir(%s)` failed with \"%s\"" path err_msg))
-    >>= fun () -> Core_unix.Filename_unix.realpath "."
+    >>= fun () -> Ok (Filename_unix.realpath path)
 
   let mkdir = Core_unix.mkdir ~perm:0o775
 
@@ -436,8 +433,8 @@ module Make_test () : TestSig = struct
     this_pid
 
   let proc_expectations : Mock_process.spec option ref = ref None
-  let chdir _ = Ok ()
-  (* This function only exists to cause OS side-effects, no-op in tests *)
+  let chdir path = Ok path
+  (* Note: this will not normalize paths as the real one does *)
 
   let mkdir path =
     match Hashtbl.add path_to_entity ~key:path ~data:Directory with
