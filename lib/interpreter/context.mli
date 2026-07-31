@@ -5,3 +5,4 @@ val push_empty : 'a t -> 'a t
 val get : 'a t -> string -> 'a option
 val bind : 'a t -> string -> 'a -> unit option
 val reassign : 'a t -> string -> 'a -> unit option
+val debug : 'a t -> ('a -> string) -> unit

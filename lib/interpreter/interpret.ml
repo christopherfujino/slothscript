@@ -728,16 +728,21 @@ and interpret_expr globals (expr : Compiler.Optimizer.expr) =
           | Exit _ -> (globals, either)
           | Return _ -> (globals, either)))
   | WithExpr (assignments, block, pos) ->
+      (* TODO *)
       let module M = (val globals.l) in
       let post_block_hook = ref None in
       let inner_globals =
         { globals with context_ids = Context.push_empty globals.context_ids }
       in
+      let debug tag =
+        let cwd = Context.get inner_globals.context_ids "$cwd" |> Option.value_exn |> Runtime.to_s in
+        Printf.printf "[DEBUG] %s\t$CWD = %s\n" tag cwd
+      in
       (*
       Process side effects for certain context variables
       These can't be recovered from, we must fail immediately
       *)
-      let middleware name prev next =
+      let middleware name prev next = (* TODO: this is wrong, we shouldn't re-assign $cwd here, we do it later; we should have a seperate syscall for realpath, and do it before here *)
         match name with
         | "$cwd" ->
             let cd_wrapper p =
@@ -747,7 +752,9 @@ and interpret_expr globals (expr : Compiler.Optimizer.expr) =
                     Context.reassign globals.context_ids "$cwd"
                       (Runtime.String new_p)
                   with
-                  | Some () -> Printf.printf "[DEBUG] %s\n" new_p; ()
+                  | Some () ->
+                      debug "B";
+                      ()
                   | None -> internal_failure "Failed to re-assign $cwd")
               | Error msg -> fail ~globals pos msg
             in
@@ -767,6 +774,7 @@ and interpret_expr globals (expr : Compiler.Optimizer.expr) =
         | _ -> ()
       in
 
+      debug "C";
       let _, either =
         List.fold assignments ~init:(inner_globals, First ())
           ~f:(fun prev (name, expr) ->
@@ -780,15 +788,19 @@ and interpret_expr globals (expr : Compiler.Optimizer.expr) =
                     name
                   |> fail ~globals pos
             in
+            debug "D";
             middleware name prev next_value;
+            debug "E";
             (match Context.reassign globals.context_ids name next_value with
             | Some () -> ()
             | None -> internal_failure __LOC__);
             (globals, First ()))
         >>= fun globals () -> (globals, interpret_block globals block)
       in
+      debug "F";
       (* This needs to run regardless of either's state *)
       let _ = Option.map !post_block_hook ~f:(fun hook -> hook ()) in
+      debug "G";
       (globals, either)
   | CatchExpr { subject; capture; catch; pos = _ } -> (
       let globals, subject_either = interpret_expr globals subject in
@@ -1155,7 +1167,7 @@ and cast_to_file_descriptor ~globals ~pos ~mode ~m t :
   match t with
   | FileDescriptor fd -> First fd
   | File { path } -> (
-      let module M = (val m : Native.Sig) in
+      let module M = (val m : Native_sig.Sig) in
       match M.open_file ~mode path with
       | Ok fd -> First fd
       | Error msg -> failure_obj ~globals ~pos msg)
