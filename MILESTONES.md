@@ -119,3 +119,4 @@
 ## Bugs
 - [ ] bug: stacktrace printing is wrong in REPL
 - [ ] bug: Do static methods need to take self as first arg?
+- [ ] bug: $cwd is NOT always absolute

@@ -35,7 +35,7 @@ module type Sig = sig
     string array ->
     (Runtime.t, string) Result.t
 
-  val chdir : string -> (unit, string) Result.t
+  val chdir : string -> (string, string) Result.t
   val directory_exists : string -> bool
   val file_exists : string -> bool
   val mkdir : string -> unit
@@ -97,10 +97,12 @@ module Prod : Sig = struct
     else Ok ()
 
   let chdir path =
-    try Ok (Core_unix.chdir path)
-    with Core_unix.Unix_error (err, _, _) ->
-      let err_msg = Core_unix.Error.message err in
-      Error (Printf.sprintf "`chdir(%s)` failed with \"%s\"" path err_msg)
+    let open Result.Monad_infix in
+    (try Ok (Core_unix.chdir path)
+     with Core_unix.Unix_error (err, _, _) ->
+       let err_msg = Core_unix.Error.message err in
+       Error (Printf.sprintf "`chdir(%s)` failed with \"%s\"" path err_msg))
+    >>= fun () -> Core_unix.Filename_unix.realpath "."
 
   let mkdir = Core_unix.mkdir ~perm:0o775
 

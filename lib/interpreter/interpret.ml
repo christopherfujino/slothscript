@@ -740,11 +740,19 @@ and interpret_expr globals (expr : Compiler.Optimizer.expr) =
       let middleware name prev next =
         match name with
         | "$cwd" ->
+            let cd_wrapper p =
+              match M.chdir p with
+              | Ok new_p -> (
+                  match
+                    Context.reassign globals.context_ids "$cwd"
+                      (Runtime.String new_p)
+                  with
+                  | Some () -> ()
+                  | None -> internal_failure "Failed to re-assign $cwd")
+              | Error msg -> fail ~globals pos msg
+            in
             (match Runtime.string_of_val next with
-            | Some s -> (
-                match M.chdir s with
-                | Ok () -> ()
-                | Error msg -> fail ~globals pos msg)
+            | Some s -> cd_wrapper s
             | None ->
                 fail ~globals pos
                 @@ Printf.sprintf
@@ -753,14 +761,9 @@ and interpret_expr globals (expr : Compiler.Optimizer.expr) =
             post_block_hook :=
               Some
                 (fun () ->
-                  let unit_res =
-                    Runtime.string_of_val prev
-                    |> option_value ~message:__LOC__
-                    |> M.chdir
-                  in
-                  match unit_res with
-                  | Ok () -> ()
-                  | Error msg -> fail ~globals pos msg)
+                  Runtime.string_of_val prev
+                  |> option_value ~message:__LOC__
+                  |> cd_wrapper)
         | _ -> ()
       in
 
