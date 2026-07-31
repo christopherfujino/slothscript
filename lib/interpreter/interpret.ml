@@ -735,14 +735,18 @@ and interpret_expr globals (expr : Compiler.Optimizer.expr) =
         { globals with context_ids = Context.push_empty globals.context_ids }
       in
       let debug tag =
-        let cwd = Context.get inner_globals.context_ids "$cwd" |> Option.value_exn |> Runtime.to_s in
+        let cwd =
+          Context.get inner_globals.context_ids "$cwd"
+          |> Option.value_exn |> Runtime.to_s
+        in
         Printf.printf "[DEBUG] %s\t$CWD = %s\n" tag cwd
       in
       (*
       Process side effects for certain context variables
       These can't be recovered from, we must fail immediately
       *)
-      let middleware name prev next = (* TODO: this is wrong, we shouldn't re-assign $cwd here, we do it later; we should have a seperate syscall for realpath, and do it before here *)
+      let middleware name prev next =
+        (* TODO: this is wrong, we shouldn't re-assign $cwd here, we do it later; we should have a seperate syscall for realpath, and do it before here *)
         match name with
         | "$cwd" ->
             let cd_wrapper p =

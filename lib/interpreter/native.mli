@@ -1,5 +1,4 @@
 open Core
-
 module Prod : Native_sig.Sig
 
 module type TestSig = sig
