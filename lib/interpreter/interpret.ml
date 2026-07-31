@@ -728,7 +728,6 @@ and interpret_expr globals (expr : Compiler.Optimizer.expr) =
           | Exit _ -> (globals, either)
           | Return _ -> (globals, either)))
   | WithExpr (assignments, block, pos) ->
-      (* TODO *)
       let module M = (val globals.l) in
       let post_block_hook = ref None in
       let inner_globals =
@@ -739,7 +738,6 @@ and interpret_expr globals (expr : Compiler.Optimizer.expr) =
       These can't be recovered from, we must fail immediately
       *)
       let middleware name prev next =
-        (* TODO: this is wrong, we shouldn't re-assign $cwd here, we do it later; we should have a seperate syscall for realpath, and do it before here *)
         match name with
         | "$cwd" ->
             let cd_wrapper p =
