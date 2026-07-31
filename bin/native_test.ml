@@ -12,4 +12,4 @@ let () =
   |> map_error (fun msg ->
       Printf.printf "CD-ing to /nosuchdir returned \"%s\"\n" msg);
   Sn.Native.chdir "/"
-  |> map_ok (fun msg -> Printf.printf "CD-ing to / succeeded with \"%s\"." msg)
+  |> map_ok (fun () -> Printf.printf "CD-ing to / succeeded.\n")
