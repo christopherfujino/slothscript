@@ -33,9 +33,3 @@ let reassign t' name v =
       let tbl = List.hd_exn t' in
       Hashtbl.change tbl name ~f:(fun _ -> Some v);
       Some ()
-
-let debug t' to_s =
-  List.iter t' ~f:(fun tbl ->
-      Hashtbl.iter_keys tbl ~f:(fun key ->
-          let value = Hashtbl.find tbl key |> Option.value_exn in
-          Printf.printf "%s => %s\n" key (to_s value)))
