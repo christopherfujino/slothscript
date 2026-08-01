@@ -122,5 +122,5 @@ let () =
   match res with
   | Ok -> print_endline "CI suite successful!"
   | Error errs ->
-      print_endline "CI suite failed with the following errors:";
-      List.iter (fun msg -> Printf.printf "-> %s\n" msg) errs
+      print_endline "\n\nCI suite failed with the following errors:";
+      List.iter (fun msg -> Printf.printf " - %s\n" msg) errs

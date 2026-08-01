@@ -1,47 +1,8 @@
 open Core
 open Sloth_common.Common
+open Native_sig
 
-type processMode =
-  | BlockInherit (* proc! -> null *)
-  | ForkInherit (* ? -> ProcessHandle *)
-  | ForkBuffer (* proc& -> ProcessHandle *)
-  | BlockBuffer (* proc&! -> ProcessResult *)
-
-module type Sig = sig
-  (* TODO we should never be returning Runtime.t, but more specific types *)
-
-  val file_read_all : string -> string
-  val fd_read_all : Core_unix.File_descr.t -> (Runtime.t, string) Result.t
-  val fd_write_all : Core_unix.File_descr.t -> string -> (unit, string) Result.t
-
-  (* TODO does this type of `data` need to be more generic to support binary? *)
-  val write : Core_unix.File_descr.t -> data:string -> (unit, string) Result.t
-  val read : Core_unix.File_descr.t -> (Runtime.t, string) Result.t
-  val wait : Runtime.process_handle -> (Runtime.t, string) Result.t
-
-  val pipe : unit -> Core_unix.File_descr.t * Core_unix.File_descr.t
-  (** unit -> read * write *)
-
-  val open_file :
-    mode:Core_unix.open_flag list ->
-    string ->
-    (Core_unix.File_descr.t, string) Result.t
-
-  val close : Core_unix.File_descr.t -> (unit, string) Result.t
-
-  val proc_exec :
-    mode:processMode ->
-    Runtime.process ->
-    string array ->
-    (Runtime.t, string) Result.t
-
-  val chdir : string -> (unit, string) Result.t
-  val directory_exists : string -> bool
-  val file_exists : string -> bool
-  val mkdir : string -> unit
-end
-
-module Prod : Sig = struct
+module Prod : Native_sig.Sig = struct
   let pipe = Core_unix.pipe ~close_on_exec:true
   let file_read_all = In_channel.read_all
 
@@ -101,6 +62,9 @@ module Prod : Sig = struct
     with Core_unix.Unix_error (err, _, _) ->
       let err_msg = Core_unix.Error.message err in
       Error (Printf.sprintf "`chdir(%s)` failed with \"%s\"" path err_msg)
+
+  (** TODO make a Result.t *)
+  let realpath path = Filename_unix.realpath path
 
   let mkdir = Core_unix.mkdir ~perm:0o775
 
@@ -435,7 +399,10 @@ module Make_test () : TestSig = struct
 
   let proc_expectations : Mock_process.spec option ref = ref None
   let chdir _ = Ok ()
-  (* This function only exists to cause OS side-effects, no-op in tests *)
+  (* Note: this function only exists to cause side effects *)
+
+  let realpath _ = "TODO normalize test realpath"
+  (* TODO: write test normalization algorithm? *)
 
   let mkdir path =
     match Hashtbl.add path_to_entity ~key:path ~data:Directory with

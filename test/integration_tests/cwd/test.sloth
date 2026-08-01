@@ -1,14 +1,28 @@
 #!/usr/bin/env sloth
 
+let sub = Directory("${$scriptDir}/sub")
+# Cleanup from previous failed runs
+if sub.exists() {
+  "rmdir ${ sub.path }"!
+}
+
 with ($cwd = $scriptDir) {
   let cwd = ("pwd"&!).stdout.trim()
   assert(cwd == $cwd)
 
-  let sub = Directory("${$cwd}/sub")
   sub.create()
   with ($cwd = sub.path) {
     cwd = ("pwd"&!).stdout.trim()
     assert(cwd == $cwd)
+
+    # Go back up to $scriptDir
+    with ($cwd = '..') {
+      cwd = ("pwd"&!).stdout.trim()
+      if cwd != $cwd {
+        throw "${ cwd } != ${ $cwd }"
+      }
+      assert(cwd == $cwd)
+    }
   }
 
   cwd = ("pwd"&!).stdout.trim()

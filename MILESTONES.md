@@ -41,6 +41,7 @@
 
 ## next
 - [x] Feature: Process.forkInherit()
+- [x] bug: $cwd is NOT always absolute
 
 ## v0.1 - initially tagged version
 - [x] Language versioning

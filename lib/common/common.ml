@@ -26,6 +26,7 @@ let wrap_error cb =
   | CompileError msg -> Error msg
   | RuntimeError msg -> Error msg
 
+(* TODO: why is this different from `internal_failure` above? *)
 let option_value opt ~message =
   match opt with Some v -> v | None -> raise @@ InternalFailure message
 

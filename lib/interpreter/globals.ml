@@ -1,7 +1,7 @@
 open Core
 
 type t = {
-  l : (module Native.Sig);
+  l : (module Native_sig.Sig);
   identifiers : Runtime.t Identifiers.t;
   context_ids : Runtime.t Context.t;
   (* We need to store these at the top level so that we can find these for
@@ -26,7 +26,7 @@ let push_frame t next_func pos =
 
 (* TODO memoize *)
 let make_globals m src script_path ~argv ~env ~version =
-  let module M = (val m : Native.Sig) in
+  let module M = (val m : Native_sig.Sig) in
   let classes = Hashtbl.create (module String) in
   let identifiers : Runtime.t Identifiers.t = Identifiers.create () in
   let context_ids = Context.create () in

@@ -1,6 +1,6 @@
 let map_some cb = function Some v -> cb v | None -> failwith "Nope!"
 let map_none cb = function None -> cb () | Some _ -> failwith "Nope!"
-let map_ok cb = function Ok () -> cb () | Error _ -> failwith "Nope!"
+let map_ok cb = function Ok v -> cb v | Error _ -> failwith "Nope!"
 let map_error cb = function Ok _ -> failwith "Nope!" | Error msg -> cb msg
 
 let () =
@@ -12,4 +12,4 @@ let () =
   |> map_error (fun msg ->
       Printf.printf "CD-ing to /nosuchdir returned \"%s\"\n" msg);
   Sn.Native.chdir "/"
-  |> map_ok (fun () -> print_endline "CD-ing to / succeeded.")
+  |> map_ok (fun () -> Printf.printf "CD-ing to / succeeded.\n")

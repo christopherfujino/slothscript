@@ -740,11 +740,13 @@ and interpret_expr globals (expr : Compiler.Optimizer.expr) =
       let middleware name prev next =
         match name with
         | "$cwd" ->
+            let cd_wrapper p =
+              match M.chdir p with
+              | Ok _ -> ()
+              | Error msg -> fail ~globals pos msg
+            in
             (match Runtime.string_of_val next with
-            | Some s -> (
-                match M.chdir s with
-                | Ok () -> ()
-                | Error msg -> fail ~globals pos msg)
+            | Some s -> cd_wrapper s
             | None ->
                 fail ~globals pos
                 @@ Printf.sprintf
@@ -753,14 +755,9 @@ and interpret_expr globals (expr : Compiler.Optimizer.expr) =
             post_block_hook :=
               Some
                 (fun () ->
-                  let unit_res =
-                    Runtime.string_of_val prev
-                    |> option_value ~message:__LOC__
-                    |> M.chdir
-                  in
-                  match unit_res with
-                  | Ok () -> ()
-                  | Error msg -> fail ~globals pos msg)
+                  Runtime.string_of_val prev
+                  |> option_value ~message:__LOC__
+                  |> cd_wrapper)
         | _ -> ()
       in
 
@@ -768,7 +765,7 @@ and interpret_expr globals (expr : Compiler.Optimizer.expr) =
         List.fold assignments ~init:(inner_globals, First ())
           ~f:(fun prev (name, expr) ->
             prev >>= fun globals () ->
-            interpret_expr globals expr >>= fun globals next_path ->
+            interpret_expr globals expr >>= fun globals next_value ->
             let prev =
               match Context.get globals.context_ids name with
               | Some prev -> prev
@@ -777,10 +774,22 @@ and interpret_expr globals (expr : Compiler.Optimizer.expr) =
                     name
                   |> fail ~globals pos
             in
-            middleware name prev next_path;
-            (match Context.reassign globals.context_ids name next_path with
-            | Some () -> ()
-            | None -> internal_failure __LOC__);
+            let next_value =
+              match name with
+              | "$cwd" -> (
+                  match Runtime.string_of_val next_value with
+                  | Some path -> Runtime.String (M.realpath path)
+                  | None ->
+                      fail ~globals pos
+                      @@ Printf.sprintf
+                           "Cannot assign %s to $cwd because it must be a \
+                            `String`"
+                      @@ Runtime.to_s next_value)
+              | _ -> next_value
+            in
+            Context.reassign globals.context_ids name next_value
+            |> option_value ~message:__LOC__;
+            middleware name prev next_value;
             (globals, First ()))
         >>= fun globals () -> (globals, interpret_block globals block)
       in
@@ -1152,7 +1161,7 @@ and cast_to_file_descriptor ~globals ~pos ~mode ~m t :
   match t with
   | FileDescriptor fd -> First fd
   | File { path } -> (
-      let module M = (val m : Native.Sig) in
+      let module M = (val m : Native_sig.Sig) in
       match M.open_file ~mode path with
       | Ok fd -> First fd
       | Error msg -> failure_obj ~globals ~pos msg)

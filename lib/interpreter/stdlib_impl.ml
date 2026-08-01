@@ -37,7 +37,7 @@ let make_method ~arity ~name cb =
  fun self -> Ok (make_native_func ~arity ~name (cb self))
 
 let make_ids m =
-  let module M = (val m : Native.Sig) in
+  let module M = (val m : Native_sig.Sig) in
   [
     ( "print",
       make_native_func ~arity:(Some 1) ~name:"print" (fun ctx _ args ->
@@ -114,7 +114,7 @@ let make_ids m =
   ]
 
 let make_protos m =
-  let module M = (val m : Native.Sig) in
+  let module M = (val m : Native_sig.Sig) in
   [
     {
       name = "List";
@@ -365,7 +365,7 @@ let make_protos m =
                              `HashMap[String]String`, but got %s"
                          @@ Runtime.to_s env)
                 in
-                match M.proc_exec ~mode:Native.ForkBuffer self env with
+                match M.proc_exec ~mode:Native_sig.ForkBuffer self env with
                 | Ok t' -> First t'
                 | Error err -> Second (Runtime.Error (None, String err))) );
           ( "forkInherit",
@@ -388,7 +388,7 @@ let make_protos m =
                              `HashMap[String]String`, but got %s"
                          @@ Runtime.to_s env)
                 in
-                match M.proc_exec ~mode:Native.ForkInherit self env with
+                match M.proc_exec ~mode:Native_sig.ForkInherit self env with
                 | Ok t' -> First t'
                 | Error err -> Second (Runtime.Error (None, String err))) );
           ( "blockBuffer",
@@ -411,7 +411,7 @@ let make_protos m =
                              `HashMap[String]String`, but got %s"
                          @@ Runtime.to_s env)
                 in
-                match M.proc_exec ~mode:Native.BlockBuffer self env with
+                match M.proc_exec ~mode:Native_sig.BlockBuffer self env with
                 | Ok t' -> First t'
                 | Error err -> Second (Runtime.Error (None, String err))) );
           ( "blockInherit",
@@ -434,7 +434,7 @@ let make_protos m =
                              `HashMap[String]String`, but got %s"
                          @@ Runtime.to_s env)
                 in
-                match M.proc_exec ~mode:Native.BlockInherit self env with
+                match M.proc_exec ~mode:Native_sig.BlockInherit self env with
                 | Ok t' -> First t'
                 | Error err -> Second (Runtime.Error (None, String err))) );
           ( "stdout",
