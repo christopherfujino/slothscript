@@ -1,8 +1,8 @@
 open Core
 open Sloth_common.Common
-open Native_sig
+include Native_sig
 
-module Prod : Native_sig.Sig = struct
+module Prod : Sig = struct
   let pipe = Core_unix.pipe ~close_on_exec:true
   let file_read_all = In_channel.read_all
 

@@ -1,8 +1,11 @@
 open Core
-module Prod : Native_sig.Sig
+
+module type Sig = Native_sig.Sig
+
+module Prod : Sig
 
 module type TestSig = sig
-  include Native_sig.Sig
+  include Sig
 
   type fs_entity = File of string ref * Core_unix.File_descr.t | Directory
 

@@ -5,8 +5,8 @@ type proto_t = {
   static_getters : (string * (Runtime.t -> (Runtime.t, string) Result.t)) list;
 }
 
-val make_ids : (module Native_sig.Sig) -> (string * Runtime.t) list
-val make_protos : (module Native_sig.Sig) -> proto_t list
+val make_ids : (module Native.Sig) -> (string * Runtime.t) list
+val make_protos : (module Native.Sig) -> proto_t list
 
 val context_ids :
   cwd:string ->

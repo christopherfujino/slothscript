@@ -2,7 +2,6 @@ open Core
 
 (* This is its own, interface-only module to work around:
   https://discuss.ocaml.org/t/why-do-i-need-to-repeat-type-declarations-between-interfaces-and-implementations-or-how-do-i-get-around-this/3350 *)
-
 type processMode =
   | BlockInherit (* proc! -> null *)
   | ForkInherit (* ? -> ProcessHandle *)
