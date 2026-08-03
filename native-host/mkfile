@@ -1,0 +1,35 @@
+CC = clang
+OCAML_DIR = `{ocamlc -where}
+CFLAGS = -g -O0 -Wall -Werror -I$OCAML_DIR
+LDFLAGS = -lm
+OCAML_BUILD = `{realpath "$PWD/../_build"}
+OBJECT = $OCAML_BUILD/default/lib/c-bindings/binding.exe.o
+BINARY = a.out
+DEPFILES = `{/bin/sh -c 'find . -maxdepth 1 -name "*.d"'}
+
+root:V: compile_commands.json $BINARY
+  "./$BINARY"
+
+<|cat $DEPFILES /dev/null
+
+$BINARY: $OBJECT main.o state.o
+  $CC $LDFLAGS $prereq -o $target
+
+$OBJECT: dune-build
+
+dune-build:V:
+  (cd .. && dune build)
+
+%.o: %.c
+  $CC $CFLAGS \
+    -MT $target -MMD -MP -MF $stem.d \
+    -c $stem.c \
+    -o $target
+
+compile_commands.json:
+  mk clean
+  rm -f "$BINARY"
+  bear -- mk -i "$BINARY"
+
+clean:V:
+  rm -f a.out *.o *.d
