@@ -12,11 +12,6 @@
 // TODO: this is sus
 extern void caml_print_exception_backtrace(void);
 
-const char program[] = "'uname'!\n\
-print(\"Hello, world from Sloth!\")\n\
-print($argv)\n\
-";
-
 static value caml_result_unwrap(caml_result result) {
   if (!caml_result_is_exception(result)) {
     return result.data;
@@ -36,8 +31,7 @@ void repl(char **argv) {
 
   const value *init = caml_named_value("init_repl_env");
   if (init == NULL) {
-    fprintf(stderr,
-            "Failed to lookup OCaml value named \"init_repl_env\"\n");
+    fprintf(stderr, "Failed to lookup OCaml value named \"init_repl_env\"\n");
     abort();
   }
   value env = caml_result_unwrap(caml_callback_res(*init, Val_unit));
@@ -73,30 +67,68 @@ cleanup:
   caml_shutdown();
 }
 
-int main(int _, char **argv) {
-  if (isatty(STDIN_FILENO)) {
-    repl(argv);
-  } else {
-    caml_startup(argv);
-    State state = state_new();
+void interpreter(char **argv, char *program, size_t program_len) {
+  caml_startup(argv);
+  State state = state_new();
 
-    const value *compiler = caml_named_value("parse_compile_interpret");
-    if (compiler == NULL) {
-      fprintf(
-          stderr,
-          "Failed to lookup OCaml value named \"parse_compile_interpret\"\n");
+  const value *compiler = caml_named_value("parse_compile_interpret");
+  if (compiler == NULL) {
+    fprintf(stderr,
+            "Failed to lookup OCaml value named \"parse_compile_interpret\"\n");
+    abort();
+  }
+
+  value tuple = caml_alloc_tuple(2);
+  {
+    // TODO: unneccessary copy
+    value program_val = caml_alloc_initialized_string(program_len, program);
+    Store_field(tuple, 0, program_val);
+    Store_field(tuple, 1, state_wrap(&state));
+  }
+
+  caml_result_unwrap(caml_callback_res(*compiler, tuple));
+  caml_shutdown();
+}
+
+int main(int argc, char **argv) {
+  if (argc == 1) {
+    if (isatty(STDIN_FILENO)) {
+      repl(argv);
+    } else {
+      fprintf(stderr, "TODO! %d\n", __LINE__);
+      abort();
+      interpreter(argv, "TODO", 4);
+    }
+  } else if (argc > 1) {
+    char *script = argv[1];
+    FILE *file = fopen(script, "r");
+    if (file == NULL) {
+      fprintf(stderr, "Failed to open %s ", script);
+      perror("with");
       abort();
     }
 
-    value tuple = caml_alloc_tuple(2);
+    // Let's find the length of the file before reading
+    size_t len;
     {
-      value program_val =
-          caml_alloc_initialized_string(strlen(program), program);
-      Store_field(tuple, 0, program_val);
-      Store_field(tuple, 1, state_wrap(&state));
+      fseek(file, 0, SEEK_END);
+      len = ftell(file);
+      rewind(file);
     }
 
-    caml_result_unwrap(caml_callback_res(*compiler, tuple));
-    caml_shutdown();
+    // +1 for '\0'
+    char *buffer = (char *)malloc(len + 1);
+    size_t n = fread(buffer, sizeof(char), len, file);
+    if (n != len) {
+      // TODO: make correct
+      fprintf(stderr, "%ld != %ld\n", n, len);
+      abort();
+    }
+    buffer[len] = '\0';
+
+    interpreter(argv, buffer, len);
+  } else {
+    fprintf(stderr, "Unreachable!\n");
+    abort();
   }
 }
