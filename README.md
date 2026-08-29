@@ -48,33 +48,6 @@ only Linux is tested). Windows support is an explicit *non-goal*.
 1. There will not be pre-compiled builds of the interpreter until a future
 release. Compiling the interpreter will require an Ocaml toolchain.
 
-## Tour
-
-User-written variables or functions must start with a lowercase letter or `_`.
-Names starting with a capital letter are reserved for class names.
-
-```sloth
-let x = 1 + 1
-
-print(x)
-```
-
-First-class functions:
-
-```sloth
-func makeCounter() {
-  let x = 0
-  func() {
-    x = x + 1
-    x
-  }
-}
-
-let counter = makeCounter()
-print(counter())
-print(counter())
-```
-
 ## Language
 
 ### Reserved words

@@ -19,21 +19,6 @@ only Linux is tested). Windows support is an explicit *non-goal*.
 1. There will not be pre-compiled builds of the interpreter until a future
 release. Compiling the interpreter will require an Ocaml toolchain.
 
-## Tour
-
-User-written variables or functions must start with a lowercase letter or `_`.
-Names starting with a capital letter are reserved for class names.
-
-```sloth
-{{ .test_green_specs_var_reference_sloth }}
-```
-
-First-class functions:
-
-```sloth
-{{ .test_green_specs_first_class_func_sloth }}
-```
-
 ## Language
 
 ### Reserved words
