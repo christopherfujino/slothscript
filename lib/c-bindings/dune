@@ -1,4 +1,5 @@
 (executable
-  (name binding)
-  (libraries compiler interpreter core)
-  (modes (native object)))
+ (name binding)
+ (libraries compiler interpreter core)
+ (modes
+  (native object)))
