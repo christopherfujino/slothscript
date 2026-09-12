@@ -79,7 +79,7 @@
 (* These are optional, and could have been done exclusively with production
    rules--however, they help resolve conflicts.
 
-   These are ordered, from high to low precedence.
+   These are ordered, from low to high precedence.
    *)
 
 %left OR BANG AMPERSAND AMPERSAND_BANG (* Postfix *)
