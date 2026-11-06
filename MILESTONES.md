@@ -42,6 +42,7 @@
 ## next
 - [x] Feature: Process.forkInherit()
 - [x] bug: $cwd is NOT always absolute
+- [x] bug: argument lists cannot have trailing commas
 
 ## v0.1 - initially tagged version
 - [x] Language versioning
@@ -50,7 +51,6 @@
 - [x] Bug: $scriptDir and $cwd should be absolute, so they can be chained
 - [x] `List` methods
     - `.pop(element)`
-<<<<<<< Updated upstream
     - `.push(element)`
     - `.reduce(callback)`
     - `.filter(callback)`

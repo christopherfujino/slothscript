@@ -273,6 +273,10 @@ expr7:
   | e = expr7; pos = LPAREN; a = expr_list; RPAREN {
     FuncInvoc (e, a, pos)
   }
+  (* expr_list will never end in COMMA *)
+  | e = expr7; pos = LPAREN; a = expr_list; COMMA; RPAREN {
+    FuncInvoc (e, a, pos)
+  }
   | e = expr7; pos = LPAREN; RPAREN {
     FuncInvoc (e, [], pos)
   }

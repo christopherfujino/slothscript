@@ -1,0 +1,57 @@
+### Program
+func take2(x, y) {
+}
+
+take2(1, 2)
+take2(
+  1,
+  2,
+)
+
+### Processes
+()
+
+### Ast
+((FuncDecl
+  (name
+    take2)
+  (parameters
+    ((x
+      <opaque>)
+      (y
+        <opaque>)))
+  (block
+    ())
+  (pos
+    <opaque>))
+  (StmtDecl
+    (ExprStmt
+      (FuncInvoc
+        (IdRef
+          take2
+          <opaque>)
+        ((Num
+          1
+          <opaque>)
+          (Num
+            2
+            <opaque>))
+        <opaque>)))
+  (StmtDecl
+    (ExprStmt
+      (FuncInvoc
+        (IdRef
+          take2
+          <opaque>)
+        ((Num
+          1
+          <opaque>)
+          (Num
+            2
+            <opaque>))
+        <opaque>))))
+
+### Stdout
+
+
+### Failure

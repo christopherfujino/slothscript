@@ -33,6 +33,11 @@ assert(s == "1234", s)
 let l2 = l.merge(['3', '4'])
 assert(l2 == ['2', '3', '4'])
 
+let l3 = [
+  1,
+  2,
+]
+
 ### Processes
 ()
 
@@ -573,6 +578,19 @@ assert(l2 == ['2', '3', '4'])
             <opaque>)
           true
           <opaque>))
+        <opaque>)))
+  (StmtDecl
+    (ExprStmt
+      (LetExpr
+        l3
+        (List
+          ((Num
+            1
+            <opaque>)
+            (Num
+              2
+              <opaque>))
+          <opaque>)
         <opaque>))))
 
 ### Stdout
