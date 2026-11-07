@@ -37,10 +37,11 @@ let make_globals m src script_path ~argv ~env ~version =
              (Printf.sprintf "Failed to bind the function named %s at %s" name
                 __LOC__));
 
-  (* TODO inject cwd *)
+  let arch = M.get_arch ()
+  in
   List.iter
     (Stdlib_impl.context_ids ~cwd:(Sys_unix.getcwd ()) ~env ~script_path ~argv
-       ~version)
+       ~version ~arch)
     ~f:(fun (name, t) ->
       Context.bind context_ids name t |> Option.value_exn ~message:__LOC__);
 

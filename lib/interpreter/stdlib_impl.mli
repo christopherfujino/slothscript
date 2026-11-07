@@ -14,4 +14,5 @@ val context_ids :
   script_path:string ->
   argv:string list ->
   version:Sloth_common.Semver.t ->
+  arch:Native_sig.cpuArch ->
   (string * Runtime.t) list

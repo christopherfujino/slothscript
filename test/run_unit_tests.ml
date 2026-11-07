@@ -90,10 +90,11 @@ let stdlib_interface_and_impl_match _ =
     Interpreter.Stdlib_impl.make_ids (module M)
     |> List.map ~f:(fun (name, _) -> name)
   in
+  let arch = M.get_arch () in
   let impl_context_ids =
     Interpreter.Stdlib_impl.context_ids ~cwd:"/home/user"
       ~env:[| "USER=sloth" |] ~script_path:"/home/user/script.sloth" ~argv:[]
-      ~version:Common.version
+      ~version:Common.version ~arch
     |> List.map ~f:(fun (name, _) -> name)
   in
   compare_two_string_lists interface.ids impl_ids;

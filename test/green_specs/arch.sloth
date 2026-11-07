@@ -1,0 +1,43 @@
+### Program
+# This value is hard-coded in the native test module
+assert($arch == "ARM64", "actual: ${$arch}")
+
+### Processes
+()
+
+### Ast
+((StmtDecl
+  (ExprStmt
+    (FuncInvoc
+      (IdRef
+        assert
+        <opaque>)
+      ((Equality
+        (ContextId
+          $arch
+          <opaque>)
+        (String
+          ((FullString
+            ARM64
+            <opaque>))
+          <opaque>)
+        true
+        <opaque>)
+        (String
+          ((StartStringInterp
+            "actual: "
+            <opaque>)
+            (ExpressionStringInterp
+              (ContextId
+                $arch
+                <opaque>))
+            (EndStringInterp
+              ""
+              <opaque>))
+          <opaque>))
+      <opaque>))))
+
+### Stdout
+
+
+### Failure

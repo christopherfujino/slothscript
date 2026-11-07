@@ -253,6 +253,36 @@ module Prod : Sig = struct
             }
         in
         wait handle >>= fun t -> Ok t
+
+  (* Use
+     https://pubs.opengroup.org/onlinepubs/009695399/basedefs/sys/utsname.h.html
+     once we're in C
+     *)
+  let get_arch () =
+    let dummy = Core_unix.File_descr.of_int 1 in
+    let proc : Runtime.process =
+      {
+        cmd = [ "uname"; "-m" ];
+        stdout = dummy;
+        stderr = dummy;
+        stdin = dummy;
+        pipes_to_collect = [];
+        previous = None;
+      }
+    in
+    let v_opt =
+      match proc_exec ~mode:BlockBuffer proc [||] with
+      | Ok v -> v
+      | Error e -> failwith e
+    in
+    let res = Runtime.process_result_of_val v_opt |> Option.value_exn in
+    let stdout = res.stdout |> String.strip in
+    match stdout with
+    | "aarch64" -> Arm64
+    | "x86_64" -> X64
+    | _ ->
+        failwith
+        @@ Printf.sprintf "Unknown output from `uname -m`: \"%s\"" stdout
 end
 
 module type TestSig = sig
@@ -607,6 +637,9 @@ module Make_test () : TestSig = struct
               Error msg)
     in
     rec_proc_exec proc
+
+  (* Parameterize Make_test *)
+  let get_arch () = Arm64
 end
 
 let make_test spec =

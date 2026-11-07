@@ -993,8 +993,10 @@ let make_protos m =
     };
   ]
 
-let context_ids ~cwd ~env ~script_path ~argv ~version =
+let context_ids ~cwd ~env ~script_path ~argv ~version ~arch =
+  let arch_str = match arch with Native_sig.Arm64 -> "ARM64" | X64 -> "x64" in
   [
+    ("$arch", Runtime.String arch_str);
     ( "$argv",
       Runtime.List
         (Dynarray.of_list @@ List.map argv ~f:(fun s -> Runtime.String s)) );

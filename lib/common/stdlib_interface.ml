@@ -13,6 +13,7 @@ let globals =
     ids = [ "assert"; "exit"; "print" ];
     context_ids =
       [
+        "$arch";
         "$argv";
         "$cwd";
         "$env";
