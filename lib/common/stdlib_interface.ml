@@ -64,6 +64,7 @@ let globals =
               "contains";
               "filter";
               "forEach";
+              "join";
               "length";
               "map";
               "merge";

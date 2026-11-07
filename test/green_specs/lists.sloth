@@ -37,6 +37,7 @@ let l3 = [
   1,
   2,
 ]
+assert(l3.join(', ') == "1, 2")
 
 ### Processes
 ()
@@ -591,6 +592,34 @@ let l3 = [
               2
               <opaque>))
           <opaque>)
+        <opaque>)))
+  (StmtDecl
+    (ExprStmt
+      (FuncInvoc
+        (IdRef
+          assert
+          <opaque>)
+        ((Equality
+          (FuncInvoc
+            (ObjDeref
+              (IdRef
+                l3
+                <opaque>)
+              join
+              <opaque>)
+            ((String
+              ((FullString
+                ", "
+                <opaque>))
+              <opaque>))
+            <opaque>)
+          (String
+            ((FullString
+              "1, 2"
+              <opaque>))
+            <opaque>)
+          true
+          <opaque>))
         <opaque>))))
 
 ### Stdout

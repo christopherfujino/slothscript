@@ -43,6 +43,7 @@
 - [x] Feature: Process.forkInherit()
 - [x] bug: $cwd is NOT always absolute
 - [x] bug: argument lists cannot have trailing commas
+- [x] feat: List.join()
 
 ## v0.1 - initially tagged version
 - [x] Language versioning

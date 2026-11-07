@@ -176,6 +176,37 @@ let make_protos m =
                   (First (Dynarray.create ()))
                   self
                 >>= fun new_arr -> First (Runtime.List new_arr)) );
+          ( "join",
+            make_method ~arity:(Some 2) ~name:"List.join" (fun self _ _ args ->
+                let self =
+                  Runtime.list_of_t self |> option_value ~message:__LOC__
+                in
+                let joiner = List.nth_exn args 1 in
+                match Runtime.string_of_val joiner with
+                | None ->
+                    let msg =
+                      Printf.sprintf
+                        "Expected the first argument to `List.join()` to be a \
+                         String, but got `%s`"
+                        (Runtime.to_s joiner)
+                    in
+                    Second (Runtime.Error (None, Runtime.String msg))
+                | Some s ->
+                    First s >>= fun joiner ->
+                    let _, either =
+                      Dynarray.fold_left
+                        (fun (first_run, acc) cur ->
+                          match acc with
+                          | First acc ->
+                              if first_run then
+                                (false, First (acc ^ Runtime.to_s cur))
+                              else
+                                (false, First (acc ^ joiner ^ Runtime.to_s cur))
+                          | Second _ -> (false, acc))
+                        (true, First "") self
+                    in
+                    either >>= fun final_str -> First (Runtime.String final_str))
+          );
           ( "forEach",
             make_method ~arity:(Some 2) ~name:"List.forEach"
               (fun self _ eval args ->
@@ -188,7 +219,7 @@ let make_protos m =
                       let msg =
                         Printf.sprintf
                           "Expected the first argument to `List.forEach()` to \
-                           be a function, but got %s"
+                           be a function, but got `%s`"
                         @@ Runtime.to_s target
                       in
                       Second (Runtime.Error (None, Runtime.String msg))
