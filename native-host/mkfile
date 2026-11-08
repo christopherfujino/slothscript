@@ -1,23 +1,18 @@
-CC = clang
+CC = bear --append -- clang
+PROJECT = slothnative
 OCAML_DIR = `{ocamlc -where}
 CFLAGS = -g -O0 -Wall -Werror -I$OCAML_DIR
 LDFLAGS = -lm
 OCAML_BUILD = `{realpath "$PWD/../_build"}
-OBJECT = $OCAML_BUILD/default/lib/c-bindings/binding.exe.o
-BINARY = a.out
+OCAML_LIB = $OCAML_BUILD/default/lib/c-bindings/binding.exe.o
 DEPFILES = `{/bin/sh -c 'find . -maxdepth 1 -name "*.d"'}
 
-root:V: compile_commands.json $BINARY
-  "./$BINARY"
+$PROJECT.exe: $OCAML_LIB main.o state.o
+  $CC $LDFLAGS $prereq -o $target
 
 <|cat $DEPFILES /dev/null
 
-$BINARY: $OBJECT main.o state.o
-  $CC $LDFLAGS $prereq -o $target
-
-$OBJECT: dune-build
-
-dune-build:V:
+$OCAML_LIB:
   (cd .. && dune build)
 
 %.o: %.c
@@ -26,10 +21,5 @@ dune-build:V:
     -c $stem.c \
     -o $target
 
-compile_commands.json:
-  mk clean
-  rm -f "$BINARY"
-  bear -- mk -i "$BINARY"
-
 clean:V:
-  rm -f a.out *.o *.d
+  rm -f a.out *.exe *.o *.d compile_commands.json
