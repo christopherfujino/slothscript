@@ -1170,4 +1170,5 @@ and cast_to_file_descriptor ~globals ~pos ~mode ~m t :
       cast_to_file_descriptor ~globals ~pos ~mode ~m t
   | _ ->
       failure_obj ~globals ~pos
-      @@ Printf.sprintf "Don't know how to cast from %s to a FileDescriptor" (Runtime.to_class_name t)
+      @@ Printf.sprintf "Don't know how to cast from %s to a FileDescriptor"
+           (Runtime.to_class_name t)

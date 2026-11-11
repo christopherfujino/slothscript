@@ -5,8 +5,13 @@
       "template": "README.tmpl.md",
       "inputs": [
         "test/green_specs/configure_cmake.sloth",
+        "test/docs/01-intro-01.sloth",
         "docs/context.md"
       ]
+    },
+    {
+      "output": "test/docs/01-intro-01.sloth",
+      "filter": "awk '/### Program/{f=1; next} /### /{f=0} f'"
     },
     {
       "output": "test/green_specs/configure_cmake.sloth",

@@ -35,6 +35,25 @@ with ($cwd = build.path) {
 }
 ```
 
+## Quick Intro
+
+Sloth has a C-like syntax:
+
+```sloth
+let msg = 'Hello, world!'
+
+print(msg)
+```
+
+Variables are declared with the `let` keyword. Variables are always mutable.
+
+Like shells or Ruby, string literals can be declared with double quotes (where escapes are interpreted) or single quotes (raw).
+
+Functions are called by following the name of the function with an argument
+list wrapped in parentheses (round brackets).
+
+Semicolons at the end of statements are optional.
+
 ## Installation
 
 Note that:

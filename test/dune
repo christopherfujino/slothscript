@@ -4,6 +4,7 @@
  (name main)
  (libraries ounit2 sloth_script re core_unix unit_tests)
  (deps
+  (source_tree docs)
   (source_tree green_specs)
   (source_tree red_specs))
  (modes byte))
@@ -24,6 +25,7 @@
   (:specs
    ; TODO: once generating AST precludes running optimizer checks
    ; (source_tree red_specs)
+   (source_tree docs)
    (source_tree green_specs))
   (file train.exe)
   ; Required to define a rule without any targets

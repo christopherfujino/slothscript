@@ -184,6 +184,7 @@ let tests =
   "slothscript"
   >::: [
          "green" >::: List.map ~f:make_test (Specs.green ());
+         "docs" >::: List.map ~f:make_test (Specs.docs ());
          "red" >::: List.map ~f:make_failing_test (Specs.red ());
          "unit" >::: Run_unit_tests.get ();
        ]

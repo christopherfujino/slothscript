@@ -1,0 +1,34 @@
+### Program
+let msg = 'Hello, world!'
+
+print(msg)
+
+### Processes
+()
+
+### Ast
+((StmtDecl
+  (ExprStmt
+    (LetExpr
+      msg
+      (String
+        ((FullString
+          "Hello, world!"
+          <opaque>))
+        <opaque>)
+      <opaque>)))
+  (StmtDecl
+    (ExprStmt
+      (FuncInvoc
+        (IdRef
+          print
+          <opaque>)
+        ((IdRef
+          msg
+          <opaque>))
+        <opaque>))))
+
+### Stdout
+Hello, world!
+
+### Failure

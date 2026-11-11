@@ -8,9 +8,7 @@ type processMode =
   | ForkBuffer (* proc& -> ProcessHandle *)
   | BlockBuffer (* proc&! -> ProcessResult *)
 
-type cpuArch =
-  | Arm64
-  | X64
+type cpuArch = Arm64 | X64
 
 module type Sig = sig
   (* TODO we should never be returning Runtime.t, but more specific types *)

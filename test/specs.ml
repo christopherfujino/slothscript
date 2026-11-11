@@ -9,6 +9,10 @@ let green () =
   let specs = find_child_specs "./green_specs" in
   List.map specs ~f:Spec_parser.deserialize
 
+let docs () =
+  let specs = find_child_specs "./docs" in
+  List.map specs ~f:Spec_parser.deserialize
+
 let red () =
   let specs = find_child_specs "./red_specs" in
   List.map specs ~f:Spec_parser.deserialize
