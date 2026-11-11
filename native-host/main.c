@@ -42,7 +42,7 @@ void repl(char **argv) {
             "Failed to lookup OCaml value named \"parse_compile_interpret\"\n");
     abort();
   }
-  char line[BUFSIZ];
+  char line[BUFSIZ] = {};
 
   while (1) {
     // TODO use a line editor
@@ -50,7 +50,7 @@ void repl(char **argv) {
     char *p = fgets(line, BUFSIZ, stdin);
     if (p == NULL) {
       fputc('\n', stdout);
-      goto cleanup;
+      break;
     }
 
     value tuple = caml_alloc_tuple(2);
@@ -63,7 +63,6 @@ void repl(char **argv) {
     env = caml_result_unwrap(caml_callback_res(*interpreter, tuple));
   }
 
-cleanup:
   caml_shutdown();
 }
 
