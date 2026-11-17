@@ -1,3 +1,0 @@
-CompileFlags:
-  # This was promoted to //native by //native/dune
-  CompilationDatabase: ..
