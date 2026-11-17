@@ -1,3 +1,4 @@
+#include "editline.h"
 #include "state.h"
 
 #include <caml/alloc.h>    // caml_alloc_initialized_string()
@@ -42,17 +43,9 @@ void repl(char **argv) {
             "Failed to lookup OCaml value named \"parse_compile_interpret\"\n");
     abort();
   }
-  char line[BUFSIZ] = {};
+  char *line = nullptr;
 
-  while (1) {
-    // TODO use a line editor
-    fputs("> ", stdout);
-    char *p = fgets(line, BUFSIZ, stdin);
-    if (p == NULL) {
-      fputc('\n', stdout);
-      break;
-    }
-
+  while ((line = readline("> ")) != nullptr) {
     value tuple = caml_alloc_tuple(2);
     {
       value program_val = caml_alloc_initialized_string(strlen(line), line);
@@ -62,6 +55,7 @@ void repl(char **argv) {
 
     env = caml_result_unwrap(caml_callback_res(*interpreter, tuple));
   }
+  printf("\n");
 
   caml_shutdown();
 }
@@ -94,17 +88,42 @@ int main(int argc, char **argv) {
     if (isatty(STDIN_FILENO)) {
       repl(argv);
     } else {
-      fprintf(stderr, "TODO! %d\n", __LINE__);
-      abort();
+      constexpr size_t n = 1;
+      constexpr size_t buflen = BUFSIZ;
+      char buffer[buflen + 1] = {};
+      char *program = nullptr;
+      size_t program_len = 0;
+      while (1) {
+        size_t bytes_read = fread(buffer, buflen, n, stdin);
+        if (bytes_read < n) {
+          if (feof(stdin)) {
+            program = realloc(program, (program_len + n + 1) * sizeof(char));
+            if (program == nullptr) {
+              perror("realloc() failed");
+              abort();
+            }
+            strncpy(program + program_len, buffer, n);
+            program_len += n;
+            program[program_len] = '\0';
+            break;
+          }
+          // TODO implement error case
+        }
+        // TODO implement
+      }
       interpreter(argv, "TODO", 4);
     }
   } else if (argc > 1) {
+    if (argc > 2) {
+      fprintf(stderr, "TODO: implement more robust arg-parsing\n");
+      return 1;
+    }
     char *script = argv[1];
     FILE *file = fopen(script, "r");
     if (file == NULL) {
       fprintf(stderr, "Failed to open %s ", script);
-      perror("with");
-      abort();
+      perror("fopen() failed");
+      return 1;
     }
 
     // Let's find the length of the file before reading

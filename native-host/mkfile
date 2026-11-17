@@ -3,11 +3,13 @@ LDFLAGS = -lm
 OCAML_DIR = `{ocamlc -where}
 CFLAGS = -I$OCAML_DIR
 <../../../mkfiles/single-dir.mkfile
+REPO_ROOT = `{realpath "$PWD/../../../"}
+<../../../mkfiles/editline.mkfile
 
 OCAML_BUILD = `{realpath "$PWD/../_build"}
 OCAML_LIB = $OCAML_BUILD/default/lib/c-bindings/binding.exe.o
 
-$PROJECT.exe: $OCAML_LIB state.o
+$PROJECT.exe: $OCAML_LIB $EDITLINE_LIB state.o
 
 $OCAML_LIB:
   (cd .. && dune build)
