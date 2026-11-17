@@ -3,6 +3,7 @@ LDFLAGS = -lm
 OCAML_DIR = `{ocamlc -where}
 CFLAGS = -I$OCAML_DIR
 <../../../mkfiles/single-dir.mkfile
+CFLAGS = $CFLAGS -Wno-vla
 REPO_ROOT = `{realpath "$PWD/../../../"}
 <../../../mkfiles/editline.mkfile
 

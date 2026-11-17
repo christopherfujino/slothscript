@@ -1,5 +1,10 @@
 #!/usr/bin/env sloth
 
+let sloth = $env['SLOTH']
+if sloth == null {
+  sloth = 'sloth'
+}
+
 with ($cwd = $scriptDir) {
   let tests = ("find -name 'test.sloth'"&!).
     stdout.
@@ -8,6 +13,8 @@ with ($cwd = $scriptDir) {
 
   for test in tests {
     print("Executing ${test}...")
-    "${test}"!
+    [sloth, test]!
   }
+
+  print("All ${tests.length} tests passed!")
 }

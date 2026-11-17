@@ -8,7 +8,11 @@
 #include <stdint.h>        // uint8_t
 #include <stdlib.h>        // abort(), malloc(), realloc()
 #include <string.h>        // strlen()
-#include <unistd.h>        // isatty()
+#include <unistd.h>        // getcwd(), isatty()
+
+// TODO: figure the right POSIX_SOURCE macro to allow limits.h to provide
+// this
+#define PATH_MAX 4096
 
 // TODO: this is sus
 extern void caml_print_exception_backtrace(void);
@@ -19,12 +23,12 @@ static value caml_result_unwrap(caml_result result) {
   }
   {
     char *exn_msg = caml_format_exception(result.data);
-    fprintf(stderr, "\nOCaml raised: %s\n", exn_msg);
+    fprintf(stderr, "%s\n", exn_msg);
     caml_stat_free(exn_msg);
   }
   caml_print_exception_backtrace();
   fflush(stderr);
-  abort();
+  exit(1);
 }
 
 void repl(char **argv) {
@@ -44,15 +48,12 @@ void repl(char **argv) {
     abort();
   }
   char *line = nullptr;
+  value tuple = caml_alloc_tuple(2);
 
   while ((line = readline("> ")) != nullptr) {
-    value tuple = caml_alloc_tuple(2);
-    {
-      value program_val = caml_alloc_initialized_string(strlen(line), line);
-      Store_field(tuple, 0, env);
-      Store_field(tuple, 1, program_val);
-    }
-
+    value program_val = caml_alloc_initialized_string(strlen(line), line);
+    Store_field(tuple, 0, env);
+    Store_field(tuple, 1, program_val);
     env = caml_result_unwrap(caml_callback_res(*interpreter, tuple));
   }
   printf("\n");
@@ -60,27 +61,38 @@ void repl(char **argv) {
   caml_shutdown();
 }
 
-void interpreter(char **argv, char *program, size_t program_len) {
+long interpreter(char **argv, size_t program_len,
+                 const char program[static program_len],
+                 const char *program_path) {
+  long code = -1;
   caml_startup(argv);
-  State state = state_new();
-
-  const value *compiler = caml_named_value("parse_compile_interpret");
-  if (compiler == NULL) {
-    fprintf(stderr,
-            "Failed to lookup OCaml value named \"parse_compile_interpret\"\n");
-    abort();
-  }
-
-  value tuple = caml_alloc_tuple(2);
   {
-    // TODO: unneccessary copy
-    value program_val = caml_alloc_initialized_string(program_len, program);
-    Store_field(tuple, 0, program_val);
-    Store_field(tuple, 1, state_wrap(&state));
-  }
+    State state = state_new();
 
-  caml_result_unwrap(caml_callback_res(*compiler, tuple));
+    const value *compiler = caml_named_value("parse_compile_interpret");
+    if (compiler == NULL) {
+      fprintf(
+          stderr,
+          "Failed to lookup OCaml value named \"parse_compile_interpret\"\n");
+      abort();
+    }
+
+    value tuple = caml_alloc_tuple(3);
+    {
+      // TODO: unneccessary copy
+      value program_val = caml_alloc_initialized_string(program_len, program);
+      value program_path_val =
+          caml_alloc_initialized_string(strlen(program_path), program_path);
+      Store_field(tuple, 0, program_val);
+      Store_field(tuple, 1, state_wrap(&state));
+      Store_field(tuple, 2, program_path_val);
+    }
+
+    value code_value = caml_result_unwrap(caml_callback_res(*compiler, tuple));
+    code = Long_val(code_value);
+  }
   caml_shutdown();
+  return code;
 }
 
 int main(int argc, char **argv) {
@@ -88,30 +100,49 @@ int main(int argc, char **argv) {
     if (isatty(STDIN_FILENO)) {
       repl(argv);
     } else {
-      constexpr size_t n = 1;
       constexpr size_t buflen = BUFSIZ;
       char buffer[buflen + 1] = {};
       char *program = nullptr;
       size_t program_len = 0;
       while (1) {
-        size_t bytes_read = fread(buffer, buflen, n, stdin);
-        if (bytes_read < n) {
+        // important to read buflen number of bytes, so bytes read is accurate
+        size_t bytes_read = fread(buffer, 1, buflen, stdin);
+        if (bytes_read < buflen) {
           if (feof(stdin)) {
-            program = realloc(program, (program_len + n + 1) * sizeof(char));
+            program =
+                realloc(program, (program_len + buflen + 1) * sizeof(char));
             if (program == nullptr) {
               perror("realloc() failed");
-              abort();
+              return 1;
             }
-            strncpy(program + program_len, buffer, n);
-            program_len += n;
+            strncpy(program + program_len, buffer, bytes_read);
+            program_len += bytes_read;
             program[program_len] = '\0';
             break;
           }
-          // TODO implement error case
+          fprintf(stderr, "Error while trying to read from STDIN!\n");
+          return 1;
         }
-        // TODO implement
+        program = realloc(program, program_len + buflen);
+        if (program == nullptr) {
+          perror("realloc() failed");
+          return 1;
+        }
+        memcpy(program + program_len, buffer, buflen);
+        program_len += buflen;
       }
-      interpreter(argv, "TODO", 4);
+      // 6 is the length of "/stdin"
+      char *cwd = malloc(PATH_MAX + 6);
+      cwd = getcwd(cwd, PATH_MAX);
+      if (cwd == nullptr) {
+        fprintf(stderr, "getcwd() failed\n");
+        return 1;
+      }
+      strcat(cwd, "/stdin");
+      long code = interpreter(argv, program_len, program, cwd);
+      free(cwd);
+      free(program);
+      return code;
     }
   } else if (argc > 1) {
     if (argc > 2) {
@@ -135,16 +166,17 @@ int main(int argc, char **argv) {
     }
 
     // +1 for '\0'
-    char *buffer = (char *)malloc(len + 1);
-    size_t n = fread(buffer, sizeof(char), len, file);
+    char *program = (char *)calloc(len + 1, 1);
+        // important to read buflen number of bytes, so bytes read is accurate
+    size_t n = fread(program, len, sizeof(char), file);
     if (n != len) {
       // TODO: make correct
       fprintf(stderr, "%ld != %ld\n", n, len);
       abort();
     }
-    buffer[len] = '\0';
+    program[len] = '\0';
 
-    interpreter(argv, buffer, len);
+    interpreter(argv, len, program, script);
   } else {
     fprintf(stderr, "Unreachable!\n");
     abort();

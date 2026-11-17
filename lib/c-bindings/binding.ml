@@ -17,8 +17,14 @@ let parse_compile_interpret (prog, s) =
   let _, ast = Compiler.Main.parse env prog in
   let _, either = Interpreter.Interpret.interpret_prog globals ast in
   match either with
-  | First final_val -> final_val
-  | Second _ -> failwith "Fail!"
+  | First _ -> 0
+  | Second bt -> (
+      match bt with
+      | Exit code -> code
+      | Error (str_opt, _) ->
+          let str = match str_opt with None -> "None" | Some msg -> msg in
+          failwith str
+      | Return _ | Break _ | Continue _ -> failwith "unreachable")
 
 let init_repl_env () =
   let argv = Sys.get_argv () |> Array.to_list in
