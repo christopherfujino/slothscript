@@ -1,4 +1,5 @@
 CC = bear --append -- clang
+MKSHELL = bash
 PROJECT = slothnative
 OCAML_DIR = `{ocamlc -where}
 CFLAGS = -g -O0 -Wall -Werror -I$OCAML_DIR
@@ -13,7 +14,10 @@ $PROJECT.exe: $OCAML_LIB main.o state.o
 <|cat $DEPFILES /dev/null
 
 $OCAML_LIB:
-  (cd .. && dune build)
+  set -euo pipefail
+  cd ..
+  make get
+  dune build
 
 %.o: %.c
   $CC $CFLAGS \
