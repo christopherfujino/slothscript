@@ -57,6 +57,7 @@ jobs:
           curl -L "$REMOTE" -o db.tar.gz
           tar xvzf db.tar.gz
           mv "./db-${VERSION}-linux-${ARCH}" ./db
+      # TODO: just migrate to use actions/checkout
       - name: Check out repo
         shell: bash -exuo pipefail {0}
         # TODO: support when GITHUB_REF is a tag (e.g. `refs/tags/v0.1.0`)
@@ -69,6 +70,16 @@ jobs:
             sed --in-place=.bak 's/url = git@github\.com:christopherfujino\/slothscript/url = https:\/\/github.com\/christopherfujino\/slothscript/' ../../.git/config
             git submodule update .
             git checkout $REF
+          popd >/dev/null
+          pushd monorepo/3p >/dev/null
+            git submodule init -- .
+            sed --in-place=.bak 's/url = git@github\.com:christopherfujino\/3p/url = https:\/\/github.com\/christopherfujino\/3p/' ../.git/config
+            git submodule update .
+            pushd editline >/dev/null
+              git submodule init -- .
+              sed --in-place=.bak 's/url = git@github\.com:troglobit\/editline/url = https:\/\/github.com\/troglobit\/editline/' ../../.git/config
+              git submodule update .
+            popd >/dev/null
           popd >/dev/null
       - name: Setup switch
         shell: bash -exuo pipefail {0}
