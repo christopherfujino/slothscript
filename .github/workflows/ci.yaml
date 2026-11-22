@@ -65,7 +65,10 @@ jobs:
           REF=$(echo "${GITHUB_REF}" | sed -n 's/refs\/heads\/\(.*\)/\1/p')
           pwd
           git clone "https://github.com/christopherfujino/monorepo" -b $MONOREPO_REF
-          pushd monorepo/src/sloth >/dev/null
+          pushd monorepo/src/sloth
+            pwd
+            ls -alh
+            git remote -v
             git remote add https https://github.com/christopherfujino/slothscript
             git fetch https
             git checkout --track https/$REF
