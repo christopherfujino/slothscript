@@ -43,7 +43,7 @@ jobs:
           sudo chown "$(id -u):$(id -g)" "$GITHUB_WORKSPACE"
           sudo chmod -R 777 "$GITHUB_WORKSPACE"
           sudo chmod -R 777 "$RUNNER_TEMP"
-      - name: Download doc-builder
+      - name: Download doc-builder [deprecated]
         shell: bash -exuo pipefail {0}
         run: |
           VERSION='0.5'
