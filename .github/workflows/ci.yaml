@@ -63,8 +63,11 @@ jobs:
           REF=$(echo "${GITHUB_REF}" | sed -n 's/refs\/heads\/\(.*\)/\1/p')
           git clone "https://github.com/christopherfujino/monorepo" -b $MONOREPO_REF
           pushd monorepo/src/sloth >/dev/null
-            git submodule update --init
-            git checkout $REF
+            git remote add https https://github.com/christopherfujino/slothscript
+            git fetch https
+            git checkout --track https/$REF
+            #git submodule update --init
+            #git checkout $REF
           popd >/dev/null
 
       - name: Setup switch
@@ -77,7 +80,7 @@ jobs:
 
       - name: Run CI
         shell: bash -exuo pipefail {0}
-        working-directory: ./src/sloth
+        working-directory: ./monorepo/src/sloth
         run: |
           eval $(opam env --switch=default-switch)
           # 9base install path
