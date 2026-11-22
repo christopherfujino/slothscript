@@ -16,12 +16,12 @@ ci:V:
   # ensure these run sequentially
   mk docs
   mk fetch-deps
+  mk unit-tests
   pushd native-host >/dev/null
     # This will run integration tests
     mk ci
   popd >/dev/null
   mk check-format
-  mk unit-tests
 
 train:V:
   TEST_DIR="${PWD}/test" dune build @train
