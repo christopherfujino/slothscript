@@ -75,10 +75,12 @@ jobs:
         shell: bash -exuo pipefail {0}
         run: |
           pwd
-          ls -l
+          ls -alh
           #pushd monorepo/src/sloth
           pushd monorepo
+          ls -alh
           pushd src
+          ls -alh
           pushd sloth
             eval $(opam env --switch=default-switch)
             # 9base install path
