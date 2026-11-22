@@ -51,7 +51,7 @@ jobs:
           ref: master
           fetch-depth: 1
           submodules: recursive
-      - name: Check out sloth REF
+      - name: checkout sloth REF
         shell: bash -exuo pipefail {0}
         # TODO: support when GITHUB_REF is a tag (e.g. `refs/tags/v0.1.0`)
         run: |
@@ -61,6 +61,7 @@ jobs:
             sed --in-place=.bak 's/url = git@github\.com:christopherfujino\/slothscript/url = https:\/\/github.com\/christopherfujino\/slothscript/' ../../.git/config
             git submodule update .
             git checkout $REF
+            git rev-parse HEAD
           popd
       - name: Setup switch
         shell: bash -exuo pipefail {0}
@@ -75,6 +76,6 @@ jobs:
           pushd monorepo/src/sloth
             eval $(opam env --switch=default-switch)
             # 9base install path
-            export PATH="$PATH:$(realpath ../../../db):/usr/lib/plan9/bin"
+            export PATH="/usr/lib/plan9/bin"
             mk ci
           popd
