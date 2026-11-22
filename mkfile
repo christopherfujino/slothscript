@@ -36,6 +36,7 @@ $DB_BINARY:
   popd >/dev/null
 
 docs:V: $DB_BINARY
+  ls -alh "$DB_REPO"
   "$DB_BINARY" -ensure
 
 fetch-deps:V:
