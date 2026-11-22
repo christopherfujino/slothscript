@@ -1,8 +1,14 @@
 #!/usr/bin/env sloth
 
+let sloth = if $env["SLOTH"] == null {
+  'sloth'
+} else {
+  $env["SLOTH"]
+}
+
 with ($cwd = $scriptDir) {
   # compile C app
   "make"!
   # run integration test
-  "./fixture.sloth"!
+  [sloth, './fixture.sloth']!
 }

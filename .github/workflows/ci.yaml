@@ -14,28 +14,35 @@ jobs:
     # This is the VM image
     runs-on: ubuntu-latest
     container:
-      # Updated 2026-02-20
-      image: ocaml/opam:debian-13-opam
-
+      # updated 2026-11-21
+      image: ocaml/opam:ubuntu-26.04-ocaml-5.4
     steps:
       - name: Install OS deps
-        shell: bash -exo pipefail {0}
+        shell: bash -euxo pipefail {0}
         run: |
+          CLANG_VERSION=21
+          CLANG=clang-$CLANG_VERSION
           sudo apt-get update
           sudo apt-get --yes upgrade
           sudo apt-get install --yes \
+            autoconf \
+            cmake \
+            libtool \
             golang \
             libreadline-dev \
-            cmake \
-            ninja-build
-
+            ninja-build \
+            9base \
+            bear \
+            llvm \
+            llvm-dev \
+            $CLANG
+          sudo update-alternatives --install /usr/bin/clang clang "$(which "$CLANG")" 100
       - name: Chmod dirs
         shell: bash -exuo pipefail {0}
         run: |
           sudo chown "$(id -u):$(id -g)" "$GITHUB_WORKSPACE"
           sudo chmod -R 777 "$GITHUB_WORKSPACE"
           sudo chmod -R 777 "$RUNNER_TEMP"
-
       - name: Download doc-builder
         shell: bash -exuo pipefail {0}
         run: |
@@ -53,15 +60,33 @@ jobs:
           curl -L "$REMOTE" -o db.tar.gz
           tar xvzf db.tar.gz
           mv "./db-${VERSION}-linux-${ARCH}" ./db
-
+      # TODO: just migrate to use actions/checkout
       - name: Check out repo
         shell: bash -exuo pipefail {0}
         # TODO: support when GITHUB_REF is a tag (e.g. `refs/tags/v0.1.0`)
         run: |
-          env
+          MONOREPO_REF='master'
           REF=$(echo "${GITHUB_REF}" | sed -n 's/refs\/heads\/\(.*\)/\1/p')
-          git clone "${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}" -b "${REF}"
-
+          git clone --depth 1 "https://github.com/christopherfujino/monorepo" -b $MONOREPO_REF
+          pushd monorepo/src/sloth
+            git submodule init -- .
+            sed --in-place=.bak 's/url = git@github\.com:christopherfujino\/slothscript/url = https:\/\/github.com\/christopherfujino\/slothscript/' ../../.git/config
+            git submodule update .
+            git checkout $REF
+          popd >/dev/null
+          pushd monorepo/3p >/dev/null
+            git submodule init -- .
+            sed --in-place=.bak 's/url = git@github\.com:christopherfujino\/3p/url = https:\/\/github.com\/christopherfujino\/3p/' ../.git/config
+            git submodule update .
+            pushd editline >/dev/null
+              git submodule init -- .
+              GIT_CONFIG=../../.git/modules/3p/config
+              cat $GIT_CONFIG
+              sed --in-place=.bak 's/url = git@github\.com:troglobit\/editline/url = https:\/\/github.com\/troglobit\/editline/' $GIT_CONFIG
+              cat $GIT_CONFIG
+              git submodule update .
+            popd >/dev/null
+          popd >/dev/null
       - name: Setup switch
         shell: bash -exuo pipefail {0}
         run: |
@@ -69,23 +94,12 @@ jobs:
           # Latest stable as of 2025-11-06
           opam switch create default-switch 5.4.0
           opam install --yes dune ocamlformat
-
       - name: Run CI
         shell: bash -exuo pipefail {0}
-        working-directory: ./slothscript
         run: |
-          eval $(opam env --switch=default-switch)
-          export PATH="$(realpath ../db):$PATH"
-          make docs
-          make yolos
-          make get
-          make build
-          ln -s "$(realpath ./_build/default/bin/main.exe)" ./_build/default/bin/sloth
-          export PATH="$(realpath ./_build/default/bin):$PATH"
-          ./test/integration_tests/test_all.sloth
-          make check-format
-          make test
-      # TODO use tool/ci.exe
-      #  run: |
-      #    eval $(opam env --switch=default-switch)
-      #    dune exec tool/ci.exe
+          pushd monorepo/src/sloth
+            eval $(opam env --switch=default-switch)
+            # 9base install path
+            export PATH="$PATH:$(realpath ../../../db):/usr/lib/plan9/bin"
+            mk ci
+          popd

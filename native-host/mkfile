@@ -1,29 +1,34 @@
-CC = bear --append -- clang
-MKSHELL = bash
 PROJECT = slothnative
-OCAML_DIR = `{ocamlc -where}
-CFLAGS = -g -O0 -Wall -Werror -I$OCAML_DIR
+MKSHELL = bash
 LDFLAGS = -lm
+OCAML_DIR = `{ocamlc -where}
+CFLAGS = -I$OCAML_DIR -Wno-vla
+# `man 3 realpath` requires _XOPEN_SOURCE >= 500
+# not sure what PATH_MAX requires, but 500 is sufficient
+CFLAGS = $CFLAGS '-D_XOPEN_SOURCE=500'
+<../../../mkfiles/single-dir.mkfile
+REPO_ROOT = `{realpath "$PWD/../../../"}
+<../../../mkfiles/editline.mkfile
+
 OCAML_BUILD = `{realpath "$PWD/../_build"}
 OCAML_LIB = $OCAML_BUILD/default/lib/c-bindings/binding.exe.o
-DEPFILES = `{/bin/sh -c 'find . -maxdepth 1 -name "*.d"'}
 
-$PROJECT.exe: $OCAML_LIB main.o state.o
-  $CC $LDFLAGS $prereq -o $target
+$PROJECT.exe: $OCAML_LIB $EDITLINE_LIB state.o
 
-<|cat $DEPFILES /dev/null
+ci:V: integration_tests
 
+integration_tests:V: $PROJECT.exe
+  set -euo pipefail
+  export SLOTH="$PWD/$PROJECT.exe"
+  "$SLOTH" ../test/integration_tests/test_all.sloth
+
+# Just explicitly call `dune build` if ocaml deps changed
+# if this target is made virtual, a re-build will not cause the parent to
+#   become outdated
+# if we create a virtual dependency, it being re-built will not cause this
+#   target to be outdated
 $OCAML_LIB:
   set -euo pipefail
-  cd ..
-  make get
-  dune build
-
-%.o: %.c
-  $CC $CFLAGS \
-    -MT $target -MMD -MP -MF $stem.d \
-    -c $stem.c \
-    -o $target
-
-clean:V:
-  rm -f a.out *.exe *.o *.d compile_commands.json
+  pushd .. >/dev/null
+    dune build
+  popd >/dev/null

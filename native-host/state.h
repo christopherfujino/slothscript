@@ -1,5 +1,5 @@
-#ifndef __SLOTHSCRIPT_NATIVE_HOST_STATE_H
-#define __SLOTHSCRIPT_NATIVE_HOST_STATE_H
+#ifndef SLOTHSCRIPT_NATIVE_HOST_STATE_H
+#define SLOTHSCRIPT_NATIVE_HOST_STATE_H
 
 #include <caml/mlvalues.h> // value
 #include <stddef.h>        // size_t
@@ -15,4 +15,4 @@ typedef struct State {
 State state_new();
 value state_wrap(State *state);
 
-#endif // __SLOTHSCRIPT_NATIVE_HOST_STATE_H
+#endif // SLOTHSCRIPT_NATIVE_HOST_STATE_H
