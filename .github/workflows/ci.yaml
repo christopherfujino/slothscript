@@ -16,11 +16,12 @@ jobs:
     container:
       # updated 2026-11-21
       image: ocaml/opam:ubuntu-26.04-ocaml-5.4
-
     steps:
       - name: Install OS deps
         shell: bash -exo pipefail {0}
         run: |
+          CLANG_VERSION=21
+          CLANG=clang-$CLANG_VERSION
           sudo apt-get update
           sudo apt-get --yes upgrade
           # TODO: remove tree
@@ -31,16 +32,15 @@ jobs:
             ninja-build \
             9base \
             bear \
-            clang-21 \
+            $CLANG \
             tree
-
+          update-alternatives --install /usr/bin/clang clang "$(which "$CLANG")" 100
       - name: Chmod dirs
         shell: bash -exuo pipefail {0}
         run: |
           sudo chown "$(id -u):$(id -g)" "$GITHUB_WORKSPACE"
           sudo chmod -R 777 "$GITHUB_WORKSPACE"
           sudo chmod -R 777 "$RUNNER_TEMP"
-
       - name: Download doc-builder
         shell: bash -exuo pipefail {0}
         run: |
@@ -58,7 +58,6 @@ jobs:
           curl -L "$REMOTE" -o db.tar.gz
           tar xvzf db.tar.gz
           mv "./db-${VERSION}-linux-${ARCH}" ./db
-
       - name: Check out repo
         shell: bash -exuo pipefail {0}
         # TODO: support when GITHUB_REF is a tag (e.g. `refs/tags/v0.1.0`)
