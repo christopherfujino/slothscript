@@ -77,9 +77,10 @@ jobs:
             git submodule update .
             pushd editline >/dev/null
               git submodule init -- .
-              cat ../../.git/config
-              sed --in-place=.bak 's/url = git@github\.com:troglobit\/editline/url = https:\/\/github.com\/troglobit\/editline/' ../../.git/config
-              cat ../../.git/config
+              GIT_CONFIG=../../.git/modules/3p/config
+              cat $GIT_CONFIG
+              sed --in-place=.bak 's/url = git@github\.com:troglobit\/editline/url = https:\/\/github.com\/troglobit\/editline/' GIT_CONFIG
+              cat $GIT_CONFIG
               git submodule update .
             popd >/dev/null
           popd >/dev/null
