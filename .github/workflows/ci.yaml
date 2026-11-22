@@ -24,8 +24,8 @@ jobs:
           CLANG=clang-$CLANG_VERSION
           sudo apt-get update
           sudo apt-get --yes upgrade
-          # TODO: remove tree
           sudo apt-get install --yes \
+            autoconf \
             golang \
             libreadline-dev \
             cmake \
