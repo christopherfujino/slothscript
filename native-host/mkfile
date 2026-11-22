@@ -15,6 +15,8 @@ OCAML_LIB = $OCAML_BUILD/default/lib/c-bindings/binding.exe.o
 
 $PROJECT.exe: $OCAML_LIB $EDITLINE_LIB state.o
 
+ci:V: integration_tests
+
 integration_tests:V: $PROJECT.exe
   set -euo pipefail
   export SLOTH="$PWD/$PROJECT.exe"
