@@ -36,7 +36,10 @@ $DB_BINARY:
   popd >/dev/null
 
 docs:V: $DB_BINARY
+  echo "$DB_REPO"
   ls -alh "$DB_REPO"
+  echo "$DB_BINARY"
+  ls -alh "$DB_BINARY"
   "$DB_BINARY" -ensure
 
 fetch-deps:V:
