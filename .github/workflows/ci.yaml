@@ -76,7 +76,10 @@ jobs:
         run: |
           pwd
           ls -l
-          pushd monorepo/src/sloth
+          #pushd monorepo/src/sloth
+          pushd monorepo
+          pushd src
+          pushd sloth
             eval $(opam env --switch=default-switch)
             # 9base install path
             export PATH="$PATH:$(realpath ../../../db):/usr/lib/plan9/bin"
