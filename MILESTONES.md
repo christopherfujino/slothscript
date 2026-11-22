@@ -2,7 +2,6 @@
 
 ## v0.2
 - [ ] Binary builds
-- [ ] statically link readline
 
 ## v0.3 - initial pre-release
 - [ ] Test suite
@@ -45,6 +44,7 @@
 - [x] bug: argument lists cannot have trailing commas
 - [x] feat: List.join()
 - [x] feat: $arch variable
+- [x] migrate from readline to editline, statically linked
 
 ## v0.1 - initially tagged version
 - [x] Language versioning
