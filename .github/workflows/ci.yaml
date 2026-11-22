@@ -73,7 +73,8 @@ jobs:
       - name: Run CI
         shell: bash -exuo pipefail {0}
         run: |
-          pushd monorepo/src/sloth
+          pwd ; ls -alh
+          pushd src/sloth
             eval $(opam env --switch=default-switch)
             # 9base install path
             export PATH="/usr/lib/plan9/bin"
