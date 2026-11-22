@@ -1,18 +1,15 @@
-#include "editline.h"
-#include "state.h"
-
 #include <caml/alloc.h>    // caml_alloc_initialized_string()
 #include <caml/callback.h> // caml_startup(), caml_callback_res()
 #include <caml/mlvalues.h> // value
 #include <caml/printexc.h> // caml_format_exception()
+#include <limits.h>        // PATH_MAX
 #include <stdint.h>        // uint8_t
-#include <stdlib.h>        // abort(), malloc(), realloc()
+#include <stdlib.h>        // abort(), malloc(), realloc(), realpath()
 #include <string.h>        // strlen()
 #include <unistd.h>        // getcwd(), isatty()
 
-// TODO: figure the right POSIX_SOURCE macro to allow limits.h to provide
-// this
-#define PATH_MAX 4096
+#include "editline.h"
+#include "state.h"
 
 // TODO: this is sus
 extern void caml_print_exception_backtrace(void);
@@ -63,7 +60,7 @@ void repl(char **argv) {
 
 long interpreter(char **argv, size_t program_len,
                  const char program[static program_len],
-                 const char *program_path) {
+                 const char *relative_program_path) {
   long code = -1;
   caml_startup(argv);
   {
@@ -79,6 +76,12 @@ long interpreter(char **argv, size_t program_len,
 
     value tuple = caml_alloc_tuple(3);
     {
+      char *program_path = nullptr;
+      program_path = realpath(relative_program_path, program_path);
+      if (program_path == nullptr) {
+        perror("realpath() failed");
+        abort();
+      }
       // TODO: unneccessary copy
       value program_val = caml_alloc_initialized_string(program_len, program);
       value program_path_val =
@@ -167,11 +170,11 @@ int main(int argc, char **argv) {
 
     // +1 for '\0'
     char *program = (char *)calloc(len + 1, 1);
-        // important to read buflen number of bytes, so bytes read is accurate
-    size_t n = fread(program, len, sizeof(char), file);
+    // important to read buflen number of bytes, so bytes read is accurate
+    size_t n = fread(program, sizeof(char), len, file);
     if (n != len) {
       // TODO: make correct
-      fprintf(stderr, "%ld != %ld\n", n, len);
+      fprintf(stderr, "fread() failed: %ld != %ld\n", n, len);
       abort();
     }
     program[len] = '\0';

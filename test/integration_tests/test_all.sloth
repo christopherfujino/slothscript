@@ -12,7 +12,7 @@ with ($cwd = $scriptDir) {
     split("\n")
 
   for test in tests {
-    print("Executing ${test}...")
+    print("Executing \"${test}\"...")
     [sloth, test]!
   }
 

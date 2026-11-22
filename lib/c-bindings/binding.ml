@@ -3,9 +3,8 @@ open Interpreter
 open Sloth_common.Common
 open Native_host_api
 
-let parse_compile_interpret (prog, s) =
+let parse_compile_interpret (prog, s, program_name) =
   let argv = Sys.get_argv () |> Array.to_list in
-  let program_name = List.hd_exn argv in
   let env = Compiler.Environment.create prog |> Compiler.Environment.populate in
   let globals =
     Globals.make_globals

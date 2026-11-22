@@ -1,9 +1,12 @@
 PROJECT = slothnative
+MKSHELL = bash
 LDFLAGS = -lm
 OCAML_DIR = `{ocamlc -where}
-CFLAGS = -I$OCAML_DIR
+CFLAGS = -I$OCAML_DIR -Wno-vla
+# `man 3 realpath` requires _XOPEN_SOURCE >= 500
+# not sure what PATH_MAX requires, but 500 is sufficient
+CFLAGS = $CFLAGS '-D_XOPEN_SOURCE=500'
 <../../../mkfiles/single-dir.mkfile
-CFLAGS = $CFLAGS -Wno-vla
 REPO_ROOT = `{realpath "$PWD/../../../"}
 <../../../mkfiles/editline.mkfile
 
@@ -12,5 +15,18 @@ OCAML_LIB = $OCAML_BUILD/default/lib/c-bindings/binding.exe.o
 
 $PROJECT.exe: $OCAML_LIB $EDITLINE_LIB state.o
 
+integration_tests:V: $PROJECT.exe
+  set -euo pipefail
+  export SLOTH="$PWD/$PROJECT.exe"
+  "$SLOTH" ../test/integration_tests/test_all.sloth
+
+# Just explicitly call `dune build` if ocaml deps changed
+# if this target is made virtual, a re-build will not cause the parent to
+#   become outdated
+# if we create a virtual dependency, it being re-built will not cause this
+#   target to be outdated
 $OCAML_LIB:
-  (cd .. && dune build)
+  set -euo pipefail
+  pushd .. >/dev/null
+    dune build
+  popd >/dev/null
