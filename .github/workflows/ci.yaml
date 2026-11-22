@@ -33,6 +33,8 @@ jobs:
             ninja-build \
             9base \
             bear \
+            llvm \
+            llvm-dev \
             $CLANG
           sudo update-alternatives --install /usr/bin/clang clang "$(which "$CLANG")" 100
       - name: Chmod dirs
