@@ -43,15 +43,6 @@ jobs:
           sudo chown "$(id -u):$(id -g)" "$GITHUB_WORKSPACE"
           sudo chmod -R 777 "$GITHUB_WORKSPACE"
           sudo chmod -R 777 "$RUNNER_TEMP"
-      - name: Download doc-builder [deprecated]
-        shell: bash -exuo pipefail {0}
-        run: |
-          VERSION='0.5'
-          ARCH='amd64'
-          REMOTE="https://github.com/christopherfujino/doc-builder/releases/download/v${VERSION}/db-${VERSION}-linux-${ARCH}.tar.gz"
-          curl -L "$REMOTE" -o db.tar.gz
-          tar xvzf db.tar.gz
-          mv "./db-${VERSION}-linux-${ARCH}" ./db
       - name: checkout code
         uses: actions/checkout@v7
         with:
