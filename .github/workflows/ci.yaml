@@ -30,6 +30,7 @@ jobs:
             cmake \
             ninja-build \
             9base \
+            bear \
             tree
 
       - name: Chmod dirs
