@@ -26,9 +26,10 @@ jobs:
           sudo apt-get --yes upgrade
           sudo apt-get install --yes \
             autoconf \
+            cmake \
+            libtool \
             golang \
             libreadline-dev \
-            cmake \
             ninja-build \
             9base \
             bear \
