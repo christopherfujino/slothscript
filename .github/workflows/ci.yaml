@@ -61,6 +61,7 @@ jobs:
         run: |
           MONOREPO_REF='master'
           REF=$(echo "${GITHUB_REF}" | sed -n 's/refs\/heads\/\(.*\)/\1/p')
+          pwd
           git clone "https://github.com/christopherfujino/monorepo" -b $MONOREPO_REF
           pushd monorepo/src/sloth >/dev/null
             git remote add https https://github.com/christopherfujino/slothscript
@@ -69,6 +70,7 @@ jobs:
             #git submodule update --init
             #git checkout $REF
           popd >/dev/null
+          ls -alh
 
       - name: Setup switch
         shell: bash -exuo pipefail {0}
