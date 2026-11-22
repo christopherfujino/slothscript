@@ -34,7 +34,7 @@ jobs:
             bear \
             $CLANG
           echo "[DEBUG] Hi"
-          update-alternatives --install /usr/bin/clang clang "$(which "$CLANG")" 100
+          sudo update-alternatives --install /usr/bin/clang clang "$(which "$CLANG")" 100
       - name: Chmod dirs
         shell: bash -exuo pipefail {0}
         run: |
