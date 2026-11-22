@@ -31,6 +31,7 @@ train:V:
 $DB_BINARY:
   echo "$DB_REPO"
   pushd "$DB_REPO" >/dev/null
+    cat mkfile
     mk build
   popd >/dev/null
 
