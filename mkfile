@@ -29,6 +29,7 @@ train:V:
   TEST_DIR="${PWD}/test" dune build @train
 
 $DB_BINARY:
+  echo "$DB_REPO"
   pushd "$DB_REPO" >/dev/null
     mk build
   popd >/dev/null
