@@ -16,6 +16,7 @@ jobs:
     container:
       # updated 2026-11-21
       image: ocaml/opam:ubuntu-26.04-ocaml-5.4
+      options: --user root
     steps:
       - name: Install OS deps
         shell: bash -euxo pipefail {0}
