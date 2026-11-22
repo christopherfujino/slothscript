@@ -59,9 +59,13 @@ jobs:
         shell: bash -exuo pipefail {0}
         # TODO: support when GITHUB_REF is a tag (e.g. `refs/tags/v0.1.0`)
         run: |
-          env
+          MONOREPO_REF='master'
           REF=$(echo "${GITHUB_REF}" | sed -n 's/refs\/heads\/\(.*\)/\1/p')
-          git clone "${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}" -b "${REF}"
+          git clone "https://github.com/christopherfujino/monorepo" -b $MONOREPO_REF
+          pushd monorepo/src/sloth >/dev/null
+            git submodule update --init
+            git checkout $REF
+          popd >/dev/null
 
       - name: Setup switch
         shell: bash -exuo pipefail {0}
@@ -73,7 +77,7 @@ jobs:
 
       - name: Run CI
         shell: bash -exuo pipefail {0}
-        working-directory: ./slothscript
+        working-directory: ./src/sloth
         run: |
           eval $(opam env --switch=default-switch)
           # 9base install path
