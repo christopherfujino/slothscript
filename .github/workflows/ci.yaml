@@ -69,8 +69,10 @@ jobs:
             pwd
             ls -alh
             git remote -v
-            git remote add https https://github.com/christopherfujino/slothscript
-            git fetch https
+
+            git submodule init -- .
+            sed --in-place=.bak 's/url = git@github\.com:christopherfujino\/slothscript/url = https:\/\/github.com\/christopherfujino\/slothscript/' ../../.git/config
+            git submodule update .
             git checkout --track https/$REF
             #git submodule update --init
             #git checkout $REF
