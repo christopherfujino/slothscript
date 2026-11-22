@@ -16,6 +16,7 @@ jobs:
     container:
       # updated 2026-11-21
       image: ocaml/opam:ubuntu-26.04-ocaml-5.4
+      options: --user root
     steps:
       - name: Install OS deps
         shell: bash -euxo pipefail {0}
@@ -43,50 +44,25 @@ jobs:
           sudo chown "$(id -u):$(id -g)" "$GITHUB_WORKSPACE"
           sudo chmod -R 777 "$GITHUB_WORKSPACE"
           sudo chmod -R 777 "$RUNNER_TEMP"
-      - name: Download doc-builder
-        shell: bash -exuo pipefail {0}
-        run: |
-          #REF='da72ac8ccda2b1f088d86ca7dcbcfe70ea81a67c'
-          #git clone https://github.com/christopherfujino/doc-builder ./db
-          #cd db
-          #git fetch
-          #git checkout "$REF"
-          #go get .
-          #go build -o db .
-
-          VERSION='0.5'
-          ARCH='amd64'
-          REMOTE="https://github.com/christopherfujino/doc-builder/releases/download/v${VERSION}/db-${VERSION}-linux-${ARCH}.tar.gz"
-          curl -L "$REMOTE" -o db.tar.gz
-          tar xvzf db.tar.gz
-          mv "./db-${VERSION}-linux-${ARCH}" ./db
-      # TODO: just migrate to use actions/checkout
-      - name: Check out repo
+      - name: checkout code
+        uses: actions/checkout@v7
+        with:
+          repository: christopherfujino/monorepo
+          ref: master
+          fetch-depth: 1
+          submodules: recursive
+      - name: checkout sloth REF
         shell: bash -exuo pipefail {0}
         # TODO: support when GITHUB_REF is a tag (e.g. `refs/tags/v0.1.0`)
         run: |
-          MONOREPO_REF='master'
           REF=$(echo "${GITHUB_REF}" | sed -n 's/refs\/heads\/\(.*\)/\1/p')
-          git clone --depth 1 "https://github.com/christopherfujino/monorepo" -b $MONOREPO_REF
-          pushd monorepo/src/sloth
+          pushd src/sloth
             git submodule init -- .
             sed --in-place=.bak 's/url = git@github\.com:christopherfujino\/slothscript/url = https:\/\/github.com\/christopherfujino\/slothscript/' ../../.git/config
             git submodule update .
             git checkout $REF
-          popd >/dev/null
-          pushd monorepo/3p >/dev/null
-            git submodule init -- .
-            sed --in-place=.bak 's/url = git@github\.com:christopherfujino\/3p/url = https:\/\/github.com\/christopherfujino\/3p/' ../.git/config
-            git submodule update .
-            pushd editline >/dev/null
-              git submodule init -- .
-              GIT_CONFIG=../../.git/modules/3p/config
-              cat $GIT_CONFIG
-              sed --in-place=.bak 's/url = git@github\.com:troglobit\/editline/url = https:\/\/github.com\/troglobit\/editline/' $GIT_CONFIG
-              cat $GIT_CONFIG
-              git submodule update .
-            popd >/dev/null
-          popd >/dev/null
+            git rev-parse HEAD
+          popd
       - name: Setup switch
         shell: bash -exuo pipefail {0}
         run: |
@@ -94,12 +70,13 @@ jobs:
           # Latest stable as of 2025-11-06
           opam switch create default-switch 5.4.0
           opam install --yes dune ocamlformat
+          echo 'eval $(opam env --switch=default-switch)' >> ~/.profile
       - name: Run CI
         shell: bash -exuo pipefail {0}
         run: |
-          pushd monorepo/src/sloth
-            eval $(opam env --switch=default-switch)
+          pwd ; ls -alh
+          pushd src/sloth
             # 9base install path
-            export PATH="$PATH:$(realpath ../../../db):/usr/lib/plan9/bin"
+            export PATH="/usr/lib/plan9/bin"
             mk ci
           popd

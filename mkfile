@@ -1,5 +1,7 @@
 # TODO: what should our default target be?
 MKSHELL = bash
+DB_REPO = `{realpath "$PWD/../doc-builder"}
+DB_BINARY = "$DB_REPO/db"
 
 unit-tests:V:
   OUNIT_CI=true dune build @runtest --force
@@ -13,6 +15,7 @@ native-host/slothnative.exe:
   popd >/dev/null
 
 ci:V:
+  echo "DB_REPO is $DB_REPO"
   # ensure these run sequentially
   mk docs
   mk fetch-deps
@@ -26,8 +29,19 @@ ci:V:
 train:V:
   TEST_DIR="${PWD}/test" dune build @train
 
-docs:V:
-  db -ensure
+$DB_BINARY:
+  echo "$DB_REPO"
+  pushd "$DB_REPO" >/dev/null
+    cat mkfile
+    mk build
+  popd >/dev/null
+
+docs:V: $DB_BINARY
+  echo "$DB_REPO"
+  ls -alh "$DB_REPO"
+  echo "$DB_BINARY"
+  ls -alh "$DB_BINARY"
+  "$DB_BINARY" -ensure
 
 fetch-deps:V:
   opam install "$PWD" --yes --deps-only --with-test --with-doc -vv
