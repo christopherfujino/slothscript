@@ -84,5 +84,7 @@ jobs:
         run: |
           eval $(opam env --switch=default-switch)
           # 9base install path
-          export PATH="$PATH:$(realpath ../db):/usr/lib/plan9/bin"
+          export PATH="$PATH:$(realpath ../../../db):/usr/lib/plan9/bin"
+          pwd
+          ls -l
           mk ci
