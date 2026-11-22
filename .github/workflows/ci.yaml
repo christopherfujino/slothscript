@@ -80,11 +80,12 @@ jobs:
 
       - name: Run CI
         shell: bash -exuo pipefail {0}
-        working-directory: ./monorepo/src/sloth
         run: |
-          eval $(opam env --switch=default-switch)
-          # 9base install path
-          export PATH="$PATH:$(realpath ../../../db):/usr/lib/plan9/bin"
           pwd
           ls -l
-          mk ci
+          pushd ./monorepo/src/sloth
+            eval $(opam env --switch=default-switch)
+            # 9base install path
+            export PATH="$PATH:$(realpath ../../../db):/usr/lib/plan9/bin"
+            mk ci
+          popd
