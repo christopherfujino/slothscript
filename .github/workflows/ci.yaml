@@ -14,8 +14,8 @@ jobs:
     # This is the VM image
     runs-on: ubuntu-latest
     container:
-      # Updated 2026-02-20
-      image: ocaml/opam:debian-13-opam
+      # updated 2026-11-21
+      image: ocaml/opam:ubuntu-26.04-ocaml-5.4
 
     steps:
       - name: Install OS deps
