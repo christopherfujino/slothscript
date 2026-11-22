@@ -27,7 +27,8 @@ jobs:
             golang \
             libreadline-dev \
             cmake \
-            ninja-build
+            ninja-build \
+            9base
 
       - name: Chmod dirs
         shell: bash -exuo pipefail {0}
@@ -75,5 +76,6 @@ jobs:
         working-directory: ./slothscript
         run: |
           eval $(opam env --switch=default-switch)
-          export PATH="$(realpath ../db):$PATH"
+          # 9base install path
+          export PATH="$PATH:$(realpath ../db):/usr/lib/plan9/bin"
           mk ci
