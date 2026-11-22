@@ -71,7 +71,17 @@ jobs:
             #git checkout $REF
           popd >/dev/null
           ls -alh
-
+      - name: Run CI
+        shell: bash -exuo pipefail {0}
+        run: |
+          pwd
+          ls -l
+          pushd monorepo/src/sloth
+            eval $(opam env --switch=default-switch)
+            # 9base install path
+            export PATH="$PATH:$(realpath ../../../db):/usr/lib/plan9/bin"
+            mk ci
+          popd
       - name: Setup switch
         shell: bash -exuo pipefail {0}
         run: |
@@ -80,14 +90,4 @@ jobs:
           opam switch create default-switch 5.4.0
           opam install --yes dune ocamlformat
 
-      - name: Run CI
-        shell: bash -exuo pipefail {0}
-        run: |
-          pwd
-          ls -l
-          pushd ./monorepo/src/sloth
-            eval $(opam env --switch=default-switch)
-            # 9base install path
-            export PATH="$PATH:$(realpath ../../../db):/usr/lib/plan9/bin"
-            mk ci
-          popd
+
