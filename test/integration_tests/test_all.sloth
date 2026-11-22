@@ -1,11 +1,9 @@
 #!/usr/bin/env sloth
 
-let sloth = $env['SLOTH']
-if sloth == null {
-  print("Setting fallback sloth binary")
-  sloth = 'sloth'
+let sloth = if $env["SLOTH"] == null {
+  'sloth'
 } else {
-  print("Using SLOTH binary from env = ${sloth}")
+  $env["SLOTH"]
 }
 
 with ($cwd = $scriptDir) {
