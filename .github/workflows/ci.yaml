@@ -46,14 +46,6 @@ jobs:
       - name: Download doc-builder
         shell: bash -exuo pipefail {0}
         run: |
-          #REF='da72ac8ccda2b1f088d86ca7dcbcfe70ea81a67c'
-          #git clone https://github.com/christopherfujino/doc-builder ./db
-          #cd db
-          #git fetch
-          #git checkout "$REF"
-          #go get .
-          #go build -o db .
-
           VERSION='0.5'
           ARCH='amd64'
           REMOTE="https://github.com/christopherfujino/doc-builder/releases/download/v${VERSION}/db-${VERSION}-linux-${ARCH}.tar.gz"
@@ -81,9 +73,7 @@ jobs:
             pushd editline >/dev/null
               git submodule init -- .
               GIT_CONFIG=../../.git/modules/3p/config
-              cat $GIT_CONFIG
               sed --in-place=.bak 's/url = git@github\.com:troglobit\/editline/url = https:\/\/github.com\/troglobit\/editline/' $GIT_CONFIG
-              cat $GIT_CONFIG
               git submodule update .
             popd >/dev/null
           popd >/dev/null
