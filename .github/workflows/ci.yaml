@@ -23,12 +23,14 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get --yes upgrade
+          # TODO: remove tree
           sudo apt-get install --yes \
             golang \
             libreadline-dev \
             cmake \
             ninja-build \
-            9base
+            9base \
+            tree
 
       - name: Chmod dirs
         shell: bash -exuo pipefail {0}
@@ -76,12 +78,8 @@ jobs:
         run: |
           pwd
           ls -alh
-          #pushd monorepo/src/sloth
-          pushd monorepo
-          ls -alh
-          pushd src
-          ls -alh
-          pushd sloth
+          tree
+          pushd monorepo/src/sloth
             eval $(opam env --switch=default-switch)
             # 9base install path
             export PATH="$PATH:$(realpath ../../../db):/usr/lib/plan9/bin"
