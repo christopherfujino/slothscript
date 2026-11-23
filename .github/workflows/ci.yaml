@@ -63,6 +63,7 @@ jobs:
             git submodule update .
             git fetch --all
             git ls-remote | grep heads
+            git remote -v
             git checkout --track origin/$REF
             git rev-parse HEAD
           popd
