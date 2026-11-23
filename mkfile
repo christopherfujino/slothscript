@@ -1,8 +1,8 @@
-# TODO: what should our default target be?
 MKSHELL = bash
 DB_REPO = $PWD/../doc-builder
 DB_BINARY = $DB_REPO/db
 
+# TODO: what should our default target be?
 unit-tests:V:
   OUNIT_CI=true dune build @runtest --force
 

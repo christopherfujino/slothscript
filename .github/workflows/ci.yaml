@@ -50,7 +50,7 @@ jobs:
         with:
           repository: christopherfujino/monorepo
           ref: master
-          fetch-depth: 1
+          #fetch-depth: 1
           submodules: recursive
       - name: checkout sloth REF
         shell: bash -exuo pipefail {0}
