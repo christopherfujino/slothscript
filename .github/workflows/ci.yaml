@@ -62,7 +62,7 @@ jobs:
             sed --in-place=.bak 's/url = git@github\.com:christopherfujino\/slothscript/url = https:\/\/github.com\/christopherfujino\/slothscript/' ../../.git/config
             git submodule update .
             git fetch --all
-            git checkout $REF
+            git checkout --track origin/$REF
             git rev-parse HEAD
           popd
       - name: Setup switch
