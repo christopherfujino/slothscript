@@ -15,6 +15,7 @@ native-host/slothnative.exe:
   popd >/dev/null
 
 ci:V:
+  set -euxo pipefail
   echo "DB_REPO is $DB_REPO"
   # ensure these run sequentially
   mk docs
