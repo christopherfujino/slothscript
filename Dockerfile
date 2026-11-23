@@ -11,6 +11,4 @@ ENV REPO_PATH /home/opam/slothscript
 
 ADD . ${REPO_PATH}
 
-RUN sudo chown -R opam:opam ${REPO_PATH}
-
 WORKDIR ${REPO_PATH}

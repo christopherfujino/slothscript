@@ -27,6 +27,7 @@ jobs:
           sudo apt-get --yes upgrade
           sudo apt-get install --yes \
             autoconf \
+            bash \
             cmake \
             libtool \
             golang \
