@@ -48,7 +48,8 @@ jobs:
         uses: actions/checkout@v7
         with:
           repository: christopherfujino/monorepo
-          ref: master
+          # TODO: master
+          ref: github-actions
           fetch-depth: 1
           submodules: recursive
       - name: checkout sloth REF
