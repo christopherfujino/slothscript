@@ -52,21 +52,27 @@ jobs:
           ref: master
           #fetch-depth: 1
           submodules: recursive
-      - name: checkout sloth REF
-        shell: bash -exuo pipefail {0}
-        # TODO: support when GITHUB_REF is a tag (e.g. `refs/tags/v0.1.0`)
-        run: |
-          REF=$(echo "${GITHUB_REF}" | sed -n 's/refs\/heads\/\(.*\)/\1/p')
-          pushd src/sloth
-            git submodule init -- .
-            sed --in-place=.bak 's/url = git@github\.com:christopherfujino\/slothscript/url = https:\/\/github.com\/christopherfujino\/slothscript/' ../../.git/config
-            git submodule update .
-            git fetch --all
-            git ls-remote | grep heads
-            git remote -v
-            git checkout --track origin/$REF
-            git rev-parse HEAD
-          popd
+      - name: checkout sloth
+        uses: actions/checkout@v7
+        with:
+          repository: christopherfujino/monorepo
+          ref: ${GITHUB_REF}
+          path: src/sloth
+      #- name: checkout sloth REF
+      #  shell: bash -exuo pipefail {0}
+      #  # TODO: support when GITHUB_REF is a tag (e.g. `refs/tags/v0.1.0`)
+      #  run: |
+      #    REF=$(echo "${GITHUB_REF}" | sed -n 's/refs\/heads\/\(.*\)/\1/p')
+      #    pushd src/sloth
+      #      git submodule init -- .
+      #      sed --in-place=.bak 's/url = git@github\.com:christopherfujino\/slothscript/url = https:\/\/github.com\/christopherfujino\/slothscript/' ../../.git/config
+      #      git submodule update .
+      #      git fetch --all
+      #      git ls-remote | grep heads
+      #      git remote -v
+      #      git checkout --track origin/$REF
+      #      git rev-parse HEAD
+      #    popd
       - name: Setup switch
         shell: bash -exuo pipefail {0}
         run: |
