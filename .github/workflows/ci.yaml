@@ -48,9 +48,8 @@ jobs:
         uses: actions/checkout@v7
         with:
           repository: christopherfujino/monorepo
-          # TODO: master
-          ref: github-actions
-          fetch-depth: 1
+          ref: master
+          #fetch-depth: 1
           submodules: recursive
       - name: checkout sloth REF
         shell: bash -exuo pipefail {0}
