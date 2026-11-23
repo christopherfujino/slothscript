@@ -61,6 +61,7 @@ jobs:
             git submodule init -- .
             sed --in-place=.bak 's/url = git@github\.com:christopherfujino\/slothscript/url = https:\/\/github.com\/christopherfujino\/slothscript/' ../../.git/config
             git submodule update .
+            git fetch
             git checkout $REF
             git rev-parse HEAD
           popd
